@@ -1,5 +1,8 @@
 # Abasong
 
+[GitHub仓库](https://github.com/olly888/abasong) · [开发任务](https://github.com/olly888/abasong/issues) · [里程碑](https://github.com/olly888/abasong/milestones) · [项目看板（需权限）](https://github.com/users/olly888/projects/1) · [自动检查](https://github.com/olly888/abasong/actions)
+
+
 V12.1 临时配送支援与公寓进入信息协作应用。产品基线见 [产品基线](产品基线.md)，工程进度见 [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md)。
 
 ## 本地启动

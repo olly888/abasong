@@ -52,3 +52,7 @@ Phone/OTP/display-name routes and real account states implemented outside three-
 ## Latest UI verification
 
 2026-10-30: iPhone18Pro/iOS27.0 and Android17/API37 phone-entry checks completed after unlock. Invalid numbers only; no SMS, cloud auth changes or test bypass. This turn changes validation documentation only; prior full checks remain applicable. Next D1 work remains authorized apartment lookup/contribution/feedback and object permissions; real SMS/session acceptance still needs provider setup.
+
+## Tool preference reaffirmed
+
+2026-10-30: User explicitly cancelled mandatory gstack /browse. Choose native tools, direct model work or relevant skills according to the task. No mandatory gstack routing.

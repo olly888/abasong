@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import { tokens } from "@abasong/ui";
 import HomeMap from "../../components/HomeMap";
 import {
@@ -10,12 +11,23 @@ import {
 } from "../../components/HomeChrome";
 import { HomeApartments } from "../../apartments/HomeApartments";
 export default function Home() {
+  const params = useLocalSearchParams<{ apartment_id?: string }>();
+  useEffect(() => {
+    if (params.apartment_id) setMode("公寓");
+  }, [params.apartment_id]);
   const [mode, setMode] = useState<HomeMode>("公寓");
   const toolbar = <HomeChrome mode={mode} onMode={setMode} />;
   return (
     <SafeAreaView style={styles.root} edges={["top"]}>
       {mode === "公寓" ? (
-        <HomeApartments toolbar={toolbar} />
+        <HomeApartments
+          toolbar={toolbar}
+          apartmentId={
+            typeof params.apartment_id === "string"
+              ? params.apartment_id
+              : undefined
+          }
+        />
       ) : (
         <View style={styles.map}>
           <HomeMap />
@@ -26,7 +38,7 @@ export default function Home() {
             <Text style={styles.title}>
               {mode === "找活" ? "附近临时支援" : "附近可用司机"}
             </Text>
-            <Text style={styles.secondary}>暂无信息</Text>
+            <Text style={styles.secondary}>暂未开放</Text>
           </View>
         </View>
       )}

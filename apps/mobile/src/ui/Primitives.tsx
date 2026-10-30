@@ -48,6 +48,7 @@ export function IconButton({
   return (
     <Pressable
       accessibilityRole="button"
+      focusable
       accessibilityLabel={label}
       accessibilityState={{ disabled, selected }}
       disabled={disabled}

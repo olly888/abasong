@@ -4074,6 +4074,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                apartment_id?: string;
             };
             header?: never;
             path?: never;

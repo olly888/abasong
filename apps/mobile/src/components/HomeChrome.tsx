@@ -33,7 +33,7 @@ export function HomeChrome({
           accessibilityLabel="消息"
           accessibilityState={{ disabled: true }}
           disabled
-          style={styles.message}
+          style={[styles.message, styles.unavailable]}
         >
           <Icon name="message" />
         </Pressable>
@@ -45,6 +45,7 @@ export function HomeChrome({
             accessibilityRole="tab"
             accessibilityState={{ selected: mode === m }}
             onPress={() => onMode(m)}
+            hitSlop={{ top: 4, bottom: 4 }}
             style={[styles.tab, mode === m && styles.selected]}
           >
             <Text style={[styles.label, mode === m && styles.active]}>{m}</Text>
@@ -70,7 +71,7 @@ export function MapTools({
         accessibilityLabel="发需求"
         accessibilityState={{ disabled: true }}
         disabled
-        style={styles.help}
+        style={[styles.help, styles.unavailable]}
       >
         <Icon name="plus" color={tokens.color.onBrand} size={20} />
         <Text style={styles.helpText}>发需求</Text>
@@ -142,6 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     justifyContent: "center",
   },
+  unavailable: { opacity: 0.42 },
   label: { fontSize: 15, color: tokens.color.textSecondary },
   selected: { backgroundColor: tokens.color.brandSurface },
   active: { color: tokens.color.brandPrimary, fontWeight: "600" },

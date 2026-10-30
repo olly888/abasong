@@ -8,8 +8,8 @@
   },
   "scripts": {
     "build": "pnpm --filter './packages/*' -r build && pnpm --filter './apps/api' --filter './apps/worker' -r build",
-    "typecheck": "pnpm -r typecheck && tsc -p scripts/d0/tsconfig.json",
-    "lint": "eslint apps packages scripts/d0 --max-warnings 0",
+    "typecheck": "pnpm -r typecheck && tsc -p scripts/d0/tsconfig.json && tsc -p scripts/d1/tsconfig.json",
+    "lint": "eslint apps packages scripts/d0 scripts/d1 --max-warnings 0",
     "test": "vitest run",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "dev:api": "pnpm --filter @abasong/api dev",
@@ -23,7 +23,8 @@
     "env:init": "node scripts/d0/init-local-env.mjs",
     "tokens:generate": "node scripts/d0/generate-tokens.mjs",
     "smoke:services": "tsx scripts/d0/smoke-services.ts",
-    "mapbox:check": "node scripts/d0/check-mapbox.mjs"
+    "mapbox:check": "node scripts/d0/check-mapbox.mjs",
+    "verify:access-ranking": "tsx scripts/d1/verify-access-ranking.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

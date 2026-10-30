@@ -1,8 +1,8 @@
 # Abasong development status
 
-Updated: 2026-10-29 (America/Los_Angeles). Branch: `codex/d0-engineering`.
+Updated: 2026-10-29 (America/Los_Angeles). Branch: `codex/d1-apartment`.
 
-## Current stage: D0 complete; D1 apartment loop next
+## Current stage: D0 complete; D1 apartment loop started
 
 D0 engineering checks are complete. Android ARM64 Debug compilation/install/start passed. iOS Release rebuild/install/start with Mapbox passed. Actual Los Angeles basemaps rendered on both simulators; Android map panning passed. This is a D0 shell, not full business/device acceptance.
 
@@ -32,3 +32,7 @@ Read [D0 verification record](docs/technical/D0_工程验证记录.md), [depende
 Migration0001 has now been applied locally; subsequent schema changes should use new migrations. Database service-role access does not implement end-user authorization. Worker currently probes connectivity only and must not acknowledge real events before handlers exist.
 
 Latest tool preference: mandatory gstack use revoked by the user. Native tools/direct implementation or suitable skills may be chosen as needed. See [D0补齐说明](docs/technical/D0_Android与Mapbox补齐说明.md).
+
+## D1 first implementation batch
+
+Internal metadata-only access-ranking SQL implemented. Sixteen real PostgreSQL scenarios passed under the API role, with all synthetic fixtures rolled back. Explicit feedback interval required; no production window invented. CI includes the verifier. No secret lookup/HTTP endpoint has been exposed; Auth/object/schedule permissions, encryption, contribution/feedback transactions, native card integration and device validation remain. See [D1 record](docs/technical/D1_公寓闭环开发记录.md).

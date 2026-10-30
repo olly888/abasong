@@ -71,3 +71,11 @@ API 默认仅监听 `127.0.0.1:3001`。`/health/live` 检查进程，`/health/re
 ```
 
 Google API37 的当前 SDK 包名为 `platforms;android-37.0`。Mapbox 原生 SDK 的公开 token 不使用网站 URL 限制；检查脚本只验证样式权限，不代替原生底图和定位验收。账号注册和邮箱/付款/条款由账号所有人完成。
+
+## D1 内部排序验证
+
+```sh
+./scripts/dev verify:access-ranking
+```
+
+需先完成本地数据库初始化；用回滚事务执行真实SQL的16个排序场景，不读取密码。当前仅内部查询，尚无公寓密码HTTP接口，完整进度见 [D1开发记录](docs/technical/D1_公寓闭环开发记录.md)。

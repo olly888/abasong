@@ -262,6 +262,7 @@ export class ApartmentsService {
       z
         .object({
           cursor: id.optional(),
+          apartment_id: id.optional(),
           limit: z.coerce.number().int().min(1).max(100).default(20),
         })
         .strict(),
@@ -270,8 +271,13 @@ export class ApartmentsService {
     return this.tx(a, async (c) => {
       const rows = (
         await c.query<EntryRow>(
-          "SELECT p.*,(SELECT count(*)::int FROM abasong.personal_access_records r WHERE r.entry_id=p.id AND r.owner_id=p.owner_id) AS private_record_count FROM abasong.personal_apartments p WHERE p.owner_id=$1 AND ($2::uuid IS NULL OR p.id>$2) ORDER BY p.id LIMIT $3",
-          [a.userId, input.cursor ?? null, input.limit + 1],
+          "SELECT p.*,(SELECT count(*)::int FROM abasong.personal_access_records r WHERE r.entry_id=p.id AND r.owner_id=p.owner_id) AS private_record_count FROM abasong.personal_apartments p WHERE p.owner_id=$1 AND ($2::uuid IS NULL OR p.id>$2) AND ($4::uuid IS NULL OR p.apartment_id=$4) ORDER BY p.id LIMIT $3",
+          [
+            a.userId,
+            input.cursor ?? null,
+            input.limit + 1,
+            input.apartment_id ?? null,
+          ],
         )
       ).rows;
       return {

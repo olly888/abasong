@@ -75,6 +75,10 @@ async function main() {
       signal: AbortSignal.timeout(10000),
     });
     const out = await response.json();
+    if (response.status !== status)
+      console.error(
+        `HTTP check ${checks + 1}: expected ${status}, received ${response.status}`,
+      );
     assert.equal(response.status, status);
     assert.equal(response.headers.get("cache-control"), "no-store");
     if (status >= 400)
@@ -292,6 +296,23 @@ async function main() {
       entry.id,
     );
     await req("POST", root, a, 409, { address: "Changed" }, k);
+    assert.deepEqual(
+      (
+        await req("GET", `${root}?apartment_id=${aid}&limit=1`, a, 200)
+      ).items.map((x: { id: string }) => x.id),
+      [entry.id],
+    );
+    assert.equal(
+      (await req("GET", `${root}?apartment_id=${aid}`, b, 200)).items.length,
+      0,
+    );
+    assert.equal(
+      (await req("GET", `${root}?apartment_id=${randomUUID()}`, a, 200)).items
+        .length,
+      0,
+    );
+    await req("GET", `${root}?apartment_id=invalid`, a, 400);
+
     await req("GET", `${root}/${entry.id}`, b, 404);
     await req(
       "PATCH",
@@ -544,6 +565,32 @@ async function main() {
       randomUUID(),
     );
     await req("GET", `${root}/${entry.id}`, a, 200);
+    const off = await req(
+      "PATCH",
+      `${root}/${entry.id}`,
+      a,
+      200,
+      { expected_version: 1, favorite: false },
+      randomUUID(),
+    );
+    assert.equal(off.favorite, false);
+    const detailAfterOff = await req("GET", `${root}/${entry.id}`, a, 200);
+    assert.equal(detailAfterOff.records.length, 1);
+    assert.equal(
+      (await req("GET", `${root}?apartment_id=${aid}`, a, 200)).items[0]
+        .favorite,
+      false,
+    );
+    const on = await req(
+      "PATCH",
+      `${root}/${entry.id}`,
+      a,
+      200,
+      { expected_version: off.version, favorite: true },
+      randomUUID(),
+    );
+    assert.equal(on.favorite, true);
+
     const unknown = await req(
       "POST",
       root,
@@ -579,7 +626,7 @@ async function main() {
       `${root}/${entry.id}`,
       a,
       200,
-      { expected_version: 1, region: "Local region", favorite: false },
+      { expected_version: on.version, region: "Local region", favorite: false },
       randomUUID(),
     );
     await req(
@@ -669,7 +716,16 @@ async function main() {
     await bootstrap.end();
   }
 }
-main().catch(() => {
+main().catch((error: unknown) => {
+  if (error instanceof Error) {
+    const location = error.stack
+      ?.split("\n")
+      .find(
+        (line) =>
+          /^\s+at /.test(line) && line.includes("verify-library-api.ts"),
+      );
+    if (location) console.error(location.trim());
+  }
   console.error(
     "Private-library verification failed (assertion/setup/runtime); no sensitive details emitted",
   );

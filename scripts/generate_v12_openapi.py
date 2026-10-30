@@ -166,7 +166,7 @@ op('/v1/apartments/{apartment_id}/access-records','post','contributeAccess','有
 op('/v1/access-records/{record_id}/feedback','put','feedbackAccess','覆盖本人当前反馈且追加不可变事件','FeedbackResult','FeedbackInput',cap=['access.read'])
 op('/v1/access-records/{record_id}','delete','withdrawAccess','仅本人贡献或运营；停止正文展示')
 op('/v1/me/contributions','get','listMyContributions','本人贡献元数据，不含正文；查看密码仍需有效资格','ContributionSummaryPage',list_query=True)
-op('/v1/me/apartment-library','get','listMyApartmentLibrary','本人摘要，不含密码；私人地址按owner授权返回','LibraryPage',list_query=True,sensitive=True)
+op('/v1/me/apartment-library','get','listMyApartmentLibrary','本人摘要，不含密码；私人地址按owner授权返回','LibraryPage',list_query=True,sensitive=True,queries=[query('apartment_id',uid)])
 op('/v1/me/apartment-library','post','createMyApartmentEntry','收藏已收录公寓或保存自填地址，二选一','LibraryEntry','LibraryCreate',code=201,idem=True,sensitive=True)
 op('/v1/me/apartment-library/{entry_id}','get','getMyApartmentEntry','仅owner揭示私人正文；不代表共享查看资格','LibraryDetail',sensitive=True)
 op('/v1/me/apartment-library/{entry_id}','patch','patchMyApartmentEntry','本人区域/名称/收藏，版本校验','LibraryEntry','LibraryPatch',idem=True,sensitive=True)

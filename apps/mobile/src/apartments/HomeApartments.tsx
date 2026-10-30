@@ -22,13 +22,19 @@ import { tokens } from "@abasong/ui";
 import HomeMap from "../components/HomeMap";
 import { MapTools } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
-import { IconButton, ListRow } from "../ui/Primitives";
-import { ActionButton } from "../auth/AuthControls";
+import { ListRow } from "../ui/Primitives";
+import { ApartmentSheet } from "./ApartmentSheet";
 import { useAuth } from "../auth/AuthProvider";
 import { AccountError } from "../auth/api-client";
 import { dataRequest } from "./client";
 type S = components["schemas"];
-export function HomeApartments({ toolbar }: { toolbar: ReactNode }) {
+export function HomeApartments({
+  toolbar,
+  apartmentId,
+}: {
+  toolbar: ReactNode;
+  apartmentId?: string;
+}) {
   const auth = useAuth();
   const [focused, setFocused] = useState(false),
     [active, setActive] = useState(AppState.currentState === "active");
@@ -64,10 +70,22 @@ export function HomeApartments({ toolbar }: { toolbar: ReactNode }) {
         </View>
       </View>
     );
-  return <Content key={auth.session.access_token} toolbar={toolbar} />;
+  return (
+    <Content
+      key={auth.session.access_token + ":" + (apartmentId ?? "")}
+      toolbar={toolbar}
+      apartmentId={apartmentId}
+    />
+  );
 }
 
-function Content({ toolbar }: { toolbar: ReactNode }) {
+function Content({
+  toolbar,
+  apartmentId,
+}: {
+  toolbar: ReactNode;
+  apartmentId?: string;
+}) {
   const auth = useAuth(),
     session = auth.session!;
   const control = useRef(new AbortController()),
@@ -81,7 +99,11 @@ function Content({ toolbar }: { toolbar: ReactNode }) {
     [busy, setBusy] = useState(false),
     [locating, setLocating] = useState(false),
     [loaded, setLoaded] = useState(false),
-    [saved, setSaved] = useState(false),
+    [favorite, setFavorite] = useState<S["LibraryEntry"] | null>(null),
+    [bookmarkKnown, setBookmarkKnown] = useState(false),
+    [bookmarkBusy, setBookmarkBusy] = useState(false),
+    [feedbackBusy, setFeedbackBusy] = useState<string | null>(null),
+    [readError, setReadError] = useState(false),
     [panelHeight, setPanelHeight] = useState(210),
     [error, setError] = useState<string | null>(null),
     [notice, setNotice] = useState("定位查看附近公寓");
@@ -96,7 +118,20 @@ function Content({ toolbar }: { toolbar: ReactNode }) {
   const alive = () => !control.current.signal.aborted;
   useEffect(() => {
     control.current = new AbortController();
-    void locate(false);
+    if (apartmentId)
+      void request<S["Apartment"]>(
+        "/v1/apartments/" + encodeURIComponent(apartmentId),
+      )
+        .then((p) => {
+          if (alive()) return select(p);
+        })
+        .catch(() => {
+          if (alive()) {
+            setNotice("公寓已不可用，请搜索地址");
+            setError(null);
+          }
+        });
+    else void locate(false);
     return () => {
       control.current.abort();
       locationGeneration.current++;
@@ -104,6 +139,7 @@ function Content({ toolbar }: { toolbar: ReactNode }) {
     };
   }, []);
   async function locate(ask: boolean) {
+    if (ask && apartmentId) router.setParams({ apartment_id: "" });
     const current = ++locationGeneration.current;
     const valid = () => alive() && current === locationGeneration.current;
     generation.current++;
@@ -180,40 +216,62 @@ function Content({ toolbar }: { toolbar: ReactNode }) {
     }
   }
   async function select(p: S["Apartment"]) {
-    // An explicit building choice locks selection until the driver relocates.
     const version = ++generation.current;
     locationGeneration.current++;
     setLocating(false);
     setSelected(p);
-    setSaved(false);
     setRecords([]);
     setLoaded(false);
+    setReadError(false);
     setExpanded(false);
     setError(null);
     setBusy(true);
-    try {
-      if (auth.me?.capabilities.includes("access.read")) {
-        const result = await request<S["AccessList"]>(
-          `/v1/apartments/${p.id}/access-records`,
-        );
-        if (alive() && version === generation.current) {
-          setRecords(result.items);
-          setLoaded(true);
+    setFavorite(null);
+    setBookmarkKnown(false);
+    await Promise.all([
+      (async () => {
+        try {
+          if (auth.me?.capabilities.includes("access.read")) {
+            const result = await request<S["AccessList"]>(
+              `/v1/apartments/${p.id}/access-records`,
+            );
+            if (alive() && version === generation.current) {
+              setRecords(result.items);
+              setLoaded(true);
+            }
+          }
+        } catch (e) {
+          if (alive() && version === generation.current) {
+            setReadError(true);
+            setError(e instanceof Error ? e.message : "读取失败");
+          }
+        } finally {
+          if (alive() && version === generation.current) setBusy(false);
         }
-      }
-    } catch (e) {
-      if (alive() && version === generation.current)
-        setError(e instanceof Error ? e.message : "读取失败");
-    } finally {
-      if (alive() && version === generation.current) setBusy(false);
-    }
+      })(),
+      (async () => {
+        try {
+          const page = await request<S["LibraryPage"]>(
+            `/v1/me/apartment-library?apartment_id=${p.id}&limit=1`,
+          );
+          if (alive() && version === generation.current) {
+            setFavorite(page.items[0] ?? null);
+            setBookmarkKnown(true);
+          }
+        } catch {
+          if (alive() && version === generation.current)
+            setError("收藏状态暂不可用，请重新读取");
+        }
+      })(),
+    ]);
   }
   async function feedback(
     r: S["AccessRecord"],
     value: "useful" | "not_useful",
-  ) {
+  ): Promise<boolean> {
+    if (feedbackBusy) return false;
     const version = generation.current;
-    setBusy(true);
+    setFeedbackBusy(r.id);
     setError(null);
     try {
       await request(`/v1/access-records/${r.id}/feedback`, {
@@ -224,32 +282,75 @@ function Content({ toolbar }: { toolbar: ReactNode }) {
         const result = await request<S["AccessList"]>(
           `/v1/apartments/${selected.id}/access-records`,
         );
-        if (alive() && version === generation.current) setRecords(result.items);
+        if (alive() && version === generation.current) {
+          setRecords(result.items);
+          return true;
+        }
       }
+      return false;
     } catch (e) {
-      if (alive() && version === generation.current)
+      if (alive() && version === generation.current) {
+        if (e instanceof AccountError && [401, 403, 404].includes(e.status)) {
+          setRecords([]);
+          setReadError(true);
+        }
         setError(e instanceof Error ? e.message : "反馈失败");
+      }
+      return false;
     } finally {
-      if (alive() && version === generation.current) setBusy(false);
+      if (alive() && version === generation.current) setFeedbackBusy(null);
     }
   }
   async function save() {
-    if (!selected) return;
+    if (!selected || !bookmarkKnown || bookmarkBusy) return;
     const version = generation.current;
-    setBusy(true);
+    setBookmarkBusy(true);
     setError(null);
     try {
-      await request("/v1/me/apartment-library", {
-        method: "POST",
-        key: randomUUID(),
-        body: { apartment_id: selected.id },
-      });
-      if (alive() && version === generation.current) setSaved(true);
+      let entry = favorite;
+      if (!entry)
+        entry = await request<S["LibraryEntry"]>("/v1/me/apartment-library", {
+          method: "POST",
+          key: randomUUID(),
+          body: { apartment_id: selected.id },
+        });
+      else
+        entry = await request<S["LibraryEntry"]>(
+          `/v1/me/apartment-library/${entry.id}`,
+          {
+            method: "PATCH",
+            key: randomUUID(),
+            body: {
+              expected_version: entry.version,
+              favorite: !entry.favorite,
+            },
+          },
+        );
+      if (entry && !favorite && !entry.favorite)
+        entry = await request<S["LibraryEntry"]>(
+          `/v1/me/apartment-library/${entry.id}`,
+          {
+            method: "PATCH",
+            key: randomUUID(),
+            body: { expected_version: entry.version, favorite: true },
+          },
+        );
+      if (alive() && version === generation.current) setFavorite(entry);
     } catch (e) {
-      if (alive() && version === generation.current)
+      if (alive() && version === generation.current) {
         setError(e instanceof Error ? e.message : "收藏失败");
+        try {
+          const page = await request<S["LibraryPage"]>(
+            `/v1/me/apartment-library?apartment_id=${selected.id}&limit=1`,
+          );
+          if (alive() && version === generation.current)
+            setFavorite(page.items[0] ?? null);
+        } catch {
+          /* preserve previous state, do not guess success */
+        }
+      }
     } finally {
-      if (alive() && version === generation.current) setBusy(false);
+      if (alive() && version === generation.current) setBookmarkBusy(false);
     }
   }
   const canRead = auth.me?.capabilities.includes("access.read");
@@ -284,203 +385,96 @@ function Content({ toolbar }: { toolbar: ReactNode }) {
           onLocate={() => void locate(true)}
         />
       ) : null}
-      <View
-        onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
-        style={[styles.panel, expanded && styles.expanded]}
-      >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={expanded ? "收起卡片" : "展开卡片"}
-          disabled={!selected}
-          accessibilityState={{ expanded }}
-          style={styles.handleSpace}
-          onPress={() => setExpanded((v) => !v)}
+      {selected ? (
+        <ApartmentSheet
+          apartment={selected}
+          records={records}
+          status={
+            !canRead
+              ? "denied"
+              : readError
+                ? "error"
+                : !loaded && busy
+                  ? "loading"
+                  : "ready"
+          }
+          expanded={expanded}
+          saved={!!favorite?.favorite}
+          bookmarkBusy={bookmarkBusy || !bookmarkKnown}
+          feedbackBusy={feedbackBusy}
+          error={error}
+          onExpand={setExpanded}
+          onAdd={add}
+          onOther={clearSelection}
+          onRetry={() => void select(selected)}
+          onBookmark={() => void save()}
+          onFeedback={feedback}
+          onHeight={setPanelHeight}
+        />
+      ) : (
+        <View
+          onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
+          style={styles.panel}
         >
-          <View style={styles.handle} />
-        </Pressable>
-        <ScrollView contentContainerStyle={styles.inner}>
-          {error ? (
-            <Text accessibilityRole="alert" style={styles.error}>
-              {error}
-            </Text>
-          ) : null}
-          {selected ? (
-            <>
-              <View style={styles.headingRow}>
-                <View style={{ flex: 1, gap: 4 }}>
-                  <Text style={styles.title}>{selected.name ?? "公寓"}</Text>
-                  <Text style={styles.address}>
-                    {selected.address_line1}, {selected.city}, {selected.state}
-                  </Text>
-                </View>
-                {expanded ? (
-                  <>
-                    <IconButton
-                      name="down"
-                      label="收起密码记录"
-                      onPress={() => setExpanded(false)}
-                    />
-                    <IconButton
-                      name="bookmark"
-                      label={saved ? "已收藏公寓" : "收藏公寓"}
-                      disabled={busy || saved}
-                      selected={saved}
-                      onPress={() => void save()}
-                    />
-                  </>
-                ) : null}
-              </View>
-              {busy ? (
-                <ActivityIndicator
-                  color={tokens.color.brandPrimary}
-                  style={{ marginVertical: 12 }}
-                />
-              ) : null}
-              {!canRead ? (
-                <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>暂未获得资料查看资格</Text>
-                </View>
-              ) : loaded && !records.length ? (
-                <View style={{ gap: 14, paddingTop: 20, paddingBottom: 8 }}>
-                  <Text style={styles.emptyTitle}>暂无共享密码</Text>
-                  {!expanded ? (
-                    <ActionButton label="添加密码" onPress={add} />
-                  ) : null}
-                </View>
-              ) : null}
-              {!expanded && records[0] ? (
-                <>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="查看密码记录"
-                    onPress={() => setExpanded(true)}
-                  >
-                    <Text style={styles.code}>{records[0].value}</Text>
-                    <Text style={styles.muted}>
-                      {new Date(records[0].contributed_at).toLocaleString()}{" "}
-                      贡献
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => setExpanded(true)}
-                    style={styles.expandRow}
-                  >
-                    <Text style={styles.link}>
-                      查看 {records.length} 条密码记录
-                    </Text>
-                    <Icon
-                      name="up"
-                      color={tokens.color.brandPrimary}
-                      size={18}
-                    />
-                  </Pressable>
-                </>
-              ) : null}
-              {expanded ? (
-                <>
-                  <View style={{ paddingTop: 18, paddingBottom: 14 }}>
-                    <ActionButton label="＋ 添加密码" onPress={add} />
-                  </View>
-                  {records.map((r) => (
-                    <View key={r.id} style={styles.record}>
-                      <View style={styles.recordTop}>
-                        <Text style={styles.recordCode}>{r.value}</Text>
-                        {r.effective_useful ? (
-                          <Text style={styles.status}>有用反馈</Text>
-                        ) : null}
-                      </View>
-                      <Text style={styles.address}>
-                        {r.scope.label ?? "大门"}
-                      </Text>
-                      <Text style={styles.muted}>
-                        {new Date(r.contributed_at).toLocaleString()} 贡献
-                      </Text>
-                      <View style={styles.feedbackRow}>
-                        {(["useful", "not_useful"] as const).map((value) => (
-                          <Pressable
-                            key={value}
-                            accessibilityRole="button"
-                            accessibilityState={{
-                              selected: r.my_feedback === value,
-                              disabled: busy,
-                            }}
-                            disabled={busy}
-                            onPress={() => void feedback(r, value)}
-                            style={[
-                              styles.feedback,
-                              r.my_feedback === value &&
-                                styles.feedbackSelected,
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.feedbackLabel,
-                                r.my_feedback === value && {
-                                  color: tokens.color.brandPrimary,
-                                },
-                              ]}
-                            >
-                              {value === "useful" ? "有用" : "没用"}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    </View>
-                  ))}
-                  <Pressable
-                    accessibilityRole="button"
-                    style={styles.expandRow}
-                    onPress={clearSelection}
-                  >
-                    <Text style={styles.muted}>不是这栋公寓？</Text>
-                    <Icon
-                      name="chevron"
-                      color={tokens.color.textMuted}
-                      size={18}
-                    />
-                  </Pressable>
-                  {error ? (
-                    <ActionButton
-                      label="重新读取"
-                      secondary
-                      disabled={busy}
-                      onPress={() => void select(selected)}
-                    />
-                  ) : null}
-                </>
-              ) : null}
-            </>
-          ) : candidates.length ? (
-            <>
-              <Text style={styles.title}>你在哪栋公寓？</Text>
-              <Text style={styles.muted}>选择对应地址</Text>
-              {candidates.map((p) => (
-                <ListRow
-                  key={p.id}
-                  title={p.name ?? "公寓"}
-                  subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
-                  onPress={() => void select(p)}
-                />
-              ))}
-            </>
-          ) : (
-            <EmptyApartment
-              title={
-                locating
-                  ? "正在查找当前公寓"
-                  : notice === "定位查看附近公寓" ||
-                      notice === "开启定位，或搜索公寓地址"
-                    ? "开启位置，找到当前公寓"
-                    : notice
-              }
-              action={locating ? "定位中…" : "使用当前位置"}
-              busy={locating}
-              onPress={() => void locate(true)}
-            />
-          )}
-        </ScrollView>
-      </View>
+          <View style={styles.handleSpace}>
+            <View style={styles.handle} />
+          </View>
+          <ScrollView contentContainerStyle={styles.inner}>
+            {error ? (
+              <Text accessibilityRole="alert" style={styles.error}>
+                {error}
+              </Text>
+            ) : null}
+            {candidates.length ? (
+              <>
+                <Text style={styles.title}>你在哪栋公寓？</Text>
+                <Text style={styles.muted}>选择对应地址</Text>
+                {candidates.map((p) => (
+                  <ListRow
+                    key={p.id}
+                    title={p.name ?? "公寓"}
+                    subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
+                    onPress={() => void select(p)}
+                  />
+                ))}
+              </>
+            ) : (
+              <EmptyApartment
+                title={
+                  locating
+                    ? "正在查找当前公寓"
+                    : notice === "定位查看附近公寓" ||
+                        notice === "开启定位，或搜索公寓地址"
+                      ? "开启位置，找到当前公寓"
+                      : notice
+                }
+                action={
+                  locating
+                    ? "定位中…"
+                    : notice === "开启定位，或搜索公寓地址" ||
+                        notice === "定位查看附近公寓"
+                      ? "使用当前位置"
+                      : "搜索公寓地址"
+                }
+                busy={locating}
+                onPress={() =>
+                  notice === "开启定位，或搜索公寓地址" ||
+                  notice === "定位查看附近公寓"
+                    ? void locate(true)
+                    : router.push("/apartments")
+                }
+                onRetry={
+                  !locating &&
+                  notice !== "开启定位，或搜索公寓地址" &&
+                  notice !== "定位查看附近公寓"
+                    ? () => void locate(true)
+                    : undefined
+                }
+              />
+            )}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
@@ -489,11 +483,13 @@ function EmptyApartment({
   action,
   busy = false,
   onPress,
+  onRetry,
 }: {
   title: string;
   action: string;
   busy?: boolean;
   onPress: () => void;
+  onRetry?: () => void;
 }) {
   return (
     <View style={styles.mapEmpty}>
@@ -519,6 +515,15 @@ function EmptyApartment({
           </Text>
         )}
       </Pressable>
+      {onRetry ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onRetry}
+          style={{ minHeight: 48, justifyContent: "center" }}
+        >
+          <Text style={styles.link}>重新定位</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

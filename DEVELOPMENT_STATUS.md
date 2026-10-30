@@ -1,13 +1,13 @@
 # Abasong development status
 
-Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-visual-alignment`.
+Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-card-acceptance`.
 
 ## Current snapshot — 2026-10-30
 
 Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Prior business baseline: `a3b5a51`; latest D1 location/native slice is on `codex/d1-location` (evidence below).
 
 - Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API.
-- Verified: local0001/0002 migrations (47 tables),74 business/DB+location checks,54 Auth checks,16 ranking scenarios,6 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
+- Verified: local0001/0002 migrations (47 tables),82 business/DB+location checks,54 Auth checks,16 ranking scenarios,10 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
 - Not yet accepted: full real-account native lifecycle/qualification scenarios, authorized-sample map/location/card acceptance, screenshot/OCR/batch backend/native flow, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
 - SMS: user identified airplane mode as cause of non-receipt; do not change providers. Both simulators are signed in and private CRUD was observed; full lifecycle/qualification acceptance remains pending.
 - Next: D1.1 native private CRUD now observed on both platforms (remaining scenarios below); D1.2 minimum review/correction and authorized map sample acceptance; D1.3 screenshot samples/contract/provider design then D1.4 actual screenshot contribution. Private-library polish must not postpone screenshotP0.
@@ -150,3 +150,13 @@ Executed: full check (6 unit tests),74 HTTP/PG library+resolve checks,54 Auth ch
 2026-10-30: User explicitly reprioritized prototype fidelity before further feature work. Rebuilt home full-map floating search/mode toolbar, sheet hierarchy and map tools; restored outline tab icons, muted Mapbox Light style/required attribution. Added compact secondary-page header, search row, contribution checkbox/fixed footer, underlined library tabs/outlined cards and primary fixed contribution action, compact profile/menu. No API/schema/credential/qualification changes or new dependencies. D2-only message/support/search controls explicitly disabled. Added docs/design/D1_原生视觉对齐与验收.md and a same-state screenshot/functional+visual delivery gate.
 
 Checks: full workspace check +6 unit tests and dual native JS exports passed after fixes; no new native binary compilation. Native iOS no-location home, search/no-match/clear, library/private form and synthetic save/list/remove observed. Android library/private form and same-account synthetic card observed via keyboard. Removed temporary diagnostic marker and raw JSX whitespace warning; reset request controllers on effect setup to fix Fast Refresh cancellation. Non-empty shared home/feedback still needs authorized sample and qualification; no synthetic production data/grants. Screenshots remain ignored local evidence. Entire D1/complete UI-state acceptance not claimed.
+
+## UI/UX review requested
+
+2026-10-30: Reviewed current native comparison/screenshots, dc19a09 implementation and latest page/ADD-08/screenshot specifications. Added docs/design/D1_UIUX评审与优化建议.md separating confirmed implementation gaps, unverified risks and new recommendations. Highest priorities: screenshot contribution path, representative populated-card acceptance, access method/scope/big-code semantics; then search→home consistency, disabled affordances, location recovery, sheet/feedback anchor, truthful favorites/time and accessibility. No app/API/DB or approved prototype changes; no new engineering tests or real-account actions. This is a model-led design review, not an external human consultancy or completed usability study.
+
+## D1 card interactions and OCR sample batch
+
+2026-10-30: Implemented shared native ApartmentSheet with non-keypad semantics/scope/time, large-code modal, feedback anchor/state, real owner-library favorite query/toggle, search-to-home selection, recovery and disabled future actions. Source OpenAPI and generated contracts updated for optional apartment_id library filter; no migration/dependency/cloud changes. Dev-only TEST lab renders same sheet on both native builds; production route redirects. iOS state/function observations and Android state screenshots completed; user explicitly confirmed Android large mode enter/return. Android other touch flows, real authorized shared read/search/favorite end-to-end, gestures, screen reader and physical devices remain incomplete.
+
+Final executed: workspace check +10 tests,82 library HTTP/PG,54 Auth,16 ranking, full OpenAPI/SQL static validation and dual native JS exports passed. Existing native binaries used; no new binary compilation claimed. OCR8 completely synthetic Apple Vision/Mac samples:6 exact, letter-case and small-text failed. Manual confirmation remains required; no production provider decision/native import implemented. Evidence and follow-up: docs/technical/D1_卡片交互与OCR样本验证.md. WholeD1 remains in progress.

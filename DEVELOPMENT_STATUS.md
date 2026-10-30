@@ -36,3 +36,7 @@ Latest tool preference: mandatory gstack use revoked by the user. Native tools/d
 ## D1 first implementation batch
 
 Internal metadata-only access-ranking SQL implemented. Sixteen real PostgreSQL scenarios passed under the API role, with all synthetic fixtures rolled back. Explicit feedback interval required; no production window invented. CI includes the verifier. No secret lookup/HTTP endpoint has been exposed; Auth/object/schedule permissions, encryption, contribution/feedback transactions, native card integration and device validation remain. See [D1 record](docs/technical/D1_公寓闭环开发记录.md).
+
+## Live preview
+
+Native shared Metro configured at localhost8081; iPhone18Pro/iOS27.0 and Android17/API37 both confirmed as connected React Native debugger targets. iOS uses Device Hub with Debug build; Android uses a project emulator with scrcpy5.0.1 live display due to Qt window rendering errors. Repeatable scripts and [usage guide](docs/technical/原生实时预览使用说明.md) added. Browser preview is optional, shares the screens/navigation, and isolates Web map rendering in packages/web-map with a genuine Static Images fallback when WebGL is unavailable; it is not a substitute for native/device validation.

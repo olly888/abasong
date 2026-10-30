@@ -13,10 +13,11 @@ if [ ! -x "$JAVA_HOME/bin/java" ]; then echo 'JDK required; set ABASONG_JAVA_HOM
 command=${1:-}
 [ "$#" -eq 0 ] || shift
 case "$command" in
+  run) exec "$repo_root/scripts/dev" --filter @abasong/mobile exec expo run:android "$@" ;;
   gradle) exec "$repo_root/scripts/dev" --filter @abasong/mobile exec sh -c 'cd android && exec ./gradlew "$@"' abasong-gradle "$@" ;;
   sdk) exec "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" "$@" ;;
   avd) exec "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" "$@" ;;
   emulator) exec "$ANDROID_HOME/emulator/emulator" "$@" ;;
   adb) exec "$ANDROID_HOME/platform-tools/adb" "$@" ;;
-  *) echo 'Usage: ./scripts/android gradle|sdk|adb|avd|emulator [arguments]' >&2; exit 1 ;;
+  *) echo 'Usage: ./scripts/android run|gradle|sdk|adb|avd|emulator [arguments]' >&2; exit 1 ;;
 esac

@@ -79,3 +79,7 @@ Google API37 的当前 SDK 包名为 `platforms;android-37.0`。Mapbox 原生 SD
 ```
 
 需先完成本地数据库初始化；用回滚事务执行真实SQL的16个排序场景，不读取密码。当前仅内部查询，尚无公寓密码HTTP接口，完整进度见 [D1开发记录](docs/technical/D1_公寓闭环开发记录.md)。
+
+## 原生实时预览
+
+分别在三个终端运行 `./scripts/dev preview:native`、`./scripts/dev preview:ios`、`./scripts/dev preview:android`。开发服务保持运行，两端随页面代码更新。详细步骤及重建方式见 [原生实时预览使用说明](docs/technical/原生实时预览使用说明.md)。

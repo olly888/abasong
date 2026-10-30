@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Mapbox from '@rnmapbox/maps';
+import HomeMap from '../components/HomeMap';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tokens } from '@abasong/ui';
-const token = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim();
-if (token) Mapbox.setAccessToken(token);
 const modes = ['公寓', '找活', '找人'] as const;
 export default function Home() {
   const [mode, setMode] = useState<typeof modes[number]>('公寓');
@@ -12,7 +10,7 @@ export default function Home() {
     <Text style={styles.brand}>Abasong</Text>
     <View style={styles.switcher}>{modes.map(item => <Pressable key={item} accessibilityRole="button" accessibilityState={{ selected: mode === item }} onPress={() => setMode(item)} style={[styles.mode, mode === item && styles.selected]}><Text style={[styles.label, mode === item && styles.active]}>{item}</Text></Pressable>)}</View>
     <View style={styles.map}>
-      {token ? <Mapbox.MapView style={StyleSheet.absoluteFill} styleURL={Mapbox.StyleURL.Street}><Mapbox.Camera defaultSettings={{ centerCoordinate: [-118.2437, 34.0522], zoomLevel: 12 }} /></Mapbox.MapView> : <Text style={styles.empty}>地图暂不可用</Text>}
+      <HomeMap />
     </View>
     <View style={styles.card}><Text style={styles.heading}>{mode === '公寓' ? '附近公寓' : mode === '找活' ? '附近临时支援' : '附近可用司机'}</Text><Text style={styles.secondary}>暂无信息</Text></View>
   </SafeAreaView>;

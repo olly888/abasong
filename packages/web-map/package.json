@@ -1,0 +1,19 @@
+{
+  "name": "@abasong/web-map",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "src/index.tsx",
+  "browser": "src/index.tsx",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "mapbox-gl": "3.34.1",
+    "react": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0"
+  }
+}

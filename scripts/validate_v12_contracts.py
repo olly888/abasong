@@ -59,12 +59,21 @@ assert 'FORCE ROW LEVEL SECURITY' in sql and 'NOBYPASSRLS' in sql
 assert "('access_secrets','message_secrets','request_private_details')" in sql
 assert 'request_shares' in tables and 'minimum_parcels' in sql and 'pickup_region_id' in sql
 assert not re.search(r'\b(engagement_type|ongoing|training_available|trial_policy|cooperation_schedule|availability_note)\b',sql)
+incremental_sql=(ROOT/'database/migrations/0002_personal_apartments.sql').read_text()
+incremental_parsed=parse_sql(incremental_sql)
+incremental_tables=[stmt.stmt.relation.relname for stmt in incremental_parsed if isinstance(stmt.stmt,ast.CreateStmt)]
+assert set(incremental_tables)=={'personal_apartments','personal_access_records'}
+assert 'FOREIGN KEY(owner_id,entry_id)' in incremental_sql
+assert 'FROM PUBLIC,abasong_api,abasong_worker' in incremental_sql
+assert "current_setting('abasong.actor_id',true)" in incremental_sql
+for name in ('LibraryCreate','LibraryPatch','PrivateRecordCreate','PrivateRecordPatch','PrivateShareInput'):
+ assert not {'owner_id','status','capabilities','payload'}.intersection(contract['components']['schemas'][name]['properties'])
 catalog=json.loads((ROOT/'docs/product/V12.1_页面与状态目录.json').read_text())
 page_ids={p['id'] for p in catalog['pages']}
 assert len(page_ids)==len(catalog['pages'])==40
 assert {'B04','B05','B06','U09'}.issubset(page_ids)
 for page in catalog['pages']:
-    if page['id'] in {'B04','B05','B06','U09'}:
+    if page['id'] in {'B04','B05','B06'}:
         assert not page['api_operations'] and page.get('api_contract_status'),page['id']
 for page in catalog['pages']:
     assert page['information'] and page['states'] and page['acceptance']
@@ -79,6 +88,6 @@ for path in mds:
         link=link.split('#')[0]
         if link and not link.startswith(('http://','https://','mailto:')) and not (path.parent/link).exists():missing.append([str(path.relative_to(ROOT)),link])
 assert not missing,missing
-result={'date':'2026-10-29','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
+result={'date':'2026-10-30','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
 (ROOT/'docs/technical/V12_静态校验结果.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(result,ensure_ascii=False,indent=2))

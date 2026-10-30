@@ -1574,8 +1574,12 @@
         "收藏共享资格变化"
       ],
       "api_operations": [
+        "listMyApartmentLibrary",
+        "getMyApartmentEntry",
+        "createMyApartmentEntry",
+        "createMyPrivateRecord",
         "listMyContributions",
-        "withdrawAccess"
+        "readAccessRecords"
       ],
       "requirements": [
         "V12-07",
@@ -1585,7 +1589,7 @@
         "ADD-06"
       ],
       "acceptance": "不能为看本人审核进度强制继续持有access.read；不从列表泄露失效正文。",
-      "api_contract_status": "T27/T32–T35待扩展；现有贡献接口仅覆盖旧功能",
+      "api_contract_status": "私存/收藏与手动共享契约已生成；OCR批次、纠正和统计仍待扩展",
       "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
       "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
     },
@@ -2153,12 +2157,21 @@
         "主动共享确认",
         "私存/共享分别失败"
       ],
-      "api_operations": [],
+      "api_operations": [
+        "getMyApartmentEntry",
+        "patchMyApartmentEntry",
+        "deleteMyApartmentEntry",
+        "createMyPrivateRecord",
+        "patchMyPrivateRecord",
+        "deleteMyPrivateRecord",
+        "shareMyPrivateRecord",
+        "readAccessRecords"
+      ],
       "requirements": [
         "ADD-07"
       ],
       "acceptance": "收藏关联公寓ID；本人私存和共享资格分离；不展示他人私存，修改私存不隐式修改共享。",
-      "api_contract_status": "T27/T32–T35待扩展私存/收藏/共享/纠正/统计接口",
+      "api_contract_status": "本人记录/收藏/主动共享契约已生成；未知公寓共享提议、纠正、统计仍待后续任务",
       "prototype_status": "已制作本地合成交互·待用户评审；非真实OCR"
     }
   ]

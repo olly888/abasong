@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import HomeMap from '../../components/HomeMap';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { tokens } from '@abasong/ui';
-const modes = ['公寓', '找活', '找人'] as const;
+import { useState } from "react";
+import { router } from "expo-router";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import HomeMap from "../../components/HomeMap";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { tokens } from "@abasong/ui";
+const modes = ["公寓", "找活", "找人"] as const;
 export default function Home() {
-  const [mode, setMode] = useState<(typeof modes)[number]>('公寓');
+  const [mode, setMode] = useState<(typeof modes)[number]>("公寓");
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
+    <SafeAreaView style={styles.root} edges={["top"]}>
       <Text style={styles.brand}>Abasong</Text>
       <View style={styles.switcher}>
         {modes.map((item) => (
@@ -29,13 +30,23 @@ export default function Home() {
       </View>
       <View style={styles.card}>
         <Text style={styles.heading}>
-          {mode === '公寓'
-            ? '附近公寓'
-            : mode === '找活'
-              ? '附近临时支援'
-              : '附近可用司机'}
+          {mode === "公寓"
+            ? "附近公寓"
+            : mode === "找活"
+              ? "附近临时支援"
+              : "附近可用司机"}
         </Text>
-        <Text style={styles.secondary}>暂无信息</Text>
+        {mode === "公寓" ? (
+          <Pressable
+            accessibilityRole="button"
+            style={styles.search}
+            onPress={() => router.push("/apartments")}
+          >
+            <Text style={styles.searchLabel}>搜索公寓或地址</Text>
+          </Pressable>
+        ) : (
+          <Text style={styles.secondary}>暂无信息</Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -44,12 +55,12 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: tokens.color.surface },
   brand: {
     fontSize: 26,
-    fontWeight: '700',
+    fontWeight: "700",
     color: tokens.color.ink,
     margin: 20,
   },
   switcher: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     paddingHorizontal: 20,
     paddingBottom: 16,
@@ -57,18 +68,18 @@ const styles = StyleSheet.create({
   mode: {
     minHeight: 48,
     paddingHorizontal: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderRadius: 24,
     backgroundColor: tokens.color.surfaceMuted,
   },
   selected: { backgroundColor: tokens.color.ink },
-  label: { color: tokens.color.ink, fontWeight: '600' },
+  label: { color: tokens.color.ink, fontWeight: "600" },
   active: { color: tokens.color.surface },
   map: {
     flex: 1,
     backgroundColor: tokens.color.canvas,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   empty: { color: tokens.color.textSecondary },
   card: {
@@ -78,6 +89,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     backgroundColor: tokens.color.surface,
   },
-  heading: { fontSize: 20, fontWeight: '600', color: tokens.color.ink },
+  search: {
+    minHeight: 52,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: tokens.color.brandPrimary,
+  },
+  searchLabel: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
+  heading: { fontSize: 20, fontWeight: "600", color: tokens.color.ink },
   secondary: { color: tokens.color.textSecondary },
 });

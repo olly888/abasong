@@ -116,6 +116,17 @@ out('PublicRequestShare',{'status':enum('open','ended'),'title':string(200),'sum
 for item in ['Apartment','Region','Request','RequestVersion','Application','Driver','Conversation','Message','Contact','Post','Comment','Notification','Report','AccessRecord']:
  page(item+'Page',item)
 paths={}
+# Personal apartment library: owner-only DTOs; never reuse as public data.
+obj('LibraryCreate',{'apartment_id':uid,'address':string(300,minLength=1),'name':string(160),'region':string(60)},[])
+S['LibraryCreate']['oneOf']=[{'required':['apartment_id'],'not':{'required':['address']}},{'required':['address'],'not':{'required':['apartment_id']}}]
+obj('LibraryPatch',{'expected_version':integer(1),'name':string(160),'region':string(60),'favorite':boolean},['expected_version'])
+out('LibraryEntry',{'id':uid,'apartment_id':nullable_id,'name':string(160),'address':string(300),'region':string(60),'favorite':boolean,'version':integer(1),'private_record_count':integer(),'updated_at':dt})
+page('LibraryPage','LibraryEntry')
+obj('PrivateRecordCreate',{'value':string(32,minLength=1),'scope_label':string(100,minLength=1),'note':string(300)},['value','scope_label'])
+obj('PrivateRecordPatch',{'expected_version':integer(1),'value':string(32,minLength=1),'scope_label':string(100,minLength=1),'note':string(300)},['expected_version','value','scope_label'])
+out('PrivateRecord',{'id':uid,'entry_id':uid,'value':string(32),'scope_label':string(100),'note':string(300),'version':integer(1),'updated_at':dt})
+out('LibraryDetail',{'entry':ref('LibraryEntry'),'records':arr(ref('PrivateRecord'))})
+obj('PrivateShareInput',{'expected_version':integer(1),'source_attested':{'type':'boolean','enum':[True]}},['expected_version','source_attested'])
 def query(name,schema,required=False):return {'name':name,'in':'query','required':required,'schema':schema}
 def op(path,method,operation,summary,response='Ack',body=None,code=200,cap=None,list_query=False,queries=None,idem=False,internal=False,public=False,sensitive=False):
  params=[{'name':v,'in':'path','required':True,'schema':uid} for v in re.findall(r'{([^}]+)}',path)]
@@ -155,6 +166,15 @@ op('/v1/apartments/{apartment_id}/access-records','post','contributeAccess','有
 op('/v1/access-records/{record_id}/feedback','put','feedbackAccess','覆盖本人当前反馈且追加不可变事件','FeedbackResult','FeedbackInput',cap=['access.read'])
 op('/v1/access-records/{record_id}','delete','withdrawAccess','仅本人贡献或运营；停止正文展示')
 op('/v1/me/contributions','get','listMyContributions','本人贡献元数据，不含正文；查看密码仍需有效资格','ContributionSummaryPage',list_query=True)
+op('/v1/me/apartment-library','get','listMyApartmentLibrary','本人摘要，不含密码；私人地址按owner授权返回','LibraryPage',list_query=True,sensitive=True)
+op('/v1/me/apartment-library','post','createMyApartmentEntry','收藏已收录公寓或保存自填地址，二选一','LibraryEntry','LibraryCreate',code=201,idem=True,sensitive=True)
+op('/v1/me/apartment-library/{entry_id}','get','getMyApartmentEntry','仅owner揭示私人正文；不代表共享查看资格','LibraryDetail',sensitive=True)
+op('/v1/me/apartment-library/{entry_id}','patch','patchMyApartmentEntry','本人区域/名称/收藏，版本校验','LibraryEntry','LibraryPatch',idem=True,sensitive=True)
+op('/v1/me/apartment-library/{entry_id}','delete','deleteMyApartmentEntry','仅本人项及私存；不删除共享历史')
+op('/v1/me/apartment-library/{entry_id}/records','post','createMyPrivateRecord','仅私存，不产生共享贡献或有用票','PrivateRecord','PrivateRecordCreate',code=201,idem=True,sensitive=True)
+op('/v1/me/private-access-records/{private_record_id}','patch','patchMyPrivateRecord','本人修改不覆盖共享；旧版本409','PrivateRecord','PrivateRecordPatch',idem=True,sensitive=True)
+op('/v1/me/private-access-records/{private_record_id}','delete','deleteMyPrivateRecord','仅删除本人私存')
+op('/v1/me/private-access-records/{private_record_id}/share','post','shareMyPrivateRecord','owner和当前贡献能力；只共享码/门别，私人备注不共享','ContributionResult','PrivateShareInput',code=201,cap=['access.contribute'],idem=True)
 op('/v1/requests','get','listRequests','仅开放且未到期的可见需求','RequestPage',list_query=True,queries=[query('region_id',uid),query('query',string(200)),query('kind',enum('partial_route','whole_route','extra_drivers','vehicle_help','other_help'))])
 op('/v1/requests','post','createDraft','创建本人需求草稿','Request','RequestDraftInput',code=201,cap=['request.publish'],idem=True)
 op('/v1/requests/{request_id}','get','getRequest','草稿仅本人；终态保留供查看','Request')

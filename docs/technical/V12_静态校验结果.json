@@ -1,25 +1,33 @@
 {
-  "date": "2026-10-29",
+  "date": "2026-10-30",
   "baseline": "V12.1 temporary delivery support only",
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
-    "paths": 63,
-    "operations": 80,
-    "schemas": 91,
+    "paths": 68,
+    "operations": 89,
+    "schemas": 100,
     "spec_validation": "passed"
   },
   "sql": {
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0002": {
+      "top_level_parse": "passed",
+      "tables": [
+        "personal_apartments",
+        "personal_access_records"
+      ],
+      "database_execution": "see D1 HTTP/local DB verification record"
+    },
     "database_execution": "not_run",
     "plpgsql_do_blocks_compiled": "not_run",
     "postgis_and_role_integration": "not_run"
   },
   "page_spec": {
-    "nodes": 36,
-    "state_variants": 207,
+    "nodes": 40,
+    "state_variants": 259,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

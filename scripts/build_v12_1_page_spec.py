@@ -107,6 +107,15 @@ for p in pages:
   p['states']+=['贡献入口预选共享','私存入口预选私存','范围切换清除确认','资格不足不自动改私存']
   p['actions']=[{**a,'result':a['result'].replace('首次提交后固定范围','首次提交后固定入口确认范围')} for a in p['actions']]
 
+# D1 source contract is present for manual/private library; OCR/corrections remain pending.
+for p in pages:
+ if p['id']=='U06':
+  p['api_operations']=['listMyApartmentLibrary','getMyApartmentEntry','createMyApartmentEntry','createMyPrivateRecord','listMyContributions','readAccessRecords']
+  p['api_contract_status']='私存/收藏与手动共享契约已生成；OCR批次、纠正和统计仍待扩展'
+ if p['id']=='U09':
+  p['api_operations']=['getMyApartmentEntry','patchMyApartmentEntry','deleteMyApartmentEntry','createMyPrivateRecord','patchMyPrivateRecord','deleteMyPrivateRecord','shareMyPrivateRecord','readAccessRecords']
+  p['api_contract_status']='本人记录/收藏/主动共享契约已生成；未知公寓共享提议、纠正、统计仍待后续任务'
+
 outdir=ROOT/'docs/product'
 outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'

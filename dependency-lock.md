@@ -35,3 +35,5 @@ D1账号接口：jose6.2.14、zod4.6.7、@types/express5.0.6。契约包使用di
 D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-crypto58.0.7、react-native-url-polyfill4.0.0、libphonenumber-js1.13.15，均固定直接版本。原生模块新增后已重新prebuild、更新并审查Podfile.lock；双平台原生Debug编译通过。SecureStore使用设备安全存储，无明文回退；Web只用内存。SDK2.118.0已内置会话刷新协调，移除其已弃用的processLock选项。Prettier3.9.10仅用于开发格式化。类型路由在mobile typecheck前通过Expo官方customize命令生成；不提交生成缓存。
 
 区域配置决策（2026-10-30）：用户实际创建AbasongDevWest于us-west-1（北加州）。本地配置已切换，未来API/worker/KMS计划同区；此前us-west-2为部署草案，未创建资源。旧美东项目保留，不将更换项目URL描述为原项目数据迁移。
+
+2026-10-30 D1 private data: no new runtime packages. Local envelope uses Node24 built-in crypto (AES-256-GCM, HKDF, HMAC), zod/pg/Nest already locked. Test provider uses existing jose/pg; schema validation reuses isolated /private/tmp/abasong-v12-validation dependencies. No KMS/OCR dependency selected or installed; local adapter cannot be enabled in production. Dedicated local DB credential/KEK stays ignored0600.

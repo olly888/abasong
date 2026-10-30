@@ -39,6 +39,7 @@
     "jose": "6.2.14",
     "openapi-typescript": "7.13.0",
     "pg": "8.23.1",
+    "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.1",

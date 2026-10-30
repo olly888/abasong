@@ -126,6 +126,8 @@ PODS:
     - Yoga
   - ExpoAsset (58.0.19):
     - ExpoModulesCore
+  - ExpoCrypto (58.0.7):
+    - ExpoModulesCore
   - ExpoDomWebView (58.0.2):
     - ExpoModulesCore
   - ExpoFileSystem (58.0.13):
@@ -181,6 +183,8 @@ PODS:
   - ExpoRouter (58.0.28):
     - ExpoModulesCore
     - RNScreens
+  - ExpoSecureStore (58.0.2):
+    - ExpoModulesCore
   - ExpoStatusBar (58.0.4):
     - ExpoModulesCore
   - EXUpdatesInterface (58.0.1):
@@ -2320,12 +2324,13 @@ DEPENDENCIES:
   - "EXConstants (from `../../../node_modules/.pnpm/expo-constants@58.0.14_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88_11394ecafcbdfa499a338a08212000aa/node_modules/expo-constants/ios`)"
   - "EXJSONUtils (from `../../../node_modules/.pnpm/expo-json-utils@58.0.1/node_modules/expo-json-utils/ios`)"
   - "EXManifests (from `../../../node_modules/.pnpm/expo-manifests@58.0.1_expo@58.0.21/node_modules/expo-manifests/ios`)"
-  - "Expo (from `../../../node_modules/.pnpm/expo@58.0.21_@babel+core@7.29.7_@expo+metro-runtime@58.0.15_expo-router@58.0.28_react-d_69b89e1e660b6e529b55b2f2456d4386/node_modules/expo`)"
+  - "Expo (from `../../../node_modules/.pnpm/expo@58.0.21_@babel+core@7.29.7_@expo+metro-runtime@58.0.15_expo-router@58.0.28_react-d_f65eba65929169a5a571ce2c16162956/node_modules/expo`)"
   - "expo-dev-client (from `../../../node_modules/.pnpm/expo-dev-client@58.0.17_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.8_0a36854e7875c6434b28af9cc70cc165/node_modules/expo-dev-client/ios`)"
   - "expo-dev-launcher (from `../../../node_modules/.pnpm/expo-dev-launcher@58.0.17_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0_36ce8ac8a858f8084ee615cd445c601a/node_modules/expo-dev-launcher`)"
   - "expo-dev-menu (from `../../../node_modules/.pnpm/expo-dev-menu@58.0.12_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._eb7beae99f123e52ba350a1315beccc9/node_modules/expo-dev-menu`)"
   - "expo-dev-menu-interface (from `../../../node_modules/.pnpm/expo-dev-menu-interface@58.0.1_expo@58.0.21/node_modules/expo-dev-menu-interface/ios`)"
   - "ExpoAsset (from `../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios`)"
+  - "ExpoCrypto (from `../../../node_modules/.pnpm/expo-crypto@58.0.7_expo@58.0.21/node_modules/expo-crypto/ios`)"
   - "ExpoDomWebView (from `../../../node_modules/.pnpm/@expo+dom-webview@58.0.2_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._a76539e429313ec048a33d27eca11ecc/node_modules/@expo/dom-webview/ios`)"
   - "ExpoFileSystem (from `../../../node_modules/.pnpm/expo-file-system@58.0.13_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._f2f9e22a94091a38903293dfa24f5a53/node_modules/expo-file-system/ios/ExpoFileSystem.podspec`)"
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@58.0.11_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@t_c53e7a5a646855000d7995236157f54f/node_modules/expo-font/ios/ExpoFont.podspec`)"
@@ -2338,7 +2343,8 @@ DEPENDENCIES:
   - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-jsi@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@types+react@19.3.0_react@19.3.0_/node_modules/expo-modules-jsi/apple`)"
   - "ExpoModulesWorklets (from `../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core/ExpoModulesWorklets.podspec`)"
   - "ExpoModulesWorkletsAdapter (from `../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core`)"
-  - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@58.0.28_11152156afa44d0862b1237519ea1132/node_modules/expo-router/ios`)"
+  - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@58.0.28_94fcba7eb4ef80f13c3b1ff581a21a5e/node_modules/expo-router/ios`)"
+  - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@58.0.2_expo@58.0.21/node_modules/expo-secure-store/ios`)"
   - "ExpoStatusBar (from `../../../node_modules/.pnpm/expo-status-bar@58.0.4_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88_94ddf64fe8aa69d973a611e07cfbf4a5/node_modules/expo-status-bar/ios`)"
   - "EXUpdatesInterface (from `../../../node_modules/.pnpm/expo-updates-interface@58.0.1_expo@58.0.21/node_modules/expo-updates-interface/ios`)"
   - fast_float (from `build/rndeps-facades/fast_float`)
@@ -2453,7 +2459,7 @@ EXTERNAL SOURCES:
   EXManifests:
     :path: "../../../node_modules/.pnpm/expo-manifests@58.0.1_expo@58.0.21/node_modules/expo-manifests/ios"
   Expo:
-    :path: "../../../node_modules/.pnpm/expo@58.0.21_@babel+core@7.29.7_@expo+metro-runtime@58.0.15_expo-router@58.0.28_react-d_69b89e1e660b6e529b55b2f2456d4386/node_modules/expo"
+    :path: "../../../node_modules/.pnpm/expo@58.0.21_@babel+core@7.29.7_@expo+metro-runtime@58.0.15_expo-router@58.0.28_react-d_f65eba65929169a5a571ce2c16162956/node_modules/expo"
   expo-dev-client:
     :path: "../../../node_modules/.pnpm/expo-dev-client@58.0.17_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.8_0a36854e7875c6434b28af9cc70cc165/node_modules/expo-dev-client/ios"
   expo-dev-launcher:
@@ -2464,6 +2470,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-dev-menu-interface@58.0.1_expo@58.0.21/node_modules/expo-dev-menu-interface/ios"
   ExpoAsset:
     :path: "../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios"
+  ExpoCrypto:
+    :path: "../../../node_modules/.pnpm/expo-crypto@58.0.7_expo@58.0.21/node_modules/expo-crypto/ios"
   ExpoDomWebView:
     :path: "../../../node_modules/.pnpm/@expo+dom-webview@58.0.2_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._a76539e429313ec048a33d27eca11ecc/node_modules/@expo/dom-webview/ios"
   ExpoFileSystem:
@@ -2489,7 +2497,9 @@ EXTERNAL SOURCES:
   ExpoModulesWorkletsAdapter:
     :path: "../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core"
   ExpoRouter:
-    :path: "../../../node_modules/.pnpm/expo-router@58.0.28_11152156afa44d0862b1237519ea1132/node_modules/expo-router/ios"
+    :path: "../../../node_modules/.pnpm/expo-router@58.0.28_94fcba7eb4ef80f13c3b1ff581a21a5e/node_modules/expo-router/ios"
+  ExpoSecureStore:
+    :path: "../../../node_modules/.pnpm/expo-secure-store@58.0.2_expo@58.0.21/node_modules/expo-secure-store/ios"
   ExpoStatusBar:
     :path: "../../../node_modules/.pnpm/expo-status-bar@58.0.4_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88_94ddf64fe8aa69d973a611e07cfbf4a5/node_modules/expo-status-bar/ios"
   EXUpdatesInterface:
@@ -2690,6 +2700,7 @@ SPEC CHECKSUMS:
   expo-dev-menu: 6b2030d709633f4b0aa58bfeca54b612235e5a4c
   expo-dev-menu-interface: d304e400271187edf1534704a4a05dcc140076e2
   ExpoAsset: 9c966d4d2c67a13de7d449561558f782df1c1787
+  ExpoCrypto: 33ede543a3747abbef071c3bd747135ccc4e4fd5
   ExpoDomWebView: b2a6d681b9d34c23b1f584321386ca8da1d36afb
   ExpoFileSystem: b619d80b490c53117a9a9c976021a4ce5a9da440
   ExpoFont: 77eaad26c6a7ef6be8d431963358def09d8e3a73
@@ -2703,6 +2714,7 @@ SPEC CHECKSUMS:
   ExpoModulesWorklets: e010ffcda2ad799980848396501c9cd2bea18ef5
   ExpoModulesWorkletsAdapter: d640ace42f91ccef5346d01d45a1650a9401c131
   ExpoRouter: f9bcec9be9c8faf06cac2c5fb3b00fc570f9491b
+  ExpoSecureStore: 64e1fe78b5b0a1edb61beff044bb2cad03084f9c
   ExpoStatusBar: 56aa9746e1bee4d8adbab12f4d7efc97000ac49f
   EXUpdatesInterface: 1c6a522d0eb0485f4de3fa55d0316288763b3f10
   fast_float: 7c925d1cebf8328d4018d061f49377e9f887e3b4

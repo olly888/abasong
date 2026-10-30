@@ -8,6 +8,8 @@
 
 [D0实际验证记录](technical/D0_工程验证记录.md)、[工程状态](../DEVELOPMENT_STATUS.md)、[本地启动](../README.md)、[依赖锁定](../dependency-lock.md)。已有本地工程与数据库执行证据，原生地图及双平台验收限制见记录。
 
+当前身份/账号验证见[接口记录](technical/D1_身份与账号接口验证.md)，原生接入与待验收项见[登录记录](technical/D1_原生登录接入记录.md)。
+
 ## 产品与页面
 
 - [PRD V12](../Abasong_PRD_V12_首版产品需求.md)

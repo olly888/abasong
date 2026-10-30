@@ -23,7 +23,7 @@ Approved inputs: V12.1 requirement supplement/page specification, V3 tokens and 
 - Mapbox: user supplied a public token; stored in ignored apps/mobile/.env.local with mode600. Official style access verification passed without echoing token. Native map rendering passed on both simulators; foreground location/address matching remain D1 work.
 - Android: user personally read/accepted the SDK terms and authorized installation on 2026-10-29. OpenJDK17, SDK37.0, Build Tools37, NDK27.1, CMake3.22.1 and a dedicated ARM64 emulator are installed. Gradle9.4.1 runs; native build/install/start and basemap rendering passed via scripts/android. Physical-device validation remains later.
 - iOS: full navigation interactions, real iPhone validation and actual map behavior still belong to D1/device acceptance.
-- Supabase/Auth, KMS/AWS, SMS, signing/store accounts and real data are not provisioned. No cloud DDL, real SMS, paid account creation or production deployment performed.
+- Supabase/Auth development project is available (us-east-1); public client and issuer settings configured locally. Phone provider remains disabled. KMS/AWS, SMS provider, store signing accounts and real business data are not provisioned. No cloud DDL, real SMS, paid account creation or production deployment performed.
 
 ## Continue from here
 
@@ -44,3 +44,7 @@ Native shared Metro configured at localhost8081; iPhone18Pro/iOS27.0 and Android
 ## D1 identity/account batch
 
 POST /v1/me/bootstrap and GET /v1/me implemented with strict JWT/JWKS validation, current account/capability checks, private DTOs, request IDs, idempotent transactions and no-store errors. Fifty-four real HTTP scenarios passed using ephemeral signing keys and an isolated disposable local DB. Existing smoke and 16 ranking tests passed. User Supabase project metadata/JWKS/public settings inspected read-only: healthy, us-east-1, ES256; phone login disabled. Public client settings saved locally; no cloud schema/auth mutation, real users or SMS. Real mobile/Supabase login remains unverified. See [identity verification record](docs/technical/D1_身份与账号接口验证.md).
+
+## D1 native login batch
+
+Phone/OTP/display-name routes and real account states implemented outside three-tab navigation. Native sessions use SecureStore with no plaintext fallback; browser sessions use memory only. Account requests are identity-bound, bounded and refresh once; logout clears personal state and blocks refresh-event races. Complete workspace checks (3 unit tests) and 54 HTTP auth scenarios passed again. Both native Debug builds/install passed; iOS unsigned build exposed a Keychain entitlement issue, resolved by rebuilding/installing with standard simulator local signing; cold launch no longer reports storage read errors. Real session persistence remains unverified. Mac lock prevents UI navigation checks. SMS provider remains disabled; actual OTP/session persistence and full D1 are unverified. See [native login record](docs/technical/D1_原生登录接入记录.md). Metro8081 and API3001 are running locally for preview.

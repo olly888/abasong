@@ -31,3 +31,5 @@ Android工具链已于后续补齐：OpenJDK17.0.21.0.3、Gradle9.4.1、Platform
 实时预览补充：react-native-web0.21.4（Expo兼容版本），Web预览独立包使用mapbox-gl3.34.1；与原生RNMapbox的可选Web peer隔离，原生地图实现保持不变。scrcpy5.0.1用于Android实时画面。共享包类型入口指向源文件，使全新检出在生成dist之前也能做类型检查。
 
 D1账号接口：jose6.2.14、zod4.6.7、@types/express5.0.6。契约包使用dist声明入口，根typecheck先构建契约。Node24实际执行ESM jose验证通过；没有自行实现JWT密码学。
+
+D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-crypto58.0.7、react-native-url-polyfill4.0.0、libphonenumber-js1.13.15，均固定直接版本。原生模块新增后已重新prebuild、更新并审查Podfile.lock；双平台原生Debug编译通过。SecureStore使用设备安全存储，无明文回退；Web只用内存。SDK2.118.0已内置会话刷新协调，移除其已弃用的processLock选项。Prettier3.9.10仅用于开发格式化。类型路由在mobile typecheck前通过Expo官方customize命令生成；不提交生成缓存。

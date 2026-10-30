@@ -2,9 +2,9 @@
   "version": "V12.1-screenshot-extension",
   "date": "2026-10-30",
   "prototype": "index.html",
-  "design_nodes": 39,
-  "route_or_page_views": 35,
-  "spec_state_variants": 237,
+  "design_nodes": 40,
+  "route_or_page_views": 36,
+  "spec_state_variants": 251,
   "all_state_variants_verified": false,
   "real_services_connected": false,
   "nodes": [
@@ -206,7 +206,7 @@
     },
     {
       "id": "U06",
-      "name": "我的贡献",
+      "name": "我的公寓",
       "implementation": "local_interactive_prototype",
       "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
       "state_coverage": "partial; see acceptance record"
@@ -280,6 +280,13 @@
       "implementation": "local_synthetic_interactive_prototype",
       "acceptance": "pending_user_review",
       "state_coverage": "partial; see screenshot acceptance record"
+    },
+    {
+      "id": "U09",
+      "name": "公寓详情与我的记录",
+      "implementation": "local_synthetic_interactive_prototype",
+      "acceptance": "pending_user_review",
+      "state_coverage": "partial"
     }
   ],
   "baseline_accepted_for_development": false,
@@ -289,5 +296,6 @@
     "scope": "认可当前原型作为开发参考，不表示207状态全部验收"
   },
   "extension_acceptance": "pending_user_review",
-  "real_ocr_implemented": false
+  "real_ocr_implemented": false,
+  "personal_library_implementation": "synthetic_memory_only"
 }

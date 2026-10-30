@@ -63,6 +63,28 @@ for p in pages:
   p['api_contract_status']='待T27扩展OpenAPI与生成器；尚无已冻结operationId'
   p['prototype_status']='待制作'
 
+# 2026-10-30 approved personal-apartment library and explicit sharing.
+for p in pages:
+ if p['id']=='U01':
+  p['information']=[x for x in p['information'] if x!='贡献公寓资料']
+  p['information']=[x.replace('我的发布/报名/贡献','我的发布/报名/我的公寓') for x in p['information']]
+  p['actions']=[x for x in p['actions'] if x['label']!='贡献公寓资料']
+  for a in p['actions']:
+   if a['label']=='我的贡献':a.update(label='我的公寓',target='U06',result='统一进入我保存的/我共享的及添加资料')
+ if p['id']=='U06':
+  p.update(name='我的公寓',surface='二级页；我保存的/我共享的分栏',entry='U01唯一入口、H01收藏、B06保存结果',information=['我保存的/我共享的','私人区域筛选与收藏公寓','共享贡献状态/时间及必要反馈汇总','截图添加/手动添加','本人导入批次与继续处理'],actions=[dict(label='打开保存的公寓',target='U09',result='私人记录和当前共享资料分开读取'),dict(label='截图添加',target='B04',result='默认仅自己保存，可显式同时共享'),dict(label='手动添加',target='U09',result='本人私存；未收录地址也可保存'),dict(label='纠正共享密码',target='U06',result='新增或合并正确记录，保留原事件/他人反馈'),dict(label='继续导入',target='B06',result='恢复本人批次并重校权限')],states=['未登录','我保存的','区域无结果','我共享的','无共享记录','资格过期仍可看本人元数据','导入处理中','部分成功待继续','共享纠正','统计暂无数据','撤回本人贡献','删除私存确认'])
+  p['api_contract_status']='T27/T32–T35待扩展；现有贡献接口仅覆盖旧功能'
+ if p['id']=='B05':
+  p['information'][-2:]=['保存范围：仅自己保存（默认）/同时共享','核对资料与必要来源确认','保存N条或保存并共享N条']
+  p['states']+=['仅自己保存','主动共享确认']
+  for a in p['actions']:
+   if a['label']=='确认提交N条':a.update(label='保存所选N条',result='分开记录私存与共享结果，首次提交后固定范围；重试不自动扩大共享')
+ if p['id']=='B06':p['information'][1]='私存/共享/同码/待审核/待处理/失败独立计数'
+ if p['id']=='H01':p['actions'].append(dict(label='收藏公寓',target='U09',result='保存公寓ID引用，不复制共享密码为永久快照'))
+ if p['id'] in ['H01','U01','U06','B04','B05','B06']:p['requirements'].append('ADD-07')
+page('U09','公寓详情与我的记录','二级页；私存与共享两个分区','U06保存公寓、H01收藏','地址与自定区域|我的记录：仅自己可见|共享资料：按当前资格读最新|添加/修改/删除私存|主动共享与地图入口','修改私存::U09::只改本人记录，不覆盖共享库|共享这条::U06::确认范围后复用正式贡献链路，私人备注不共享|设置区域::U09::维护本人区域标签|移除本人公寓::G03::确认私人范围，不删除公共记录|在地图查看::H01::选择该公寓后读当前资料','收藏无私存|有私人记录|共享资料可读|共享资格待审核|未收录公寓私存|编辑与删除|主动共享确认|私存/共享分别失败','', 'ADD-07','收藏关联公寓ID；本人私存和共享资格分离；不展示他人私存，修改私存不隐式修改共享。')
+pages[-1]['api_contract_status']='T27/T32–T35待扩展私存/收藏/共享/纠正/统计接口'
+
 outdir=ROOT/'docs/product'
 outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'
@@ -78,14 +100,14 @@ for p in pages:
   p['requirements'].append('ADD-06')
   p['pending_extension']='截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能'
 for p in pages:
- if p['id'] in ['B04','B05','B06'] and p['id'] in extension_made:
+ if p['id'] in ['B04','B05','B06','U09'] and p['id'] in extension_made:
   p['prototype_status']='已制作本地合成交互·待用户评审；非真实OCR'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-30','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06合成交互待评审，接口待扩展','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']
  w=csv.DictWriter(f,fieldnames=fields,lineterminator="\n");w.writeheader()
  for p in pages:
-  batch='01-公寓闭环' if p['id'] in ['A02','A03','A04','H01','S01','L01','B01','B02','B04','B05','B06','G01','G03'] else '02-找人找活' if p['id'] in ['H02','H03','P01','P03','P04','D01','P08','P09','P10','D02','U03','G02','X01'] else '03-消息与常联系' if p['id'] in ['M01','M02','U08'] else '04-社区与我的'
+  batch='01-公寓闭环' if p['id'] in ['A02','A03','A04','H01','S01','L01','B01','B02','B04','B05','B06','U06','U09','G01','G03'] else '02-找人找活' if p['id'] in ['H02','H03','P01','P03','P04','D01','P08','P09','P10','D02','U03','G02','X01'] else '03-消息与常联系' if p['id'] in ['M01','M02','U08'] else '04-社区与我的'
   w.writerow(dict(id=p['id'],name=p['name'],surface=p['surface'],batch=batch,state_count=len(p['states']),api_operations=','.join(p['api_operations']),status=p['prototype_status']))
 lines=['# Abasong V12.1 页面功能、信息与交互规格','', '日期：2026-10-30。状态：含截图P0扩展；新节点合成交互已制作待评审，接口待扩展，不代表原生/OCR已实现。产品依据：[V12 PRD](../../Abasong_PRD_V12_首版产品需求.md)及[V12.1补充决策](../Abasong_V12.1_需求补充与原型决策.md)。颜色/组件依据：[V3设计系统](../design/Abasong_设计系统_V3_原型制作基线.md)。', '', '## 1. 全局规则','', '产品只做临时配送支援与灵活运力协作，不设置长期招聘/司机招募流程。根导航固定首页/司机圈/我的；公寓/找活/找人为同一首页路由的状态。二级页面和公共面板可暂时隐藏导航，返回恢复来源视图、选中对象、筛选与滚动。登录后回到发起动作前的对象，但重新读取当前条件，不自动提交过期报名。', '', '每个界面只保留必要信息和一项当前主动作；空/错误/审核/来源/地图归属属于必要状态，设计说明、策略备注、合成数据说明留在原型外壳，不能成为产品首页常驻文案。', '', '普通草稿可保留；手动密码/进入信息明文只在编辑会话内存保留，不写通用持久草稿。截图批次另采用本人专属、有限保留的服务端加密草稿，详见[截图补充](Abasong_V12.1_截图批量贡献需求补充.md)。用户切账号、退出或资格被撤销后清理敏感缓存。需求、私聊、进入资料各自鉴权，不因显示同一地图就共享访问权。', '', '菜单按对象权限显示：发布者管理自己的需求，报名者管理自己的报名；司机与DSP不切换客户端或导航。当前没有支付、交接履约、司机排名、会员密码付费墙。', '', '原型使用合成资料和模拟请求；每个状态应可在原型外的场景控制中触发。开发说明/测试开关不出现在产品画面。', '', '## 2. 页面总览','', '| ID | 名称 | 载体 | 状态数 |','|---|---|---|---|']
 for p in pages: lines.append(f"| {p['id']} | {p['name']} | {p['surface']} | {len(p['states'])} |")
@@ -95,6 +117,6 @@ for p in pages:
  lines+=['','| 元素/动作 | 目标 | 操作结果 |','|---|---|---|']+[f"| {a['label']} | {a['target']} | {a['result']} |" for a in p['actions']]
  lines+=['', '**必须制作的状态：** '+'；'.join(p['states'])+'。','', '**接口 operationId：** '+(p['api_contract_status'] if p.get('api_contract_status') else '、'.join(p['api_operations']) if p['api_operations'] else 'Auth SDK或纯客户端/来源动作；不新建无业务价值的接口')+'。', '', '**验收：** '+p['acceptance'], '', '**需求映射：** '+ '、'.join(p['requirements'])+'。','']
  if p.get('pending_extension'): lines += ['**截图扩展：** '+p['pending_extension'],'']
-lines+=['## 4. 制作与变更规则','', '本次39个节点包含新增B04/B05/B06；原36节点原型保留历史，不等于39条原生独立路由，也不是所有状态各复制一页。原有V1.1的B03/P02/P06/P07/C05/M03/U07/U12–U14在本版合并；C04生活专用表单/U09综合收藏/完整组织成员管理继续后置。', '', '每个动作目标必须能到达，空白按钮不得伪装完成。接口由openapi-v12.yaml提供，operationId在目录中可机器检查；该文件保留名称，版本升为12.1。新增功能需更新补充决策→页面目录→接口/数据→原型与验收，不在画稿时临时加业务。', '', '后续先做公寓完整闭环，再做找人找活/分享，再做消息与常联系，最后补最小社区/我的；所有批次遵循同一套品牌和组件，不把多个历史版本混在同一原型。']
+lines+=['## 4. 制作与变更规则','', '本次40个节点包含B04/B05/B06及重新定义的公寓U09；原36节点原型保留历史，不等于40条原生独立路由，也不是所有状态各复制一页。原有V1.1的B03/P02/P06/P07/C05/M03/U07/U12–U14在本版合并；C04生活专用表单/非公寓综合收藏/完整组织成员管理继续后置；U09仅做公寓私存工具。', '', '每个动作目标必须能到达，空白按钮不得伪装完成。接口由openapi-v12.yaml提供，operationId在目录中可机器检查；该文件保留名称，版本升为12.1。新增功能需更新补充决策→页面目录→接口/数据→原型与验收，不在画稿时临时加业务。', '', '后续先做公寓完整闭环，再做找人找活/分享，再做消息与常联系，最后补最小社区/我的；所有批次遵循同一套品牌和组件，不把多个历史版本混在同一原型。']
 (outdir/'Abasong_V12.1_页面功能信息与交互规格.md').write_text('\n'.join(lines)+'\n')
 print(f'{len(pages)} design nodes; {sum(len(p["states"]) for p in pages)} required state variants')

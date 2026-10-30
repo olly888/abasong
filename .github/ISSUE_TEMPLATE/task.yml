@@ -1,0 +1,28 @@
+name: 开发任务
+description: 按总计划记录实现、测试及验收
+title: "[任务] "
+labels: ["type:task"]
+body:
+  - type: textarea
+    id: scope
+    attributes:
+      label: 目标与范围
+      description: 关联T任务、D阶段、页面与接口；列出本批排除项。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 可验证的结果，不把原型或静态检查当作端到端完成。
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: 测试与证据
+      description: 命令、环境、提交、通过/失败/未测项。不要填写密码、验证码、精确位置或私密正文。
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 前置与外部依赖

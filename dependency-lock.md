@@ -37,3 +37,5 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 区域配置决策（2026-10-30）：用户实际创建AbasongDevWest于us-west-1（北加州）。本地配置已切换，未来API/worker/KMS计划同区；此前us-west-2为部署草案，未创建资源。旧美东项目保留，不将更换项目URL描述为原项目数据迁移。
 
 2026-10-30 D1 private data: no new runtime packages. Local envelope uses Node24 built-in crypto (AES-256-GCM, HKDF, HMAC), zod/pg/Nest already locked. Test provider uses existing jose/pg; schema validation reuses isolated /private/tmp/abasong-v12-validation dependencies. No KMS/OCR dependency selected or installed; local adapter cannot be enabled in production. Dedicated local DB credential/KEK stays ignored0600.
+
+2026-10-30 GitHub history audit: Gitleaks v8.30.1 official vendor binary, release checksum verified, installed only in ignored .tooling/security. CI installer pins this version and checks vendor SHA256 before extraction. Apple Vision and existing pdftotext used offline for28 visual/PDF history versions. No new application dependencies or package-lock changes.

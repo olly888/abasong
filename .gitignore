@@ -23,3 +23,5 @@ artifacts/
 .gstack/
 
 .gstack/
+__pycache__/
+*.py[cod]

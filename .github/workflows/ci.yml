@@ -4,8 +4,26 @@ on:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: engineering-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
+  secrets:
+    name: Secret history scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+      - run: node scripts/security/install-gitleaks.mjs
+      - run: .tooling/security/gitleaks git . --log-opts="--all" --redact=100 --ignore-gitleaks-allow --no-banner
   verify:
+    name: Engineering verification
+    needs: secrets
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

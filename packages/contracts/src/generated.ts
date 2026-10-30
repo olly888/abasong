@@ -134,7 +134,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 仅本次位置匹配，不留个人轨迹 */
+        /** 仅本次位置候选，不留个人轨迹；T23现场阈值验收前不自动认定公寓 */
         post: operations["resolveApartment"];
         delete?: never;
         options?: never;

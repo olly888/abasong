@@ -636,7 +636,7 @@ paths:
   /v1/apartments/resolve:
     post:
       operationId: resolveApartment
-      summary: 仅本次位置匹配，不留个人轨迹
+      summary: 仅本次位置候选，不留个人轨迹；T23现场阈值验收前不自动认定公寓
       tags:
       - apartments
       responses:
@@ -7159,6 +7159,7 @@ components:
         accuracy_m:
           type: number
           minimum: 0
+          maximum: 100000
         accuracy_permission:
           type: string
           enum:

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { router } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import HomeMap from "../../components/HomeMap";
+import { HomeApartments } from "../../apartments/HomeApartments";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 const modes = ["公寓", "找活", "找人"] as const;
@@ -25,29 +25,21 @@ export default function Home() {
           </Pressable>
         ))}
       </View>
-      <View style={styles.map}>
-        <HomeMap />
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.heading}>
-          {mode === "公寓"
-            ? "附近公寓"
-            : mode === "找活"
-              ? "附近临时支援"
-              : "附近可用司机"}
-        </Text>
-        {mode === "公寓" ? (
-          <Pressable
-            accessibilityRole="button"
-            style={styles.search}
-            onPress={() => router.push("/apartments")}
-          >
-            <Text style={styles.searchLabel}>搜索公寓或地址</Text>
-          </Pressable>
-        ) : (
-          <Text style={styles.secondary}>暂无信息</Text>
-        )}
-      </View>
+      {mode === "公寓" ? (
+        <HomeApartments />
+      ) : (
+        <>
+          <View style={styles.map}>
+            <HomeMap />
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.heading}>
+              {mode === "找活" ? "附近临时支援" : "附近可用司机"}
+            </Text>
+            <Text style={styles.secondary}>暂无信息</Text>
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 }

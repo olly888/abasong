@@ -1,16 +1,16 @@
 # Abasong development status
 
-Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-apartment`.
+Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-location`.
 
 ## Current snapshot — 2026-10-30
 
-Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Latest implementation: `a3b5a51`.
+Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Prior business baseline: `a3b5a51`; latest D1 location/native slice is on `codex/d1-location` (evidence below).
 
 - Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API.
-- Verified: local0001/0002 migrations (47 tables),59 business/DB checks,54 Auth checks,16 ranking scenarios,6 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
-- Not yet accepted: real-account native CRUD on both platforms, complete map/location/card flow, screenshot/OCR/batch backend/native flow, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
+- Verified: local0001/0002 migrations (47 tables),74 business/DB+location checks,54 Auth checks,16 ranking scenarios,6 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
+- Not yet accepted: full real-account native lifecycle/qualification scenarios, authorized-sample map/location/card acceptance, screenshot/OCR/batch backend/native flow, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
 - SMS: user identified airplane mode as cause of non-receipt; do not change providers. Actual retry/login/CRUD still needs observed confirmation.
-- Next: D1.1 actual native account acceptance; D1.2 minimum review/map/correction flow; D1.3 screenshot samples/contract/provider design then D1.4 actual screenshot contribution. Private-library polish must not postpone screenshotP0.
+- Next: D1.1 native private CRUD now observed on both platforms (remaining scenarios below); D1.2 minimum review/correction and authorized map sample acceptance; D1.3 screenshot samples/contract/provider design then D1.4 actual screenshot contribution. Private-library polish must not postpone screenshotP0.
 
 The sections below retain historical execution notes. Older statements about missing providers/tables/interfaces describe their recorded point in time; this snapshot and the latest specific evidence govern current status.
 
@@ -138,3 +138,9 @@ GitHub initial structure verified: private repo https://github.com/olly888/abaso
 User explicitly changed visibility decision to PUBLIC after private branch protection was unavailable. Rechecked history/current local credential matches (zero unresolved), changed repository visibility through normalCLI and independently confirmedpublic. Project#1 staysprivate. main protection now successfully enforced for admins: Secret history scan + Engineering verification, strict, no force/delete, conversation resolution. First remoteCI41127260516 completedSUCCESS, including full engineering/database/Auth/library/ranking/smoke/iOS+AndroidJS exports. No production rollout implied. Final metadata/helper encoding fix to use PR flow under protection; private board screenshot moved to ignored local evidence.
 
 GitHub PR trigger verification: configuration PR#36 opened and reopened normally, but no pull_request Actions run appeared; first green run was workflow_dispatch, not proof of automatic triggering. Required checks correctly block merging while absent. Dispatched the actual PR branch for verification; keep protection enabled and investigate event triggering separately. Do not claim automatic PR/push CI verified until an event-based run is observed.
+
+## D1 location candidate / native home slice
+
+2026-10-30: Implemented read-only authenticated POST apartment resolve using active self-owned data/PostGIS and required versioned configuration; no GPS/history writes, no secret in DTO, no automatic matched building until T23 field acceptance. Native home has foreground one-shot location, candidate pins/selection, collapsed/expanded code card, top add, in-card feedback and expanded bookmark. Explicit selection/request generations prevent late-location overwrite; blur/background/auth change unmount sensitive state. Web map stays baseline only. No new dependencies/schema/cloud config. Added source-only Vitest discovery to fix compiled CJS test rediscovery on repeat checks.
+
+Executed: full check (6 unit tests),74 HTTP/PG library+resolve checks,54 Auth checks,16 ranking cases,47-table db verification,service smoke and dual native JS export passed. Existing dev builds show new home. User confirmed both platforms logged in; iOS private synthetic create/read/edit/remove passed, Android create/read/edit/remove passed; iOS refresh saw Android-created synthetic private record for same account. Both synthetic entries removed through App and both refreshed lists empty; iOS simulator location permission reset to pre-test undecided, no grant. Pending qualification preserved; no shared submission or OTP/credential extraction. Native multi-candidate/code/feedback needs authorized sample+config, continuous foreground updates and physical devices unverified. See docs/technical/D1_定位候选与原生首页验证.md.

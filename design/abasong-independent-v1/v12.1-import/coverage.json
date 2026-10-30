@@ -1,10 +1,10 @@
 {
-  "version": "V12.1-screenshot-extension",
+  "version": "V12.1-contribution-first-extension",
   "date": "2026-10-30",
   "prototype": "index.html",
   "design_nodes": 40,
   "route_or_page_views": 36,
-  "spec_state_variants": 251,
+  "spec_state_variants": 259,
   "all_state_variants_verified": false,
   "real_services_connected": false,
   "nodes": [

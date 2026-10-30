@@ -85,6 +85,28 @@ for p in pages:
 page('U09','公寓详情与我的记录','二级页；私存与共享两个分区','U06保存公寓、H01收藏','地址与自定区域|我的记录：仅自己可见|共享资料：按当前资格读最新|添加/修改/删除私存|主动共享与地图入口','修改私存::U09::只改本人记录，不覆盖共享库|共享这条::U06::确认范围后复用正式贡献链路，私人备注不共享|设置区域::U09::维护本人区域标签|移除本人公寓::G03::确认私人范围，不删除公共记录|在地图查看::H01::选择该公寓后读当前资料','收藏无私存|有私人记录|共享资料可读|共享资格待审核|未收录公寓私存|编辑与删除|主动共享确认|私存/共享分别失败','', 'ADD-07','收藏关联公寓ID；本人私存和共享资格分离；不展示他人私存，修改私存不隐式修改共享。')
 pages[-1]['api_contract_status']='T27/T32–T35待扩展私存/收藏/共享/纠正/统计接口'
 
+# Latest contribution-first entry hierarchy; no extra route required.
+for p in pages:
+ if p['id'] in ('H01','U01','U06','B02','B04','B05'):
+  p['requirements'].append('ADD-08')
+ if p['id']=='H01':
+  p['information']+=['无密码卡片直接添加；展开添加位于地址下方/历史上方','展开地址旁收藏图标；收起不显示收藏或我的公寓文字']
+  p['states']+=['无共享密码直接添加','展开添加前置与收藏图标']
+ if p['id']=='U01':
+  p['information'].insert(0,'主要操作：贡献公寓密码；次级管理：我的公寓')
+  p['actions'].insert(0,dict(label='贡献公寓密码',target='B04',result='选择截图识别或快速填写；填写复用B02并先核对公寓'))
+ if p['id']=='U06':
+  p['information']+=['卡片直显一条密码/门别及另有N条，标明私人或共享来源']
+  p['states']+=['列表直读本人私存','收藏共享资格变化']
+  for a in p['actions']:
+   if a['label']=='截图添加':a.update(label='导入私存',result='仅自己保存预选；贡献入口另走明确共享')
+ if p['id']=='B02':p['information']+=['已选公寓自动带入；通用填写先核对公寓','来源声明与确认共享按钮']
+ if p['id']=='B04':p['information']+=['贡献/私存入口意图传递，未提交不自动公开']
+ if p['id']=='B05':
+  p['information']=[x.replace('保存范围：仅自己保存（默认）/同时共享','提交范围：共享贡献/仅自己保存，按入口预选') for x in p['information']]
+  p['states']+=['贡献入口预选共享','私存入口预选私存','范围切换清除确认','资格不足不自动改私存']
+  p['actions']=[{**a,'result':a['result'].replace('首次提交后固定范围','首次提交后固定入口确认范围')} for a in p['actions']]
+
 outdir=ROOT/'docs/product'
 outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'

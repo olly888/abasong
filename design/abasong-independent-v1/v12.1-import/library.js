@@ -20,12 +20,18 @@
   }
   seed();
   function loggedOut(){return frame('我的公寓',empty('登录后管理我的公寓',''),act('login','登录'));}
+  function savedCard(e){
+    const a=apt(e.apt),isPrivate=e.records.length>0;
+    const records=isPrivate?e.records:(state.qualified&&a?rankCodes(a):[]),first=records[0];
+    const value=first?(first.value):null;
+    return `<button class="library-card" data-action="lib-detail" data-id="${e.id}"><span><b>${esc(e.name)}</b><small>${esc(e.address)}</small><span class="library-tags"><i>${esc(e.region)}</i><i>${isPrivate?'私人记录':'收藏公寓 · 共享资料'}</i></span>${value?`<span class="library-card-code">${esc(value)}</span><span class="caption">${esc(first.scope||'大门')}${records.length>1?' · 另有 '+(records.length-1)+' 条':''}</span>`:`<span class="caption">${!isPrivate&&!state.qualified?'共享资料查看资格待审核':'暂无密码'}</span>`}</span>${I('chevron')}</button>`;
+  }
   function list(){
     if(!state.logged)return loggedOut();
     const selected=saved.filter(e=>region==='all'||e.region===region);
     const shares=entries();
     const batches=window.abasongImports.list();
-    return frame('我的公寓',`<div class="library-tabs" role="tablist" aria-label="我的公寓分类">${btn('lib-tab','我保存的','library-tab '+(tab==='saved'?'active':''),'data-id="saved" role="tab" aria-selected="'+(tab==='saved')+'"')}${btn('lib-tab','我共享的','library-tab '+(tab==='shared'?'active':''),'data-id="shared" role="tab" aria-selected="'+(tab==='shared')+'"')}</div>${tab==='saved'?`<label class="library-region">区域<select aria-label="筛选保存的公寓区域" data-library-region><option value="all">全部区域</option>${[...new Set(saved.map(e=>e.region))].map(r=>`<option ${r===region?'selected':''}>${esc(r)}</option>`).join('')}</select></label>${selected.length?selected.map(e=>`<button class="library-card" data-action="lib-detail" data-id="${e.id}"><span><b>${esc(e.name)}</b><small>${esc(e.address)}</small><span class="library-tags"><i>${esc(e.region)}</i><i>${e.records.length?'私人记录 '+e.records.length+' 条':'已收藏'}</i></span></span>${I('chevron')}</button>`).join(''):empty('这个区域还没有公寓','可以收藏地图中的公寓，或添加自己的资料。')}`:`<p class="library-caption">反馈按记录展示；被查看不等于成功进入。</p>${shares.length?shares.map(({a,c})=>sharedCard(a,c)).join(''):empty('还没有共享记录','私存资料可在确认后主动共享。')}`}${batches.length?`<h2 class="import-section">导入记录</h2>${batches.map(j=>`<button class="import-batch" data-action="lib-batch" data-id="${j.id}"><span><b>截图导入 · ${esc(j.created)}</b><small>${j.status==='processing'?'正在整理':j.status==='submitting'?'正在保存':j.status==='cancelled'?'已取消':`${j.done} 条已处理 · ${j.pending} 条待处理`}</small></span>${I('chevron')}</button>`).join('')}`:''}`,act('import','从截图添加')+act('new','手动添加','button secondary'));
+    return frame('我的公寓',`<div class="library-tabs" role="tablist" aria-label="我的公寓分类">${btn('lib-tab','我保存的','library-tab '+(tab==='saved'?'active':''),'data-id="saved" role="tab" aria-selected="'+(tab==='saved')+'"')}${btn('lib-tab','我共享的','library-tab '+(tab==='shared'?'active':''),'data-id="shared" role="tab" aria-selected="'+(tab==='shared')+'"')}</div>${tab==='saved'?`<label class="library-region">区域<select aria-label="筛选保存的公寓区域" data-library-region><option value="all">全部区域</option>${[...new Set(saved.map(e=>e.region))].map(r=>`<option ${r===region?'selected':''}>${esc(r)}</option>`).join('')}</select></label>${selected.length?selected.map(savedCard).join(''):empty('这个区域还没有公寓','可以收藏地图中的公寓，或添加自己的资料。')}`:`<p class="library-caption">反馈按记录展示；被查看不等于成功进入。</p>${shares.length?shares.map(({a,c})=>sharedCard(a,c)).join(''):empty('还没有共享记录','私存资料可在确认后主动共享。')}`}${batches.length?`<h2 class="import-section">导入记录</h2>${batches.map(j=>`<button class="import-batch" data-action="lib-batch" data-id="${j.id}"><span><b>截图导入 · ${esc(j.created)}</b><small>${j.status==='processing'?'正在整理':j.status==='submitting'?'正在保存':j.status==='cancelled'?'已取消':`${j.done} 条已处理 · ${j.pending} 条待处理`}</small></span>${I('chevron')}</button>`).join('')}`:''}`,act('contribute','贡献公寓密码')+`<div class="library-inline">${act('import','导入私存','text-btn')}${act('new','添加私人记录','text-btn')}</div>`);
   }
   function sharedCard(a,c){
     const stats=c.stats||{views:0,useful:0,notUseful:0,last:null};
@@ -41,6 +47,8 @@
   function openPrivate(eid,rid){editTarget={e:eid?getEntry(eid):null,r:rid?findPrivate(rid)?.r:null};modal('library-private',{title:rid?'修改私人记录':'添加私人记录'});}
   const baseModal=renderModal;
   renderModal=function(){const m=state.modal;
+    if(m?.type==='library-contribute'){$('#overlay').innerHTML=`<section class="dialog" role="dialog" aria-modal="true" aria-label="贡献公寓密码"><div class="close-row"><h2>贡献公寓密码</h2>${ib('close-modal','close','关闭')}</div>${act('contribute-screenshots','截图识别','button')}<div class="contribution-secondary">${act('contribute-manual','快速填写','button secondary')}</div></section>`;return;}
+    if(m?.type==='library-choose-apartment'){$('#overlay').innerHTML=`<section class="dialog library-dialog" role="dialog" aria-modal="true" aria-label="选择贡献公寓"><div class="close-row"><h2>选择贡献公寓</h2>${ib('close-modal','close','关闭')}</div><form data-submit="library-choose-apartment"><label class="field"><span class="field-label">公寓</span><select name="apt" required><option value="">请选择公寓</option>${model.apartments.map(a=>`<option value="${a.id}">${esc(a.name)} · ${esc(a.address)}</option>`).join('')}</select></label><button class="button" type="submit">继续填写密码</button></form></section>`;return;}
     if(m?.type==='library-region'){const e=getEntry(m.id);$('#overlay').innerHTML=`<section class="dialog" role="dialog" aria-modal="true" aria-label="设置区域"><div class="close-row"><h2>设置区域</h2>${ib('close-modal','close','关闭')}</div><form data-submit="library-region"><label class="field"><span class="field-label">区域名称</span><input name="region" value="${esc(e?.region||'')}" maxlength="60" required></label><button class="button" type="submit">保存区域</button></form></section>`;return;}
     if(m?.type==='library-private'){
       const e=editTarget?.e,r=editTarget?.r;
@@ -59,9 +67,11 @@
       $('#app').innerHTML=state.route.view==='contributions'?list():detail();$('#screen-title').textContent=state.route.view==='contributions'?'我的公寓':'公寓详情与我的记录';$('#screen-id').textContent=state.route.view==='contributions'?'U06':'U09';renderModal();return;
     }
     baseRender();
-    if(state.route.view==='me'&&state.logged){const old=$('[data-action="import-open"]');if(old)old.remove();const entry=$('[data-action="contributions"]');if(entry)entry.outerHTML=menu('我的公寓','','lib-list');}
+    if(state.route.view==='me'&&state.logged){const old=$('[data-action="import-open"]');if(old)old.remove();const section=$('.menu-section');section?.insertAdjacentHTML('beforebegin',`<div class="contribution-primary">${act('contribute',I('plus')+'贡献公寓密码')}</div>`);const entry=$('[data-action="contributions"]');if(entry)entry.outerHTML=menu('我的公寓','','lib-list');}
     if(state.route.view==='home'&&state.homeView==='apartments'){
-      const a=getApt(),found=saved.some(e=>e.apt===a.id);$('#sheet-scroll')?.insertAdjacentHTML('beforeend',`<div class="library-inline">${act('favorite',found?'已收藏':'收藏公寓','text-btn',a.id)}${act('list','我的公寓','text-btn')}</div>`);
+      const a=getApt(),found=saved.some(e=>e.apt===a.id&&e.favorite);
+      if(state.expanded){const heading=$('.apartment-heading');heading?.insertAdjacentHTML('beforeend',`<button class="icon-btn library-favorite" data-action="lib-favorite" data-id="${a.id}" aria-label="${found?'取消收藏公寓':'收藏公寓'}" aria-pressed="${found}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z" fill="${found?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8"/></svg></button>`);}
+
     }
   };
   const baseActions=actions;
@@ -72,7 +82,10 @@
       case'list':nav('contributions');break;
       case'tab':tab=id;render();break;
       case'detail':nav('notebook',{id});break;
-      case'import':window.abasongImports.open();break;
+      case'import':window.abasongImports.open('private');break;
+      case'contribute':modal('library-contribute');break;
+      case'contribute-screenshots':closeModal();window.abasongImports.open('share');break;
+      case'contribute-manual':modal('library-choose-apartment');break;
       case'batch':window.abasongImports.resume(id);break;
       case'new':openPrivate(null,null);break;
       case'region':modal('library-region',{id});break;
@@ -80,7 +93,7 @@
       case'edit-private':{const p=findPrivate(id);if(p)openPrivate(p.e.id,id);break;}
       case'delete-private':confirmAction('删除私人记录？','只删除我的私存，共享资料保留。',()=>{const p=findPrivate(id);if(p)p.e.records=p.e.records.filter(r=>r.id!==id);closeModal();render();},true);break;
       case'remove-apartment':confirmAction('移除我的公寓？','移除本人的收藏与私人记录，共享资料保留。',()=>{saved=saved.filter(e=>e.id!==id);closeModal();nav('contributions',{},true);},true);break;
-      case'favorite':if(saved.some(e=>e.apt===id)){toast('已保存在我的公寓');nav('notebook',{id:saved.find(e=>e.apt===id).id});}else{keep(id);toast('已收藏公寓');render();}break;
+      case'favorite':{const e=saved.find(e=>e.apt===id);if(e){e.favorite=!e.favorite;if(!e.favorite&&!e.records.length)saved=saved.filter(x=>x!==e);toast(e.favorite?'已收藏公寓':'已取消收藏，私人记录保留');}else{keep(id);toast('已收藏公寓');}render();break;}
       case'public':state.apt=id;state.homeView='apartments';state.expanded=true;nav('home');break;
       case'share':{const p=findPrivate(id);if(!p||!state.qualified){toast('共享资格待核验');return;}confirmAction('共享这条资料？','共享给有资格的司机；私人备注不会共享。',()=>{if(!state.qualified||!state.logged)return;const a=apt(p.e.apt);if(!a){toast('公寓尚未收录，需先核对地址');closeModal();return;}let c=a.codes.find(c=>c.status==='active'&&c.value===p.r.value&&c.scope===p.r.scope);if(c)c.validatedByMe=true;else{c={id:uid(),value:p.r.value,scope:p.r.scope,time:2000,when:'刚刚贡献 · 实测日期未知',author:model.profile.name,mine:true,helpful:false,vote:null,status:'active'};a.codes.push(c);}closeModal();tab='shared';nav('contributions');toast('已提交共享');});break;}
       case'correct':if(state.qualified&&entries().some(x=>x.c.id===id))modal('library-correct',{id});break;
@@ -88,7 +101,7 @@
     }
   };
   document.addEventListener('change',e=>{if(e.target.closest('[data-submit="library-private"]')&&e.target.name==='apt'){const box=$('[data-library-new]');if(box){box.hidden=e.target.value!=='new';box.querySelector('input[name="address"]').required=!box.hidden;}}if(e.target.matches('[data-library-region]')){region=e.target.value;render();}});
-  document.addEventListener('submit',e=>{const type=e.target.dataset.submit;if(!['library-private','library-correct','library-region'].includes(type))return;e.preventDefault();if(!state.logged)return;const fd=new FormData(e.target);if(type==='library-region'){const e=getEntry(state.modal.id);const name=String(fd.get('region')||'').trim();if(e&&name)e.region=name;region='all';closeModal();render();return;}const value=String(fd.get('code')||'').trim();if(!value)return;
+  document.addEventListener('submit',e=>{const type=e.target.dataset.submit;if(type==='library-choose-apartment'){e.preventDefault();if(!state.logged)return;const id=String(new FormData(e.target).get('apt')||'');if(!apt(id))return;if(!state.qualified){toast('共享资格待核验');return;}state.apt=id;closeModal();actions('add-code');return;}if(!['library-private','library-correct','library-region'].includes(type))return;e.preventDefault();if(!state.logged)return;const fd=new FormData(e.target);if(type==='library-region'){const e=getEntry(state.modal.id);const name=String(fd.get('region')||'').trim();if(e&&name)e.region=name;region='all';closeModal();render();return;}const value=String(fd.get('code')||'').trim();if(!value)return;
     if(type==='library-private'){
       const aid=String(fd.get('apt')||'');const addr=String(fd.get('address')||'').trim();if(!editTarget?.e&&aid==='new'&&!addr)return;const entry=editTarget?.e||keep(aid==='new'?null:aid,addr,String(fd.get('apartmentName')||'').trim());const record=editTarget?.r;const scope=String(fd.get('scope')||'').trim()||'大门',note=String(fd.get('note')||'').trim();
       if(record)Object.assign(record,{value,scope,note,when:'刚刚修改'});else if(!entry.records.some(r=>r.value===value&&r.scope===scope))entry.records.push({id:uid(),value,scope,note,when:'刚刚保存'});

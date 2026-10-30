@@ -1,6 +1,6 @@
 # Abasong development status
 
-Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-location`.
+Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-visual-alignment`.
 
 ## Current snapshot — 2026-10-30
 
@@ -9,7 +9,7 @@ Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项�
 - Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API.
 - Verified: local0001/0002 migrations (47 tables),74 business/DB+location checks,54 Auth checks,16 ranking scenarios,6 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
 - Not yet accepted: full real-account native lifecycle/qualification scenarios, authorized-sample map/location/card acceptance, screenshot/OCR/batch backend/native flow, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
-- SMS: user identified airplane mode as cause of non-receipt; do not change providers. Actual retry/login/CRUD still needs observed confirmation.
+- SMS: user identified airplane mode as cause of non-receipt; do not change providers. Both simulators are signed in and private CRUD was observed; full lifecycle/qualification acceptance remains pending.
 - Next: D1.1 native private CRUD now observed on both platforms (remaining scenarios below); D1.2 minimum review/correction and authorized map sample acceptance; D1.3 screenshot samples/contract/provider design then D1.4 actual screenshot contribution. Private-library polish must not postpone screenshotP0.
 
 The sections below retain historical execution notes. Older statements about missing providers/tables/interfaces describe their recorded point in time; this snapshot and the latest specific evidence govern current status.
@@ -144,3 +144,9 @@ GitHub PR trigger verification: configuration PR#36 opened and reopened normally
 2026-10-30: Implemented read-only authenticated POST apartment resolve using active self-owned data/PostGIS and required versioned configuration; no GPS/history writes, no secret in DTO, no automatic matched building until T23 field acceptance. Native home has foreground one-shot location, candidate pins/selection, collapsed/expanded code card, top add, in-card feedback and expanded bookmark. Explicit selection/request generations prevent late-location overwrite; blur/background/auth change unmount sensitive state. Web map stays baseline only. No new dependencies/schema/cloud config. Added source-only Vitest discovery to fix compiled CJS test rediscovery on repeat checks.
 
 Executed: full check (6 unit tests),74 HTTP/PG library+resolve checks,54 Auth checks,16 ranking cases,47-table db verification,service smoke and dual native JS export passed. Existing dev builds show new home. User confirmed both platforms logged in; iOS private synthetic create/read/edit/remove passed, Android create/read/edit/remove passed; iOS refresh saw Android-created synthetic private record for same account. Both synthetic entries removed through App and both refreshed lists empty; iOS simulator location permission reset to pre-test undecided, no grant. Pending qualification preserved; no shared submission or OTP/credential extraction. Native multi-candidate/code/feedback needs authorized sample+config, continuous foreground updates and physical devices unverified. See docs/technical/D1_定位候选与原生首页验证.md.
+
+## D1 native visual alignment
+
+2026-10-30: User explicitly reprioritized prototype fidelity before further feature work. Rebuilt home full-map floating search/mode toolbar, sheet hierarchy and map tools; restored outline tab icons, muted Mapbox Light style/required attribution. Added compact secondary-page header, search row, contribution checkbox/fixed footer, underlined library tabs/outlined cards and primary fixed contribution action, compact profile/menu. No API/schema/credential/qualification changes or new dependencies. D2-only message/support/search controls explicitly disabled. Added docs/design/D1_原生视觉对齐与验收.md and a same-state screenshot/functional+visual delivery gate.
+
+Checks: full workspace check +6 unit tests and dual native JS exports passed after fixes; no new native binary compilation. Native iOS no-location home, search/no-match/clear, library/private form and synthetic save/list/remove observed. Android library/private form and same-account synthetic card observed via keyboard. Removed temporary diagnostic marker and raw JSX whitespace warning; reset request controllers on effect setup to fix Fast Refresh cancellation. Non-empty shared home/feedback still needs authorized sample and qualification; no synthetic production data/grants. Screenshots remain ignored local evidence. Entire D1/complete UI-state acceptance not claimed.

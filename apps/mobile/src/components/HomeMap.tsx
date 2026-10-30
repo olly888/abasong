@@ -14,7 +14,11 @@ export default function HomeMap({
   return (
     <Mapbox.MapView
       style={StyleSheet.absoluteFill}
-      styleURL={Mapbox.StyleURL.Street}
+      styleURL={Mapbox.StyleURL.Light}
+      scaleBarEnabled={false}
+      compassEnabled={false}
+      logoPosition={{ top: 144, left: 16 }}
+      attributionPosition={{ top: 144, left: 106 }}
     >
       <Mapbox.Camera
         centerCoordinate={point ? [point.lng, point.lat] : [-118.2437, 34.0522]}

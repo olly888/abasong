@@ -3,10 +3,12 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, router } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
+import { IconButton } from "../../ui/Primitives";
+import { Icon } from "../../ui/Icon";
 import { tokens } from "@abasong/ui";
 import {
   ActionButton,
-  AuthPage,
+  ApartmentPage,
   Field,
   FormError,
 } from "../../auth/AuthControls";
@@ -52,7 +54,10 @@ function LibraryContent() {
       ...opts,
       signal: controller.current.signal,
     });
-  useEffect(() => () => controller.current.abort(), []);
+  useEffect(() => {
+    controller.current = new AbortController();
+    return () => controller.current.abort();
+  }, []);
   async function load(cursor?: string) {
     const version = ++generation.current;
     setBusy(true);
@@ -143,7 +148,7 @@ function LibraryContent() {
   }
   if (selected)
     return (
-      <AuthPage
+      <ApartmentPage
         title={selected.entry.name}
         subtitle={selected.entry.address}
         onBack={() => setSelected(null)}
@@ -317,30 +322,72 @@ function LibraryContent() {
             })
           }
         />
-      </AuthPage>
+      </ApartmentPage>
     );
   return (
-    <AuthPage title="我的公寓">
-      <ActionButton
-        label="贡献公寓密码"
-        onPress={() => router.push("/apartments/contribute")}
-      />
-      <View style={styles.row}>
-        <ActionButton
-          label="我保存的"
-          secondary={tab !== "saved"}
-          onPress={() => setTab("saved")}
+    <ApartmentPage
+      title="我的公寓"
+      headerRight={
+        <IconButton
+          name="refresh"
+          label="刷新"
+          disabled={busy}
+          onPress={() => void load()}
         />
-        <ActionButton
-          label="我共享的"
-          secondary={tab !== "shared"}
-          onPress={() => setTab("shared")}
-        />
+      }
+      footer={
+        <>
+          <ActionButton
+            label="＋ 贡献公寓密码"
+            onPress={() => router.push("/apartments/contribute")}
+          />
+          <Pressable
+            accessibilityRole="button"
+            onPress={() =>
+              router.push({
+                pathname: "/apartments/contribute",
+                params: { mode: "private" },
+              })
+            }
+            style={styles.inline}
+          >
+            <Text style={styles.link}>添加私人记录</Text>
+          </Pressable>
+        </>
+      }
+    >
+      <View style={styles.tabs}>
+        {(["saved", "shared"] as const).map((value) => (
+          <Pressable
+            key={value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === value }}
+            onPress={() => setTab(value)}
+            style={[styles.tab, tab === value && styles.selectedTab]}
+          >
+            <Text
+              style={[
+                styles.tabLabel,
+                tab === value && {
+                  color: tokens.color.brandPrimary,
+                  fontWeight: "600",
+                },
+              ]}
+            >
+              {value === "saved" ? "我保存的" : "我共享的"}
+            </Text>
+          </Pressable>
+        ))}
       </View>
       <FormError message={error} />
       {tab === "saved" ? (
         <>
-          {items.length === 0 && !busy ? <Text>还没有保存的公寓</Text> : null}
+          {items.length === 0 && !busy ? (
+            <View style={styles.empty}>
+              <Icon name="bookmark" size={32} color={tokens.color.textMuted} />
+              <Text style={styles.label}>还没有保存的公寓</Text>
+            </View>
+          ) : null}
           {items.map((d) => (
             <Pressable
               accessibilityRole="button"
@@ -397,16 +444,6 @@ function LibraryContent() {
               onPress={() => void load(next)}
             />
           ) : null}
-          <ActionButton
-            label="添加私人记录"
-            secondary
-            onPress={() =>
-              router.push({
-                pathname: "/apartments/contribute",
-                params: { mode: "private" },
-              })
-            }
-          />
         </>
       ) : (
         <>
@@ -436,22 +473,37 @@ function LibraryContent() {
           ))}
         </>
       )}
-      <ActionButton
-        label="刷新"
-        secondary
-        busy={busy}
-        onPress={() => void load()}
-      />
-    </AuthPage>
+    </ApartmentPage>
   );
 }
 const styles = StyleSheet.create({
   card: {
     padding: 18,
     borderRadius: 16,
-    backgroundColor: tokens.color.surfaceMuted,
-    gap: 12,
+    backgroundColor: tokens.color.surface,
+    borderWidth: 1,
+    borderColor: tokens.color.border,
+    gap: 8,
   },
+  tabs: {
+    flexDirection: "row",
+    gap: 8,
+    borderBottomWidth: 1,
+    borderColor: tokens.color.border,
+  },
+  tab: {
+    flex: 1,
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 3,
+    borderBottomColor: "transparent",
+  },
+  selectedTab: { borderBottomColor: tokens.color.brandPrimary },
+  tabLabel: { fontSize: 15, color: tokens.color.textMuted },
+  empty: { alignItems: "center", paddingVertical: 38, gap: 18 },
+  inline: { minHeight: 48, alignItems: "center", justifyContent: "center" },
+  link: { fontSize: 14, color: tokens.color.brandPrimary },
   code: { fontSize: 30, fontWeight: "700", color: tokens.color.ink },
   label: { fontSize: 18, fontWeight: "600", color: tokens.color.ink },
   row: { flexDirection: "row", gap: 12, flexWrap: "wrap" },

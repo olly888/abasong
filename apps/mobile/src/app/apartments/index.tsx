@@ -5,12 +5,12 @@ import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import {
   ActionButton,
-  AuthPage,
-  Field,
+  ApartmentPage,
   FormError,
 } from "../../auth/AuthControls";
 import { useAuth } from "../../auth/AuthProvider";
 import { SensitiveScreen } from "../../apartments/SensitiveScreen";
+import { ListRow, SearchBox } from "../../ui/Primitives";
 import { dataRequest } from "../../apartments/client";
 type S = components["schemas"];
 export default function Apartments() {
@@ -33,7 +33,8 @@ function Content() {
     [records, setRecords] = useState<S["AccessRecord"][]>([]),
     [error, setError] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
-    [loaded, setLoaded] = useState(false);
+    [loaded, setLoaded] = useState(false),
+    [searched, setSearched] = useState(false);
   const request = <T,>(
     p: string,
     options: Parameters<typeof dataRequest>[2] = {},
@@ -42,7 +43,10 @@ function Content() {
       ...options,
       signal: controller.current.signal,
     });
-  useEffect(() => () => controller.current.abort(), []);
+  useEffect(() => {
+    controller.current = new AbortController();
+    return () => controller.current.abort();
+  }, []);
   async function open(p: S["Apartment"]) {
     const version = ++generation.current;
     setSelected(p);
@@ -74,18 +78,23 @@ function Content() {
         .catch((e) => setError(e instanceof Error ? e.message : "读取失败"));
   }, [params.apartment_id]);
   async function search() {
+    if (busy || query.trim().length < 2) return;
+    const version = ++generation.current;
     setBusy(true);
     setError(null);
     try {
       const page = await request<S["ApartmentPage"]>(
         "/v1/apartments?query=" + encodeURIComponent(query),
       );
+      if (version !== generation.current || controller.current.signal.aborted)
+        return;
       setItems(page.items);
-      if (!page.items.length) setError("未找到已收录公寓，请核对地址。");
+      setSearched(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "搜索失败");
+      if (version === generation.current && !controller.current.signal.aborted)
+        setError(e instanceof Error ? e.message : "搜索失败");
     } finally {
-      setBusy(false);
+      if (version === generation.current) setBusy(false);
     }
   }
   async function feedback(
@@ -113,8 +122,8 @@ function Content() {
     }
   }
   return (
-    <AuthPage
-      title={selected?.name ?? "公寓"}
+    <ApartmentPage
+      title={selected?.name ?? "搜索"}
       subtitle={
         selected
           ? `${selected.address_line1}, ${selected.city}, ${selected.state}`
@@ -210,23 +219,38 @@ function Content() {
         </>
       ) : (
         <>
-          <Field label="搜索公寓或地址" value={query} onChangeText={setQuery} />
-          <ActionButton
-            label="搜索"
+          <SearchBox
+            value={query}
+            onChange={(v) => {
+              generation.current++;
+              setQuery(v);
+              setSearched(false);
+              setItems([]);
+              setBusy(false);
+            }}
+            onSearch={() => void search()}
             busy={busy}
-            disabled={query.trim().length < 2}
-            onPress={() => void search()}
           />
+          {searched && !items.length && !busy ? (
+            <View style={{ alignItems: "center", paddingVertical: 40, gap: 8 }}>
+              <Text style={{ fontSize: 20, fontWeight: "600" }}>
+                没有找到结果
+              </Text>
+              <Text style={{ fontSize: 14, color: "#686C73" }}>
+                核对公寓名称或英文地址
+              </Text>
+            </View>
+          ) : null}
           {items.map((p) => (
-            <ActionButton
+            <ListRow
               key={p.id}
-              label={`${p.name ?? "公寓"} · ${p.address_line1}`}
-              secondary
+              title={p.name ?? "公寓"}
+              subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
               onPress={() => void open(p)}
             />
           ))}
         </>
       )}
-    </AuthPage>
+    </ApartmentPage>
   );
 }

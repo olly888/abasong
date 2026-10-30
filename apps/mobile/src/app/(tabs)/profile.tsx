@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "../../auth/AuthProvider";
+import { ListRow } from "../../ui/Primitives";
 import { ActionButton, FormError } from "../../auth/AuthControls";
 import { tokens } from "@abasong/ui";
 export default function Profile() {
@@ -21,16 +22,25 @@ export default function Profile() {
     }
   }
   return (
-    <SafeAreaView style={styles.page}>
-      <Text style={styles.title}>我的</Text>
-      <View style={{ gap: 20, marginTop: 36 }}>
+    <SafeAreaView style={styles.page} edges={["top"]}>
+      <View style={styles.header}>
+        <Text style={styles.title}>我的</Text>
+      </View>
+      <View style={{ gap: 20, marginTop: 24 }}>
         {auth.phase === "restoring" ||
         auth.phase === "loading-account" ||
         auth.phase === "signing-out" ? (
           <ActivityIndicator color={tokens.color.brandPrimary} />
         ) : auth.phase === "ready" && auth.me ? (
           <>
-            <Text style={styles.name}>{auth.me.profile.display_name}</Text>
+            <View style={styles.identity}>
+              <View style={styles.avatar}>
+                <Text style={styles.initial}>
+                  {auth.me.profile.display_name.slice(0, 1).toUpperCase()}
+                </Text>
+              </View>
+              <Text style={styles.name}>{auth.me.profile.display_name}</Text>
+            </View>
             <Text style={styles.secondary}>
               {auth.me.capabilities.includes("access.read")
                 ? "公寓资料查看资格已开通"
@@ -40,9 +50,9 @@ export default function Profile() {
               label="贡献公寓密码"
               onPress={() => router.push("/apartments/contribute")}
             />
-            <ActionButton
-              label="我的公寓"
-              secondary
+            <ListRow
+              title="我的公寓"
+              icon="bookmark"
               onPress={() => router.push("/apartments/library")}
             />
             <ActionButton
@@ -110,8 +120,34 @@ export default function Profile() {
   );
 }
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tokens.color.surface, padding: 24 },
-  title: { fontSize: 28, fontWeight: "700", color: tokens.color.ink },
+  page: {
+    flex: 1,
+    backgroundColor: tokens.color.surface,
+    paddingHorizontal: 20,
+  },
+  header: {
+    height: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: -20,
+    borderBottomWidth: 1,
+    borderColor: tokens.color.surfaceMuted,
+  },
+  identity: { flexDirection: "row", alignItems: "center", gap: 16 },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: tokens.color.brandSurface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  initial: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: tokens.color.brandPrimary,
+  },
+  title: { fontSize: 19, fontWeight: "700", color: tokens.color.ink },
   name: { fontSize: 24, fontWeight: "600", color: tokens.color.ink },
   secondary: {
     fontSize: 15,

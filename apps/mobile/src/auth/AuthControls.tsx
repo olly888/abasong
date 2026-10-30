@@ -9,49 +9,97 @@ import {
   TextInput,
   View,
   type TextInputProps,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { tokens } from '@abasong/ui';
-import { useAuth } from './AuthProvider';
-import type { ReactNode } from 'react';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { tokens } from "@abasong/ui";
+import { Icon } from "../ui/Icon";
+
+import { useAuth } from "./AuthProvider";
+import type { ReactNode } from "react";
 export function AuthPage({
   title,
   subtitle,
   children,
   onBack,
+  compact = false,
+  footer,
+  headerRight,
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
   onBack?: () => void;
+  compact?: boolean;
+  footer?: ReactNode;
+  headerRight?: ReactNode;
 }) {
   return (
     <SafeAreaView style={styles.page}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        {compact ? (
+          <View style={styles.pageHeader}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="返回"
+              style={styles.back}
+              onPress={
+                onBack ??
+                (() =>
+                  router.canGoBack()
+                    ? router.back()
+                    : router.replace("/profile"))
+              }
+            >
+              <Icon name="back" />
+            </Pressable>
+            <Text numberOfLines={2} style={styles.pageTitle}>
+              {title}
+            </Text>
+            {headerRight ?? <View style={{ width: 48 }} />}
+          </View>
+        ) : null}
         <ScrollView
+          style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            compact && styles.compactContent,
+          ]}
         >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="返回"
-            onPress={
-              onBack ??
-              (() =>
-                router.canGoBack() ? router.back() : router.replace('/profile'))
-            }
-            style={styles.back}
-          >
-            <Text style={{ fontSize: 32, color: tokens.color.ink }}>‹</Text>
-          </Pressable>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-          <View style={{ gap: 20, marginTop: 32 }}>{children}</View>
+          {!compact ? (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="返回"
+                onPress={
+                  onBack ??
+                  (() =>
+                    router.canGoBack()
+                      ? router.back()
+                      : router.replace("/profile"))
+                }
+                style={styles.back}
+              >
+                <Text style={{ fontSize: 32, color: tokens.color.ink }}>‹</Text>
+              </Pressable>
+              <Text style={styles.title}>{title}</Text>
+              {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+            </>
+          ) : null}
+          {compact && subtitle ? (
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 20 }]}>
+              {subtitle}
+            </Text>
+          ) : null}
+          <View style={{ gap: 20, marginTop: compact ? 0 : 32 }}>
+            {children}
+          </View>
         </ScrollView>
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -82,7 +130,7 @@ export function ActionButton({
       ]}
     >
       {busy ? (
-        <ActivityIndicator color={secondary ? tokens.color.ink : '#FFFFFF'} />
+        <ActivityIndicator color={secondary ? tokens.color.ink : "#FFFFFF"} />
       ) : (
         <Text
           style={[styles.buttonText, secondary && { color: tokens.color.ink }]}
@@ -119,15 +167,43 @@ export function FormError({ message }: { message: string | null }) {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: tokens.color.surface },
   content: { padding: 24, flexGrow: 1 },
+  footer: {
+    flexShrink: 0,
+    zIndex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderColor: tokens.color.border,
+    gap: 4,
+    backgroundColor: tokens.color.surface,
+  },
+  compactContent: { padding: 20, paddingTop: 20 },
+  pageHeader: {
+    height: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderColor: tokens.color.surfaceMuted,
+  },
+  pageTitle: {
+    fontSize: 19,
+    fontWeight: "600",
+    color: tokens.color.ink,
+    flex: 1,
+    textAlign: "center",
+  },
   back: {
     minWidth: 48,
     minHeight: 48,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: "flex-start",
+    justifyContent: "center",
   },
   title: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
     color: tokens.color.ink,
     marginTop: 28,
   },
@@ -137,42 +213,43 @@ const styles = StyleSheet.create({
     color: tokens.color.textSecondary,
     marginTop: 12,
   },
-  label: { fontSize: 14, fontWeight: '600', color: tokens.color.ink },
+  label: { fontSize: 14, fontWeight: "600", color: tokens.color.ink },
   input: {
     borderWidth: 1,
     borderColor: tokens.color.controlBorder,
     borderRadius: 12,
-    minHeight: 56,
+    minHeight: 52,
     paddingHorizontal: 16,
-    fontSize: 18,
+    fontSize: 16,
     color: tokens.color.ink,
     backgroundColor: tokens.color.surface,
   },
   button: {
-    minHeight: 54,
+    minHeight: 52,
     borderRadius: 12,
     backgroundColor: tokens.color.brandPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
   },
   secondary: { backgroundColor: tokens.color.surfaceMuted },
-  buttonText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  buttonText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
 });
 
 export function AuthResolution() {
   const auth = useAuth();
   if (
-    auth.phase === 'restoring' ||
-    auth.phase === 'loading-account' ||
-    auth.phase === 'signing-out'
+    auth.phase === "restoring" ||
+    auth.phase === "loading-account" ||
+    auth.phase === "signing-out"
   )
     return (
       <AuthPage title="正在确认登录">
         <ActivityIndicator color={tokens.color.brandPrimary} />
       </AuthPage>
     );
-  if (auth.phase === 'logout-error')
+  if (auth.phase === "logout-error")
     return (
       <AuthPage title="退出登录未完成">
         <FormError message={auth.error} />
@@ -184,7 +261,7 @@ export function AuthResolution() {
         />
       </AuthPage>
     );
-  if (auth.phase === 'error' && auth.session)
+  if (auth.phase === "error" && auth.session)
     return (
       <AuthPage title="暂时无法完成登录">
         <FormError message={auth.error} />
@@ -195,11 +272,17 @@ export function AuthResolution() {
           onPress={() => {
             void auth
               .signOut()
-              .then(() => router.dismissTo('/profile'))
+              .then(() => router.dismissTo("/profile"))
               .catch(() => {});
           }}
         />
       </AuthPage>
     );
   return null;
+}
+
+export function ApartmentPage(
+  props: Omit<Parameters<typeof AuthPage>[0], "compact">,
+) {
+  return <AuthPage {...props} compact />;
 }

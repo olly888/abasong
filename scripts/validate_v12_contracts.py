@@ -61,7 +61,11 @@ assert 'request_shares' in tables and 'minimum_parcels' in sql and 'pickup_regio
 assert not re.search(r'\b(engagement_type|ongoing|training_available|trial_policy|cooperation_schedule|availability_note)\b',sql)
 catalog=json.loads((ROOT/'docs/product/V12.1_页面与状态目录.json').read_text())
 page_ids={p['id'] for p in catalog['pages']}
-assert len(page_ids)==len(catalog['pages'])==36
+assert len(page_ids)==len(catalog['pages'])==39
+assert {'B04','B05','B06'}.issubset(page_ids)
+for page in catalog['pages']:
+    if page['id'] in {'B04','B05','B06'}:
+        assert not page['api_operations'] and page.get('api_contract_status'),page['id']
 for page in catalog['pages']:
     assert page['information'] and page['states'] and page['acceptance']
     assert all(a['target'] in page_ids for a in page['actions']),page['id']

@@ -4,6 +4,7 @@
 - Read `产品基线.md`, `DEVELOPMENT_STATUS.md`, and `docs/README.md` before changes.
 - Priority: latest human instruction, V12.1 supplement/page specification, approved V3 prototype, V12 PRD. V9 and old task imports are historical.
 - Only temporary delivery support and flexible collaboration. One client; 首页/司机圈/我的. No long-term recruitment, payment/settlement, automatic dispatch, carrier scanning or POD.
+- P0 apartment contribution includes user-selected single/multiple screenshots: read `docs/product/Abasong_V12.1_截图批量贡献需求补充.md`. OCR candidates require confirmation; new B04/B05/B06 and import contracts are pending, not covered by the old prototype acceptance.
 - Prototype reference: `design/abasong-independent-v1/v12.1/`. Never treat synthetic browser data or client-side permissions as a production service/security implementation.
 
 ## Repository and commands

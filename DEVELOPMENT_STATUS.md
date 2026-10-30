@@ -1,6 +1,6 @@
 # Abasong development status
 
-Updated: 2026-10-29 (America/Los_Angeles). Branch: `codex/d1-apartment`.
+Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-apartment`.
 
 ## Current stage: D0 complete; D1 apartment loop started
 
@@ -47,4 +47,8 @@ POST /v1/me/bootstrap and GET /v1/me implemented with strict JWT/JWKS validation
 
 ## D1 native login batch
 
-Phone/OTP/display-name routes and real account states implemented outside three-tab navigation. Native sessions use SecureStore with no plaintext fallback; browser sessions use memory only. Account requests are identity-bound, bounded and refresh once; logout clears personal state and blocks refresh-event races. Complete workspace checks (3 unit tests) and 54 HTTP auth scenarios passed again. Both native Debug builds/install passed; iOS unsigned build exposed a Keychain entitlement issue, resolved by rebuilding/installing with standard simulator local signing; cold launch no longer reports storage read errors. Real session persistence remains unverified. Mac lock prevents UI navigation checks. SMS provider remains disabled; actual OTP/session persistence and full D1 are unverified. See [native login record](docs/technical/D1_原生登录接入记录.md). Metro8081 and API3001 are running locally for preview.
+Phone/OTP/display-name routes and real account states implemented outside three-tab navigation. Native sessions use SecureStore with no plaintext fallback; browser sessions use memory only. Account requests are identity-bound, bounded and refresh once; logout clears personal state and blocks refresh-event races. Complete workspace checks (3 unit tests) and 54 HTTP auth scenarios passed again. Both native Debug builds/install passed; iOS unsigned build exposed a Keychain entitlement issue, resolved by rebuilding/installing with standard simulator local signing; cold launch no longer reports storage read errors. Real session persistence remains unverified. After user unlock on 2026-10-30, native guest/login navigation, empty input state, region selection, invalid-number feedback and page return passed on both simulators. Android mirror required keyboard focus for reliable submit/back; full touch and screen-reader acceptance remain unverified. SMS provider remains disabled; actual OTP/session persistence and full D1 are unverified. See [native login record](docs/technical/D1_原生登录接入记录.md). Metro8081 and API3001 are running locally for preview.
+
+## Latest UI verification
+
+2026-10-30: iPhone18Pro/iOS27.0 and Android17/API37 phone-entry checks completed after unlock. Invalid numbers only; no SMS, cloud auth changes or test bypass. This turn changes validation documentation only; prior full checks remain applicable. Next D1 work remains authorized apartment lookup/contribution/feedback and object permissions; real SMS/session acceptance still needs provider setup.

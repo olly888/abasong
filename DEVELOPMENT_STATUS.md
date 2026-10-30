@@ -23,7 +23,7 @@ Approved inputs: V12.1 requirement supplement/page specification, V3 tokens and 
 - Mapbox: user supplied a public token; stored in ignored apps/mobile/.env.local with mode600. Official style access verification passed without echoing token. Native map rendering passed on both simulators; foreground location/address matching remain D1 work.
 - Android: user personally read/accepted the SDK terms and authorized installation on 2026-10-29. OpenJDK17, SDK37.0, Build Tools37, NDK27.1, CMake3.22.1 and a dedicated ARM64 emulator are installed. Gradle9.4.1 runs; native build/install/start and basemap rendering passed via scripts/android. Physical-device validation remains later.
 - iOS: full navigation interactions, real iPhone validation and actual map behavior still belong to D1/device acceptance.
-- Supabase/Auth active development project is AbasongDevWest (us-west-1, North California; switched 2026-10-30); public client and issuer settings configured locally. Phone provider remains disabled. KMS/AWS, SMS provider, store signing accounts and real business data are not provisioned. No cloud DDL, real SMS, paid account creation or production deployment performed.
+- Supabase/Auth active development project is AbasongDevWest (us-west-1, North California; switched 2026-10-30); public client and issuer settings configured locally. Phone provider enabled with Twilio Verify on 2026-10-30 after explicit user authorization; real SMS not yet sent. KMS/AWS, SMS provider, store signing accounts and real business data are not provisioned. No cloud DDL, real SMS, paid account creation or production deployment performed.
 
 ## Continue from here
 
@@ -64,3 +64,7 @@ Phone/OTP/display-name routes and real account states implemented outside three-
 ## Twilio signup reported complete
 
 2026-10-30: User reports Twilio signup completed. No credentials obtained, Verify Service/account restrictions unverified, Phone provider not yet confirmed enabled. Next: user enters Twilio Verify credentials directly into AbasongDevWest provider form, then read-only configuration check and explicitly authorized real-phone acceptance.
+
+## Phone provider enabled
+
+2026-10-30: User explicitly authorized copying the existing Twilio Auth Token directly to AbasongDevWest and saving/enabling Phone, with no upgrade, phone-number purchase or SMS. Completed via the user’s logged-in Chrome session because plugin search found no Twilio plugin and current Supabase connector has no Auth-provider configuration action. Used the existing trial Verify Service shown in Try out Verify; self-created services are upgrade-gated. Supabase UI now shows Phone ENABLED; public /auth/v1/settings independently reports phone=true, email=true, anonymous=false. Phone confirmation stayed enabled; other providers/signup policies unchanged. Token transferred only through clipboard to the masked provider field, never revealed/read into model output or saved locally; clipboard then replaced with the non-sensitive page URL. No SMS, real user creation, paid upgrade, number purchase or cloud DDL. Provider save does not validate real delivery or Verify API compatibility; receiving/confirming OTP, native session restore and logout remain pending.

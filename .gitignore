@@ -25,3 +25,7 @@ artifacts/
 .gstack/
 __pycache__/
 *.py[cod]
+# Local Expo native-module build outputs
+apps/mobile/modules/*/android/build/
+apps/mobile/modules/*/android/.gradle/
+apps/mobile/modules/*/android/.cxx/

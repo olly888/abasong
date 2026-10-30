@@ -1,13 +1,13 @@
 # Abasong development status
 
-Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-card-acceptance`.
+Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-screenshot-import`.
 
 ## Current snapshot — 2026-10-30
 
 Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Prior business baseline: `a3b5a51`; latest D1 location/native slice is on `codex/d1-location` (evidence below).
 
-- Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API.
-- Verified: local0001/0002 migrations (47 tables),82 business/DB+location checks,54 Auth checks,16 ranking scenarios,10 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
+- Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API. Screenshot selection/on-device OCR/confirmation and session-only saving now added; server batch APIs remain planned.
+- Verified: local0001/0002 migrations (47 tables),82 business/DB+location checks,54 Auth checks,16 ranking scenarios,20 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
 - Not yet accepted: full real-account native lifecycle/qualification scenarios, authorized-sample map/location/card acceptance, screenshot/OCR/batch backend/native flow, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
 - SMS: user identified airplane mode as cause of non-receipt; do not change providers. Both simulators are signed in and private CRUD was observed; full lifecycle/qualification acceptance remains pending.
 - Next: D1.1 native private CRUD now observed on both platforms (remaining scenarios below); D1.2 minimum review/correction and authorized map sample acceptance; D1.3 screenshot samples/contract/provider design then D1.4 actual screenshot contribution. Private-library polish must not postpone screenshotP0.
@@ -160,3 +160,11 @@ Checks: full workspace check +6 unit tests and dual native JS exports passed aft
 2026-10-30: Implemented shared native ApartmentSheet with non-keypad semantics/scope/time, large-code modal, feedback anchor/state, real owner-library favorite query/toggle, search-to-home selection, recovery and disabled future actions. Source OpenAPI and generated contracts updated for optional apartment_id library filter; no migration/dependency/cloud changes. Dev-only TEST lab renders same sheet on both native builds; production route redirects. iOS state/function observations and Android state screenshots completed; user explicitly confirmed Android large mode enter/return. Android other touch flows, real authorized shared read/search/favorite end-to-end, gestures, screen reader and physical devices remain incomplete.
 
 Final executed: workspace check +10 tests,82 library HTTP/PG,54 Auth,16 ranking, full OpenAPI/SQL static validation and dual native JS exports passed. Existing native binaries used; no new binary compilation claimed. OCR8 completely synthetic Apple Vision/Mac samples:6 exact, letter-case and small-text failed. Manual confirmation remains required; no production provider decision/native import implemented. Evidence and follow-up: docs/technical/D1_卡片交互与OCR样本验证.md. WholeD1 remains in progress.
+
+## D1 screenshot contract / native on-device import batch
+
+2026-10-30: Added18 planned owner-batch operations +23 schemas (82 paths/107 operations/123 schemas) with mode/version/confirmation/two-stage outcomes and source policy. Existing89 operations/100 schemas semantically unchanged. No batch controller,0003/cloud migration or worker/storage deployment. Native import uses actual existing library/share API; never represents planned batch API as live. Added official Expo58 picker58.0.10/filesystem58.0.13 and local Vision/ML Kit Latin16.0.1 module; locks documented.
+
+Actual iOS Debug and Android Debug compilation/install/start passed. Native: iOS system3-image pick ->3 candidate rows, negative distractor no code; edit/selection/declaration -> real private save1TEST item; Android system1-image pick -> correct same synthetic address/leading-zero symbol code and then same-account read of iOS-saved item. No public contribution/grant/SMS/cloudDDL/real screenshot upload. Fixed auth-recheck picker unmount, async file-copy deletion race (regression tests), cache extension and result continuation.
+
+Executed: workspace check20 tests;82 HTTP/PG existing library checks; full static contract/SQL/pages/links; generation reproducibility; dual JS exports. Prior Auth54/ranking16 unchanged this batch; not falsely claimed newly rerun. Native scope/limits: docs/technical/D1_截图导入原生接入与验收.md; design contract: V12.1_截图导入接口契约.md. Real carrier accuracy, full Android editing/save, new shared end-to-end, Activity/process recovery, server draft/encryption/cleanup, complete prototype states/physical device/accessibility remain pending. Mac locked during final cleanup/visual inspection; user asked to unlock asynchronously. Test item removal through App executed but final empty-list observation pending. Do not repeat provider/SMS setup or claim fullD1 accepted. Next implement local0003/batch permissions and complete remaining native acceptance; no cloud migration authorization.

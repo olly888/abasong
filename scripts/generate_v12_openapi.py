@@ -234,6 +234,9 @@ op('/v1/ops/capabilities','post','grantCapability','仅用户管理权限；不�
 op('/v1/ops/users/{user_id}/capabilities','get','listUserCapabilities','仅员工查看工作能力记录；不返回认证口令','CapabilityGrantPage',cap=['ops.user_manage'],internal=True,list_query=True)
 op('/v1/ops/capabilities/{capability_id}','delete','revokeCapability','撤销工作能力，不允许此接口管理员工权限','Ack',cap=['ops.user_manage'],internal=True)
 op('/v1/ops/access-records/{record_id}/reveal','post','revealForReview','仅必要核验，MFA+揭示权限+理由；强审计','OpsReveal','ReasonInput',cap=['ops.reveal'],internal=True,sensitive=True)
+from import_contracts import add_import_contracts
+add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
+                     nullable_id, boolean, page, op, paths)
 paths['/v1/requests']['get']['parameters'].append(query('carrier',string(80)))
 # OpenAPI 3.0 nullable does not override a referenced non-nullable object in allOf.
 # Explicit null branch keeps ended shares and undeclared driver availability valid.

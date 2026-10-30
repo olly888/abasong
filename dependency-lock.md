@@ -43,3 +43,5 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 2026-10-30 D1 location: reuses locked expo-location58.0.20 / rnmapbox10.3.16 / PostGIS, no new package or lockfile changes. Versioned candidate limits required; production auto-match remains off pending T23. Vitest5 source-only discovery configured to exclude compiled duplicate suites on repeat checks.
 
 2026-10-30 native visual alignment: no added packages/fonts/native modules; outline icons use native views, V3 shared tokens reused. Existing rnmapbox10.3.16 Light basemap with required attribution retained.
+
+2026-10-30 screenshot import: Expo58官方兼容安装后固定 expo-image-picker58.0.10、expo-file-system58.0.13；pnpm主锁与审查后的Podfile.lock同步。新增本地Expo模块AbasongOcr0.1.0：iOS Apple Vision系统框架，Android Google Maven随包Latin文本识别com.google.mlkit:text-recognition16.0.1。原图不发往云端OCR，单张串行且限制文件/像素/行数；模型输出仅是待核对文本。Android依赖由Gradle解析，后续升级须复跑双平台原生及识别样本。未选择云端OCR供应商、未增加商业账号或上传真实截图。新增原生模块已触发双平台Debug重编译，详细验收以本批记录为准。

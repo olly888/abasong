@@ -62,3 +62,5 @@ python3 scripts/github/bootstrap.py --prepare-only
 字段工具兼容说明：GitHub CLI导出中文自定义字段名存在编码差异；阶段校准脚本使用官方GraphQL字段ID读取并验证，不依赖乱码键。看板35项与Issue任务ID一一对应。初始化脚本不是后台自动化，后续不得用初始快照覆盖新的真实进度。
 
 维护约定：初始化快照只用于初始导入，未来变更用具体Issue/PR与当前证据更新。公开仓库初始化命令需显式`--allow-public`；看板仍要求Private。截图证据中私有看板的截图仅留本机ignored目录，不随公开源码上传。
+
+触发验收限制：首轮成功运行来自手动 workflow_dispatch。PR#36 创建及重新打开后尚未出现 pull_request 事件运行；工作流事件声明和仓库 Actions 已启用，但不能据此宣称自动触发已验证。已针对实际 PR 分支补充完整检查，分支保护持续开启；自动事件触发单独保留待排查项。

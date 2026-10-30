@@ -1,0 +1,20 @@
+name: abasong-d0
+services:
+  database:
+    image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD:?Create the local .env file}
+      POSTGRES_DB: abasong_local
+    ports:
+      - '127.0.0.1:54329:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d abasong_local']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+volumes:
+  pgdata:

@@ -1,0 +1,35 @@
+{
+  "checks": [
+    {
+      "foreground": "#FFFFFF",
+      "background": "#1467D8",
+      "ratio": 5.3,
+      "normal_text_4_5_pass": true
+    },
+    {
+      "foreground": "#FFFFFF",
+      "background": "#1054B3",
+      "ratio": 7.14,
+      "normal_text_4_5_pass": true
+    },
+    {
+      "foreground": "#1467D8",
+      "background": "#EDF4FF",
+      "ratio": 4.79,
+      "normal_text_4_5_pass": true
+    },
+    {
+      "foreground": "#FFFFFF",
+      "background": "#006AE6",
+      "ratio": 4.99,
+      "normal_text_4_5_pass": true
+    },
+    {
+      "foreground": "#101114",
+      "background": "#FFFFFF",
+      "ratio": 18.88,
+      "normal_text_4_5_pass": true
+    }
+  ],
+  "scope": "Specific solid color pairs only; not a full accessibility audit"
+}

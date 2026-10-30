@@ -1,0 +1,50 @@
+﻿Epic,Key,Summary,Issue Type,Priority,Sprint,PRD Trace,Depends On,Acceptance Criteria
+EPIC 0 Concierge验证,S0.1,20次真实人工撮合记录,Story,P0,W1-2,"§18,§20,附录A",-,≥20次记录;产出价格曲线;TTA基线;外扩计时真数据;≥3名司机说下次还找你
+EPIC 0 Concierge验证,S0.2,门禁痛点独立验证(跟车10次),Story,P0,W1-2,"§3.2,§6",-,10次跟车;量化到点卡顿;明确结论成立/不成立;不成立则触发§6重裁
+EPIC 0 Concierge验证,S0.3,法律意见四问,Story,P0,W1-2,§8.6,-,§2810.3隔离;托管归类;门禁码责任;FMCSA定性;均有书面答案
+EPIC 0 Concierge验证,S0.4,Design Tokens交付,Story,P0,W1-2,"§9,§0.1",-,§9.6 JSON;全端无#007AFF;含help/rescue语义色;三字体齐
+EPIC 0 Concierge验证,GATE0,决策门:触达是否真瓶颈,Gate,P0,W2,§20,"S0.1,S0.2,S0.3",Go:≥20次+价格曲线+TTA基线+法律答案 / No-Go:人工撮合不成或触达非瓶颈->论题重定义
+EPIC 1 地基,S1.1,Phone OTP注册登录,Story,P0,W3-4,"§13,§18",GATE0,OTP staging>95%;短TTL JWT+可撤销refresh;RBAC四角色;五scope
+EPIC 1 地基,S1.2,司机档案,Story,P0,W3-4,"§7.4,§8.9,§11.4,§13",S1.1,承运商标签强制标注司机自行申报;隐私控制;一键隐身;注销即彻底删除
+EPIC 1 地基,S1.3,地图壳,Story,P0,W3-4,"§7.1,§7.2,§16",S1.1,默认这一站尺度400m;暗色;不许有加载态;搜索框常驻;LCP<=2.5s;H3随zoom
+EPIC 1 地基,S1.4,Presence上报(无轨迹表),Story,P0,W3-4,"§11.1,§11.3,§11.6,§16",S1.2,上报h3非坐标;Redis TTL;无位置历史表(SQL可证);不做持续GPS;逐功能明示同意
+EPIC 1 地基,S1.5,密度聚合API(k匿名),Story,P0,W3-4,"§11.2,§7.2,§9.2,§16",S1.4,7天k>=3今天k>=5;不足则合并粗环;绝不渲染count=1;<50ms;Gold #FFB020
+EPIC 1 地基,S1.6,楼宇搜索,Story,P0,W3-4,"§13,§16",S1.3,地址/楼名/保存地点;p95<1.5s
+EPIC 1 地基,S1.7,埋点管线,Story,P0,W3-4,§15,S1.1,§15全指标口径;TTA与区域周活密度可算;有效网络行为定义落地
+EPIC 1 地基,S1.8,组件库与Tokens落地,Story,P0,W3-4,"§9,§16",S0.4,按钮>=48px;图标2px/24grid;Gold不用于白底正文;对比>=4.5:1;全端无#007AFF
+EPIC 1 地基,GATE1,地基门,Gate,P0,W4,§20,S1.1-S1.8,OTP>95%;k匿名生效;地图无加载态;LCP<=2.5s;无轨迹表可证
+EPIC 2 到点态(Hero1),S2.1,活动识别触发器,Story,P0,W5-6,"§8.1,§0.1",GATE1,主触发in_vehicle->on_foot;蓝牙/CarPlay强化;跃迁瞬间单次定位;红灯不触发;废弃GPS10-15s方案
+EPIC 2 到点态(Hero1),S2.2,buildings/resolve猜一栋+候选,Story,P0,W5-6,"§8.1,§10",S2.1,只推一栋+不是这栋?;一秒切候选;不先给列表
+EPIC 2 到点态(Hero1),S2.3,楼宇卡(离线优先),Story,P0,W5-6,"§8.1,§9.2,§11.4,§8.12-G5",S2.2,<2s且离线可用;门禁码30天转stale仍展示/180天零验证删码值;入口包裹室不过期;stale=码变暗+'X天没人验证试试看'+叫兄弟提前出现;每次'进去了'刷新last_verified_at
+EPIC 2 到点态(Hero1),S2.4,大字模式,Story,P0,W5-6,"§8.1,§9.3",S2.3,IBM Plex Mono>=56px;屏幕最亮;点任意处返回;不做复制到剪贴板
+EPIC 2 到点态(Hero1),S2.5,回问进去了吗,Story,P0,W5-6,"§8.1,§0.1",S2.3,触发=on_foot->in_vehicle;不在开卡时问;两按钮;划走不再问;进去了则静默+1不再问
+EPIC 2 到点态(Hero1),S2.6,失败原因+叫兄弟,Story,P0,W5-6,"§8.1,§9.2",S2.5,3个chip不打字;同屏叫兄弟入口;原因回流降confidence
+EPIC 2 到点态(Hero1),S2.7,众包地理码,Story,P0,W5-6,"§8.1,§12",S2.2,记录每次就是/不是这栋;持续优化坐标->楼映射;零额外用户动作
+EPIC 2 到点态(Hero1),S2.8,区域预取缓存,Story,P0,W5-6,"§8.1,§16",S2.3,进入ZIP即预取;地库/飞行模式必须能弹;无loading转圈
+EPIC 2 到点态(Hero1),S2.9,空态=邀请,Story,P0,W5-6,§8.1,S2.3,你是第一个;只要一个码;不显示暂无数据
+EPIC 2 到点态(Hero1),GATE2,到点门,Gate,P0,W6,§20,S2.1-S2.9,Go:弹对楼率达标+离线可用+有人回答 / No-Go:识别不准(弹错比不弹更伤)
+EPIC 3 网络地基,S3.1,线路圈+双向确认,Story,P0,W7-8,"§8.7,§7.2,§14",GATE2,跨承运商;入圈双向确认;可属多圈;退圈后履约记录保留;territory描边
+EPIC 3 网络地基,S3.2,求助发布,Story,P0,W7-8,"§8.8,§11.1,§9.2",S3.1,一键发出不填表;问题类型必选;显示确定性非地图;位置仅协作期共享;Help #0E7C86
+EPIC 3 网络地基,S3.3,求助回答->自动落库,Story,P0,W7-8,"§8.1,§12",S3.2,回答自动生成access_record;source_type=help_answer;署名;零额外动作
+EPIC 3 网络地基,S3.4,双向信誉v1,Story,P0,W7-8,"§8.9,§0.1",S3.1,事实优先非裸分;送达侧+付款侧;贝叶斯收缩;只计地理确认交接;合谋检测;圈内vouch
+EPIC 3 网络地基,S3.5,广播引擎骨架(心脏),Story,P0,W7-8,"§8.3,§12,§8.12-G4","S0.1,S3.1,S3.4","五环+外扩计时(参数取自S0.1);relationship_depth=depth_raw/(depth_raw+3),depth_raw=Σexp(-days/60);圈内地板0.2;饱和即反刷分;deadline压缩;写审计;幂等"
+EPIC 3 网络地基,S3.6,定价与难度,Story,P0,W7-8,§8.5,S0.1,billable=solo+bundle*0.5;base $1.8(须校准);难度含bundle_ratio最强;喂建议价与信誉归一
+EPIC 3 网络地基,GATE3,网络地基门,Gate,P0,W8,§20,S3.1-S3.6,同心圆次序与计时正确;触达数实时回传;求助回答自动成记录;双向信誉可算
+EPIC 4 转单(Hero2),S4.1,转单发布,Story,P0,W9-10,"§8.2,§9.5,§0.1",GATE3,<=3tap且<=15s;全字段预填;按钮'我送不完';文案必须'通常'不能'保证';Rescue #E4571C
+EPIC 4 转单(Hero2),S4.2,广播分发+触达可视化,Story,P0,W9-10,"§8.3,§10","S3.5,S4.1",实时触达数;UI显示8->23->41;显示环层与已接/剩余
+EPIC 4 转单(Hero2),S4.3,接单卡片,Story,P0,W9-10,"§8.2,§8.9,§7.1",S4.2,5秒读完8项;发布方付款信誉决策前展示;四动作;仅验证司机;收工态浮现
+EPIC 4 转单(Hero2),S4.4,拆单+余量续播,Story,P0,W9-10,"§8.4,§14,§8.12-G3",S4.3,均价法:effective_rate=总价/总件数;UI明示'均价已含联单折扣';交接前双向可调单方不可改;余量自动续播;partially_filled一等状态;S0.1必答按件还是按区域拆
+EPIC 4 转单(Hero2),S4.5,交接凭证+到达判定/no-show,Story,P0,W9-10,"§8.2,§14,§11.4,§8.12-G1",S4.4,ACCEPTANCE加eta_at/arrived_at/arrived态;到达检测复用S2.1活动识别;不做连续追踪;超eta+15min->candidate_no_show且立即自动重播余量;A可随时取消重播;PIN/QR件数双确认
+EPIC 4 转单(Hero2),S4.6,托管现结(Stripe Connect),Story,P0,W9-10,"§8.6,§14,§8.12-G2,§8.12-G7","S0.3,S4.5",P0-b与EPIC4同时上线(默认);发布=授权hold非扣款;接单仅capture该笔;未成交void剩余(无退款手续费);已capture须退则平台承担手续费绝不扣司机;法律未过则P0-a+8周硬上限
+EPIC 4 转单(Hero2),S4.7,加价bump-pay,Story,P0,W9-10,§8.5,S4.2,外扩到④仍无人接->提示加$20试试;加价后重新广播
+EPIC 4 转单(Hero2),S4.8,双向互评,Story,P0,W9-10,§8.9,S4.5,完成后互评写REPUTATION_EVENT;送达侧计接单方付款侧计发布方;评价者加权
+EPIC 4 转单(Hero2),GATE4,转单门,Gate,P0,W10,§20,"S4.1-S4.8,S5.5",发布<=15s;拆单余量续播;押金拦截;托管->放款->到账打通;首纠纷playbook演练通过
+EPIC 5 信任与安全,S5.1,押金诈骗守卫,Story,P0,W5-10,§11.5,S1.2,永久禁止向司机收费的发布;表单无押金字段;卡片固定警示;关键词检测;查实永久封禁
+EPIC 5 信任与安全,S5.2,虚假发布拦截,Story,P0,W5-10,"§11.5,§8.3",S3.5,验证阶梯;未验证/可疑者不进入分发;频率/报酬离群检测
+EPIC 5 信任与安全,S5.3,纠纷与欠款举报,Story,P0,W5-10,"§14,§8.9,§11.5",S4.5,含欠款举报;进入即冻结信誉事件与托管资金;到点一键与发布不符留证
+EPIC 5 信任与安全,S5.4,运营后台+仲裁工作台,Story,P0,W5-10,§8.10,S1.1,验证/审核/仲裁/播种/审计;RBAC+JIT+导出受限;受限数据永不示于未验证账号;高危举报24h内无未决
+EPIC 5 信任与安全,S5.5,首纠纷ops playbook,Story,P0,W5-10,"§8.10,§18",S5.4,书面playbook+演练通过;必须在EPIC4上线之前就位
+EPIC 5 信任与安全,S5.6,隐私控制,Story,P0,W5-10,"§11.2,§11.4,§8.12-G6",S1.4,任何人含车队长绝无监控权限;协作结束位置降粒度;helpable=enabled+8h或收工90min先到为准;绝不用自然日(伤夜班司机);到期提醒+一键续开;禁人脸识别;禁位置用于广告
+EPIC 6 Beta与复盘,S6.1,指标看板,Story,P0,W11,§15,S1.7,主维度=线路圈/仓库非ZIP;TTA/密度/cross_circle_fill_share/reach/dispute_rate/paid_on_time_rate
+EPIC 6 Beta与复盘,S6.2,闭门Beta,Story,P0,W11,§18,GATE4,2-3线路圈100司机;地图永不为空;绝不投放假司机;ops runbook+on-call
+EPIC 6 Beta与复盘,GATE5,生死门(三条线),Gate,P0,W12,§20,"S6.1,S6.2",Hero:TTA<=4min+填补率>=70%+跨圈>=35% / 日活:zero_tap达标+d7>=25% / 信任:事故0+dispute<1%+押金诈骗0

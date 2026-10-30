@@ -1,0 +1,1866 @@
+{
+  "version": "V12.1",
+  "date": "2026-10-29",
+  "note": "36设计节点包含同路由状态和共享组件，不等于36条独立路由；本地原型制作状态不代表207状态全部验收或真实服务完成",
+  "pages": [
+    {
+      "id": "A02",
+      "name": "手机号登录",
+      "surface": "全屏二级页；保留来源意图",
+      "entry": "报名、联系、看受控资料或我的登录入口",
+      "information": [
+        "返回",
+        "+1区号选择与手机号",
+        "获取验证码",
+        "必要协议链接"
+      ],
+      "actions": [
+        {
+          "label": "返回",
+          "target": "G03",
+          "result": "退出登录并回原来源，不丢草稿"
+        },
+        {
+          "label": "获取验证码",
+          "target": "A03",
+          "result": "校验格式后请求OTP，禁重复请求"
+        }
+      ],
+      "states": [
+        "默认",
+        "号码错误",
+        "发送中",
+        "限流/失败",
+        "来源需求已终止"
+      ],
+      "api_operations": [],
+      "requirements": [
+        "AUTH",
+        "V12-15"
+      ],
+      "acceptance": "登录前后身份变化不复用上一个账号的缓存；无业务资料在此页公开。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "A03",
+      "name": "验证码与恢复",
+      "surface": "二级页，同一认证流程",
+      "entry": "A02发送成功",
+      "information": [
+        "掩码手机号",
+        "验证码输入",
+        "重发倒计时",
+        "更改号码",
+        "验证错误"
+      ],
+      "actions": [
+        {
+          "label": "更改号码",
+          "target": "A02",
+          "result": "清除验证码并保留安全来源"
+        },
+        {
+          "label": "验证",
+          "target": "A04",
+          "result": "Auth成功后bootstrap，老用户直接回来源"
+        },
+        {
+          "label": "重发",
+          "target": "A03",
+          "result": "遵守供应商限流，不默认每点发短信"
+        }
+      ],
+      "states": [
+        "输入",
+        "验证中",
+        "错误/过期",
+        "重发受限",
+        "登录成功回跳"
+      ],
+      "api_operations": [
+        "bootstrapMe"
+      ],
+      "requirements": [
+        "AUTH",
+        "V12-15"
+      ],
+      "acceptance": "OTP不进日志；登录后重新请求来源对象，不能自动提交旧报价报名。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "A04",
+      "name": "首次最小资料",
+      "surface": "二级页，仅新账号",
+      "entry": "A03新账号",
+      "information": [
+        "显示名",
+        "保存按钮；经验和车辆不强制在首次查码前填写"
+      ],
+      "actions": [
+        {
+          "label": "保存",
+          "target": "H01",
+          "result": "bootstrap完成后回原意图，H01只是无来源时默认"
+        }
+      ],
+      "states": [
+        "空",
+        "保存中",
+        "校验失败",
+        "资格待审核"
+      ],
+      "api_operations": [
+        "bootstrapMe",
+        "patchMyProfile"
+      ],
+      "requirements": [
+        "AUTH"
+      ],
+      "acceptance": "显示名不能自带官方核验身份；登录不自动授予密码资格。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "H01",
+      "name": "首页·公寓",
+      "surface": "首页根状态，公寓卡收起/展开",
+      "entry": "首次启动、首页导航、主动切公寓",
+      "information": [
+        "搜索、消息",
+        "公寓/找活/找人",
+        "定位与公寓建筑",
+        "收起：名称/英文地址/首条密码/贡献时间",
+        "展开：各条密码、必要门别/时段、实测时间、反馈、添加",
+        "独立＋发需求",
+        "三项底部导航"
+      ],
+      "actions": [
+        {
+          "label": "搜索",
+          "target": "S01",
+          "result": "带公寓视图"
+        },
+        {
+          "label": "消息",
+          "target": "M01",
+          "result": "开统一消息"
+        },
+        {
+          "label": "点卡/拖手柄",
+          "target": "H01",
+          "result": "同一面板展开，不新建一层页"
+        },
+        {
+          "label": "不是这栋",
+          "target": "L01",
+          "result": "候选/手动纠错"
+        },
+        {
+          "label": "点密码",
+          "target": "B01",
+          "result": "大字模式"
+        },
+        {
+          "label": "有用/没用",
+          "target": "H01",
+          "result": "作用于本记录；失败回滚，重排保留阅读锚点"
+        },
+        {
+          "label": "添加/更新",
+          "target": "B02",
+          "result": "公寓ID带入；新增记录不覆盖历史"
+        },
+        {
+          "label": "＋发需求",
+          "target": "P01",
+          "result": "独立于卡片"
+        },
+        {
+          "label": "定位",
+          "target": "H01",
+          "result": "主动解除选择锁定后重新匹配"
+        }
+      ],
+      "states": [
+        "冷启动",
+        "唯一命中收起",
+        "历史展开",
+        "多候选",
+        "暂无密码",
+        "无固定码",
+        "无资格",
+        "定位拒绝",
+        "粗略/旧位置",
+        "弱网/底图失败",
+        "记录失效/撤回",
+        "反馈提交失败"
+      ],
+      "api_operations": [
+        "resolveApartment",
+        "getApartment",
+        "readAccessRecords",
+        "feedbackAccess"
+      ],
+      "requirements": [
+        "V12-01",
+        "V12-02",
+        "V12-03",
+        "V12-04",
+        "V12-05",
+        "V12-06",
+        "V12-07",
+        "V12-08"
+      ],
+      "acceptance": "首次默认公寓；卡外无有用/没用/更新行，无楼宇/入口/停车菜单；GPS不抢走已选公寓。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "H02",
+      "name": "首页·找活",
+      "surface": "与H01同一路由的地图状态",
+      "entry": "首页切找活",
+      "information": [
+        "搜索与消息",
+        "区域需求标记/聚合",
+        "日期/支援类型筛选",
+        "选中卡：配送区、具体日期/时段、数量/人数、最低量、报价单位、截止/缺口",
+        "独立发需求与导航"
+      ],
+      "actions": [
+        {
+          "label": "点标记",
+          "target": "H02",
+          "result": "选中并更新卡，不切身份"
+        },
+        {
+          "label": "卡片",
+          "target": "D01",
+          "result": "看需求条件"
+        },
+        {
+          "label": "搜索/筛选",
+          "target": "S01",
+          "result": "找区域/承运商/支援类型"
+        },
+        {
+          "label": "＋发需求",
+          "target": "P01",
+          "result": "统一发布"
+        },
+        {
+          "label": "列表",
+          "target": "H02",
+          "result": "同视图切可操作需求列表，不叠新导航"
+        }
+      ],
+      "states": [
+        "有需求",
+        "列表替代地图",
+        "无需求",
+        "区域无结果",
+        "过期/关闭即时移除",
+        "加载失败"
+      ],
+      "api_operations": [
+        "listRequests",
+        "listRegions"
+      ],
+      "requirements": [
+        "V12-09",
+        "ADD-01",
+        "ADD-03"
+      ],
+      "acceptance": "地图定位配送区，取件地区另列；所有配送支援明确当次件数与时间，不伪造报价或到场承诺；只有一条可见选中卡。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "H03",
+      "name": "首页·找人",
+      "surface": "与H01同一路由的地图状态",
+      "entry": "首页切找人",
+      "information": [
+        "区域标记/聚合",
+        "服务区域/相关经验筛选",
+        "司机卡：显示名、声明时段、容量、经验来源",
+        "我的可接活入口",
+        "发需求与导航"
+      ],
+      "actions": [
+        {
+          "label": "司机卡",
+          "target": "D02",
+          "result": "看最小档案"
+        },
+        {
+          "label": "搜索/筛选",
+          "target": "S01",
+          "result": "按服务区/承运商"
+        },
+        {
+          "label": "设置可接活",
+          "target": "U03",
+          "result": "本人主动开放"
+        },
+        {
+          "label": "列表",
+          "target": "H03",
+          "result": "同状态可操作司机列表"
+        },
+        {
+          "label": "＋发需求",
+          "target": "P01",
+          "result": "统一入口"
+        }
+      ],
+      "states": [
+        "有效可用司机",
+        "列表替代",
+        "无人可接",
+        "司机未在线但声明有效",
+        "时段刚到期",
+        "加载失败"
+      ],
+      "api_operations": [
+        "listAvailableDrivers",
+        "listRegions"
+      ],
+      "requirements": [
+        "V12-13",
+        "V12-14"
+      ],
+      "acceptance": "不画精确车点/轨迹；不以关闭App判不可用；区域中心不叫司机当前位置。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "S01",
+      "name": "搜索与筛选",
+      "surface": "二级搜索页，依来源切内容",
+      "entry": "H01/H02/H03搜索",
+      "information": [
+        "返回/输入/清除",
+        "公寓：自有地址名称，外部临时候选独立来源",
+        "找活：区域、承运商、支援类型、日期",
+        "找人：区域、承运商经验",
+        "结果列表/空态"
+      ],
+      "actions": [
+        {
+          "label": "返回",
+          "target": "H01",
+          "result": "回原地图视图与选中对象，非固定切公寓"
+        },
+        {
+          "label": "选择公寓",
+          "target": "H01",
+          "result": "锁定用户选中公寓后查权限与记录"
+        },
+        {
+          "label": "选择需求",
+          "target": "D01",
+          "result": "展示当前版本"
+        },
+        {
+          "label": "选择司机",
+          "target": "D02",
+          "result": "展示最小档案"
+        },
+        {
+          "label": "选择外部地址",
+          "target": "L01",
+          "result": "仅用于当前定位候选，不默认入永久库"
+        }
+      ],
+      "states": [
+        "空查询",
+        "输入联想",
+        "自有结果",
+        "仅外部地址",
+        "无结果",
+        "失败",
+        "筛选后无结果"
+      ],
+      "api_operations": [
+        "searchApartments",
+        "suggestAddresses",
+        "retrieveAddress",
+        "listRequests",
+        "listAvailableDrivers"
+      ],
+      "requirements": [
+        "V12-02",
+        "V12-08",
+        "V12-18",
+        "ADD-03"
+      ],
+      "acceptance": "不持久保存敏感搜索历史；切来源调整字段，不用全站万能搜索混放私人账号。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "L01",
+      "name": "选择正确公寓",
+      "surface": "地图底部选择面板",
+      "entry": "多候选、不是这栋、外部地址选择",
+      "information": [
+        "当前候选地址/名称",
+        "地图候选对应高亮",
+        "手动搜索",
+        "没有这栋/纠错"
+      ],
+      "actions": [
+        {
+          "label": "选这栋",
+          "target": "H01",
+          "result": "锁定并查询，不拿最近邻码代替"
+        },
+        {
+          "label": "搜索地址",
+          "target": "S01",
+          "result": "带当前搜索词"
+        },
+        {
+          "label": "没有这栋",
+          "target": "B02",
+          "result": "先提交公寓提议再贡献，均待规则核验"
+        }
+      ],
+      "states": [
+        "多栋",
+        "仅地址无公寓",
+        "候选已撤回",
+        "提交纠错失败"
+      ],
+      "api_operations": [
+        "getApartment",
+        "proposeApartment",
+        "correctApartment"
+      ],
+      "requirements": [
+        "V12-02",
+        "V12-08"
+      ],
+      "acceptance": "外部临时地址不自动变有权长期存储的自有公寓；无匹配能退出。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "B01",
+      "name": "密码大字",
+      "surface": "轻量全屏/弹层",
+      "entry": "H01点单条密码",
+      "information": [
+        "所属地址",
+        "该条密码/进入方式大字",
+        "必要适用范围",
+        "关闭"
+      ],
+      "actions": [
+        {
+          "label": "关闭",
+          "target": "H01",
+          "result": "恢复原展开位置"
+        }
+      ],
+      "states": [
+        "正常",
+        "记录已撤回/资格失效",
+        "重新加载失败"
+      ],
+      "api_operations": [
+        "readAccessRecords"
+      ],
+      "requirements": [
+        "V12-07",
+        "V12-17"
+      ],
+      "acceptance": "退出清敏感内存；不提供批量复制/分享密码按钮；不把已失效缓存继续显示。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "B02",
+      "name": "贡献密码/进入方式",
+      "surface": "编辑面板，可随键盘展开",
+      "entry": "H01添加/更新，L01无这栋",
+      "information": [
+        "固定所属公寓/纠错入口",
+        "密码或进入方式",
+        "可选门别/时段",
+        "有权分享来源确认",
+        "保存；未知公寓先提议地址"
+      ],
+      "actions": [
+        {
+          "label": "保存",
+          "target": "H01",
+          "result": "新增待审核/可用记录或同码验证；不覆盖原记录"
+        },
+        {
+          "label": "取消",
+          "target": "G03",
+          "result": "未提交内容仅内存保留，本轮不将明文草稿持久化"
+        },
+        {
+          "label": "改公寓",
+          "target": "L01",
+          "result": "先确认目标再提交"
+        }
+      ],
+      "states": [
+        "空",
+        "同码验证",
+        "新记录",
+        "来源未确认",
+        "权限不足",
+        "待审核",
+        "保存失败",
+        "公寓提议待审核"
+      ],
+      "api_operations": [
+        "contributeAccess",
+        "proposeApartment"
+      ],
+      "requirements": [
+        "V12-04",
+        "V12-05",
+        "V12-06",
+        "V12-07"
+      ],
+      "acceptance": "保存成功状态准确，不将pending放进可用首码；0/O、1/I、#/*可辨；请求重试复用幂等键。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "P01",
+      "name": "统一发需求选择",
+      "surface": "首页工具展开面板，合并旧P02",
+      "entry": "任一地图＋发需求、司机圈发需求",
+      "information": [
+        "配送找人/车辆求助/其他配送求助",
+        "配送子类：部分包裹/整条线路/增加司机",
+        "增加司机指本次配送临时缺人"
+      ],
+      "actions": [
+        {
+          "label": "配送类型",
+          "target": "P03",
+          "result": "创建对应表单，保留类型草稿"
+        },
+        {
+          "label": "车辆/其他",
+          "target": "P04",
+          "result": "打开共用短表单"
+        },
+        {
+          "label": "取消",
+          "target": "H01",
+          "result": "恢复来源视图"
+        }
+      ],
+      "states": [
+        "一级类别",
+        "配送子类",
+        "已有草稿选择"
+      ],
+      "api_operations": [
+        "createDraft"
+      ],
+      "requirements": [
+        "V12-09",
+        "ADD-01"
+      ],
+      "acceptance": "司机DSP共用，无角色工作台；发布后改类型走复制新草稿。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "P03",
+      "name": "配送找人发布/编辑",
+      "surface": "全屏表单；类型内短分组",
+      "entry": "P01或P09编辑/复制",
+      "information": [
+        "基础：承运商、配送区、单一取件区",
+        "时间：具体日期、开始时段与有效截止",
+        "数量：当次总量/人数/拆分/最低量",
+        "报价金额+单位或议价",
+        "理货/接手条件",
+        "相关配送经验要求",
+        "可选：车型/特殊配送条件与私下付款约定",
+        "提交摘要与发布"
+      ],
+      "actions": [
+        {
+          "label": "发布",
+          "target": "D01",
+          "result": "先校验和摘要确认，再发布成功回本人详情"
+        },
+        {
+          "label": "保存草稿",
+          "target": "U04",
+          "result": "仅本人可见"
+        },
+        {
+          "label": "返回",
+          "target": "G03",
+          "result": "选择保留草稿或放弃，不丢状态"
+        },
+        {
+          "label": "切换类型",
+          "target": "P01",
+          "result": "仅未发布可切；已发布不提供此项"
+        }
+      ],
+      "states": [
+        "部分包裹",
+        "整线",
+        "临时增人",
+        "联系议价",
+        "最低量错误",
+        "不同取件/配送区域",
+        "编辑版本冲突",
+        "提交中/失败"
+      ],
+      "api_operations": [
+        "createDraft",
+        "updateRequest",
+        "publishRequest"
+      ],
+      "requirements": [
+        "V12-09",
+        "V12-11",
+        "ADD-01",
+        "ADD-02",
+        "ADD-03",
+        "ADD-04"
+      ],
+      "acceptance": "每条配送支援明确当次件数/时段；不设招聘周期/试线/带教流程；无代收/支付选项；未填金额不显示$0。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "P04",
+      "name": "车辆/其他配送求助",
+      "surface": "复用简短发布表单",
+      "entry": "P01车辆/其他",
+      "information": [
+        "求助类型",
+        "大致区域",
+        "时间/截止",
+        "必要说明",
+        "联系入口"
+      ],
+      "actions": [
+        {
+          "label": "发布",
+          "target": "D01",
+          "result": "创建普通同行求助，不承诺专业到场"
+        },
+        {
+          "label": "返回",
+          "target": "G03",
+          "result": "保留或放弃草稿"
+        }
+      ],
+      "states": [
+        "车辆",
+        "其他",
+        "缺字段",
+        "发布失败"
+      ],
+      "api_operations": [
+        "createDraft",
+        "publishRequest"
+      ],
+      "requirements": [
+        "V12-09"
+      ],
+      "acceptance": "车辆修理和包裹找人是两类需求，用户可另发配送找人，不自动生成专业维修订单。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "D01",
+      "name": "需求详情",
+      "surface": "二级页；本人/他人不同动作",
+      "entry": "H02、司机圈需求卡、通知、我的、分享登录回跳",
+      "information": [
+        "状态/支援类型/具体联系人来源",
+        "配送区、取件区、承运商",
+        "当次包裹总量/剩余件数/临时所需人数",
+        "最低量/拆分、报价单位",
+        "具体日期/开始与截止",
+        "相关配送经验要求/接手条件",
+        "私下付款文字；更多菜单"
+      ],
+      "actions": [
+        {
+          "label": "报名",
+          "target": "P08",
+          "result": "开放且有资格可报名；已报显示查看报名"
+        },
+        {
+          "label": "联系",
+          "target": "M02",
+          "result": "创建/复用会话并附来源卡"
+        },
+        {
+          "label": "管理需求",
+          "target": "P09",
+          "result": "仅发布者"
+        },
+        {
+          "label": "分享",
+          "target": "G02",
+          "result": "仅发布者生成公开链接"
+        },
+        {
+          "label": "举报/屏蔽",
+          "target": "G01",
+          "result": "对象和来源带入"
+        }
+      ],
+      "states": [
+        "公开开放",
+        "本人",
+        "已报名",
+        "已找到",
+        "关闭/到期",
+        "报价已更新",
+        "数量低于下限暂不可报",
+        "被屏蔽/无权限"
+      ],
+      "api_operations": [
+        "getRequest",
+        "createConversation"
+      ],
+      "requirements": [
+        "V12-09",
+        "V12-10",
+        "V12-11",
+        "V12-12",
+        "ADD-01",
+        "ADD-02",
+        "ADD-03",
+        "ADD-04"
+      ],
+      "acceptance": "主CTA不同时显示两颗同权重按钮；终态停止新报名，已有会话可读；精确集合点不默认公开。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "P08",
+      "name": "报名/我能帮忙",
+      "surface": "详情内报名面板",
+      "entry": "D01报名",
+      "information": [
+        "来源需求最新摘要/版本",
+        "可到时间、可接件数",
+        "相关承运商配送经验",
+        "提交报名"
+      ],
+      "actions": [
+        {
+          "label": "提交报名",
+          "target": "M02",
+          "result": "报名和会话成功后进入来源会话"
+        },
+        {
+          "label": "补充经验",
+          "target": "U02",
+          "result": "保存后回报名草稿"
+        },
+        {
+          "label": "先联系",
+          "target": "M02",
+          "result": "不冒充报名成功"
+        }
+      ],
+      "states": [
+        "可接部分",
+        "整线确认",
+        "临时补充司机",
+        "不足最低量",
+        "超剩余量",
+        "版本变化",
+        "资格不足",
+        "重复/失败"
+      ],
+      "api_operations": [
+        "applyToRequest",
+        "createConversation"
+      ],
+      "requirements": [
+        "V12-10",
+        "V12-11",
+        "ADD-01",
+        "ADD-02",
+        "ADD-04"
+      ],
+      "acceptance": "重试不重复报名；报名成功与消息失败分开；无法承接不伪造容量。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "P09",
+      "name": "管理我的需求",
+      "surface": "D01管理模式，合并旧P07成功回执",
+      "entry": "本人详情、U04",
+      "information": [
+        "当前状态/版本",
+        "剩余件数/人数",
+        "报名总数≠已联系/已找到",
+        "编辑、查看报名、分享、关闭/重开、复制",
+        "草稿删除"
+      ],
+      "actions": [
+        {
+          "label": "编辑",
+          "target": "P03",
+          "result": "带当前版本，关键变动通知"
+        },
+        {
+          "label": "报名列表",
+          "target": "P10",
+          "result": "仅本人可看"
+        },
+        {
+          "label": "改缺口",
+          "target": "P09",
+          "result": "版本检查，零缺口需确认已找到"
+        },
+        {
+          "label": "关闭/已找到",
+          "target": "G03",
+          "result": "确认后终态，不代表费用结清"
+        },
+        {
+          "label": "重开",
+          "target": "P03",
+          "result": "重新填有效期后校验"
+        },
+        {
+          "label": "复制",
+          "target": "P03",
+          "result": "新草稿，原报名不搬走"
+        },
+        {
+          "label": "删除草稿",
+          "target": "G03",
+          "result": "只隐藏本人未发布草稿，不删已发布历史"
+        },
+        {
+          "label": "分享",
+          "target": "G02",
+          "result": "审核公开摘要"
+        }
+      ],
+      "states": [
+        "草稿",
+        "开放",
+        "有报名",
+        "缺口为0待确认",
+        "版本冲突",
+        "已找到/关闭/到期",
+        "重开"
+      ],
+      "api_operations": [
+        "getRequest",
+        "updateRequestGap",
+        "closeRequest",
+        "reopenRequest",
+        "discardDraft"
+      ],
+      "requirements": [
+        "V12-11",
+        "V12-12",
+        "ADD-01",
+        "ADD-02"
+      ],
+      "acceptance": "报名不自动减缺口；临时增人按本次缺口管理；公开期满不能静默续期。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "P10",
+      "name": "报名司机列表",
+      "surface": "本人需求内列表",
+      "entry": "P09查看报名",
+      "information": [
+        "每人：显示名、相关经验、本次可到时间/可接数量、报名版本、报名/撤回、已联系"
+      ],
+      "actions": [
+        {
+          "label": "看司机",
+          "target": "D02",
+          "result": "最小档案"
+        },
+        {
+          "label": "联系",
+          "target": "M02",
+          "result": "来源会话"
+        },
+        {
+          "label": "标已联系",
+          "target": "P10",
+          "result": "仅作本人管理，非到岗"
+        },
+        {
+          "label": "返回",
+          "target": "P09",
+          "result": "保留列表位置"
+        }
+      ],
+      "states": [
+        "无报名",
+        "部分/整线/增人字段适配",
+        "已撤回",
+        "条件变化",
+        "加载失败"
+      ],
+      "api_operations": [
+        "listRequestApplications",
+        "markApplicationContacted"
+      ],
+      "requirements": [
+        "V12-10",
+        "V12-11"
+      ],
+      "acceptance": "他人不能访问；无到场确认、雇佣合同和结算状态。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "D02",
+      "name": "司机档案",
+      "surface": "二级页，非DSP工作台",
+      "entry": "H03、报名列表、会话、常联系",
+      "information": [
+        "显示名/自报或核验经验",
+        "熟悉区域/车型",
+        "当前可用时段/容量，有则显示",
+        "联系/常联系/更多"
+      ],
+      "actions": [
+        {
+          "label": "联系",
+          "target": "M02",
+          "result": "复用两人会话，检查双向屏蔽"
+        },
+        {
+          "label": "常联系",
+          "target": "U08",
+          "result": "已有真实会话后可保存"
+        },
+        {
+          "label": "举报/屏蔽",
+          "target": "G01",
+          "result": "当前人作为目标"
+        }
+      ],
+      "states": [
+        "可用",
+        "未声明/已到期",
+        "未在线但可用",
+        "经验未核验",
+        "被屏蔽",
+        "用户已注销"
+      ],
+      "api_operations": [
+        "getDriver",
+        "createConversation",
+        "saveContact"
+      ],
+      "requirements": [
+        "V12-13",
+        "V12-14"
+      ],
+      "acceptance": "无可用声明不应把整个档案变404；不公开真实GPS/手机号。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "M01",
+      "name": "消息中心",
+      "surface": "二级列表，顶部分对话/通知",
+      "entry": "首页消息图标",
+      "information": [
+        "对话列表：人名、时间、来源需求标题、未读；不预取正文",
+        "通知：报名/条件变更/终态/必要系统",
+        "总未读来自服务端"
+      ],
+      "actions": [
+        {
+          "label": "对话",
+          "target": "M02",
+          "result": "只标本会话已读水位"
+        },
+        {
+          "label": "需求通知",
+          "target": "D01",
+          "result": "查看当前状态，发布者报名通知可到P10"
+        },
+        {
+          "label": "贡献通知",
+          "target": "H01",
+          "result": "需重新查权限不把密码塞推送"
+        },
+        {
+          "label": "设置",
+          "target": "U11",
+          "result": "通知偏好"
+        }
+      ],
+      "states": [
+        "对话",
+        "通知",
+        "空",
+        "未读",
+        "推送被禁但站内有记录",
+        "刷新失败"
+      ],
+      "api_operations": [
+        "listConversations",
+        "listNotifications",
+        "getInboxSummary",
+        "readNotification"
+      ],
+      "requirements": [
+        "V12-15"
+      ],
+      "acceptance": "进入中心不清空全部未读；无消息正文锁屏预览。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "M02",
+      "name": "一对一会话",
+      "surface": "二级会话页，键盘避让",
+      "entry": "报名成功、联系、会话列表",
+      "information": [
+        "对方显示名/最小组织来源",
+        "来源需求卡及所见版本",
+        "文字消息、发送状态",
+        "输入/发送",
+        "已共享集合点卡（明确授权后）",
+        "更多"
+      ],
+      "actions": [
+        {
+          "label": "发送",
+          "target": "M02",
+          "result": "client_message_id重试复用"
+        },
+        {
+          "label": "需求卡",
+          "target": "D01",
+          "result": "当前版本详情，历史快照不覆盖"
+        },
+        {
+          "label": "对方头像",
+          "target": "D02",
+          "result": "最小档案"
+        },
+        {
+          "label": "分享集合点",
+          "target": "M02",
+          "result": "仅发布者明确分享给本会话"
+        },
+        {
+          "label": "常联系/屏蔽",
+          "target": "G01",
+          "result": "本人操作"
+        },
+        {
+          "label": "返回",
+          "target": "M01",
+          "result": "来自其他源则回源"
+        }
+      ],
+      "states": [
+        "正常",
+        "发送中",
+        "失败可重试",
+        "报价变动",
+        "需求已关闭",
+        "无新消息",
+        "双方屏蔽仅历史可读",
+        "共享撤回",
+        "断网"
+      ],
+      "api_operations": [
+        "listMessages",
+        "sendMessage",
+        "readConversation",
+        "shareMeeting",
+        "getSharedMeeting",
+        "revokeMeetingShare"
+      ],
+      "requirements": [
+        "V12-15",
+        "V12-17"
+      ],
+      "acceptance": "无支付、视频、语音、群聊；消息接受不显示成对方已读；已读水位不跨会话。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "C01",
+      "name": "司机圈",
+      "surface": "底部导航根页",
+      "entry": "司机圈导航",
+      "information": [
+        "文字互助动态",
+        "关联需求卡",
+        "基础回复数",
+        "发动态/发需求入口",
+        "同一三导航"
+      ],
+      "actions": [
+        {
+          "label": "动态",
+          "target": "C02",
+          "result": "查看及回复"
+        },
+        {
+          "label": "需求卡",
+          "target": "D01",
+          "result": "同一个需求ID与状态"
+        },
+        {
+          "label": "发文字",
+          "target": "C03",
+          "result": "首版仅文字"
+        },
+        {
+          "label": "发需求",
+          "target": "P01",
+          "result": "统一发布"
+        }
+      ],
+      "states": [
+        "有内容",
+        "无内容",
+        "需求已结束",
+        "已屏蔽作者",
+        "加载失败"
+      ],
+      "api_operations": [
+        "listPosts"
+      ],
+      "requirements": [
+        "V12-16"
+      ],
+      "acceptance": "无虚构活跃人数、假头像墙、生活服务独立市场；不把原型备注当内容。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "C02",
+      "name": "动态与回复",
+      "surface": "二级详情",
+      "entry": "C01、U04、通知",
+      "information": [
+        "作者/时间",
+        "文字正文",
+        "可选关联需求",
+        "基础回复",
+        "输入/发送",
+        "更多菜单"
+      ],
+      "actions": [
+        {
+          "label": "发送回复",
+          "target": "C02",
+          "result": "提交成功才加列表，失败保留文本"
+        },
+        {
+          "label": "作者",
+          "target": "D02",
+          "result": "最小档案"
+        },
+        {
+          "label": "关联需求",
+          "target": "D01",
+          "result": "当前状态"
+        },
+        {
+          "label": "举报/删除",
+          "target": "G01",
+          "result": "按作者/运营权限展示"
+        }
+      ],
+      "states": [
+        "正常",
+        "无回复",
+        "发送失败",
+        "动态已删除",
+        "回复被移除"
+      ],
+      "api_operations": [
+        "getPost",
+        "listComments",
+        "createComment",
+        "removeComment"
+      ],
+      "requirements": [
+        "V12-16"
+      ],
+      "acceptance": "不要求贴面单/门码；不复制支援条件形成另一套过期信息。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "C03",
+      "name": "发布互助文字",
+      "surface": "二级编辑页",
+      "entry": "C01发文字",
+      "information": [
+        "文本输入",
+        "可选关联本人已发布需求",
+        "发布按钮"
+      ],
+      "actions": [
+        {
+          "label": "发布",
+          "target": "C02",
+          "result": "成功进动态，不构造假互动"
+        },
+        {
+          "label": "返回",
+          "target": "G03",
+          "result": "保存普通文字草稿或放弃"
+        }
+      ],
+      "states": [
+        "空",
+        "字数上限",
+        "发布中/失败",
+        "关联需求不可见"
+      ],
+      "api_operations": [
+        "createPost",
+        "listMyRequests"
+      ],
+      "requirements": [
+        "V12-16"
+      ],
+      "acceptance": "无多图上传、租房保险交易表单；页面不加品牌口号长说明。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U01",
+      "name": "我的",
+      "surface": "底部导航根页",
+      "entry": "我的导航",
+      "information": [
+        "本人资料",
+        "可接活状态",
+        "我的发布/报名/贡献",
+        "常联系",
+        "组织来源",
+        "设置"
+      ],
+      "actions": [
+        {
+          "label": "资料",
+          "target": "U02",
+          "result": "修改本人"
+        },
+        {
+          "label": "可接活",
+          "target": "U03",
+          "result": "声明时段与区域"
+        },
+        {
+          "label": "我的发布",
+          "target": "U04",
+          "result": "需求/文字"
+        },
+        {
+          "label": "我的报名",
+          "target": "U05",
+          "result": "当前与历史"
+        },
+        {
+          "label": "我的贡献",
+          "target": "U06",
+          "result": "本人记录"
+        },
+        {
+          "label": "常联系",
+          "target": "U08",
+          "result": "私人列表"
+        },
+        {
+          "label": "组织来源",
+          "target": "U10",
+          "result": "最小来源"
+        },
+        {
+          "label": "设置",
+          "target": "U11",
+          "result": "账户/通知/位置"
+        }
+      ],
+      "states": [
+        "未登录",
+        "正常",
+        "资格待核验",
+        "可用/到期",
+        "账号受限"
+      ],
+      "api_operations": [
+        "getMe",
+        "getMyAvailability"
+      ],
+      "requirements": [
+        "V12-13",
+        "V12-20"
+      ],
+      "acceptance": "没有钱包/收入/结算/配送数据；身份不触发另一端工作台。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U02",
+      "name": "资料与经验",
+      "surface": "二级编辑页",
+      "entry": "U01、报名补充",
+      "information": [
+        "显示名、简短介绍",
+        "自报承运商经验/区域",
+        "车型",
+        "已有核验记录只读",
+        "保存"
+      ],
+      "actions": [
+        {
+          "label": "保存",
+          "target": "U01",
+          "result": "回实际来源，报名返回P08保留条件"
+        },
+        {
+          "label": "返回",
+          "target": "G03",
+          "result": "普通草稿提示保留或放弃"
+        }
+      ],
+      "states": [
+        "普通",
+        "长名/空名错误",
+        "自报与核验分开",
+        "保存失败"
+      ],
+      "api_operations": [
+        "patchMyProfile",
+        "getMe"
+      ],
+      "requirements": [
+        "V12-13"
+      ],
+      "acceptance": "本人无法把source改verified；核验资料不被自报PATCH覆盖。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U03",
+      "name": "可接活设置",
+      "surface": "二级编辑页",
+      "entry": "U01/H03",
+      "information": [
+        "可接活开关",
+        "开始/结束时段",
+        "可去区域",
+        "可接容量",
+        "最晚结束时间",
+        "保存"
+      ],
+      "actions": [
+        {
+          "label": "保存",
+          "target": "U01",
+          "result": "当前时段生效，回来源"
+        },
+        {
+          "label": "关闭可接活",
+          "target": "U03",
+          "result": "停止找人推荐，不删除会话"
+        }
+      ],
+      "states": [
+        "未设置",
+        "已开启",
+        "时间错误",
+        "过期",
+        "容量为空",
+        "版本冲突"
+      ],
+      "api_operations": [
+        "getMyAvailability",
+        "setMyAvailability",
+        "listRegions"
+      ],
+      "requirements": [
+        "V12-13",
+        "V12-14"
+      ],
+      "acceptance": "切回承运商App仍按声明时段有效；不请求后台轨迹权限。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U04",
+      "name": "我的发布",
+      "surface": "二级列表，需求/动态分段",
+      "entry": "U01",
+      "information": [
+        "需求：草稿/开放/终态、件数/本次人数缺口、更新时间",
+        "动态：正文摘要/状态"
+      ],
+      "actions": [
+        {
+          "label": "需求",
+          "target": "P09",
+          "result": "本人管理模式"
+        },
+        {
+          "label": "动态",
+          "target": "C02",
+          "result": "本人更多有删除"
+        },
+        {
+          "label": "草稿",
+          "target": "P03",
+          "result": "继续编辑"
+        }
+      ],
+      "states": [
+        "草稿",
+        "已发布",
+        "已结束",
+        "文字",
+        "空",
+        "失败"
+      ],
+      "api_operations": [
+        "listMyRequests",
+        "listMyPosts"
+      ],
+      "requirements": [
+        "V12-12",
+        "V12-16"
+      ],
+      "acceptance": "本人列表不能把草稿放进公开圈子；旧报名不搬到复制需求。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U05",
+      "name": "我的报名",
+      "surface": "二级列表",
+      "entry": "U01",
+      "information": [
+        "配送区域/支援类型",
+        "本次到达时间/容量",
+        "报名版本/当前状态",
+        "撤回操作"
+      ],
+      "actions": [
+        {
+          "label": "需求",
+          "target": "D01",
+          "result": "当前条件"
+        },
+        {
+          "label": "联系",
+          "target": "M02",
+          "result": "已有会话"
+        },
+        {
+          "label": "撤回",
+          "target": "G03",
+          "result": "撤本人报名，不替发布者扣回缺口"
+        }
+      ],
+      "states": [
+        "已报名",
+        "撤回",
+        "条件变更",
+        "需求结束",
+        "空"
+      ],
+      "api_operations": [
+        "listMyApplications",
+        "withdrawApplication"
+      ],
+      "requirements": [
+        "V12-10",
+        "V12-11"
+      ],
+      "acceptance": "撤回不删除双方历史消息；未接受新价不显示已同意。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U06",
+      "name": "我的贡献",
+      "surface": "二级列表；元数据与正文分开",
+      "entry": "U01",
+      "information": [
+        "所属公寓、创建/同码验证类型、时间",
+        "待审核/可用/失效/撤回",
+        "不默认加载密码正文"
+      ],
+      "actions": [
+        {
+          "label": "看公寓",
+          "target": "H01",
+          "result": "重新校验资格再读正文"
+        },
+        {
+          "label": "撤回本人创建",
+          "target": "G03",
+          "result": "停止展示；同码验证者不能撤别人原记录"
+        },
+        {
+          "label": "查看审核状态",
+          "target": "U06",
+          "result": "只读本人元数据"
+        }
+      ],
+      "states": [
+        "创建",
+        "同码验证",
+        "待审核",
+        "已失效",
+        "已撤回",
+        "资格过期仍可看本人元数据"
+      ],
+      "api_operations": [
+        "listMyContributions",
+        "withdrawAccess"
+      ],
+      "requirements": [
+        "V12-07",
+        "V12-17"
+      ],
+      "acceptance": "不能为看本人审核进度强制继续持有access.read；不从列表泄露失效正文。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U08",
+      "name": "常联系",
+      "surface": "二级私人列表",
+      "entry": "U01、D02、会话",
+      "information": [
+        "显示名/相关经验",
+        "本人备注",
+        "会话入口",
+        "移除"
+      ],
+      "actions": [
+        {
+          "label": "联系",
+          "target": "M02",
+          "result": "已有会话；屏蔽则不可新发"
+        },
+        {
+          "label": "档案",
+          "target": "D02",
+          "result": "最小资料"
+        },
+        {
+          "label": "备注/移除",
+          "target": "U08",
+          "result": "只影响本人列表"
+        }
+      ],
+      "states": [
+        "有联系人",
+        "空",
+        "已屏蔽",
+        "用户注销",
+        "保存失败"
+      ],
+      "api_operations": [
+        "listMyContacts",
+        "saveContact",
+        "deleteContact"
+      ],
+      "requirements": [
+        "V12-15"
+      ],
+      "acceptance": "不导入微信通讯录、不让DSP其他人读取本人备注。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U10",
+      "name": "组织来源",
+      "surface": "本人资料内二级编辑",
+      "entry": "U01、发布需求来源",
+      "information": [
+        "组织名称",
+        "本人具体联系人",
+        "自报/已核验状态只读",
+        "保存"
+      ],
+      "actions": [
+        {
+          "label": "保存",
+          "target": "U01",
+          "result": "仅维护本人有权代表的来源"
+        },
+        {
+          "label": "返回",
+          "target": "G03",
+          "result": "未保存提示"
+        }
+      ],
+      "states": [
+        "未填",
+        "自报",
+        "已核验",
+        "保存失败"
+      ],
+      "api_operations": [
+        "putMyOrganization",
+        "getMyOrganization"
+      ],
+      "requirements": [
+        "V12-09"
+      ],
+      "acceptance": "无成员邀请、权限工作台；发布不冒用其他组织ID。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "U11",
+      "name": "设置与账户",
+      "surface": "二级设置页，分组子面板",
+      "entry": "U01、消息",
+      "information": [
+        "通知偏好",
+        "位置权限与系统设置入口",
+        "账号/手机号恢复入口",
+        "退出登录",
+        "删除账号",
+        "隐私/必要条款",
+        "不增加完整英文首发承诺"
+      ],
+      "actions": [
+        {
+          "label": "通知设置",
+          "target": "U11",
+          "result": "偏好只改推送，站内事件仍保留"
+        },
+        {
+          "label": "位置设置",
+          "target": "U11",
+          "result": "仅按需打开OS设置，不索后台轨迹"
+        },
+        {
+          "label": "退出",
+          "target": "G03",
+          "result": "解绑本设备并清敏感缓存"
+        },
+        {
+          "label": "删除账号",
+          "target": "G03",
+          "result": "重新认证后提交删除任务，展示状态"
+        },
+        {
+          "label": "返回",
+          "target": "U01",
+          "result": "保留原源"
+        }
+      ],
+      "states": [
+        "正常",
+        "推送拒绝",
+        "定位拒绝",
+        "退出失败",
+        "需重新认证",
+        "删除处理中/失败"
+      ],
+      "api_operations": [
+        "getNotificationPreferences",
+        "setNotificationPreferences",
+        "unbindDevice",
+        "deleteMyAccount"
+      ],
+      "requirements": [
+        "V12-15",
+        "V12-17"
+      ],
+      "acceptance": "删除不写成瞬时清空所有备份；不泄露OTP/refresh token。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "G01",
+      "name": "更多/举报/屏蔽",
+      "surface": "公共操作面板",
+      "entry": "详情、会话、动态、本人记录",
+      "information": [
+        "依对象权限显示：举报/屏蔽/常联系/本人删除撤回",
+        "举报原因",
+        "必要确认"
+      ],
+      "actions": [
+        {
+          "label": "举报",
+          "target": "G01",
+          "result": "提交对象/原因，回执不自动处罚"
+        },
+        {
+          "label": "屏蔽",
+          "target": "G03",
+          "result": "双向限制新联系，保留必要历史"
+        },
+        {
+          "label": "删除/撤回",
+          "target": "G03",
+          "result": "只按本人权限动作"
+        },
+        {
+          "label": "常联系",
+          "target": "U08",
+          "result": "有会话才可保存"
+        }
+      ],
+      "states": [
+        "他人对象",
+        "本人对象",
+        "原因未填",
+        "提交失败",
+        "已屏蔽"
+      ],
+      "api_operations": [
+        "submitReport",
+        "blockUser",
+        "unblockUser",
+        "saveContact",
+        "removePost",
+        "removeComment"
+      ],
+      "requirements": [
+        "V12-15",
+        "V12-17"
+      ],
+      "acceptance": "不暴露举报人给被举报者，不做单方差评自动黑名单。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "G02",
+      "name": "分享需求",
+      "surface": "公共分享面板，仅发布者",
+      "entry": "D01/P09本人分享",
+      "information": [
+        "将公开的需求摘要",
+        "复制链接/系统分享",
+        "撤销链接",
+        "来源状态"
+      ],
+      "actions": [
+        {
+          "label": "生成/复制",
+          "target": "G02",
+          "result": "生成token并系统复制，用户自行发微信"
+        },
+        {
+          "label": "系统分享",
+          "target": "G02",
+          "result": "调用OS分享，不保证存在微信专用按钮"
+        },
+        {
+          "label": "预览",
+          "target": "X01",
+          "result": "看游客公开摘要"
+        },
+        {
+          "label": "撤销",
+          "target": "G03",
+          "result": "立即使token不可用"
+        }
+      ],
+      "states": [
+        "未生成",
+        "可分享",
+        "公开字段待核对",
+        "生成失败",
+        "链接已撤销",
+        "需求已结束"
+      ],
+      "api_operations": [
+        "createRequestShare",
+        "revokeRequestShare"
+      ],
+      "requirements": [
+        "ADD-05"
+      ],
+      "acceptance": "不默认发朋友圈；无电话微信/精确集合点/报名名单/门码。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "X01",
+      "name": "外部公开需求摘要",
+      "surface": "H5公开页，App深链/登录桥接",
+      "entry": "用户主动分享的token链接",
+      "information": [
+        "Abasong标识",
+        "只读公开摘要",
+        "状态/有效期",
+        "打开App、报名/联系入口",
+        "未安装时分发入口"
+      ],
+      "actions": [
+        {
+          "label": "报名/联系",
+          "target": "A02",
+          "result": "保存token+意图，登录后查最新需求再进入D01/P08"
+        },
+        {
+          "label": "打开App",
+          "target": "D01",
+          "result": "深链成功后仍查当前权限与状态"
+        }
+      ],
+      "states": [
+        "开放",
+        "已结束仅终态",
+        "token无效/撤销",
+        "登录回跳条件变化",
+        "未安装App"
+      ],
+      "api_operations": [
+        "getPublicRequestShare"
+      ],
+      "requirements": [
+        "ADD-05"
+      ],
+      "acceptance": "游客不访问完整Request接口；不能通过token读私聊、司机库或公寓码；首版不承诺H5完整报名工作端。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    },
+    {
+      "id": "G03",
+      "name": "确认/错误/恢复",
+      "surface": "全局组件状态，不是独立路由",
+      "entry": "表单退出、撤回、关闭、删除、错误",
+      "information": [
+        "明确对象与动作",
+        "必要结果说明",
+        "主动作/取消或重试"
+      ],
+      "actions": [
+        {
+          "label": "确认",
+          "target": "G03",
+          "result": "执行来源动作，成功返回来源状态"
+        },
+        {
+          "label": "取消",
+          "target": "G03",
+          "result": "不改变业务"
+        },
+        {
+          "label": "重试",
+          "target": "G03",
+          "result": "复用幂等意图，不清空输入"
+        }
+      ],
+      "states": [
+        "未保存退出",
+        "关闭需求",
+        "撤回记录/报名",
+        "删除草稿/动态",
+        "退出/删账号",
+        "服务错误/版本冲突"
+      ],
+      "api_operations": [],
+      "requirements": [
+        "V12-07",
+        "V12-11",
+        "V12-12",
+        "V12-15"
+      ],
+      "acceptance": "不弹长段教学；危险操作用明确名称，非统一写确定；共享组件按来源完成回跳。",
+      "prototype_status": "原型已认可·作为开发基线（状态部分覆盖）"
+    }
+  ]
+}

@@ -1,0 +1,217 @@
+{
+  "date": "2026-10-29",
+  "prototype_version": "V12.1",
+  "review_status": "pending_user_review",
+  "javascript_syntax": "passed",
+  "static_actions_have_handlers": true,
+  "v3_tokens_match_source": true,
+  "route_smoke": [
+    {
+      "page": "H01 · 首页 · 公寓",
+      "passed": true
+    },
+    {
+      "page": "S01 · 搜索与筛选",
+      "passed": true
+    },
+    {
+      "page": "L01 · 选择正确公寓",
+      "passed": true
+    },
+    {
+      "page": "B01 · 密码大字",
+      "passed": true
+    },
+    {
+      "page": "B02 · 添加密码",
+      "passed": true
+    },
+    {
+      "page": "P01 · 发需求",
+      "passed": true
+    },
+    {
+      "page": "P03 · 配送支援发布",
+      "passed": true
+    },
+    {
+      "page": "P04 · 配送求助",
+      "passed": true
+    },
+    {
+      "page": "D01 · 需求详情",
+      "passed": true
+    },
+    {
+      "page": "P08 · 报名",
+      "passed": true
+    },
+    {
+      "page": "P09 · 管理我的需求",
+      "passed": true
+    },
+    {
+      "page": "P10 · 报名司机",
+      "passed": true
+    },
+    {
+      "page": "D02 · 司机档案",
+      "passed": true
+    },
+    {
+      "page": "M01 · 消息中心",
+      "passed": true
+    },
+    {
+      "page": "M02 · 一对一会话",
+      "passed": true
+    },
+    {
+      "page": "C01 · 司机圈",
+      "passed": true
+    },
+    {
+      "page": "C02 · 动态与回复",
+      "passed": true
+    },
+    {
+      "page": "C03 · 发布互助文字",
+      "passed": true
+    },
+    {
+      "page": "U01 · 我的",
+      "passed": true
+    },
+    {
+      "page": "U02 · 资料与经验",
+      "passed": true
+    },
+    {
+      "page": "U03 · 可接活设置",
+      "passed": true
+    },
+    {
+      "page": "U04 · 我的发布",
+      "passed": true
+    },
+    {
+      "page": "U05 · 我的报名",
+      "passed": true
+    },
+    {
+      "page": "U06 · 我的贡献",
+      "passed": true
+    },
+    {
+      "page": "U08 · 常联系",
+      "passed": true
+    },
+    {
+      "page": "U10 · 组织来源",
+      "passed": true
+    },
+    {
+      "page": "U11 · 设置",
+      "passed": true
+    },
+    {
+      "page": "A02 · 手机号登录",
+      "passed": true
+    },
+    {
+      "page": "A03 · 验证码",
+      "passed": true
+    },
+    {
+      "page": "A04 · 最小个人资料",
+      "passed": true
+    },
+    {
+      "page": "G02 · 分享需求",
+      "passed": true
+    },
+    {
+      "page": "X01 · 公开需求摘要",
+      "passed": true
+    }
+  ],
+  "apartment_scenarios": [
+    {
+      "scene": "已识别 · 有可用记录",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "相邻公寓 · 多个候选",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "这栋公寓暂无密码",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "没有固定密码",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "未开启定位",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "位置已过期",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "网络连接失败",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "没有资料查看资格",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "尚未登录",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    },
+    {
+      "scene": "反馈提交失败",
+      "rendered": true,
+      "passwordVisibilityAsExpected": true
+    }
+  ],
+  "home_responsive": [
+    {
+      "app": 375,
+      "document": 375,
+      "navItems": 3,
+      "viewport": 375,
+      "passed": true
+    },
+    {
+      "app": 390,
+      "document": 390,
+      "navItems": 3,
+      "viewport": 390,
+      "passed": true
+    },
+    {
+      "app": 430,
+      "document": 430,
+      "navItems": 3,
+      "viewport": 430,
+      "passed": true
+    }
+  ],
+  "browser_script_errors_observed": 0,
+  "all_207_states_accepted": false,
+  "backend_mapbox_native_or_carrier_connected": false,
+  "notes": "Browser smoke and listed local flows only; see 验收记录.md. Not a production/security/accessibility certification."
+}

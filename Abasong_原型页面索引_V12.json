@@ -1,0 +1,400 @@
+{
+  "version": "V12",
+  "date": "2026-10-29",
+  "baseline": "Abasong_PRD_V12_首版产品需求.md",
+  "note": "历史49设计节点的首版映射；P0行为可合并，不等于49条独立路由；细节冲突以V12为准",
+  "pages": [
+    {
+      "id": "A01",
+      "title": "首次简短引导",
+      "release": "P0",
+      "treatment": "合并首次使用",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "A02",
+      "title": "手机号登录",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "A03",
+      "title": "验证码与账号恢复",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "A04",
+      "title": "最小个人资料",
+      "release": "P0",
+      "treatment": "合并最小资料",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "H01",
+      "title": "首页·公寓",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "H02",
+      "title": "首页·找活",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "H03",
+      "title": "首页·找人",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "S01",
+      "title": "搜索与结果",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "L01",
+      "title": "选择正确公寓",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "B01",
+      "title": "密码大字",
+      "release": "P0",
+      "treatment": "合并大字弹层",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "B02",
+      "title": "添加/更新密码",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "B03",
+      "title": "单条密码没用反馈",
+      "release": "P0",
+      "treatment": "合并记录内反馈",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "D01",
+      "title": "需求详情",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "D02",
+      "title": "司机档案",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P01",
+      "title": "发需求分类",
+      "release": "P0",
+      "treatment": "合并发布面板",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P02",
+      "title": "配送找人子类型",
+      "release": "P0",
+      "treatment": "合并发布面板",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P03",
+      "title": "配送找人发布",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P04",
+      "title": "车辆求助发布",
+      "release": "P0",
+      "treatment": "合并通用求助",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P05",
+      "title": "其他配送求助发布",
+      "release": "P0",
+      "treatment": "合并通用求助",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P06",
+      "title": "需求预览",
+      "release": "P0",
+      "treatment": "合并表单摘要",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P07",
+      "title": "发布成功与回执",
+      "release": "P0",
+      "treatment": "合并发布详情",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P08",
+      "title": "报名/我能帮忙",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P09",
+      "title": "管理我的需求",
+      "release": "P0",
+      "treatment": "合并需求管理",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "P10",
+      "title": "报名司机列表",
+      "release": "P0",
+      "treatment": "合并需求管理",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "C01",
+      "title": "司机圈首页",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "C02",
+      "title": "动态详情与评论",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "C03",
+      "title": "发布路上动态",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "C04",
+      "title": "发布司机生活信息",
+      "release": "P1",
+      "treatment": "生活信息专用表单后置",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "C05",
+      "title": "司机圈发布选择",
+      "release": "P0",
+      "treatment": "合并圈内发布",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "M01",
+      "title": "消息中心",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "M02",
+      "title": "一对一会话",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "M03",
+      "title": "系统通知详情",
+      "release": "P0",
+      "treatment": "合并通知与业务详情",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U01",
+      "title": "我的首页",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U02",
+      "title": "编辑资料与经验",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U03",
+      "title": "可接活设置",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U04",
+      "title": "我的发布",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U05",
+      "title": "我的报名",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U06",
+      "title": "我的密码贡献",
+      "release": "P0",
+      "treatment": "合并贡献记录",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U07",
+      "title": "贡献记录详情",
+      "release": "P0",
+      "treatment": "合并贡献记录",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U08",
+      "title": "常联系司机与合作联系人",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U09",
+      "title": "收藏",
+      "release": "P1",
+      "treatment": "综合收藏后置",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U10",
+      "title": "组织资料与成员",
+      "release": "P0",
+      "treatment": "最小组织来源；成员权限P1",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U11",
+      "title": "设置",
+      "release": "P0",
+      "treatment": "合并设置",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U12",
+      "title": "隐私与位置",
+      "release": "P0",
+      "treatment": "合并设置",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U13",
+      "title": "通知设置",
+      "release": "P0",
+      "treatment": "合并设置",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "U14",
+      "title": "账号与安全",
+      "release": "P0",
+      "treatment": "合并设置",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "G01",
+      "title": "举报、屏蔽与内容操作",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "G02",
+      "title": "分享",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    },
+    {
+      "id": "G03",
+      "title": "确认、错误与恢复",
+      "release": "P0",
+      "treatment": "保留核心行为",
+      "scope_document": "Abasong_V12_页面范围与原型验收.md",
+      "legacy_spec": "Abasong_页面信息架构与交互规格_V1.1_密码记录展开版.md"
+    }
+  ]
+}

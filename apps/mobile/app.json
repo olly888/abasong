@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Abasong",
+    "slug": "abasong",
+    "version": "0.1.0",
+    "scheme": "abasong",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.abasong.mobile"
+    },
+    "android": {
+      "package": "com.abasong.mobile"
+    },
+    "plugins": [
+      "expo-router",
+      "@rnmapbox/maps",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "使用当前位置查找附近公寓和临时支援。",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

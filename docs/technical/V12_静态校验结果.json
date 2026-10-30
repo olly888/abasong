@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-29",
+  "baseline": "V12.1 temporary delivery support only",
+  "openapi": {
+    "version": "3.0.3",
+    "contract_version": "12.1.0",
+    "paths": 63,
+    "operations": 80,
+    "schemas": 91,
+    "spec_validation": "passed"
+  },
+  "sql": {
+    "top_level_parse": "passed",
+    "statements": 79,
+    "tables": 45,
+    "database_execution": "not_run",
+    "plpgsql_do_blocks_compiled": "not_run",
+    "postgis_and_role_integration": "not_run"
+  },
+  "page_spec": {
+    "nodes": 36,
+    "state_variants": 207,
+    "action_targets_and_operations": "passed",
+    "no_recruitment_screens": "passed"
+  },
+  "local_doc_links": "passed",
+  "structural_contract_checks": "passed",
+  "real_device_and_cloud_tests": "not_run"
+}

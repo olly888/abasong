@@ -1,0 +1,37 @@
+name: Engineering checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+          cache: pnpm
+      - run: ./scripts/dev install --frozen-lockfile
+      - run: ./scripts/dev check
+      - name: Check generated files
+        run: |
+          ./scripts/dev contracts:generate
+          ./scripts/dev tokens:generate
+          git diff --exit-code -- packages/contracts/src/generated.ts packages/ui/src/index.ts
+      - run: ./scripts/dev env:init
+      - run: ./scripts/dev db:up
+      - run: ./scripts/dev db:verify
+      - run: ./scripts/dev smoke:services
+      - name: Bundle native JavaScript
+        run: ./scripts/dev --filter @abasong/mobile exec expo export --platform ios --output-dir dist/ios
+      - name: Bundle Android JavaScript
+        run: ./scripts/dev --filter @abasong/mobile exec expo export --platform android --output-dir dist/android
+      - name: Stop isolated database
+        if: always()
+        run: ./scripts/dev db:down

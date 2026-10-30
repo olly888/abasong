@@ -1,0 +1,72 @@
+[
+  {
+    "foreground": "ink",
+    "background": "surface",
+    "contrast": 18.88,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "ink",
+    "background": "signal",
+    "contrast": 16.32,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "textSecondary",
+    "background": "surface",
+    "contrast": 7.37,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "textMuted",
+    "background": "surface",
+    "contrast": 5.27,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "success",
+    "background": "successSoft",
+    "contrast": 6.2,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "warning",
+    "background": "warningSoft",
+    "contrast": 5.81,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "danger",
+    "background": "dangerSoft",
+    "contrast": 5.27,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "info",
+    "background": "infoSoft",
+    "contrast": 5.54,
+    "minimum": 4.5,
+    "pass": true
+  },
+  {
+    "foreground": "controlBorder",
+    "background": "surface",
+    "contrast": 3.7,
+    "minimum": 3.0,
+    "pass": true
+  },
+  {
+    "foreground": "focus",
+    "background": "surface",
+    "contrast": 6.17,
+    "minimum": 3.0,
+    "pass": true
+  }
+]

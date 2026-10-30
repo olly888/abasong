@@ -1,0 +1,302 @@
+{
+  "source": "/Users/olly/Abasong/Abasong_页面信息架构与交互规格_V1_原型制作基线.md",
+  "date": "2026-10-29",
+  "status": "prototype baseline proposal",
+  "note": "49 design nodes include root states, secondary pages, sheets and result states, not 49 independent routes",
+  "pages": [
+    {
+      "id": "A01",
+      "title": "首次简短引导",
+      "presentation": "首次进入状态，不是日常必经启动页。",
+      "source_line": 69
+    },
+    {
+      "id": "A02",
+      "title": "手机号登录",
+      "presentation": "二级页面；入口是登录或触发需账号动作。",
+      "source_line": 79
+    },
+    {
+      "id": "A03",
+      "title": "验证码与账号恢复",
+      "presentation": "二级页面，与 A02 同一账号流程。",
+      "source_line": 89
+    },
+    {
+      "id": "A04",
+      "title": "最小个人资料",
+      "presentation": "二级页面，新账号一次性流程。",
+      "source_line": 98
+    },
+    {
+      "id": "H01",
+      "title": "首页·公寓",
+      "presentation": "首页根页面的默认状态。",
+      "source_line": 109
+    },
+    {
+      "id": "H02",
+      "title": "首页·找活",
+      "presentation": "与 H01 同一路由的地图状态。",
+      "source_line": 131
+    },
+    {
+      "id": "H03",
+      "title": "首页·找人",
+      "presentation": "首页地图第三状态，司机和 DSP 都可访问。",
+      "source_line": 144
+    },
+    {
+      "id": "S01",
+      "title": "搜索与结果",
+      "presentation": "二级页面，复用一个搜索路由，带当前地图视图。",
+      "source_line": 155
+    },
+    {
+      "id": "L01",
+      "title": "选择正确公寓",
+      "presentation": "底部弹层；来源是自动多候选或“不是这栋”。",
+      "source_line": 170
+    },
+    {
+      "id": "B01",
+      "title": "密码大字",
+      "presentation": "轻量全屏或大字弹层。",
+      "source_line": 181
+    },
+    {
+      "id": "B02",
+      "title": "添加/更新密码",
+      "presentation": "底部编辑弹层，可随键盘扩展。",
+      "source_line": 190
+    },
+    {
+      "id": "B03",
+      "title": "不能用反馈",
+      "presentation": "先即时反馈，再展开可跳过的原因弹层。",
+      "source_line": 202
+    },
+    {
+      "id": "D01",
+      "title": "需求详情",
+      "presentation": "二级页面；首页找活、司机圈、消息卡片与我的发布都引用同一记录。",
+      "source_line": 214
+    },
+    {
+      "id": "D02",
+      "title": "司机档案",
+      "presentation": "二级页面；地图卡、报名人、聊天头像、联系人均可进入。",
+      "source_line": 227
+    },
+    {
+      "id": "P01",
+      "title": "发需求分类",
+      "presentation": "首页独立“＋ 发需求”底部弹层。",
+      "source_line": 239
+    },
+    {
+      "id": "P02",
+      "title": "配送找人子类型",
+      "presentation": "P01 的下一层弹层。",
+      "source_line": 248
+    },
+    {
+      "id": "P03",
+      "title": "配送找人发布",
+      "presentation": "二级短表单，子类型控制字段，不切换 DSP 端。",
+      "source_line": 257
+    },
+    {
+      "id": "P04",
+      "title": "车辆求助发布",
+      "presentation": "二级短表单。",
+      "source_line": 281
+    },
+    {
+      "id": "P05",
+      "title": "其他配送求助发布",
+      "presentation": "二级短表单。",
+      "source_line": 291
+    },
+    {
+      "id": "P06",
+      "title": "需求预览",
+      "presentation": "二级页面，生成与实际公开样式一致的预览卡。",
+      "source_line": 300
+    },
+    {
+      "id": "P07",
+      "title": "发布成功与回执",
+      "presentation": "结果状态，不必另建持久页面。",
+      "source_line": 309
+    },
+    {
+      "id": "P08",
+      "title": "报名/我能帮忙",
+      "presentation": "D01 或找活卡触发的底部弹层。",
+      "source_line": 317
+    },
+    {
+      "id": "P09",
+      "title": "管理我的需求",
+      "presentation": "本人 D01 的管理模式，可复用详情布局。",
+      "source_line": 328
+    },
+    {
+      "id": "P10",
+      "title": "报名司机列表",
+      "presentation": "二级页面；组织发布按成员权限可看，非参与者不可枚举。",
+      "source_line": 337
+    },
+    {
+      "id": "C01",
+      "title": "司机圈首页",
+      "presentation": "第二根页面。",
+      "source_line": 348
+    },
+    {
+      "id": "C02",
+      "title": "动态详情与评论",
+      "presentation": "二级页面，普通动态和生活信息；工作需求引用则去 D01。",
+      "source_line": 360
+    },
+    {
+      "id": "C03",
+      "title": "发布路上动态",
+      "presentation": "二级图文编辑页。",
+      "source_line": 369
+    },
+    {
+      "id": "C04",
+      "title": "发布司机生活信息",
+      "presentation": "复用 C03，增加生活类型与联系。",
+      "source_line": 379
+    },
+    {
+      "id": "C05",
+      "title": "司机圈发布选择",
+      "presentation": "底部弹层。",
+      "source_line": 388
+    },
+    {
+      "id": "M01",
+      "title": "消息中心",
+      "presentation": "二级页面，所有消息入口与推送共用。",
+      "source_line": 398
+    },
+    {
+      "id": "M02",
+      "title": "一对一会话",
+      "presentation": "二级页面。首发建议支持文字、脱敏图片、需求卡片；语音、群聊与音视频不进首版。",
+      "source_line": 408
+    },
+    {
+      "id": "M03",
+      "title": "系统通知详情",
+      "presentation": "二级页面。",
+      "source_line": 421
+    },
+    {
+      "id": "U01",
+      "title": "我的首页",
+      "presentation": "第三根页面。",
+      "source_line": 431
+    },
+    {
+      "id": "U02",
+      "title": "编辑资料与经验",
+      "presentation": "二级页面，可从本人档案进入。",
+      "source_line": 441
+    },
+    {
+      "id": "U03",
+      "title": "可接活设置",
+      "presentation": "二级页面；找人地图的供给来源。",
+      "source_line": 450
+    },
+    {
+      "id": "U04",
+      "title": "我的发布",
+      "presentation": "二级列表。",
+      "source_line": 460
+    },
+    {
+      "id": "U05",
+      "title": "我的报名",
+      "presentation": "二级列表。",
+      "source_line": 469
+    },
+    {
+      "id": "U06",
+      "title": "我的密码贡献",
+      "presentation": "二级列表。",
+      "source_line": 477
+    },
+    {
+      "id": "U07",
+      "title": "贡献记录详情",
+      "presentation": "二级页面，贡献人与授权运营范围内可看。",
+      "source_line": 485
+    },
+    {
+      "id": "U08",
+      "title": "常联系司机与合作联系人",
+      "presentation": "二级列表。",
+      "source_line": 493
+    },
+    {
+      "id": "U09",
+      "title": "收藏",
+      "presentation": "二级列表。",
+      "source_line": 501
+    },
+    {
+      "id": "U10",
+      "title": "组织资料与成员",
+      "presentation": "二级设置页，不是 DSP 工作台。",
+      "source_line": 509
+    },
+    {
+      "id": "U11",
+      "title": "设置",
+      "presentation": "二级页面。",
+      "source_line": 519
+    },
+    {
+      "id": "U12",
+      "title": "隐私与位置",
+      "presentation": "二级页面。",
+      "source_line": 527
+    },
+    {
+      "id": "U13",
+      "title": "通知设置",
+      "presentation": "二级页面。",
+      "source_line": 536
+    },
+    {
+      "id": "U14",
+      "title": "账号与安全",
+      "presentation": "二级页面及验证子状态。",
+      "source_line": 545
+    },
+    {
+      "id": "G01",
+      "title": "举报、屏蔽与内容操作",
+      "presentation": "统一底部菜单及简短反馈页，带对象类型。",
+      "source_line": 556
+    },
+    {
+      "id": "G02",
+      "title": "分享",
+      "presentation": "系统分享面板加应用内内容预览，不仿制所有第三方 App。",
+      "source_line": 565
+    },
+    {
+      "id": "G03",
+      "title": "确认、错误与恢复",
+      "presentation": "复用对话框、表单错误或行内提示，不为每种错误做独立路由。",
+      "source_line": 574
+    }
+  ]
+}

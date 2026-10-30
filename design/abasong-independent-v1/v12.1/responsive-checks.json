@@ -1,0 +1,23 @@
+[
+  {
+    "app": 375,
+    "document": 375,
+    "navItems": 3,
+    "viewport": 375,
+    "passed": true
+  },
+  {
+    "app": 390,
+    "document": 390,
+    "navItems": 3,
+    "viewport": 390,
+    "passed": true
+  },
+  {
+    "app": 430,
+    "document": 430,
+    "navItems": 3,
+    "viewport": 430,
+    "passed": true
+  }
+]

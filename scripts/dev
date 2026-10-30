@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+# Prefer an existing Node 24 runtime. Override per machine; no global shell configuration is changed.
+if [ -n "${ABASONG_NODE_BIN:-}" ]; then
+  export PATH="$ABASONG_NODE_BIN:$PATH"
+elif [ -x "$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node" ]; then
+  export PATH="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH"
+fi
+export NPM_CONFIG_USERCONFIG="$repo_root/.tooling/npmrc"
+export npm_config_userconfig="$repo_root/.tooling/npmrc"
+mkdir -p "$repo_root/.tooling"
+if [ ! -f "$NPM_CONFIG_USERCONFIG" ]; then printf 'registry=https://registry.npmjs.org/\n' > "$NPM_CONFIG_USERCONFIG"; fi
+cd "$repo_root"
+node -e 'if(process.versions.node.split(".")[0]!=="24")throw new Error("Node 24 LTS required; set ABASONG_NODE_BIN")'
+exec pnpm "$@"

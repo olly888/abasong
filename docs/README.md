@@ -1,0 +1,43 @@
+# Abasong V12 研发文档入口
+
+更新：2026-10-29。用户批准的产品需求已形成基线；本目录补齐实施设计。文档已编写不代表代码已实现、数据库已应用或服务已上线。
+
+当前原型已获用户体验认可，可以进入正式工程开发；[Codex开发准备与执行方案](technical/V12.1_Codex正式开发准备与执行方案.md)记录实测环境和D0启动项。
+
+## 工程状态
+
+[D0实际验证记录](technical/D0_工程验证记录.md)、[工程状态](../DEVELOPMENT_STATUS.md)、[本地启动](../README.md)、[依赖锁定](../dependency-lock.md)。已有本地工程与数据库执行证据，原生地图及双平台验收限制见记录。
+
+## 产品与页面
+
+- [PRD V12](../Abasong_PRD_V12_首版产品需求.md)
+- [首版页面范围与原型验收](../Abasong_V12_页面范围与原型验收.md)
+- [V12.1需求补充与原型决策](Abasong_V12.1_需求补充与原型决策.md)：最新边界，只做临时配送支援与灵活运力协作，不做长期招聘/司机招募。
+- [V12.1逐页功能信息与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[机器目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
+- [原型制作与验收计划](product/Abasong_V12.1_原型制作与验收计划.md)。
+
+## 技术交付
+
+1. [技术架构与开发基线](technical/V12_技术架构与开发基线.md)
+2. [数据库设计与事务规则](technical/V12_数据库设计与事务规则.md)
+3. [SQL 初始迁移](../database/migrations/0001_v12_initial.sql)
+4. [API 契约与权限规则](technical/V12_API契约与权限规则.md)
+5. [OpenAPI 机器契约](technical/openapi-v12.yaml)
+6. [开发顺序与验证计划](technical/V12_开发顺序与验证计划.md)
+7. [静态校验结果](technical/V12_静态校验结果.json)
+8. [地图选型与现场验证](../research/2026-10-29_地图服务商选型_Mapbox与公寓识别.md)
+9. [V12.1页面与技术契约对齐](technical/V12.1_页面梳理与契约对齐.md)：接口文件保留原名，版本升为12.1.0；未应用的初始SQL草案已同步。
+
+## 设计交付
+
+- [当前V12.1交互原型入口](../design/abasong-independent-v1/v12.1/index.html)、[使用说明](../design/abasong-independent-v1/v12.1/README.md)、[验收记录](../design/abasong-independent-v1/v12.1/验收记录.md)：本地合成模型可操作，待用户评审；未连接真实服务，207种规格状态尚未逐项通过。
+- [现有视觉基础 V2](../design/abasong-independent-v1/Abasong_国际化视觉与设计系统_V2.md)：现有令牌与原型基础。
+- [品牌与交互 V3 顾问建议](design/Abasong_品牌与交互策略_V3_顾问建议.md)：自主皇家蓝方向已获同意，旧原型未覆盖。
+- [设计系统V3·原型制作基线](design/Abasong_设计系统_V3_原型制作基线.md)、[V3令牌JSON](design/tokens-v3.json)、[CSS](design/tokens-v3.css)：用于新版原型和组件；不是原生组件库已开发。
+- [配色对照](../design/abasong-independent-v1/brand-v3-comparison.html)：同一布局下切换黑白/皇家蓝，仅是设计方案。
+
+## 版本规则
+
+产品规则以PRD V12与V12.1补充及用户最新边界为准；技术文件实现这些规则，不新增履约/结算或长期招聘。V9技术草案和旧Jira清单不再作为开发来源。新版原型使用独立V3令牌，V2旧原型保留历史不作为已经升级完成。
+
+当前先完成页面规格与原型验收，再按闭环启动业务实现；纯技术兼容/迁移验证可并行。后续实现顺序：公寓查询/贡献/反馈 → 发布/报名/消息 → 可用司机/常联系/最小社区 → 真机与真实线路试点。

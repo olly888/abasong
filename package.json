@@ -1,0 +1,40 @@
+{
+  "name": "abasong",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=24.3.0 <25"
+  },
+  "scripts": {
+    "build": "pnpm --filter './packages/*' -r build && pnpm --filter './apps/api' --filter './apps/worker' -r build",
+    "typecheck": "pnpm -r typecheck && tsc -p scripts/d0/tsconfig.json",
+    "lint": "eslint apps packages scripts/d0 --max-warnings 0",
+    "test": "vitest run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "dev:api": "pnpm --filter @abasong/api dev",
+    "dev:worker": "pnpm --filter @abasong/worker dev",
+    "dev:mobile": "pnpm --filter @abasong/mobile start",
+    "contracts:generate": "openapi-typescript docs/technical/openapi-v12.yaml -o packages/contracts/src/generated.ts",
+    "db:up": "docker compose --env-file .env -f compose.yaml up -d --wait",
+    "db:down": "docker compose --env-file .env -f compose.yaml down",
+    "db:verify": "tsx scripts/d0/verify-database.ts",
+    "env:check": "node scripts/d0/check-environment.mjs",
+    "env:init": "node scripts/d0/init-local-env.mjs",
+    "tokens:generate": "node scripts/d0/generate-tokens.mjs",
+    "smoke:services": "tsx scripts/d0/smoke-services.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "eslint": "10.13.0",
+    "openapi-typescript": "7.13.0",
+    "pg": "8.23.1",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

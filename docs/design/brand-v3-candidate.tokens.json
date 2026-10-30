@@ -1,0 +1,15 @@
+{
+  "status": "candidate_not_applied",
+  "brand": {
+    "primary": "#1467D8",
+    "pressed": "#1054B3",
+    "surface": "#EDF4FF",
+    "onPrimary": "#FFFFFF"
+  },
+  "reference": {
+    "url": "https://flex.amazon.com/",
+    "observed_button": "#006AE6",
+    "scope": "computed style on observed page; not global Amazon brand standard"
+  },
+  "base": "../../design/abasong-independent-v1/tokens.json"
+}

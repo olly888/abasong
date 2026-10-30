@@ -2,7 +2,19 @@
 
 Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-apartment`.
 
-## Current stage: D0 complete; D1 apartment loop started
+## Current snapshot — 2026-10-30
+
+Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Latest implementation: `a3b5a51`.
+
+- Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API.
+- Verified: local0001/0002 migrations (47 tables),59 business/DB checks,54 Auth checks,16 ranking scenarios,6 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
+- Not yet accepted: real-account native CRUD on both platforms, complete map/location/card flow, screenshot/OCR/batch backend/native flow, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
+- SMS: user identified airplane mode as cause of non-receipt; do not change providers. Actual retry/login/CRUD still needs observed confirmation.
+- Next: D1.1 actual native account acceptance; D1.2 minimum review/map/correction flow; D1.3 screenshot samples/contract/provider design then D1.4 actual screenshot contribution. Private-library polish must not postpone screenshotP0.
+
+The sections below retain historical execution notes. Older statements about missing providers/tables/interfaces describe their recorded point in time; this snapshot and the latest specific evidence govern current status.
+
+## Historical D0 engineering summary
 
 D0 engineering checks are complete. Android ARM64 Debug compilation/install/start passed. iOS Release rebuild/install/start with Mapbox passed. Actual Los Angeles basemaps rendered on both simulators; Android map panning passed. This is a D0 shell, not full business/device acceptance.
 
@@ -110,3 +122,7 @@ SMS steering update: User identified airplane mode on their phone as the cause o
 Final executed checks: full check passed (lint, all workspace/script types,6 unit tests, builds), full OpenAPI+SQL static validator passed via existing isolated Python dependencies, db:verify47 tables passed,59 HTTP/library checks and54 Auth checks passed,16 ranking scenarios passed, service smoke passed; iOS1467-module/Android1460-module JS exports passed. New Swift/Gradle binary compilation not repeated; existing dev builds render new JS.
 
 Current batch ready for commit: source contract/types/page catalogue reproducibility and secret-pattern source scan passed, approved original prototype untouched. Runtime/model dependencies unchanged. Final library/Auth/ranking/service regression all passed after audit and async-selection fixes. Full native logged-in CRUD still awaiting user retry after airplane mode; no further Twilio investigation needed unless receipt still fails.
+
+## Unified roadmap consolidation
+
+2026-10-30: Added the development/acceptance master plan consolidating existingD0–D4/T01–T35, status definitions, stage gates, test matrix, defect levels, dependencies and evidence/report format. Reconciled stale current-status claims in product baseline, docs index and task plan; preserved historical evidence. Documentation-only change; no new implementation or service/device tests claimed.

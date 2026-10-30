@@ -152,6 +152,120 @@ async function main() {
     const a = await token(actor),
       b = await token(other),
       root = "/v1/me/apartment-library";
+    const resolvePath = "/v1/apartments/resolve";
+    const fix = {
+      point: { lng: -118.25, lat: 34.05 },
+      observed_at: new Date().toISOString(),
+      accuracy_m: 10,
+      accuracy_permission: "precise",
+    };
+    await req("POST", resolvePath, undefined, 401, fix);
+    await req("POST", resolvePath, a, 503, fix);
+    await req("POST", resolvePath, a, 400, {
+      ...fix,
+      point: { lng: 181, lat: 0 },
+    });
+    await req("POST", resolvePath, a, 400, { ...fix, accuracy_m: -1 });
+    await req("POST", resolvePath, a, 400, { ...fix, observed_at: "invalid" });
+    await req("POST", resolvePath + "?point=hidden", a, 400, fix);
+    await req("POST", resolvePath, a, 400, { ...fix, owner_id: other });
+    await db.query(
+      `INSERT INTO abasong.config_versions(version,config,activated_at) VALUES(1,$1,now())`,
+      [
+        JSON.stringify({
+          apartment_resolve: {
+            radius_m: 100,
+            max_age_seconds: 120,
+            future_tolerance_seconds: 15,
+            max_accuracy_m: 100,
+          },
+        }),
+      ],
+    );
+    const nearby = await req("POST", resolvePath, a, 200, fix);
+    assert.equal(nearby.status, "candidates");
+    assert.equal(nearby.matched_id, null);
+    assert.deepEqual(
+      nearby.candidates.map((p: { id: string }) => p.id),
+      [aid],
+    );
+    assert.deepEqual(
+      Object.keys(nearby.candidates[0]).sort(),
+      [
+        "id",
+        "name",
+        "address_line1",
+        "city",
+        "state",
+        "postal_code",
+        "confidence",
+        "point",
+      ].sort(),
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...fix,
+          accuracy_permission: "approximate",
+        })
+      ).status,
+      "candidates",
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, { ...fix, accuracy_m: 101 }))
+        .status,
+      "unknown",
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...fix,
+          observed_at: new Date(Date.now() - 180000).toISOString(),
+        })
+      ).status,
+      "stale_location",
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...fix,
+          observed_at: new Date(Date.now() + 60000).toISOString(),
+        })
+      ).status,
+      "stale_location",
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...fix,
+          point: { lng: 0, lat: 0 },
+        })
+      ).status,
+      "unknown",
+    );
+    const second = randomUUID();
+    await db.query(
+      "INSERT INTO abasong.apartments(id,address_line1,city,source_id,point,status) VALUES($1,'Second synthetic','Los Angeles',$2,'SRID=4326;POINT(-118.2501 34.05)'::extensions.geography,'active')",
+      [second, source],
+    );
+    const multiple = await req("POST", resolvePath, a, 200, fix);
+    assert.deepEqual(
+      multiple.candidates.map((p: { id: string }) => p.id),
+      [aid, second],
+    );
+    assert.equal(multiple.matched_id, null);
+    await db.query(
+      "UPDATE abasong.apartments SET status='pending' WHERE id=$1",
+      [second],
+    );
+    assert.deepEqual(
+      (await req("POST", resolvePath, a, 200, fix)).candidates.map(
+        (p: { id: string }) => p.id,
+      ),
+      [aid],
+    );
+    await db.query("DELETE FROM abasong.apartments WHERE id=$1", [second]);
+    await db.query("DELETE FROM abasong.config_versions WHERE version=1");
     await req("GET", root, undefined, 401);
     await req("GET", root, a, 200);
     await req(

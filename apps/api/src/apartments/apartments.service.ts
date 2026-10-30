@@ -879,6 +879,91 @@ export class ApartmentsService {
       };
     });
   }
+  async resolve(
+    a: VerifiedIdentity,
+    body: unknown,
+  ): Promise<S["ResolveResult"]> {
+    const b = parse(
+      z
+        .object({
+          point: z
+            .object({
+              lng: z.number().finite().min(-180).max(180),
+              lat: z.number().finite().min(-90).max(90),
+            })
+            .strict(),
+          observed_at: z.string().datetime({ offset: true }),
+          accuracy_m: z.number().finite().min(0).max(100000),
+          accuracy_permission: z.enum(["precise", "approximate"]),
+        })
+        .strict(),
+      body,
+    );
+    return this.tx(a, async (c) => {
+      const config = (
+        await c.query(
+          "SELECT version,config FROM abasong.config_versions WHERE activated_at<=now() ORDER BY version DESC LIMIT 1",
+        )
+      ).rows[0];
+      const settings = z
+        .object({
+          radius_m: z.number().finite().positive().max(1000),
+          max_age_seconds: z.number().finite().positive().max(300),
+          future_tolerance_seconds: z.number().finite().min(0).max(30),
+          max_accuracy_m: z.number().finite().positive().max(1000),
+        })
+        .strict()
+        .safeParse(config?.config.apartment_resolve);
+      if (!settings.success)
+        throw new ApiError(
+          503,
+          "RESOLVE_NOT_CONFIGURED",
+          "附近公寓暂不可用，请搜索地址",
+        );
+      const cfg = settings.data;
+      const age = (Date.now() - Date.parse(b.observed_at)) / 1000;
+      if (age > cfg.max_age_seconds || age < -cfg.future_tolerance_seconds)
+        return {
+          status: "stale_location",
+          matched_id: null,
+          candidates: [],
+          config_version: config.version,
+        };
+      // Coarse fixes must never silently choose a building. No position/history is written.
+      if (b.accuracy_m > cfg.max_accuracy_m)
+        return {
+          status: "unknown",
+          matched_id: null,
+          candidates: [],
+          config_version: config.version,
+        };
+      const result = await c.query(
+        `SELECT id,name,address_line1,city,state,postal_code,confidence,
+        extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat
+        FROM abasong.apartments WHERE status='active' AND
+        extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3)
+        ORDER BY extensions.ST_Distance(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography),id LIMIT 20`,
+        [b.point.lng, b.point.lat, cfg.radius_m],
+      );
+      const candidates = result.rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        address_line1: r.address_line1,
+        city: r.city,
+        state: r.state,
+        postal_code: r.postal_code,
+        confidence: r.confidence,
+        point: { lng: r.lng, lat: r.lat },
+      }));
+      // Automatic matching stays off until LA field thresholds are accepted (T23).
+      return {
+        status: candidates.length ? "candidates" : "unknown",
+        matched_id: null,
+        candidates,
+        config_version: config.version,
+      };
+    });
+  }
   async apartment(a: VerifiedIdentity, rid: string): Promise<S["Apartment"]> {
     parse(id, rid);
     return this.tx(a, async (c) => {

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Headers,
+  HttpCode,
   Inject,
   Param,
   Patch,
@@ -95,6 +96,11 @@ export class ApartmentsController {
   }
   @Get("me/contributions") contributions(@Req() r: ApiRequest) {
     return this.service.contributions(this.actor(r), r.query);
+  }
+  @Post("apartments/resolve")
+  @HttpCode(200)
+  resolve(@Req() r: ApiRequest, @Body() b: unknown) {
+    return this.service.resolve(this.actor(r, true), b);
   }
   @Get("apartments/:apartment_id") apartment(
     @Req() r: ApiRequest,

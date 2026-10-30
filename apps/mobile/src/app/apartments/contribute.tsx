@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Text, View, Pressable } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import {
   ActionButton,
-  AuthPage,
+  ApartmentPage,
   Field,
   FormError,
 } from "../../auth/AuthControls";
 import { useAuth } from "../../auth/AuthProvider";
 import { SensitiveScreen } from "../../apartments/SensitiveScreen";
+import { tokens } from "@abasong/ui";
+import { ListRow, SearchBox } from "../../ui/Primitives";
 import { dataRequest } from "../../apartments/client";
 type S = components["schemas"];
 export default function Contribute() {
@@ -50,7 +52,10 @@ function Content() {
       ...opts,
       signal: controller.current.signal,
     });
-  useEffect(() => () => controller.current.abort(), []);
+  useEffect(() => {
+    controller.current = new AbortController();
+    return () => controller.current.abort();
+  }, []);
   useEffect(() => {
     if (!params.apartment_id) return;
     void request<S["Apartment"]>("/v1/apartments/" + params.apartment_id)
@@ -64,6 +69,7 @@ function Content() {
   }, [params.apartment_id]);
 
   async function search() {
+    if (busy || query.trim().length < 2) return;
     setBusy(true);
     setError(null);
     try {
@@ -138,14 +144,52 @@ function Content() {
     }
   }
   return (
-    <AuthPage title={isPrivate ? "添加私人记录" : "贡献公寓密码"}>
+    <ApartmentPage
+      title={isPrivate ? "添加私人记录" : "添加密码"}
+      footer={
+        <>
+          <ActionButton
+            label={isPrivate ? "仅自己保存" : "确认共享"}
+            busy={busy}
+            disabled={
+              !value.trim() ||
+              !scope.trim() ||
+              (!target && (!isPrivate || !address.trim())) ||
+              (!isPrivate &&
+                (!confirmed ||
+                  !a.me?.capabilities.includes("access.contribute")))
+            }
+            onPress={() => void submit()}
+          />
+          {!isPrivate ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={busy}
+              accessibilityState={{ disabled: busy }}
+              onPress={() =>
+                router.replace("/apartments/contribute?mode=private")
+              }
+              style={{
+                minHeight: 48,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ fontSize: 14, color: tokens.color.brandPrimary }}>
+                改为添加私人记录
+              </Text>
+            </Pressable>
+          ) : null}
+        </>
+      }
+    >
       <FormError message={error} />
       {!isPrivate && !a.me?.capabilities.includes("access.contribute") ? (
-        <Text>共享贡献资格待审核。你仍可保存自己的私人记录。</Text>
+        <Text>共享贡献资格待审核</Text>
       ) : null}
       {target ? (
         <View style={{ gap: 12 }}>
-          <Text style={{ fontSize: 20, fontWeight: "600" }}>
+          <Text style={{ fontSize: 18, fontWeight: "600" }}>
             {target.name ?? "公寓"}
           </Text>
           <Text>
@@ -163,24 +207,17 @@ function Content() {
         </View>
       ) : (
         <>
-          <Field
-            label="搜索公寓或地址"
+          <SearchBox
             value={query}
-            onChangeText={setQuery}
-            autoCapitalize="none"
-          />
-          <ActionButton
-            label="搜索"
-            secondary
+            onChange={setQuery}
+            onSearch={() => void search()}
             busy={busy}
-            disabled={query.trim().length < 2}
-            onPress={() => void search()}
           />
           {matches.map((p) => (
-            <ActionButton
+            <ListRow
               key={p.id}
-              label={`${p.name ?? ""} · ${p.address_line1}`}
-              secondary
+              title={p.name ?? "公寓"}
+              subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
               onPress={() => {
                 setTarget(p);
                 setConfirmed(false);
@@ -199,6 +236,7 @@ function Content() {
       ) : null}
       <Field
         label="密码"
+        placeholder="保留 #、* 和开头的 0"
         value={value}
         onChangeText={(v) => {
           setValue(v);
@@ -218,34 +256,52 @@ function Content() {
         maxLength={100}
       />
       {!isPrivate ? (
-        <ActionButton
-          label={
-            confirmed ? "✓ 已核对公寓，并有权共享" : "我已核对公寓，并有权共享"
-          }
-          secondary
-          onPress={() => setConfirmed((v) => !v)}
-        />
-      ) : null}
-      <ActionButton
-        label={isPrivate ? "仅自己保存" : "确认共享"}
-        busy={busy}
-        disabled={
-          !value.trim() ||
-          !scope.trim() ||
-          (!target && (!isPrivate || !address.trim())) ||
-          (!isPrivate &&
-            (!confirmed || !a.me?.capabilities.includes("access.contribute")))
-        }
-        onPress={() => void submit()}
-      />
-      {!isPrivate ? (
-        <ActionButton
-          label="改为添加私人记录"
-          secondary
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: confirmed, disabled: busy }}
           disabled={busy}
-          onPress={() => router.replace("/apartments/contribute?mode=private")}
-        />
+          onPress={() => setConfirmed((v) => !v)}
+          style={{
+            flexDirection: "row",
+            gap: 10,
+            alignItems: "center",
+            minHeight: 48,
+          }}
+        >
+          <View
+            style={{
+              height: 20,
+              width: 20,
+              borderWidth: 1.5,
+              borderColor: confirmed
+                ? tokens.color.brandPrimary
+                : tokens.color.controlBorder,
+              borderRadius: 4,
+              backgroundColor: confirmed
+                ? tokens.color.brandPrimary
+                : tokens.color.surface,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {confirmed ? (
+              <Text style={{ color: tokens.color.onBrand, fontSize: 14 }}>
+                ✓
+              </Text>
+            ) : null}
+          </View>
+          <Text
+            style={{
+              fontSize: 14,
+              lineHeight: 22,
+              color: tokens.color.ink,
+              flex: 1,
+            }}
+          >
+            我已核对公寓，并有权共享
+          </Text>
+        </Pressable>
       ) : null}
-    </AuthPage>
+    </ApartmentPage>
   );
 }

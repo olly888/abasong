@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   AppState,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,10 +20,15 @@ import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import HomeMap from "../components/HomeMap";
+import { MapTools } from "../components/HomeChrome";
+import { Icon } from "../ui/Icon";
+import { IconButton, ListRow } from "../ui/Primitives";
+import { ActionButton } from "../auth/AuthControls";
 import { useAuth } from "../auth/AuthProvider";
+import { AccountError } from "../auth/api-client";
 import { dataRequest } from "./client";
 type S = components["schemas"];
-export function HomeApartments() {
+export function HomeApartments({ toolbar }: { toolbar: ReactNode }) {
   const auth = useAuth();
   const [focused, setFocused] = useState(false),
     [active, setActive] = useState(AppState.currentState === "active");
@@ -36,18 +48,26 @@ export function HomeApartments() {
     return (
       <View style={styles.root}>
         <HomeMap />
+        {toolbar}
+        <MapTools bottom={344} />
         <View style={styles.panel}>
-          <Text style={styles.title}>附近公寓</Text>
-          <Button
-            label="搜索公寓或地址"
-            onPress={() => router.push("/apartments")}
-          />
+          <View style={styles.handleSpace}>
+            <View style={styles.handle} />
+          </View>
+          <View style={{ paddingHorizontal: 22 }}>
+            <EmptyApartment
+              title="登录后使用公寓资料"
+              action="登录"
+              onPress={() => router.push("/auth/phone")}
+            />
+          </View>
         </View>
       </View>
     );
-  return <Content key={auth.session.access_token} />;
+  return <Content key={auth.session.access_token} toolbar={toolbar} />;
 }
-function Content() {
+
+function Content({ toolbar }: { toolbar: ReactNode }) {
   const auth = useAuth(),
     session = auth.session!;
   const control = useRef(new AbortController()),
@@ -62,6 +82,7 @@ function Content() {
     [locating, setLocating] = useState(false),
     [loaded, setLoaded] = useState(false),
     [saved, setSaved] = useState(false),
+    [panelHeight, setPanelHeight] = useState(210),
     [error, setError] = useState<string | null>(null),
     [notice, setNotice] = useState("定位查看附近公寓");
   const request = <T,>(
@@ -147,8 +168,13 @@ function Content() {
             : "附近暂无已收录公寓，请搜索地址",
       );
     } catch (e) {
-      if (valid())
-        setError(e instanceof Error ? e.message : "定位失败，请重试");
+      if (valid()) {
+        if (e instanceof AccountError) setError(e.message);
+        else {
+          setError(null);
+          setNotice("暂时无法获取位置");
+        }
+      }
     } finally {
       if (valid()) setLocating(false);
     }
@@ -227,6 +253,20 @@ function Content() {
     }
   }
   const canRead = auth.me?.capabilities.includes("access.read");
+  const add = () =>
+    selected &&
+    router.push({
+      pathname: "/apartments/contribute",
+      params: { apartment_id: selected.id },
+    });
+  const clearSelection = () => {
+    generation.current++;
+    setSelected(null);
+    setRecords([]);
+    setBusy(false);
+    setExpanded(false);
+    setNotice("确认你所在的公寓");
+  };
   return (
     <View style={styles.root}>
       <HomeMap
@@ -236,194 +276,394 @@ function Content() {
         selectedId={selected?.id}
         onSelect={(p) => void select(p)}
       />
-      <View style={styles.locate}>
-        <Button
-          label={locating ? "定位中…" : "我的位置"}
-          disabled={locating}
-          onPress={() => void locate(true)}
+      {toolbar}
+      {!expanded ? (
+        <MapTools
+          bottom={panelHeight + 16}
+          locating={locating}
+          onLocate={() => void locate(true)}
         />
-      </View>
-      <View style={styles.panel}>
-        <ScrollView contentContainerStyle={{ gap: 12 }}>
+      ) : null}
+      <View
+        onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
+        style={[styles.panel, expanded && styles.expanded]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={expanded ? "收起卡片" : "展开卡片"}
+          disabled={!selected}
+          accessibilityState={{ expanded }}
+          style={styles.handleSpace}
+          onPress={() => setExpanded((v) => !v)}
+        >
+          <View style={styles.handle} />
+        </Pressable>
+        <ScrollView contentContainerStyle={styles.inner}>
           {error ? (
-            <Text
-              accessibilityRole="alert"
-              style={{ color: tokens.color.danger }}
-            >
+            <Text accessibilityRole="alert" style={styles.error}>
               {error}
             </Text>
           ) : null}
           {selected ? (
             <>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="展开公寓密码"
-                accessibilityState={{ expanded }}
-                onPress={() => setExpanded((v) => !v)}
-                style={{ minHeight: 48, gap: 6 }}
-              >
-                <Text style={styles.title}>
-                  {selected.name ?? "公寓"} {expanded ? "⌄" : "⌃"}
-                </Text>
-                <Text>
-                  {selected.address_line1}, {selected.city}, {selected.state}
-                </Text>
-                {!expanded && records[0] ? (
-                  <Text style={styles.code}>{records[0].value}</Text>
-                ) : null}
-                {!expanded && records[0] ? (
-                  <Text style={styles.muted}>
-                    {new Date(records[0].contributed_at).toLocaleString()}
+              <View style={styles.headingRow}>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Text style={styles.title}>{selected.name ?? "公寓"}</Text>
+                  <Text style={styles.address}>
+                    {selected.address_line1}, {selected.city}, {selected.state}
                   </Text>
+                </View>
+                {expanded ? (
+                  <>
+                    <IconButton
+                      name="down"
+                      label="收起密码记录"
+                      onPress={() => setExpanded(false)}
+                    />
+                    <IconButton
+                      name="bookmark"
+                      label={saved ? "已收藏公寓" : "收藏公寓"}
+                      disabled={busy || saved}
+                      selected={saved}
+                      onPress={() => void save()}
+                    />
+                  </>
                 ) : null}
-              </Pressable>
-              {busy ? <Text style={styles.muted}>正在读取…</Text> : null}
-              {!canRead ? (
-                <Text>公寓资料查看资格待审核</Text>
-              ) : loaded && !records.length ? (
-                <Text>暂无共享密码</Text>
-              ) : null}
-              {expanded || (loaded && !records.length) ? (
-                <Button
-                  label="添加密码"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/apartments/contribute",
-                      params: { apartment_id: selected.id },
-                    })
-                  }
+              </View>
+              {busy ? (
+                <ActivityIndicator
+                  color={tokens.color.brandPrimary}
+                  style={{ marginVertical: 12 }}
                 />
+              ) : null}
+              {!canRead ? (
+                <View style={styles.empty}>
+                  <Text style={styles.emptyTitle}>暂未获得资料查看资格</Text>
+                </View>
+              ) : loaded && !records.length ? (
+                <View style={{ gap: 14, paddingTop: 20, paddingBottom: 8 }}>
+                  <Text style={styles.emptyTitle}>暂无共享密码</Text>
+                  {!expanded ? (
+                    <ActionButton label="添加密码" onPress={add} />
+                  ) : null}
+                </View>
+              ) : null}
+              {!expanded && records[0] ? (
+                <>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="查看密码记录"
+                    onPress={() => setExpanded(true)}
+                  >
+                    <Text style={styles.code}>{records[0].value}</Text>
+                    <Text style={styles.muted}>
+                      {new Date(records[0].contributed_at).toLocaleString()}{" "}
+                      贡献
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setExpanded(true)}
+                    style={styles.expandRow}
+                  >
+                    <Text style={styles.link}>
+                      查看 {records.length} 条密码记录
+                    </Text>
+                    <Icon
+                      name="up"
+                      color={tokens.color.brandPrimary}
+                      size={18}
+                    />
+                  </Pressable>
+                </>
               ) : null}
               {expanded ? (
                 <>
-                  <View style={{ flexDirection: "row", gap: 12 }}>
-                    <Button
-                      label={saved ? "★" : "☆"}
-                      accessibilityLabel="收藏公寓"
-                      disabled={busy}
-                      onPress={() => void save()}
-                    />
-                    <Button
-                      label="不是这栋"
-                      onPress={() => {
-                        generation.current++;
-                        setSelected(null);
-                        setRecords([]);
-                        setBusy(false);
-                        setNotice("确认你所在的公寓");
-                      }}
-                    />
+                  <View style={{ paddingTop: 18, paddingBottom: 14 }}>
+                    <ActionButton label="＋ 添加密码" onPress={add} />
                   </View>
                   {records.map((r) => (
                     <View key={r.id} style={styles.record}>
-                      <Text style={styles.code}>{r.value}</Text>
-                      <Text>{r.scope.label ?? "大门"}</Text>
-                      <Text style={styles.muted}>
-                        {r.effective_useful ? "有用反馈 · " : ""}
-                        {new Date(r.contributed_at).toLocaleString()}
+                      <View style={styles.recordTop}>
+                        <Text style={styles.recordCode}>{r.value}</Text>
+                        {r.effective_useful ? (
+                          <Text style={styles.status}>有用反馈</Text>
+                        ) : null}
+                      </View>
+                      <Text style={styles.address}>
+                        {r.scope.label ?? "大门"}
                       </Text>
-                      <View style={{ flexDirection: "row", gap: 12 }}>
-                        <Button
-                          label={r.my_feedback === "useful" ? "✓ 有用" : "有用"}
-                          disabled={busy}
-                          onPress={() => void feedback(r, "useful")}
-                        />
-                        <Button
-                          label={
-                            r.my_feedback === "not_useful"
-                              ? "✓ 不能用"
-                              : "不能用"
-                          }
-                          disabled={busy}
-                          onPress={() => void feedback(r, "not_useful")}
-                        />
+                      <Text style={styles.muted}>
+                        {new Date(r.contributed_at).toLocaleString()} 贡献
+                      </Text>
+                      <View style={styles.feedbackRow}>
+                        {(["useful", "not_useful"] as const).map((value) => (
+                          <Pressable
+                            key={value}
+                            accessibilityRole="button"
+                            accessibilityState={{
+                              selected: r.my_feedback === value,
+                              disabled: busy,
+                            }}
+                            disabled={busy}
+                            onPress={() => void feedback(r, value)}
+                            style={[
+                              styles.feedback,
+                              r.my_feedback === value &&
+                                styles.feedbackSelected,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.feedbackLabel,
+                                r.my_feedback === value && {
+                                  color: tokens.color.brandPrimary,
+                                },
+                              ]}
+                            >
+                              {value === "useful" ? "有用" : "没用"}
+                            </Text>
+                          </Pressable>
+                        ))}
                       </View>
                     </View>
                   ))}
-                  <Button
-                    label="重新读取"
-                    disabled={busy}
-                    onPress={() => void select(selected)}
-                  />
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.expandRow}
+                    onPress={clearSelection}
+                  >
+                    <Text style={styles.muted}>不是这栋公寓？</Text>
+                    <Icon
+                      name="chevron"
+                      color={tokens.color.textMuted}
+                      size={18}
+                    />
+                  </Pressable>
+                  {error ? (
+                    <ActionButton
+                      label="重新读取"
+                      secondary
+                      disabled={busy}
+                      onPress={() => void select(selected)}
+                    />
+                  ) : null}
                 </>
               ) : null}
             </>
-          ) : (
+          ) : candidates.length ? (
             <>
-              <Text style={styles.title}>{notice}</Text>
+              <Text style={styles.title}>你在哪栋公寓？</Text>
+              <Text style={styles.muted}>选择对应地址</Text>
               {candidates.map((p) => (
-                <Button
+                <ListRow
                   key={p.id}
-                  label={`${p.name ?? "公寓"} · ${p.address_line1}`}
+                  title={p.name ?? "公寓"}
+                  subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
                   onPress={() => void select(p)}
                 />
               ))}
             </>
+          ) : (
+            <EmptyApartment
+              title={
+                locating
+                  ? "正在查找当前公寓"
+                  : notice === "定位查看附近公寓" ||
+                      notice === "开启定位，或搜索公寓地址"
+                    ? "开启位置，找到当前公寓"
+                    : notice
+              }
+              action={locating ? "定位中…" : "使用当前位置"}
+              busy={locating}
+              onPress={() => void locate(true)}
+            />
           )}
-          <Button
-            label="搜索公寓或地址"
-            onPress={() => router.push("/apartments")}
-          />
         </ScrollView>
       </View>
     </View>
   );
 }
-function Button({
-  label,
+function EmptyApartment({
+  title,
+  action,
+  busy = false,
   onPress,
-  disabled = false,
-  accessibilityLabel,
 }: {
-  label: string;
+  title: string;
+  action: string;
+  busy?: boolean;
   onPress: () => void;
-  disabled?: boolean;
-  accessibilityLabel?: string;
 }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={[styles.button, disabled && { opacity: 0.45 }]}
-    >
-      <Text style={{ fontWeight: "600", color: tokens.color.ink }}>
-        {label}
-      </Text>
-    </Pressable>
+    <View style={styles.mapEmpty}>
+      <View style={styles.emptyIcon}>
+        <Icon name="box" color="#6D829E" />
+      </View>
+      <Text style={styles.emptyHeading}>{title}</Text>
+      <Text style={styles.emptySubtitle}>也可以直接搜索地址。</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: busy, busy }}
+        disabled={busy}
+        onPress={onPress}
+        style={styles.emptyAction}
+      >
+        {busy ? (
+          <ActivityIndicator color={tokens.color.ink} />
+        ) : (
+          <Text
+            style={{ fontSize: 16, fontWeight: "600", color: tokens.color.ink }}
+          >
+            {action}
+          </Text>
+        )}
+      </Pressable>
+    </View>
   );
 }
 const styles = StyleSheet.create({
+  mapEmpty: {
+    paddingVertical: 38,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  emptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 17,
+    backgroundColor: "#F1F4F8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+  },
+  emptyHeading: {
+    fontSize: 19,
+    lineHeight: 26,
+    fontWeight: "600",
+    color: tokens.color.ink,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    lineHeight: 24,
+    color: tokens.color.textMuted,
+    marginTop: 10,
+    marginBottom: 18,
+    textAlign: "center",
+  },
+  emptyAction: {
+    minHeight: 52,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: tokens.color.controlBorder,
+    alignSelf: "stretch",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
   root: { flex: 1 },
   panel: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    maxHeight: "55%",
-    padding: 20,
+    maxHeight: "72%",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     backgroundColor: tokens.color.surface,
+    zIndex: 20,
+    shadowColor: "#1B2D44",
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 5,
+    paddingBottom: 12,
   },
-  title: { fontSize: 19, fontWeight: "600", color: tokens.color.ink },
-  code: { fontSize: 34, fontWeight: "700", color: tokens.color.ink },
-  muted: { color: tokens.color.textSecondary, fontSize: 12 },
-  button: {
+  expanded: { height: "86%", maxHeight: "86%", zIndex: 30 },
+  handleSpace: { height: 25, alignItems: "center", justifyContent: "center" },
+  handle: { width: 35, height: 4, borderRadius: 4, backgroundColor: "#D9DDE2" },
+  inner: { paddingHorizontal: 22, paddingBottom: 8 },
+  empty: { paddingTop: 12, paddingBottom: 12, gap: 14 },
+  emptyTitle: { fontSize: 22, fontWeight: "600", color: tokens.color.ink },
+  title: {
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: "600",
+    letterSpacing: -0.2,
+    color: tokens.color.ink,
+  },
+  address: { fontSize: 14, lineHeight: 21, color: tokens.color.textSecondary },
+  muted: { color: tokens.color.textMuted, fontSize: 14, lineHeight: 22 },
+  code: {
+    fontSize: 40,
+    lineHeight: 52,
+    fontWeight: "600",
+    letterSpacing: 1.5,
+    fontVariant: ["tabular-nums"],
+    color: tokens.color.ink,
+    paddingTop: 9,
+    paddingBottom: 2,
+  },
+  headingRow: { flexDirection: "row", alignItems: "flex-start" },
+  expandRow: {
     minHeight: 48,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 12,
-    justifyContent: "center",
-    backgroundColor: tokens.color.surfaceMuted,
-  },
-  locate: { position: "absolute", top: 16, right: 16 },
-  record: {
-    backgroundColor: tokens.color.canvas,
-    borderRadius: 16,
-    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 10,
+    marginTop: 8,
+  },
+  link: { fontSize: 14, color: tokens.color.brandPrimary },
+  record: {
+    paddingTop: 12,
+    paddingBottom: 15,
+    borderTopWidth: 1,
+    borderColor: "#E8EBEF",
+    gap: 4,
+  },
+  recordTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  recordCode: {
+    fontSize: 29,
+    lineHeight: 38,
+    letterSpacing: 1,
+    fontWeight: "600",
+    color: tokens.color.ink,
+    flexShrink: 1,
+  },
+  status: {
+    fontSize: 12,
+    color: tokens.color.success,
+    backgroundColor: "#EDF5F0",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  feedbackRow: { flexDirection: "row", gap: 8, marginTop: 10 },
+  feedback: {
+    minHeight: 48,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#C8CDD5",
+    borderRadius: 9,
+  },
+  feedbackSelected: {
+    borderColor: tokens.color.brandPrimary,
+    backgroundColor: tokens.color.brandSurface,
+  },
+  feedbackLabel: { fontSize: 14, color: tokens.color.ink },
+  error: {
+    color: tokens.color.danger,
+    fontSize: 14,
+    lineHeight: 22,
+    paddingVertical: 8,
   },
 });

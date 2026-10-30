@@ -37,7 +37,7 @@ API 默认仅监听 `127.0.0.1:3001`。`/health/live` 检查进程，`/health/re
 ./scripts/dev --filter @abasong/mobile android
 ```
 
-地图账号准备好后，将受限的公开 token 写入 `apps/mobile/.env.local` 的 `EXPO_PUBLIC_MAPBOX_TOKEN`。公开 token 会进入客户端包，不能用 secret token。没有 token 时显示地图不可用状态，不生成模拟地图。当前 D0 壳只有导航和空状态，业务页面按已确认原型逐阶段实现。
+地图账号准备好后，将公开 token 写入 `apps/mobile/.env.local` 的 `EXPO_PUBLIC_MAPBOX_TOKEN`。公开 token 会进入客户端包，不能用 secret token。没有 token 时显示地图不可用状态，不生成模拟地图。当前 D0 壳只有导航和空状态，业务页面按已确认原型逐阶段实现。
 
 移动端模拟器访问宿主 API：iOS 使用 `127.0.0.1`，Android Emulator 使用 `10.0.2.2`；真实设备需另行配置开发网络和 API 监听范围，D0 不自动向局域网开放服务。
 
@@ -58,3 +58,16 @@ API 默认仅监听 `127.0.0.1:3001`。`/health/live` 检查进程，`/health/re
 ```
 
 生成文件必须与源契约/令牌一同更新。具体版本及限制见 [dependency-lock.md](dependency-lock.md)。
+
+## Android 工具链补齐
+
+`./scripts/android` 使用项目范围的 JAVA_HOME/ANDROID_HOME 和 Gradle 缓存，不改 shell 启动文件。默认 JDK 为 Homebrew openjdk@17，SDK 为忽略的 `.tooling/android-sdk`；可用 ABASONG_JAVA_HOME / ABASONG_ANDROID_HOME 覆盖。
+
+```sh
+./scripts/android gradle --version
+./scripts/android sdk --list_installed
+./scripts/android gradle :app:assembleDebug -PreactNativeArchitectures=arm64-v8a --console=plain
+./scripts/dev mapbox:check
+```
+
+Google API37 的当前 SDK 包名为 `platforms;android-37.0`。Mapbox 原生 SDK 的公开 token 不使用网站 URL 限制；检查脚本只验证样式权限，不代替原生底图和定位验收。账号注册和邮箱/付款/条款由账号所有人完成。

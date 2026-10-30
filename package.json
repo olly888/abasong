@@ -22,7 +22,8 @@
     "env:check": "node scripts/d0/check-environment.mjs",
     "env:init": "node scripts/d0/init-local-env.mjs",
     "tokens:generate": "node scripts/d0/generate-tokens.mjs",
-    "smoke:services": "tsx scripts/d0/smoke-services.ts"
+    "smoke:services": "tsx scripts/d0/smoke-services.ts",
+    "mapbox:check": "node scripts/d0/check-mapbox.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

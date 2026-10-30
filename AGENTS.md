@@ -25,5 +25,5 @@
 - If parallel work is explicitly authorized, use separate branches/worktrees with clear ownership rather than concurrent edits on main. Do not spawn agents merely because tools exist.
 - Keep task state in `DEVELOPMENT_STATUS.md`; record dependency decisions in `dependency-lock.md`. Update handoff state before context becomes insufficient; use client compaction when available.
 - User preferences take priority over skill defaults. Do not inject additional skill routing, telemetry, plugins or approval requirements.
-- For all web browsing use the gstack /browse skill, per the latest user instructions. Never use mcp__claude-in-chrome__*. Prefer first-party documentation for technical claims.
+- The user revoked mandatory gstack usage on 2026-10-29. Choose built-in tools, direct engineering work or relevant skills as needed; no gstack dependency is required. Prefer first-party documentation for technical claims.
 - Routine authorized implementation/test/fix work proceeds autonomously. Ask only for missing external state or consequential authorization; do not accept legal agreements on the user's behalf.

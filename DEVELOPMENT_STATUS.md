@@ -23,7 +23,7 @@ Approved inputs: V12.1 requirement supplement/page specification, V3 tokens and 
 - Mapbox: user supplied a public token; stored in ignored apps/mobile/.env.local with mode600. Official style access verification passed without echoing token. Native map rendering passed on both simulators; foreground location/address matching remain D1 work.
 - Android: user personally read/accepted the SDK terms and authorized installation on 2026-10-29. OpenJDK17, SDK37.0, Build Tools37, NDK27.1, CMake3.22.1 and a dedicated ARM64 emulator are installed. Gradle9.4.1 runs; native build/install/start and basemap rendering passed via scripts/android. Physical-device validation remains later.
 - iOS: full navigation interactions, real iPhone validation and actual map behavior still belong to D1/device acceptance.
-- Supabase/Auth development project is available (us-east-1); public client and issuer settings configured locally. Phone provider remains disabled. KMS/AWS, SMS provider, store signing accounts and real business data are not provisioned. No cloud DDL, real SMS, paid account creation or production deployment performed.
+- Supabase/Auth active development project is AbasongDevWest (us-west-1, North California; switched 2026-10-30); public client and issuer settings configured locally. Phone provider remains disabled. KMS/AWS, SMS provider, store signing accounts and real business data are not provisioned. No cloud DDL, real SMS, paid account creation or production deployment performed.
 
 ## Continue from here
 
@@ -56,3 +56,7 @@ Phone/OTP/display-name routes and real account states implemented outside three-
 ## Tool preference reaffirmed
 
 2026-10-30: User explicitly cancelled mandatory gstack /browse. Choose native tools, direct model work or relevant skills according to the task. No mandatory gstack routing.
+
+## West development project switch
+
+2026-10-30: User-created AbasongDevWest verified ACTIVE_HEALTHY in us-west-1 (North California), not the previously suggested Oregon. Switched ignored client URL/publishable key and API issuer/audience/ES256 configuration; preserved Mapbox and all local DB settings. JWKS and public Auth settings returned successfully; Phone disabled, email enabled. Old us-east-1 project preserved, no cloud DDL/data migration/Auth setting change/SMS. Deployment plan updated to colocate future API/worker/KMS in us-west-1; no AWS resources created. Local API and Metro restarted with new env. User has no SMS provider yet and requested signup guidance.

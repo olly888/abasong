@@ -60,3 +60,7 @@ Phone/OTP/display-name routes and real account states implemented outside three-
 ## West development project switch
 
 2026-10-30: User-created AbasongDevWest verified ACTIVE_HEALTHY in us-west-1 (North California), not the previously suggested Oregon. Switched ignored client URL/publishable key and API issuer/audience/ES256 configuration; preserved Mapbox and all local DB settings. JWKS and public Auth settings returned successfully; Phone disabled, email enabled. Old us-east-1 project preserved, no cloud DDL/data migration/Auth setting change/SMS. Deployment plan updated to colocate future API/worker/KMS in us-west-1; no AWS resources created. Local API and Metro restarted with new env. User has no SMS provider yet and requested signup guidance.
+
+## Twilio signup reported complete
+
+2026-10-30: User reports Twilio signup completed. No credentials obtained, Verify Service/account restrictions unverified, Phone provider not yet confirmed enabled. Next: user enters Twilio Verify credentials directly into AbasongDevWest provider form, then read-only configuration check and explicitly authorized real-phone acceptance.

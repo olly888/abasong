@@ -29,3 +29,5 @@ Android工具链已于后续补齐：OpenJDK17.0.21.0.3、Gradle9.4.1、Platform
 官方依据：[Expo58 SDK](https://docs.expo.dev/versions/v58.0.0/)、[Expo Router 安装](https://docs.expo.dev/router/installation/)、[RNMapbox 安装](https://rnmapbox.github.io/docs/install)。Expo 模块版本另通过 SDK 的 bundledNativeModules 和 expo install --check 核对。
 
 实时预览补充：react-native-web0.21.4（Expo兼容版本），Web预览独立包使用mapbox-gl3.34.1；与原生RNMapbox的可选Web peer隔离，原生地图实现保持不变。scrcpy5.0.1用于Android实时画面。共享包类型入口指向源文件，使全新检出在生成dist之前也能做类型检查。
+
+D1账号接口：jose6.2.14、zod4.6.7、@types/express5.0.6。契约包使用dist声明入口，根typecheck先构建契约。Node24实际执行ESM jose验证通过；没有自行实现JWT密码学。

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "pnpm --filter './packages/*' -r build && pnpm --filter './apps/api' --filter './apps/worker' -r build",
-    "typecheck": "pnpm -r typecheck && tsc -p scripts/d0/tsconfig.json && tsc -p scripts/d1/tsconfig.json",
+    "typecheck": "pnpm --filter @abasong/contracts build && pnpm -r typecheck && tsc -p scripts/d0/tsconfig.json && tsc -p scripts/d1/tsconfig.json",
     "lint": "eslint apps packages scripts/d0 scripts/d1 scripts/preview --max-warnings 0",
     "test": "vitest run",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
@@ -28,13 +28,15 @@
     "preview": "pnpm --filter @abasong/mobile web",
     "preview:native": "pnpm --filter @abasong/mobile exec expo start --dev-client --localhost --port 8081",
     "preview:ios": "./scripts/preview/ios.sh",
-    "preview:android": "node scripts/preview/android.mjs"
+    "preview:android": "node scripts/preview/android.mjs",
+    "verify:auth-api": "tsx scripts/d1/verify-auth-api.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",
     "eslint": "10.13.0",
+    "jose": "6.2.14",
     "openapi-typescript": "7.13.0",
     "pg": "8.23.1",
     "tsx": "4.23.15",

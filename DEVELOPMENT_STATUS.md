@@ -11,7 +11,7 @@ Approved inputs: V12.1 requirement supplement/page specification, V3 tokens and 
 ## Implemented and verified
 
 - Monorepo mobile/API/worker/contracts/UI packages, exact direct dependency versions, Node24 wrapper, pnpm and native iOS locks.
-- API liveness/readiness, independent worker database probe and graceful shutdown. No business CRUD or event consumption yet.
+- API liveness/readiness, independent worker database probe and graceful shutdown. Account bootstrap/current-user API is now implemented; no apartment CRUD or event consumption yet.
 - Isolated local PostgreSQL/PostGIS migration: 45 tables, forced RLS, non-owner login, sensitive separation, append-only history permissions, constraints, spatial query and rollback verification passed.
 - Lint, workspace/script type checks, one database-target protection unit test and builds passed.
 - Real service smoke passed: healthy200, unknown business route404, DB outage503 without sensitive details, restricted worker connection.
@@ -40,3 +40,7 @@ Internal metadata-only access-ranking SQL implemented. Sixteen real PostgreSQL s
 ## Live preview
 
 Native shared Metro configured at localhost8081; iPhone18Pro/iOS27.0 and Android17/API37 both confirmed as connected React Native debugger targets. iOS uses Device Hub with Debug build; Android uses a project emulator with scrcpy5.0.1 live display due to Qt window rendering errors. Repeatable scripts and [usage guide](docs/technical/原生实时预览使用说明.md) added. Browser preview is optional, shares the screens/navigation, and isolates Web map rendering in packages/web-map with a genuine Static Images fallback when WebGL is unavailable; it is not a substitute for native/device validation.
+
+## D1 identity/account batch
+
+POST /v1/me/bootstrap and GET /v1/me implemented with strict JWT/JWKS validation, current account/capability checks, private DTOs, request IDs, idempotent transactions and no-store errors. Fifty-four real HTTP scenarios passed using ephemeral signing keys and an isolated disposable local DB. Existing smoke and 16 ranking tests passed. User Supabase project metadata/JWKS/public settings inspected read-only: healthy, us-east-1, ES256; phone login disabled. Public client settings saved locally; no cloud schema/auth mutation, real users or SMS. Real mobile/Supabase login remains unverified. See [identity verification record](docs/technical/D1_身份与账号接口验证.md).

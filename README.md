@@ -83,3 +83,7 @@ Google API37 的当前 SDK 包名为 `platforms;android-37.0`。Mapbox 原生 SD
 ## 原生实时预览
 
 分别在三个终端运行 `./scripts/dev preview:native`、`./scripts/dev preview:ios`、`./scripts/dev preview:android`。开发服务保持运行，两端随页面代码更新。详细步骤及重建方式见 [原生实时预览使用说明](docs/technical/原生实时预览使用说明.md)。
+
+## D1 账号接口验证
+
+`./scripts/dev verify:auth-api` 在本机创建独立临时测试库，用真实签名/JWKS和HTTP请求验证身份、账号与幂等逻辑，结束后仅销毁该测试库。不会连接云数据库或发送短信。详见 [身份与账号验证记录](docs/technical/D1_身份与账号接口验证.md)。

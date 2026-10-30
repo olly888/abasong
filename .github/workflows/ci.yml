@@ -27,6 +27,7 @@ jobs:
       - run: ./scripts/dev env:init
       - run: ./scripts/dev db:up
       - run: ./scripts/dev db:verify
+      - run: ./scripts/dev verify:auth-api
       - run: ./scripts/dev verify:access-ranking
       - run: ./scripts/dev smoke:services
       - name: Bundle native JavaScript

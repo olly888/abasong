@@ -16,7 +16,7 @@
 - [首版页面范围与原型验收](../Abasong_V12_页面范围与原型验收.md)
 - [V12.1需求补充与原型决策](Abasong_V12.1_需求补充与原型决策.md)：最新边界，只做临时配送支援与灵活运力协作，不做长期招聘/司机招募。
 - [V12.1逐页功能信息与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[机器目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
-- [P0截图批量贡献补充](product/Abasong_V12.1_截图批量贡献需求补充.md)：2026-10-30新增39节点/237状态范围，新B04/B05/B06待制作，OCR/接口/增量迁移待实现。
+- [P0截图批量贡献补充](product/Abasong_V12.1_截图批量贡献需求补充.md)：2026-10-30新增39节点/237状态范围，新B04/B05/B06本地合成交互已制作待评审，OCR/接口/增量迁移待实现。
 - [原型制作与验收计划](product/Abasong_V12.1_原型制作与验收计划.md)。
 
 ## 技术交付
@@ -32,6 +32,8 @@
 9. [V12.1页面与技术契约对齐](technical/V12.1_页面梳理与契约对齐.md)：接口文件保留原名，版本升为12.1.0；未应用的初始SQL草案已同步。
 
 ## 设计交付
+
+- [截图贡献扩展原型](../design/abasong-independent-v1/v12.1-import/index.html)、[使用与限制](../design/abasong-independent-v1/v12.1-import/README.md)、[实际检查](../design/abasong-independent-v1/v12.1-import/验收记录.md)：新增合成流程待用户评审，原认可版本保留。
 
 - [当前V12.1交互原型入口](../design/abasong-independent-v1/v12.1/index.html)、[使用说明](../design/abasong-independent-v1/v12.1/README.md)、[验收记录](../design/abasong-independent-v1/v12.1/验收记录.md)：本地合成模型可操作，待用户评审；未连接真实服务，207种规格状态尚未逐项通过。
 - [现有视觉基础 V2](../design/abasong-independent-v1/Abasong_国际化视觉与设计系统_V2.md)：现有令牌与原型基础。

@@ -68,20 +68,26 @@ outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'
 coverage=json.loads(coverage_path.read_text()) if coverage_path.exists() else {}
 made={p['id'] for p in coverage.get('nodes',[])}
+extension_path=ROOT/'design/abasong-independent-v1/v12.1-import/coverage.json'
+extension=json.loads(extension_path.read_text()) if extension_path.exists() else {}
+extension_made={p['id'] for p in extension.get('nodes',[])}
 for p in pages:p['prototype_status']=('原型已认可·作为开发基线（状态部分覆盖）' if coverage.get('baseline_accepted_for_development') else '已制作本地交互·待用户验收（状态部分覆盖）') if p['id'] in made else '待制作'
 for p in pages:
  if p['id'] in ['H01','B02','U01','U06']:
-  p['prototype_status']='原节点基线已认可；截图新增入口/状态待制作'
+  p['prototype_status']='原节点基线已认可；截图扩展已制作待评审' if p['id'] in extension_made else '原节点基线已认可；截图新增入口/状态待制作'
   p['requirements'].append('ADD-06')
   p['pending_extension']='截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能'
-(outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-30','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06待制作，接口待扩展','pages':pages},ensure_ascii=False,indent=2)+'\n')
+for p in pages:
+ if p['id'] in ['B04','B05','B06'] and p['id'] in extension_made:
+  p['prototype_status']='已制作本地合成交互·待用户评审；非真实OCR'
+(outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-30','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06合成交互待评审，接口待扩展','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']
  w=csv.DictWriter(f,fieldnames=fields,lineterminator="\n");w.writeheader()
  for p in pages:
   batch='01-公寓闭环' if p['id'] in ['A02','A03','A04','H01','S01','L01','B01','B02','B04','B05','B06','G01','G03'] else '02-找人找活' if p['id'] in ['H02','H03','P01','P03','P04','D01','P08','P09','P10','D02','U03','G02','X01'] else '03-消息与常联系' if p['id'] in ['M01','M02','U08'] else '04-社区与我的'
   w.writerow(dict(id=p['id'],name=p['name'],surface=p['surface'],batch=batch,state_count=len(p['states']),api_operations=','.join(p['api_operations']),status=p['prototype_status']))
-lines=['# Abasong V12.1 页面功能、信息与交互规格','', '日期：2026-10-30。状态：含截图P0扩展；新节点待制作，接口待扩展，不代表已实现。产品依据：[V12 PRD](../../Abasong_PRD_V12_首版产品需求.md)及[V12.1补充决策](../Abasong_V12.1_需求补充与原型决策.md)。颜色/组件依据：[V3设计系统](../design/Abasong_设计系统_V3_原型制作基线.md)。', '', '## 1. 全局规则','', '产品只做临时配送支援与灵活运力协作，不设置长期招聘/司机招募流程。根导航固定首页/司机圈/我的；公寓/找活/找人为同一首页路由的状态。二级页面和公共面板可暂时隐藏导航，返回恢复来源视图、选中对象、筛选与滚动。登录后回到发起动作前的对象，但重新读取当前条件，不自动提交过期报名。', '', '每个界面只保留必要信息和一项当前主动作；空/错误/审核/来源/地图归属属于必要状态，设计说明、策略备注、合成数据说明留在原型外壳，不能成为产品首页常驻文案。', '', '普通草稿可保留；手动密码/进入信息明文只在编辑会话内存保留，不写通用持久草稿。截图批次另采用本人专属、有限保留的服务端加密草稿，详见[截图补充](Abasong_V12.1_截图批量贡献需求补充.md)。用户切账号、退出或资格被撤销后清理敏感缓存。需求、私聊、进入资料各自鉴权，不因显示同一地图就共享访问权。', '', '菜单按对象权限显示：发布者管理自己的需求，报名者管理自己的报名；司机与DSP不切换客户端或导航。当前没有支付、交接履约、司机排名、会员密码付费墙。', '', '原型使用合成资料和模拟请求；每个状态应可在原型外的场景控制中触发。开发说明/测试开关不出现在产品画面。', '', '## 2. 页面总览','', '| ID | 名称 | 载体 | 状态数 |','|---|---|---|---|']
+lines=['# Abasong V12.1 页面功能、信息与交互规格','', '日期：2026-10-30。状态：含截图P0扩展；新节点合成交互已制作待评审，接口待扩展，不代表原生/OCR已实现。产品依据：[V12 PRD](../../Abasong_PRD_V12_首版产品需求.md)及[V12.1补充决策](../Abasong_V12.1_需求补充与原型决策.md)。颜色/组件依据：[V3设计系统](../design/Abasong_设计系统_V3_原型制作基线.md)。', '', '## 1. 全局规则','', '产品只做临时配送支援与灵活运力协作，不设置长期招聘/司机招募流程。根导航固定首页/司机圈/我的；公寓/找活/找人为同一首页路由的状态。二级页面和公共面板可暂时隐藏导航，返回恢复来源视图、选中对象、筛选与滚动。登录后回到发起动作前的对象，但重新读取当前条件，不自动提交过期报名。', '', '每个界面只保留必要信息和一项当前主动作；空/错误/审核/来源/地图归属属于必要状态，设计说明、策略备注、合成数据说明留在原型外壳，不能成为产品首页常驻文案。', '', '普通草稿可保留；手动密码/进入信息明文只在编辑会话内存保留，不写通用持久草稿。截图批次另采用本人专属、有限保留的服务端加密草稿，详见[截图补充](Abasong_V12.1_截图批量贡献需求补充.md)。用户切账号、退出或资格被撤销后清理敏感缓存。需求、私聊、进入资料各自鉴权，不因显示同一地图就共享访问权。', '', '菜单按对象权限显示：发布者管理自己的需求，报名者管理自己的报名；司机与DSP不切换客户端或导航。当前没有支付、交接履约、司机排名、会员密码付费墙。', '', '原型使用合成资料和模拟请求；每个状态应可在原型外的场景控制中触发。开发说明/测试开关不出现在产品画面。', '', '## 2. 页面总览','', '| ID | 名称 | 载体 | 状态数 |','|---|---|---|---|']
 for p in pages: lines.append(f"| {p['id']} | {p['name']} | {p['surface']} | {len(p['states'])} |")
 lines+=['','## 3. 逐页规格','']
 for p in pages:

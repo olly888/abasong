@@ -1,0 +1,293 @@
+{
+  "version": "V12.1-screenshot-extension",
+  "date": "2026-10-30",
+  "prototype": "index.html",
+  "design_nodes": 39,
+  "route_or_page_views": 35,
+  "spec_state_variants": 237,
+  "all_state_variants_verified": false,
+  "real_services_connected": false,
+  "nodes": [
+    {
+      "id": "A02",
+      "name": "手机号登录",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "A03",
+      "name": "验证码与恢复",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "A04",
+      "name": "首次最小资料",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "H01",
+      "name": "首页·公寓",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "H02",
+      "name": "首页·找活",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "H03",
+      "name": "首页·找人",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "S01",
+      "name": "搜索与筛选",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "L01",
+      "name": "选择正确公寓",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "B01",
+      "name": "密码大字",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "B02",
+      "name": "贡献密码/进入方式",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "P01",
+      "name": "统一发需求选择",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "P03",
+      "name": "配送找人发布/编辑",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "P04",
+      "name": "车辆/其他配送求助",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "D01",
+      "name": "需求详情",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "P08",
+      "name": "报名/我能帮忙",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "P09",
+      "name": "管理我的需求",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "P10",
+      "name": "报名司机列表",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "D02",
+      "name": "司机档案",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "M01",
+      "name": "消息中心",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "M02",
+      "name": "一对一会话",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "C01",
+      "name": "司机圈",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "C02",
+      "name": "动态与回复",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "C03",
+      "name": "发布互助文字",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U01",
+      "name": "我的",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U02",
+      "name": "资料与经验",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U03",
+      "name": "可接活设置",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U04",
+      "name": "我的发布",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U05",
+      "name": "我的报名",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U06",
+      "name": "我的贡献",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U08",
+      "name": "常联系",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U10",
+      "name": "组织来源",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "U11",
+      "name": "设置与账户",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "G01",
+      "name": "更多/举报/屏蔽",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "G02",
+      "name": "分享需求",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "X01",
+      "name": "外部公开需求摘要",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "G03",
+      "name": "确认/错误/恢复",
+      "implementation": "local_interactive_prototype",
+      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
+      "state_coverage": "partial; see acceptance record"
+    },
+    {
+      "id": "B04",
+      "name": "截图导入",
+      "implementation": "local_synthetic_interactive_prototype",
+      "acceptance": "pending_user_review",
+      "state_coverage": "partial; see screenshot acceptance record"
+    },
+    {
+      "id": "B05",
+      "name": "识别结果确认",
+      "implementation": "local_synthetic_interactive_prototype",
+      "acceptance": "pending_user_review",
+      "state_coverage": "partial; see screenshot acceptance record"
+    },
+    {
+      "id": "B06",
+      "name": "导入进度与结果",
+      "implementation": "local_synthetic_interactive_prototype",
+      "acceptance": "pending_user_review",
+      "state_coverage": "partial; see screenshot acceptance record"
+    }
+  ],
+  "baseline_accepted_for_development": false,
+  "user_review": {
+    "date": "2026-10-29",
+    "conclusion": "用户已体验认可；未发现问题，小优化后续迭代",
+    "scope": "认可当前原型作为开发参考，不表示207状态全部验收"
+  },
+  "extension_acceptance": "pending_user_review",
+  "real_ocr_implemented": false
+}

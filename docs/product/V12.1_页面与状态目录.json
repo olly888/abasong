@@ -1,7 +1,7 @@
 {
   "version": "V12.1",
   "date": "2026-10-30",
-  "note": "39设计节点含截图扩展；237状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06待制作，接口待扩展",
+  "note": "39设计节点含截图扩展；237状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06合成交互待评审，接口待扩展",
   "pages": [
     {
       "id": "A02",
@@ -217,7 +217,7 @@
         "ADD-06"
       ],
       "acceptance": "首次默认公寓；卡外无有用/没用/更新行，无楼宇/入口/停车菜单；GPS不抢走已选公寓。",
-      "prototype_status": "原节点基线已认可；截图新增入口/状态待制作",
+      "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
       "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
     },
     {
@@ -536,7 +536,7 @@
         "ADD-06"
       ],
       "acceptance": "保存成功状态准确，不将pending放进可用首码；0/O、1/I、#/*可辨；请求重试复用幂等键。",
-      "prototype_status": "原节点基线已认可；截图新增入口/状态待制作",
+      "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
       "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
     },
     {
@@ -1322,7 +1322,7 @@
         "ADD-06"
       ],
       "acceptance": "没有钱包/收入/结算/配送数据；身份不触发另一端工作台。",
-      "prototype_status": "原节点基线已认可；截图新增入口/状态待制作",
+      "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
       "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
     },
     {
@@ -1559,7 +1559,7 @@
         "ADD-06"
       ],
       "acceptance": "不能为看本人审核进度强制继续持有access.read；不从列表泄露失效正文。",
-      "prototype_status": "原节点基线已认可；截图新增入口/状态待制作",
+      "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
       "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
     },
     {
@@ -1949,7 +1949,7 @@
       ],
       "acceptance": "单/多图无须逐条录地址；不读取其他APP账户，不自动公开原图或识别正文。",
       "api_contract_status": "待T27扩展OpenAPI与生成器；尚无已冻结operationId",
-      "prototype_status": "待制作"
+      "prototype_status": "已制作本地合成交互·待用户评审；非真实OCR"
     },
     {
       "id": "B05",
@@ -2003,7 +2003,7 @@
       ],
       "acceptance": "不强制逐条打勾；不能把模型判断当用户确认。低置信不默认选入，同码不刷新贡献时间，OCR不产生有用票。",
       "api_contract_status": "待T27扩展OpenAPI与生成器；尚无已冻结operationId",
-      "prototype_status": "待制作"
+      "prototype_status": "已制作本地合成交互·待用户评审；非真实OCR"
     },
     {
       "id": "B06",
@@ -2062,7 +2062,7 @@
       ],
       "acceptance": "上传/识别/提交/可展示分开；切后台不丢批次，重试不重建已成功项，取消后不得回写。",
       "api_contract_status": "待T27扩展OpenAPI与生成器；尚无已冻结operationId",
-      "prototype_status": "待制作"
+      "prototype_status": "已制作本地合成交互·待用户评审；非真实OCR"
     }
   ]
 }

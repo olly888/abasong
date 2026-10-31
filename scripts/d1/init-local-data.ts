@@ -39,6 +39,16 @@ async function main() {
           "utf8",
         ),
       );
+    if (
+      !(
+        await db.query(
+          "SELECT 1 FROM abasong.schema_version WHERE version='V12.0004'",
+        )
+      ).rowCount
+    )
+      await db.query(
+        readFileSync("database/migrations/0004_import_batches.sql", "utf8"),
+      );
     const secret = env.DATABASE_SENSITIVE_URL
       ? localTarget(env.DATABASE_SENSITIVE_URL)
       : new URL(runtime);

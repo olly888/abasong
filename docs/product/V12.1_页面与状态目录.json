@@ -1,7 +1,7 @@
 {
   "version": "V12.1",
   "date": "2026-10-30",
-  "note": "40设计节点含截图扩展；262状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06合成交互待评审，接口待扩展",
+  "note": "40设计节点含截图扩展；262状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划",
   "pages": [
     {
       "id": "A02",
@@ -234,7 +234,7 @@
       ],
       "acceptance": "首次默认公寓；卡外无有用/没用/更新行，无楼宇/入口/停车菜单；GPS不抢走已选公寓；最近点不构成自动认定，未经核对不画建筑关联门牌号，来源无效不绘制。 三模式共享会话位置；同坐标拖图后可回位，卡片和工具栏通过camera padding避让；GPS失败、无收录与查询失败分别显示，拒绝权限可打开系统设置。",
       "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
-      "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
+      "pending_extension": "端侧识别+加密草稿/确认/两阶段批次已接入；真实来源样本、完整原生异常/真机、云识别与贡献统计仍待验收或开发"
     },
     {
       "id": "H02",
@@ -570,7 +570,7 @@
       ],
       "acceptance": "保存成功状态准确，不将pending放进可用首码；0/O、1/I、#/*可辨；请求重试复用幂等键。",
       "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
-      "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
+      "pending_extension": "端侧识别+加密草稿/确认/两阶段批次已接入；真实来源样本、完整原生异常/真机、云识别与贡献统计仍待验收或开发"
     },
     {
       "id": "P01",
@@ -1358,7 +1358,7 @@
       ],
       "acceptance": "没有钱包/收入/结算/配送数据；身份不触发另一端工作台。 设置只在页面底部菜单，不放顶部重复入口。",
       "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
-      "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
+      "pending_extension": "端侧识别+加密草稿/确认/两阶段批次已接入；真实来源样本、完整原生异常/真机、云识别与贡献统计仍待验收或开发"
     },
     {
       "id": "U02",
@@ -1610,7 +1610,7 @@
       "acceptance": "不能为看本人审核进度强制继续持有access.read；不从列表泄露失效正文。",
       "api_contract_status": "私存/收藏与手动共享契约已生成；OCR批次、纠正和统计仍待扩展",
       "prototype_status": "原节点基线已认可；截图扩展已制作待评审",
-      "pending_extension": "截图导入相关接口待T27扩展；现有api_operations仅覆盖原功能"
+      "pending_extension": "端侧识别+加密草稿/确认/两阶段批次已接入；真实来源样本、完整原生异常/真机、云识别与贡献统计仍待验收或开发"
     },
     {
       "id": "U08",
@@ -1958,7 +1958,7 @@
         "返回",
         "系统照片选择器",
         "已选图/数量/移除/追加",
-        "逐图上传状态",
+        "逐图识别与草稿状态",
         "识别截图",
         "贡献/私存入口意图传递，未提交不自动公开"
       ],
@@ -1976,7 +1976,7 @@
         {
           "label": "识别截图",
           "target": "B06",
-          "result": "创建本人批次并异步处理"
+          "result": "端侧识别；主动保存草稿或提交时登记本人加密批次"
         },
         {
           "label": "返回",
@@ -1990,18 +1990,25 @@
         "权限拒绝",
         "已选图",
         "不支持/损坏图",
-        "部分上传失败",
-        "上传中",
+        "部分识别失败",
+        "识别中",
         "账号或资格不可用"
       ],
-      "api_operations": [],
+      "api_operations": [
+        "getImportPolicy",
+        "listImportBatches",
+        "createImportBatch",
+        "getImportBatch",
+        "registerImportLocalSource",
+        "submitImportDeviceExtraction"
+      ],
       "requirements": [
         "ADD-06",
         "ADD-07",
         "ADD-08"
       ],
       "acceptance": "单/多图无须逐条录地址；不读取其他APP账户，不自动公开原图或识别正文。",
-      "api_contract_status": "待T27扩展OpenAPI与生成器；尚无已冻结operationId",
+      "api_contract_status": "15个端侧批次接口已实现并经本地HTTP/数据库验证；云端上传/识别3操作仍planned，真机与完整状态验收未完成",
       "prototype_status": "已制作本地合成交互·待用户评审；非真实OCR"
     },
     {
@@ -2057,14 +2064,21 @@
         "范围切换清除确认",
         "资格不足不自动改私存"
       ],
-      "api_operations": [],
+      "api_operations": [
+        "listImportCandidates",
+        "editImportCandidate",
+        "confirmImportCandidate",
+        "confirmImportSelection",
+        "editImportBatchMode",
+        "deleteImportDraft"
+      ],
       "requirements": [
         "ADD-06",
         "ADD-07",
         "ADD-08"
       ],
       "acceptance": "不强制逐条打勾；不能把模型判断当用户确认。低置信不默认选入，同码不刷新贡献时间，OCR不产生有用票。",
-      "api_contract_status": "待T27扩展OpenAPI与生成器；尚无已冻结operationId",
+      "api_contract_status": "15个端侧批次接口已实现并经本地HTTP/数据库验证；云端上传/识别3操作仍planned，真机与完整状态验收未完成",
       "prototype_status": "已制作本地合成交互·待用户评审；非真实OCR"
     },
     {
@@ -2118,13 +2132,18 @@
         "已取消/过期",
         "后台返回恢复"
       ],
-      "api_operations": [],
+      "api_operations": [
+        "getImportBatch",
+        "listImportSources",
+        "commitImportCandidates",
+        "cancelImportBatch"
+      ],
       "requirements": [
         "ADD-06",
         "ADD-07"
       ],
       "acceptance": "上传/识别/提交/可展示分开；切后台不丢批次，重试不重建已成功项，取消后不得回写。",
-      "api_contract_status": "待T27扩展OpenAPI与生成器；尚无已冻结operationId",
+      "api_contract_status": "15个端侧批次接口已实现并经本地HTTP/数据库验证；云端上传/识别3操作仍planned，真机与完整状态验收未完成",
       "prototype_status": "已制作本地合成交互·待用户评审；非真实OCR"
     },
     {

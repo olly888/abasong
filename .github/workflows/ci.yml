@@ -50,6 +50,7 @@ jobs:
       - run: ./scripts/dev db:verify
       - run: ./scripts/dev verify:auth-api
       - run: ./scripts/dev verify:library-api
+      - run: ./scripts/dev verify:import-api
       - run: ./scripts/dev verify:access-ranking
       - run: ./scripts/dev smoke:services
       - name: Bundle native JavaScript

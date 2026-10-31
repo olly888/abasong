@@ -307,73 +307,78 @@ export class ApartmentsService {
     body: unknown,
     key: string | undefined,
   ): Promise<S["LibraryEntry"]> {
+    return this.tx(a, (c) => this.createEntryTx(c, a, body, key));
+  }
+  async createEntryTx(
+    c: PoolClient,
+    a: VerifiedIdentity,
+    body: unknown,
+    key: string | undefined,
+  ): Promise<S["LibraryEntry"]> {
     const b = parse(createEntry, body);
-    return this.tx(a, (c) =>
-      this.write(
-        c,
-        a,
-        "library.create",
-        key,
-        b,
-        async () => {
-          await c.query(
-            "SELECT pg_advisory_xact_lock(hashtextextended($1,0))",
-            [`${a.userId}:library`],
-          );
-          let data: EntryBody = {
-            name: b.name ?? "我的公寓",
-            address: b.address ?? "",
-            region: b.region ?? "未分类",
+    return this.write(
+      c,
+      a,
+      "library.create",
+      key,
+      b,
+      async () => {
+        await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+          `${a.userId}:library`,
+        ]);
+        let data: EntryBody = {
+          name: b.name ?? "我的公寓",
+          address: b.address ?? "",
+          region: b.region ?? "未分类",
+        };
+        if (b.apartment_id) {
+          const apartment = (
+            await c.query(
+              "SELECT name,address_line1,city,state FROM abasong.apartments WHERE id=$1 AND status='active'",
+              [b.apartment_id],
+            )
+          ).rows[0];
+          if (!apartment) throw missing();
+          data = {
+            ...data,
+            name: b.name ?? apartment.name ?? "公寓",
+            address: `${apartment.address_line1}, ${apartment.city}, ${apartment.state}`,
           };
-          if (b.apartment_id) {
-            const apartment = (
-              await c.query(
-                "SELECT name,address_line1,city,state FROM abasong.apartments WHERE id=$1 AND status='active'",
-                [b.apartment_id],
-              )
-            ).rows[0];
-            if (!apartment) throw missing();
-            data = {
-              ...data,
-              name: b.name ?? apartment.name ?? "公寓",
-              address: `${apartment.address_line1}, ${apartment.city}, ${apartment.state}`,
+          const old = (
+            await c.query<EntryRow>(
+              "SELECT * FROM abasong.personal_apartments WHERE owner_id=$1 AND apartment_id=$2",
+              [a.userId, b.apartment_id],
+            )
+          ).rows[0];
+          if (old)
+            return {
+              object: old.id,
+              result: this.entryView(await this.entry(c, a, old.id)),
             };
-            const old = (
-              await c.query<EntryRow>(
-                "SELECT * FROM abasong.personal_apartments WHERE owner_id=$1 AND apartment_id=$2",
-                [a.userId, b.apartment_id],
+        }
+        if (
+          Number(
+            (
+              await c.query(
+                "SELECT count(*) FROM abasong.personal_apartments WHERE owner_id=$1",
+                [a.userId],
               )
-            ).rows[0];
-            if (old)
-              return {
-                object: old.id,
-                result: this.entryView(await this.entry(c, a, old.id)),
-              };
-          }
-          if (
-            Number(
-              (
-                await c.query(
-                  "SELECT count(*) FROM abasong.personal_apartments WHERE owner_id=$1",
-                  [a.userId],
-                )
-              ).rows[0].count,
-            ) >= 1000
-          )
-            throw new ApiError(422, "LIBRARY_LIMIT", "保存数量已达当前上限");
-          const rid = randomUUID(),
-            payload = this.crypto.seal(data, `entry:${a.userId}:${rid}:1`);
-          await c.query(
-            "INSERT INTO abasong.personal_apartments(id,owner_id,apartment_id,payload) VALUES($1,$2,$3,$4)",
-            [rid, a.userId, b.apartment_id ?? null, payload],
-          );
-          return {
-            object: rid,
-            result: this.entryView(await this.entry(c, a, rid)),
-          };
-        },
-        async (rid) => this.entryView(await this.entry(c, a, rid)),
-      ),
+            ).rows[0].count,
+          ) >= 1000
+        )
+          throw new ApiError(422, "LIBRARY_LIMIT", "保存数量已达当前上限");
+        const rid = randomUUID(),
+          payload = this.crypto.seal(data, `entry:${a.userId}:${rid}:1`);
+        await c.query(
+          "INSERT INTO abasong.personal_apartments(id,owner_id,apartment_id,payload) VALUES($1,$2,$3,$4)",
+          [rid, a.userId, b.apartment_id ?? null, payload],
+        );
+        return {
+          object: rid,
+          result: this.entryView(await this.entry(c, a, rid)),
+        };
+      },
+      async (rid) => this.entryView(await this.entry(c, a, rid)),
     );
   }
   async patch(
@@ -435,46 +440,53 @@ export class ApartmentsService {
     body: unknown,
     key: string | undefined,
   ) {
+    return this.tx(a, (c) => this.createRecordTx(c, a, eid, body, key));
+  }
+  async createRecordTx(
+    c: PoolClient,
+    a: VerifiedIdentity,
+    eid: string,
+    body: unknown,
+    key: string | undefined,
+  ) {
     const b = parse(recordInput, body);
     parse(id, eid);
-    return this.tx(a, (c) =>
-      this.write(
-        c,
-        a,
-        `private.create:${eid}`,
-        key,
-        b,
-        async () => {
-          await this.entry(c, a, eid, true);
-          const rows = (
-            await c.query<RecordRow>(
-              "SELECT * FROM abasong.personal_access_records WHERE owner_id=$1 AND entry_id=$2",
-              [a.userId, eid],
-            )
-          ).rows;
-          const same = rows.find((r) => {
-            const old = this.recordView(r);
-            return old.value === b.value && old.scope_label === b.scope_label;
-          });
-          if (same) return { object: same.id, result: this.recordView(same) };
-          if (rows.length >= 100)
-            throw new ApiError(422, "RECORD_LIMIT", "此公寓记录已达当前上限");
-          const rid = randomUUID(),
-            payload = this.crypto.seal(
-              { ...b, note: b.note ?? "" },
-              `private:${a.userId}:${rid}:1`,
-            );
-          await c.query(
-            "INSERT INTO abasong.personal_access_records(id,owner_id,entry_id,payload) VALUES($1,$2,$3,$4)",
-            [rid, a.userId, eid, payload],
+    return this.write(
+      c,
+      a,
+      `private.create:${eid}`,
+      key,
+      b,
+      async () => {
+        await this.entry(c, a, eid, true);
+        const rows = (
+          await c.query<RecordRow>(
+            "SELECT * FROM abasong.personal_access_records WHERE owner_id=$1 AND entry_id=$2",
+            [a.userId, eid],
+          )
+        ).rows;
+        const same = rows.find((r) => {
+          const old = this.recordView(r);
+          return old.value === b.value && old.scope_label === b.scope_label;
+        });
+        if (same) return { object: same.id, result: this.recordView(same) };
+        if (rows.length >= 100)
+          throw new ApiError(422, "RECORD_LIMIT", "此公寓记录已达当前上限");
+        const rid = randomUUID(),
+          payload = this.crypto.seal(
+            { ...b, note: b.note ?? "" },
+            `private:${a.userId}:${rid}:1`,
           );
-          return {
-            object: rid,
-            result: this.recordView(await this.record(c, a, rid)),
-          };
-        },
-        async (rid) => this.recordView(await this.record(c, a, rid)),
-      ),
+        await c.query(
+          "INSERT INTO abasong.personal_access_records(id,owner_id,entry_id,payload) VALUES($1,$2,$3,$4)",
+          [rid, a.userId, eid, payload],
+        );
+        return {
+          object: rid,
+          result: this.recordView(await this.record(c, a, rid)),
+        };
+      },
+      async (rid) => this.recordView(await this.record(c, a, rid)),
     );
   }
   async patchRecord(
@@ -563,6 +575,17 @@ export class ApartmentsService {
       (c) => this.contributeTx(c, a, aid, b, key, `contribute:${aid}`, b),
       "access.contribute",
     );
+  }
+  async contributeImportTx(
+    c: PoolClient,
+    a: VerifiedIdentity,
+    aid: string,
+    body: unknown,
+    key: string,
+  ) {
+    const b = parse(accessInput, body);
+    await this.cap(c, a, "access.contribute");
+    return this.contributeTx(c, a, aid, b, key, `import.share:${key}`, b);
   }
   private async contributeTx(
     c: PoolClient,

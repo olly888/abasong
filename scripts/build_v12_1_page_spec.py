@@ -149,7 +149,23 @@ for p in pages:
 for p in pages:
  if p['id'] in ['B04','B05','B06','U09'] and p['id'] in extension_made:
   p['prototype_status']='已制作本地合成交互·待用户评审；非真实OCR'
-(outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-30','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06合成交互待评审，接口待扩展','pages':pages},ensure_ascii=False,indent=2)+'\n')
+# Current on-device batch API implementation; cloud OCR/upload remains planned.
+for p in pages:
+ if p['id']=='B04':
+  p['api_operations']=['getImportPolicy','listImportBatches','createImportBatch','getImportBatch','registerImportLocalSource','submitImportDeviceExtraction']
+  p['information']=[x.replace('逐图上传状态','逐图识别与草稿状态') for x in p['information']]
+  p['states']=[x.replace('部分上传失败','部分识别失败').replace('上传中','识别中') for x in p['states']]
+  for a in p['actions']:
+   if a['label']=='识别截图':a['result']='端侧识别；主动保存草稿或提交时登记本人加密批次'
+ if p['id']=='B05':
+  p['api_operations']=['listImportCandidates','editImportCandidate','confirmImportCandidate','confirmImportSelection','editImportBatchMode','deleteImportDraft']
+ if p['id']=='B06':
+  p['api_operations']=['getImportBatch','listImportSources','commitImportCandidates','cancelImportBatch']
+ if p['id'] in ['B04','B05','B06']:
+  p['api_contract_status']='15个端侧批次接口已实现并经本地HTTP/数据库验证；云端上传/识别3操作仍planned，真机与完整状态验收未完成'
+ if p['id'] in ['H01','B02','U01','U06']:
+  p['pending_extension']='端侧识别+加密草稿/确认/两阶段批次已接入；真实来源样本、完整原生异常/真机、云识别与贡献统计仍待验收或开发'
+(outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-30','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']
  w=csv.DictWriter(f,fieldnames=fields,lineterminator="\n");w.writeheader()

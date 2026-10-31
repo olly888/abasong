@@ -2284,6 +2284,9 @@ export interface components {
             /** @enum {boolean} */
             source_attested: true;
         };
+        ImportScope: {
+            label?: string;
+        };
         ImportPolicy: {
             version: number;
             max_images: number;
@@ -2356,7 +2359,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            state: "awaiting_upload" | "uploaded" | "processing" | "recognized" | "failed" | "deleted";
+            state: "registered" | "awaiting_upload" | "uploaded" | "processing" | "recognized" | "failed" | "deleted";
             version: number;
             /** Format: date-time */
             expires_at: string;
@@ -2390,7 +2393,7 @@ export interface components {
             /** @enum {string} */
             method?: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
             value?: string;
-            scope?: components["schemas"]["AccessScope"];
+            scope?: components["schemas"]["ImportScope"];
             removed?: boolean;
         };
         ImportCandidate: {
@@ -2404,11 +2407,12 @@ export interface components {
             /** @enum {string} */
             method: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
             value: string;
-            scope: components["schemas"]["AccessScope"];
+            scope: components["schemas"]["ImportScope"];
             issues: ("missing_address" | "missing_value" | "ambiguous_pair" | "uncertain_characters" | "unmatched_apartment" | "duplicate" | "unsupported_method")[];
             /** @enum {string} */
             state: "needs_review" | "ready" | "removed" | "committed" | "failed";
             confirmation_revision: number | null;
+            commit_result?: components["schemas"]["ImportCommitResult"];
         };
         ImportCandidatePage: {
             items: components["schemas"]["ImportCandidate"][];
@@ -2449,6 +2453,8 @@ export interface components {
             /** Format: uuid */
             candidate_id: string;
             confirmed_revision: number;
+            /** Format: uuid */
+            client_commit_id: string;
             /** @enum {string} */
             private_status: "not_started" | "saved" | "failed";
             /** Format: uuid */
@@ -2469,7 +2475,7 @@ export interface components {
             value: string;
             /** @enum {string} */
             method: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
-            scope?: components["schemas"]["AccessScope"];
+            scope?: components["schemas"]["ImportScope"];
         };
         ImportDeviceExtraction: {
             expected_source_version: number;

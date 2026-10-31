@@ -50,3 +50,6 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 
 
 2026-10-30 D1真实定位/建筑首批：不增加依赖或权限，复用expo-location58与已有Android前台单次定位模块串行刷新；rnmapbox10.3.16现有ShapeSource/FillLayer/LineLayer/SymbolLayer绘制经核对几何。刷新5秒/停留8秒仅开发保护，等待现场参数冻结；不启用beta定位API或后台服务。Mapbox临时样本请求只记录覆盖统计，不存供应商返回坐标/轮廓。0003新增独立建筑映射，截图批次迁移顺延0004。
+
+
+2026-10-30真实公寓/端侧批次：不新增依赖或原生权限，继续Node24/pnpm10.32.1与现有Expo/Mapbox/OCR模块。新增独立ODbL公开几何样本及归属说明，非Mapbox临时结果存库，不新增App运行时OSM请求。新0004/50表、15个本地端侧批次操作、源状态registered、ImportScope仅label、逐项稳定提交ID与owner加密结果；云OCR/上传三操作继续planned。API JSON体上限调整为128KiB（仅批次JSON，其他接口仍16KiB），DTO/100候选/10图等开发策略另行限额，图片不走此JSON接口。worker仅新增受限过期函数调用；生产KMS/云配置未变。

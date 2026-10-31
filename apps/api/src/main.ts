@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import { ImportsController } from "./imports/imports.controller";
+import { ImportsService } from "./imports/imports.service";
 import { ApartmentsController } from "./apartments/apartments.controller";
 import { ApartmentsService } from "./apartments/apartments.service";
 import { SensitiveDatabase } from "./apartments/sensitive-database";
@@ -40,7 +42,12 @@ class HealthController {
   }
 }
 @Module({
-  controllers: [HealthController, MeController, ApartmentsController],
+  controllers: [
+    HealthController,
+    MeController,
+    ApartmentsController,
+    ImportsController,
+  ],
   providers: [
     Database,
     MeService,
@@ -48,6 +55,7 @@ class HealthController {
     IdentityGuard,
     SensitiveDatabase,
     ApartmentsService,
+    ImportsService,
   ],
 })
 class AppModule {}
@@ -61,6 +69,15 @@ async function main() {
     res.setHeader("X-Request-ID", req.requestId);
     if (req.path.startsWith("/v1/")) res.setHeader("Cache-Control", "no-store");
     next();
+  });
+  // Only batch candidate JSON needs the larger budget; retain the existing
+  // 16 KiB protection for authentication and every other business route.
+  app.useBodyParser("json", {
+    limit: "128kb",
+    type: (req) =>
+      /^\/v1\/me\/import-batches(?:\/|$)/.test(
+        (req.url ?? "").split("?")[0] ?? "",
+      ) && /^application\/json(?:;|$)/i.test(req.headers["content-type"] ?? ""),
   });
   app.useBodyParser("json", { limit: "16kb" });
   app.useGlobalFilters(new ApiExceptionFilter());

@@ -74,12 +74,15 @@ assert len(page_ids)==len(catalog['pages'])==40
 assert {'B04','B05','B06','U09'}.issubset(page_ids)
 for page in catalog['pages']:
     if page['id'] in {'B04','B05','B06'}:
-        assert not page['api_operations'] and page.get('api_contract_status'),page['id']
+        assert page['api_operations'] and page.get('api_contract_status'),page['id']
 for page in catalog['pages']:
     assert page['information'] and page['states'] and page['acceptance']
     assert all(a['target'] in page_ids for a in page['actions']),page['id']
     assert set(page['api_operations']).issubset(set(ids)),(page['id'],page['api_operations'])
     assert not any(word in ' '.join(page['information']+page['states']) for word in ['长期','试线','带教','入职']),page['id']
+batch_sql=(ROOT/'database/migrations/0004_import_batches.sql').read_text()
+batch_parsed=parse_sql(batch_sql)
+assert 'FORCE ROW LEVEL SECURITY' in batch_sql and 'SECURITY DEFINER SET search_path=pg_catalog' in batch_sql
 spatial_sql=(ROOT/'database/migrations/0003_apartment_buildings.sql').read_text()
 spatial_parsed=parse_sql(spatial_sql)
 assert 'apartment_buildings' in spatial_sql
@@ -91,6 +94,6 @@ for path in mds:
         link=link.split('#')[0]
         if link and not link.startswith(('http://','https://','mailto:')) and not (path.parent/link).exists():missing.append([str(path.relative_to(ROOT)),link])
 assert not missing,missing
-result={'date':'2026-10-30','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0003':{'top_level_parse':'passed','statements':len(spatial_parsed),'database_execution':'see D1 arrival verification record'},'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
+result={'date':'2026-10-30','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0004':{'top_level_parse':'passed','statements':len(batch_parsed),'database_execution':'see D1 import batch verification record'},'incremental_migration_0003':{'top_level_parse':'passed','statements':len(spatial_parsed),'database_execution':'see D1 arrival verification record'},'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
 (ROOT/'docs/technical/V12_静态校验结果.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(result,ensure_ascii=False,indent=2))

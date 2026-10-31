@@ -6,13 +6,18 @@
     "contract_version": "12.1.0",
     "paths": 83,
     "operations": 108,
-    "schemas": 126,
+    "schemas": 127,
     "spec_validation": "passed"
   },
   "sql": {
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0004": {
+      "top_level_parse": "passed",
+      "statements": 20,
+      "database_execution": "see D1 import batch verification record"
+    },
     "incremental_migration_0003": {
       "top_level_parse": "passed",
       "statements": 12,

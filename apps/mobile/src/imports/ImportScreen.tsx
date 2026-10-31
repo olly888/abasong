@@ -29,15 +29,29 @@ import { ListRow, SearchBox } from "../ui/Primitives";
 import { extractCandidates } from "./extract";
 import { recognize } from "./recognize";
 import { exactApartment } from "./match";
+import { ServerDraft } from "./server-draft";
 import { createImageCache } from "./storage";
 type S = components["schemas"];
-type Source = {
+const issueLabels: Record<string, string> = {
+  missing_address: "缺少地址",
+  missing_value: "缺少密码",
+  ambiguous_pair: "地址与密码对应不明",
+  uncertain_characters: "请核对字符",
+  unmatched_apartment: "公寓尚未匹配，可先私存",
+  duplicate: "存在重复资料",
+  unsupported_method: "暂不支持此进入方式",
+};
+export type Source = {
+  width?: number;
+  height?: number;
+  bytes?: number;
+  mime?: "image/png" | "image/jpeg" | "image/heic";
   id: string;
   uri: string;
   state: "selected" | "processing" | "recognized" | "failed";
   error?: string;
 };
-type Candidate = {
+export type Candidate = {
   id: string;
   sourceId: string;
   address: string;
@@ -52,9 +66,6 @@ type Candidate = {
   shared?: boolean;
   status?: "private_saved" | "pending" | "active" | "same_value" | "failed";
   error?: string;
-  entryKey: string;
-  recordKey: string;
-  shareKey: string;
 };
 function dispose(uri: string) {
   // Never delete a photo-library original or arbitrary URI.
@@ -114,7 +125,10 @@ function Session() {
     [editing, setEditing] = useState<string | null>(null),
     [query, setQuery] = useState(""),
     [matches, setMatches] = useState<S["Apartment"][]>([]),
-    [searchBusy, setSearchBusy] = useState(false);
+    [searchBusy, setSearchBusy] = useState(false),
+    [drafts, setDrafts] = useState<S["ImportBatch"][]>([]),
+    [draftSaved, setDraftSaved] = useState(false);
+  const server = useRef<ServerDraft | null>(null);
   const cache = useRef<ReturnType<typeof createImageCache> | null>(null);
   const live = useRef(true),
     running = useRef(false),
@@ -126,6 +140,13 @@ function Session() {
   useEffect(() => {
     live.current = true;
     abort.current = new AbortController();
+    server.current = new ServerDraft(session, abort.current.signal);
+    void server.current
+      .available()
+      .then((items) => {
+        if (live.current) setDrafts(items);
+      })
+      .catch(() => {});
     return () => {
       live.current = false;
       abort.current.abort();
@@ -149,11 +170,9 @@ function Session() {
       ...patch,
       revision: row.revision + 1,
       selected: false,
-      entryKey: randomUUID(),
-      recordKey: randomUUID(),
-      shareKey: randomUUID(),
     });
     setAttested(false);
+    setDraftSaved(false);
   }
   function candidate(
     sourceId: string,
@@ -171,9 +190,6 @@ function Session() {
       target: null,
       selected: false,
       revision: 1,
-      entryKey: randomUUID(),
-      recordKey: randomUUID(),
-      shareKey: randomUUID(),
     };
   }
   async function pick() {
@@ -241,9 +257,23 @@ function Session() {
         }
         allUris.current.delete(a.uri);
         allUris.current.add(uri);
-        next.push({ id, uri, state: "selected" });
+        next.push({
+          id,
+          uri,
+          state: "selected",
+          width: a.width,
+          height: a.height,
+          bytes: size,
+          mime:
+            a.mimeType === "image/heic"
+              ? "image/heic"
+              : a.mimeType === "image/png"
+                ? "image/png"
+                : "image/jpeg",
+        });
       }
       setSources((old) => [...old, ...next]);
+      setDraftSaved(false);
     } catch {
       if (live.current) setError("无法选择图片，请重试");
     } finally {
@@ -321,6 +351,7 @@ function Session() {
       if (live.current) {
         setStage("review");
         setAttested(false);
+        setDraftSaved(false);
       }
     } finally {
       running.current = false;
@@ -350,104 +381,146 @@ function Session() {
     if (running.current) return;
     Alert.alert(
       "离开截图导入？",
-      "已保存的记录保留，未保存的识别结果将清除。",
+      draftSaved
+        ? "已保存的草稿可以稍后继续。"
+        : "未保存的修改将清除；此前已保存的草稿保留。",
       [
         { text: "继续核对", style: "cancel" },
         { text: "离开", style: "destructive", onPress: () => router.back() },
       ],
     );
   }
+  async function saveDraft() {
+    if (running.current || !rows.length) return;
+    running.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      const batch = await server.current!.save(rows, sources, mode);
+      if (live.current) {
+        setDraftSaved(true);
+        setLocked(batch.mode_locked);
+      }
+    } catch (e) {
+      if (live.current)
+        setError(e instanceof Error ? e.message : "草稿保存失败，请重试");
+    } finally {
+      running.current = false;
+      if (live.current) setBusy(false);
+    }
+  }
+  async function restoreDraft(id: string) {
+    if (running.current) return;
+    running.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      const found = await server.current!.restore(id);
+      const next: Candidate[] = [];
+      for (const item of found) {
+        if (item.state === "removed") continue;
+        const row = candidate(
+          item.source_ids[0] ?? "",
+          item.address_text,
+          item.value,
+          item.issues,
+        );
+        row.id = item.id;
+        row.scope = item.scope.label ?? "门别未注明";
+        row.revision = item.revision;
+        if (item.apartment_id)
+          row.target = await request<S["Apartment"]>(
+            "/v1/apartments/" + item.apartment_id,
+          );
+        const result = item.commit_result;
+        if (result) {
+          row.privateId = result.private_record_id ?? undefined;
+          row.shared = ["active", "pending", "same_value"].includes(
+            result.share_status,
+          );
+          row.status =
+            result.private_status === "failed" ||
+            result.share_status === "failed"
+              ? "failed"
+              : result.share_status === "pending"
+                ? "pending"
+                : result.share_status === "same_value"
+                  ? "same_value"
+                  : result.share_status === "active"
+                    ? "active"
+                    : "private_saved";
+        }
+        row.selected = item.state === "ready" || item.state === "failed";
+        next.push(row);
+      }
+      if (live.current) {
+        setRows(next);
+        setSources([]);
+        setMode(server.current!.batch!.mode);
+        setLocked(server.current!.batch!.mode_locked);
+        setDraftSaved(true);
+        setAttested(false);
+        setStage("review");
+      }
+    } catch (e) {
+      if (live.current)
+        setError(e instanceof Error ? e.message : "无法恢复草稿");
+    } finally {
+      running.current = false;
+      if (live.current) setBusy(false);
+    }
+  }
   async function submit() {
     if (running.current || !attested) return;
-    const selected = rowsRef.current.filter(
+    const selected = rows.filter(
       (r) =>
         r.selected &&
-        r.value.trim() &&
-        r.scope.trim() &&
-        (r.target || (mode === "private_only" && r.address.trim())) &&
+        complete(r) &&
         (!r.privateId || (mode === "private_and_share" && !r.shared)),
     );
     if (!selected.length) return;
     running.current = true;
     setBusy(true);
-    setLocked(true);
     setError(null);
     try {
-      for (const row of selected) {
-        if (!live.current) break;
-        let privateId = row.privateId;
-        let privateVersion = row.privateVersion;
-        try {
-          if (!privateId) {
-            const entry = await request<S["LibraryEntry"]>(
-              "/v1/me/apartment-library",
-              {
-                method: "POST",
-                key: row.entryKey,
-                body: row.target
-                  ? { apartment_id: row.target.id }
-                  : { address: row.address.trim() },
-              },
-            );
-            const record = await request<S["PrivateRecord"]>(
-              `/v1/me/apartment-library/${entry.id}/records`,
-              {
-                method: "POST",
-                key: row.recordKey,
-                body: {
-                  value: row.value.trim(),
-                  scope_label: row.scope.trim(),
-                },
-              },
-            );
-            privateId = record.id;
-            privateVersion = record.version;
-            if (live.current)
-              update(row.id, {
-                privateId,
-                privateVersion,
-                status: "private_saved",
-                error: undefined,
-              });
-          }
-          if (mode === "private_and_share" && !row.shared) {
-            const result = await request<S["ContributionResult"]>(
-              `/v1/me/private-access-records/${privateId}/share`,
-              {
-                method: "POST",
-                key: row.shareKey,
-                body: {
-                  expected_version: privateVersion!,
-                  source_attested: true,
-                },
-              },
-            );
-            if (live.current)
-              update(row.id, {
-                privateId,
-                shared: true,
-                status:
-                  result.outcome === "same_value_validation"
+      const result = await server.current!.commit(
+        rows,
+        selected,
+        sources,
+        mode,
+      );
+      if (live.current) {
+        for (const { localId, out } of result)
+          update(localId, {
+            privateId: out.private_record_id ?? undefined,
+            shared: ["active", "pending", "same_value"].includes(
+              out.share_status,
+            ),
+            status:
+              out.private_status === "failed" || out.share_status === "failed"
+                ? "failed"
+                : out.share_status === "pending"
+                  ? "pending"
+                  : out.share_status === "same_value"
                     ? "same_value"
-                    : result.outcome === "created_active"
+                    : out.share_status === "active"
                       ? "active"
-                      : "pending",
-                error: undefined,
-              });
-          }
-        } catch {
-          if (live.current)
-            update(row.id, {
-              privateId,
-              privateVersion,
-              status: "failed",
-              error: privateId
+                      : "private_saved",
+            error: out.error_code
+              ? out.private_status === "saved"
                 ? "已保存，尚未共享；可重试"
-                : "保存失败，可重试",
-            });
-        }
+                : "保存失败，可重试"
+              : undefined,
+          });
+        setLocked(!!server.current!.batch?.mode_locked);
+        setDraftSaved(true);
+        setStage("result");
       }
-      if (live.current) setStage("result");
+    } catch (e) {
+      if (live.current) {
+        setLocked(!!server.current!.batch?.mode_locked);
+        setError(e instanceof Error ? e.message : "提交失败，请重试");
+      }
     } finally {
       running.current = false;
       if (live.current) setBusy(false);
@@ -534,6 +607,14 @@ function Session() {
       {stage === "select" ? (
         <>
           <Text style={styles.heading}>从截图整理公寓密码</Text>
+          {drafts.map((d) => (
+            <ListRow
+              key={d.id}
+              title="继续未完成导入"
+              subtitle={`${d.candidate_count} 条资料`}
+              onPress={() => void restoreDraft(d.id)}
+            />
+          ))}
           <ActionButton
             label="选择截图"
             secondary
@@ -607,7 +688,10 @@ function Session() {
               title={p.name ?? "公寓"}
               subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
               onPress={() => {
-                change(editor.id, { target: p });
+                change(editor.id, {
+                  target: p,
+                  address: `${p.address_line1}, ${p.city}, ${p.state}${p.postal_code ? " " + p.postal_code : ""}`,
+                });
                 setMatches([]);
               }}
             />
@@ -653,6 +737,7 @@ function Session() {
                       if (mode === m) return;
                       setMode(m);
                       setAttested(false);
+                      setDraftSaved(false);
                       setRows((old) =>
                         old.map((r) => ({ ...r, selected: false })),
                       );
@@ -732,7 +817,15 @@ function Session() {
               ) : !r.target && mode === "private_and_share" ? (
                 <Text style={styles.meta}>公寓待匹配</Text>
               ) : r.issues.length ? (
-                <Text style={styles.meta}>{r.issues.join(" · ")}</Text>
+                <Text style={styles.meta}>
+                  {r.issues
+                    .map(
+                      (i) =>
+                        issueLabels[i] ??
+                        (/^[a-z_]+$/.test(i) ? "请核对识别结果" : i),
+                    )
+                    .join(" · ")}
+                </Text>
               ) : null}
               <View style={styles.modeRow}>
                 <Pressable
@@ -773,6 +866,7 @@ function Session() {
                     onPress={() => {
                       setRows((old) => old.filter((x) => x.id !== r.id));
                       setAttested(false);
+                      setDraftSaved(false);
                     }}
                   >
                     <Text>移除</Text>
@@ -793,6 +887,14 @@ function Session() {
               secondary
               disabled={busy}
               onPress={() => setStage("review")}
+            />
+          ) : null}
+          {stage === "review" && rows.length ? (
+            <ActionButton
+              label={draftSaved ? "保存草稿修改" : "保存草稿"}
+              secondary
+              disabled={busy}
+              onPress={() => void saveDraft()}
             />
           ) : null}
           {stage === "review" && !locked ? (

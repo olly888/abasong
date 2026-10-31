@@ -7016,7 +7016,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportSourceCreate'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}/sources/{source_id}/extractions:
@@ -7110,7 +7110,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportDeviceExtraction'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}/sources:
@@ -7204,7 +7204,7 @@ paths:
           maximum: 100
           default: 20
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
     post:
@@ -7383,7 +7383,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportConfirmSelection'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-policy:
@@ -7458,7 +7458,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches:
@@ -7548,7 +7548,7 @@ paths:
           maximum: 100
           default: 20
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
     post:
@@ -7633,7 +7633,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportCreate'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}:
@@ -7723,7 +7723,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportBatchPatch'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
     get:
@@ -7802,7 +7802,7 @@ paths:
         required: true
         schema: *id001
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
     delete:
@@ -7891,7 +7891,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportVersionInput'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}/sources/{source_id}/complete:
@@ -8169,7 +8169,7 @@ paths:
           maximum: 100
           default: 20
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}/candidates/{candidate_id}:
@@ -8263,7 +8263,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportCandidateEdit'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}/candidates/{candidate_id}/confirm:
@@ -8357,7 +8357,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportCandidateConfirm'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}/commit:
@@ -8447,7 +8447,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportCommitInput'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
   /v1/me/import-batches/{batch_id}/cancel:
@@ -8537,7 +8537,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportVersionInput'
       x-sensitive-response: true
-      x-implementation-status: planned
+      x-implementation-status: implemented_local
       x-object-authorization: owner_id = authenticated user; parent/child ownership;
         404 on mismatch
 components:
@@ -11074,6 +11074,13 @@ components:
       required:
       - expected_version
       - source_attested
+    ImportScope:
+      type: object
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          maxLength: 100
     ImportPolicy:
       type: object
       additionalProperties: false
@@ -11313,6 +11320,7 @@ components:
         state:
           type: string
           enum:
+          - registered
           - awaiting_upload
           - uploaded
           - processing
@@ -11424,7 +11432,7 @@ components:
           type: string
           maxLength: 32
         scope:
-          $ref: '#/components/schemas/AccessScope'
+          $ref: '#/components/schemas/ImportScope'
         removed:
           type: boolean
       required:
@@ -11463,7 +11471,7 @@ components:
           type: string
           maxLength: 32
         scope:
-          $ref: '#/components/schemas/AccessScope'
+          $ref: '#/components/schemas/ImportScope'
         issues:
           type: array
           items:
@@ -11488,6 +11496,8 @@ components:
           type: integer
           minimum: 1
           nullable: true
+        commit_result:
+          $ref: '#/components/schemas/ImportCommitResult'
       required:
       - id
       - revision
@@ -11616,6 +11626,9 @@ components:
         confirmed_revision:
           type: integer
           minimum: 1
+        client_commit_id:
+          type: string
+          format: uuid
         private_status:
           type: string
           enum:
@@ -11648,6 +11661,7 @@ components:
       required:
       - candidate_id
       - confirmed_revision
+      - client_commit_id
       - private_status
       - private_record_id
       - share_status
@@ -11686,7 +11700,7 @@ components:
           - no_fixed_code
           - other
         scope:
-          $ref: '#/components/schemas/AccessScope'
+          $ref: '#/components/schemas/ImportScope'
       required:
       - address_text
       - value

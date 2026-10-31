@@ -339,6 +339,40 @@ async function main() {
       "UPDATE abasong.apartments SET status='pending',boundary=NULL WHERE id=$1",
       [second],
     );
+    // A competing building need only touch the uncertainty disk to veto a
+    // match; requiring full disk containment on both buildings misses this case.
+    await db.query(
+      "UPDATE abasong.apartments SET status='active',confidence='unverified',boundary=extensions.ST_Multi(extensions.ST_MakeEnvelope(-118.24996,34.04999,-118.2498,34.05001,4326)) WHERE id=$1",
+      [second],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, spatialFix)).matched_id,
+      null,
+    );
+    // Missing geometry is not permission to ignore an address point lying
+    // inside the device's uncertainty radius either.
+    await db.query(
+      "UPDATE abasong.apartments SET boundary=NULL,point='SRID=4326;POINT(-118.24996 34.05)'::extensions.geography WHERE id=$1",
+      [second],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, spatialFix)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.config_versions SET config=jsonb_set(config,'{apartment_resolve,radius_m}','1'::jsonb) WHERE version=1",
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, spatialFix)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.config_versions SET config=jsonb_set(config,'{apartment_resolve,radius_m}','150'::jsonb) WHERE version=1",
+    );
+    await db.query(
+      "UPDATE abasong.apartments SET status='pending',point='SRID=4326;POINT(-118.2501 34.05)'::extensions.geography WHERE id=$1",
+      [second],
+    );
     const mapPath = `/v1/apartments/${aid}/map-context`;
     await req("GET", mapPath, undefined, 401);
     await req("GET", mapPath + "?extra=1", a, 400);

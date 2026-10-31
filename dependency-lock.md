@@ -53,3 +53,5 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 
 
 2026-10-30真实公寓/端侧批次：不新增依赖或原生权限，继续Node24/pnpm10.32.1与现有Expo/Mapbox/OCR模块。新增独立ODbL公开几何样本及归属说明，非Mapbox临时结果存库，不新增App运行时OSM请求。新0004/50表、15个本地端侧批次操作、源状态registered、ImportScope仅label、逐项稳定提交ID与owner加密结果；云OCR/上传三操作继续planned。API JSON体上限调整为128KiB（仅批次JSON，其他接口仍16KiB），DTO/100候选/10图等开发策略另行限额，图片不走此JSON接口。worker仅新增受限过期函数调用；生产KMS/云配置未变。
+
+2026-10-30洛杉矶扩充/弱网批次：无新增依赖、原生模块、权限或数据库迁移。复用现有PostGIS geography距离判断精度范围相交，既有信封加密/幂等重放；新增5个ODbL公开地址样本，总6处，来源-only与建筑轮廓严格区分。端侧超时10秒和取消独立，不自动重复写；默认自动认定及云配置未变。

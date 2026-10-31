@@ -1,8 +1,10 @@
 # Abasong development status
 
-Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-real-apartments-import-batches`.
+Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-la-samples-recovery`.
 
 ## Current snapshot — 2026-10-30
+
+Latest LA/recovery slice: [acceptance](docs/technical/D1_洛杉矶样本扩充与弱网恢复验收.md). LocalD0 now six public address records/four footprint-backed mappings/two address-only; no grants/codes/auto-match activation/cloud DDL. Added uncertainty-circle competitor veto, policy-version dwell reset, durable lost-edit/mode-response replay, explicit draft discovery retry, missing-apartment recovery and source-only draft re-selection. check62/importHTTP113/libraryHTTP100 passed; actual TCP reply-drop retry verifies no duplicate batch/source/candidate/private record. Native both observed Del Mar 2445/courtyard holes; iOS Woodside54 shapes; Android Colony no fabricated shape. Bounded local API pause: iOS draft-error retry recovered; Android account-refresh retry restored original session/import, not a claim of Android draft-button acceptance. Final dualJS exports passed; no new native compilation. Spec40 nodes268 states. iPhone/field deferred; Android physical unavailable. Remaining native empty-draft/Android-draft-timeout/system-kill/long-task checks and real qualification/review gate stay open.
 
 Latest real-data/import slice is implemented and core verified: [acceptance](docs/technical/D1_真实公寓与截图批次后端验收.md). One public One Santa Fe apartment/address/ODbL building mapping ingested to protected localD0; Mapbox basemap unchanged, auto-match not enabled. Native actual public outline/300/address observed both; real account access.read absent, no grants or passwords fabricated. On-device batch15 operations,0004 owner encryption/usage quotas, durable two-phase commits and bounded expiry implemented; cloud upload/OCR3 operations remain planned. Native explicit draft save/discovery/restore/submit wired; iOS saved TEST draft, Android restored/committed, iOS repeated same commit, one formal record observed and then cleaned throughUI on both. CompletedTEST draft retains its finiteTTL. check43,87 batch HTTP/PG,97 old business checks,D0 50tables and dualJS exports passed. No cloud or physical-device acceptance.
 
@@ -16,7 +18,7 @@ Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项�
 - Verified latest: local0001–0004 (50 tables),87 import HTTP/DB checks,97 library/DB regression checks,43 unit tests + workspace checks, dual-platform JS export. Prior54 Auth/16 ranking and native compilation evidence retain their recorded scope.
 - Not yet accepted: full real-account native lifecycle/qualification scenarios, authorized-sample map/location/card acceptance, complete screenshot/OCR failure recovery and field acceptance, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
 - SMS: user identified airplane mode as cause of non-receipt; do not change providers. Both simulators are signed in and private CRUD was observed; full lifecycle/qualification acceptance remains pending.
-- Next: expand public-source apartment mappings and authorized contribution/review coverage; validate remaining batch/native failure/recovery states and field thresholds, iPhone provisioning when user connects. Android physical remains unavailable. Import batch0004 core is implemented locally; full screenshotP0/field/production gates remain open.
+- Next: validate remaining native recovery states and authorized contribution/review coverage; prepare field thresholds and iPhone provisioning when user connects. Android physical remains unavailable. Import batch0004 core is implemented locally; full screenshotP0/field/production gates remain open.
 
 The sections below retain historical execution notes. Older statements about missing providers/tables/interfaces describe their recorded point in time; this snapshot and the latest specific evidence govern current status.
 

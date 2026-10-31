@@ -8,6 +8,9 @@ vi.mock("expo-crypto", () => ({
   randomUUID: () =>
     `00000000-0000-4000-8000-${String(++mock.counter).padStart(12, "0")}`,
 }));
+vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
+vi.mock("../auth/supabase", () => ({ supabase: null }));
+import { AccountError } from "../auth/api-client";
 import { ServerDraft } from "./server-draft";
 type S = components["schemas"];
 const batch: S["ImportBatch"] = {
@@ -207,4 +210,189 @@ describe("server import draft safety", () => {
     expect((await client.available()).map((b) => b.id)).toEqual(["b"]);
     expect(mock.request).toHaveBeenCalledTimes(1);
   });
+});
+
+describe("lost draft mutation responses", () => {
+  const fresh = {
+    ...remote,
+    commit_result: undefined,
+    confirmation_revision: null,
+    state: "needs_review" as const,
+  };
+  it("replays a saved edit with its original key before comparing revisions", async () => {
+    let row = { ...fresh },
+      lost = true;
+    mock.request.mockImplementation(async (_s, path, o) => {
+      if (path.includes("/candidates?"))
+        return { items: [row], next_cursor: null };
+      if (o.method === "PATCH") {
+        row = { ...row, value: "TEST-corrected", revision: 3 };
+        if (lost) {
+          lost = false;
+          throw new Error("response lost");
+        }
+        return row;
+      }
+      return { ...batch, mode: "private_only", mode_locked: false };
+    });
+    const client = new ServerDraft(session, new AbortController().signal);
+    await client.restore("b");
+    const edited = { ...local, value: "TEST-corrected", privateId: undefined };
+    await expect(client.save([edited], [], "private_only")).rejects.toThrow(
+      "response lost",
+    );
+    await client.save([edited], [], "private_only");
+    const writes = mock.request.mock.calls.filter(
+      (c) => c[2].method === "PATCH",
+    );
+    expect(writes).toHaveLength(2);
+    expect(writes[0][2]).toEqual(writes[1][2]);
+  });
+  it("recovers a mode response lost after the server invalidated confirmations", async () => {
+    let mode: S["ImportBatch"]["mode"] = "private_only",
+      revision = 2,
+      lost = true;
+    mock.request.mockImplementation(async (_s, path, o) => {
+      if (path.includes("/candidates?"))
+        return { items: [{ ...fresh, revision }], next_cursor: null };
+      if (o.method === "PATCH") {
+        mode = "private_and_share";
+        revision = 3;
+        if (lost) {
+          lost = false;
+          throw new Error("response lost");
+        }
+      }
+      return { ...batch, mode, mode_locked: false };
+    });
+    const client = new ServerDraft(session, new AbortController().signal);
+    await client.restore("b");
+    await expect(client.save([local], [], "private_and_share")).rejects.toThrow(
+      "response lost",
+    );
+    await client.save([local], [], "private_and_share");
+    const writes = mock.request.mock.calls.filter(
+      (c) => c[2].method === "PATCH",
+    );
+    expect(writes).toHaveLength(2);
+    expect(writes[0][2]).toEqual(writes[1][2]);
+  });
+  it("rejects another device edit during mode-response recovery", async () => {
+    let modified = false;
+    mock.request.mockImplementation(async (_s, path, o) => {
+      if (path.includes("/candidates?"))
+        return {
+          items: [
+            {
+              ...fresh,
+              revision: modified ? 4 : 2,
+              value: modified ? "TEST-other" : fresh.value,
+            },
+          ],
+          next_cursor: null,
+        };
+      if (o.method === "PATCH") modified = true;
+      return {
+        ...batch,
+        mode: modified ? "private_and_share" : "private_only",
+        mode_locked: false,
+      };
+    });
+    const client = new ServerDraft(session, new AbortController().signal);
+    await client.restore("b");
+    await expect(client.save([local], [], "private_and_share")).rejects.toThrow(
+      "其他设备",
+    );
+  });
+  it("recovers a completed commit after a lost reply using its durable item ID", async () => {
+    let completed = false,
+      lost = true;
+    mock.request.mockImplementation(async (_s, path, o) => {
+      if (path.includes("/candidates?"))
+        return {
+          items: [
+            {
+              ...remote,
+              commit_result: {
+                ...phase,
+                share_status: completed ? "pending" : "failed",
+              },
+            },
+          ],
+          next_cursor: null,
+        };
+      if (path.endsWith("/commit")) {
+        completed = true;
+        if (lost) {
+          lost = false;
+          throw new Error("commit response lost");
+        }
+        return { batch, results: [{ ...phase, share_status: "pending" }] };
+      }
+      if (o.method === "PATCH") throw new Error("Unexpected edit");
+      return batch;
+    });
+    const client = new ServerDraft(session, new AbortController().signal);
+    await client.restore("b");
+    await expect(
+      client.commit([local], [local], [], "private_and_share"),
+    ).rejects.toThrow("response lost");
+    const result = await client.commit(
+      [local],
+      [local],
+      [],
+      "private_and_share",
+    );
+    expect(result[0].out.private_record_id).toBe("private-id");
+    const writes = mock.request.mock.calls.filter((c) =>
+      c[1].endsWith("/commit"),
+    );
+    expect(
+      writes.every((c) => c[2].body.items[0].client_commit_id === "retry-id"),
+    ).toBe(true);
+    expect(
+      mock.request.mock.calls.some((c) => c[1].endsWith("/sources/local")),
+    ).toBe(false);
+  });
+  it("stops after expiry without silently creating a replacement draft", async () => {
+    mock.request.mockRejectedValue(
+      new AccountError(422, "IMPORT_EXPIRED", "草稿已过期"),
+    );
+    const client = new ServerDraft(session, new AbortController().signal);
+    await expect(client.restore("b")).rejects.toMatchObject({
+      code: "IMPORT_EXPIRED",
+    });
+    expect(mock.request.mock.calls.every((c) => !c[2].method)).toBe(true);
+  });
+  it("stops source/edit mutations when the screen has been cancelled", async () => {
+    const control = new AbortController(),
+      client = new ServerDraft(session, control.signal);
+    control.abort();
+    await expect(client.save([local], [], "private_only")).rejects.toThrow(
+      "已取消",
+    );
+    expect(mock.request).not.toHaveBeenCalled();
+  });
+});
+
+describe("draft apartment availability recovery", () => {
+  it("keeps a restorable draft when its old apartment has been removed", async () => {
+    mock.request.mockRejectedValue(
+      new AccountError(404, "NOT_FOUND", "公寓已不可用"),
+    );
+    const client = new ServerDraft(session, new AbortController().signal);
+    await expect(client.apartment("old-apartment")).resolves.toBeNull();
+  });
+  it.each([401, 503])(
+    "does not disguise a %i auth/network failure as a missing apartment",
+    async (status) => {
+      mock.request.mockRejectedValue(
+        new AccountError(status, "TEST-error", "暂不可用"),
+      );
+      const client = new ServerDraft(session, new AbortController().signal);
+      await expect(client.apartment("old-apartment")).rejects.toMatchObject({
+        status,
+      });
+    },
+  );
 });

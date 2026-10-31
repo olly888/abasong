@@ -127,7 +127,10 @@ function Session() {
     [matches, setMatches] = useState<S["Apartment"][]>([]),
     [searchBusy, setSearchBusy] = useState(false),
     [drafts, setDrafts] = useState<S["ImportBatch"][]>([]),
-    [draftSaved, setDraftSaved] = useState(false);
+    [draftSaved, setDraftSaved] = useState(false),
+    [draftLoadError, setDraftLoadError] = useState(false),
+    [draftLoadBusy, setDraftLoadBusy] = useState(false),
+    [restartRequired, setRestartRequired] = useState(false);
   const server = useRef<ServerDraft | null>(null);
   const cache = useRef<ReturnType<typeof createImageCache> | null>(null);
   const live = useRef(true),
@@ -141,12 +144,7 @@ function Session() {
     live.current = true;
     abort.current = new AbortController();
     server.current = new ServerDraft(session, abort.current.signal);
-    void server.current
-      .available()
-      .then((items) => {
-        if (live.current) setDrafts(items);
-      })
-      .catch(() => {});
+    void loadDrafts();
     return () => {
       live.current = false;
       abort.current.abort();
@@ -216,6 +214,14 @@ function Session() {
       if (!live.current) {
         for (const a of result.assets) dispose(a.uri);
         return;
+      }
+      if (restartRequired) {
+        // The user explicitly reselected images; do not reuse a source-only
+        // batch whose original image and unsubmitted OCR were never uploaded.
+        server.current = new ServerDraft(session, abort.current.signal);
+        setRestartRequired(false);
+        setDraftSaved(false);
+        setLocked(false);
       }
       const next: Source[] = [];
       let bytes = sources.reduce((sum, s) => {
@@ -390,6 +396,19 @@ function Session() {
       ],
     );
   }
+  async function loadDrafts() {
+    if (!server.current || draftLoadBusy) return;
+    setDraftLoadBusy(true);
+    setDraftLoadError(false);
+    try {
+      const items = await server.current.available();
+      if (live.current) setDrafts(items);
+    } catch {
+      if (live.current) setDraftLoadError(true);
+    } finally {
+      if (live.current) setDraftLoadBusy(false);
+    }
+  }
   async function saveDraft() {
     if (running.current || !rows.length) return;
     running.current = true;
@@ -428,10 +447,10 @@ function Session() {
         row.id = item.id;
         row.scope = item.scope.label ?? "门别未注明";
         row.revision = item.revision;
-        if (item.apartment_id)
-          row.target = await request<S["Apartment"]>(
-            "/v1/apartments/" + item.apartment_id,
-          );
+        if (item.apartment_id) {
+          row.target = await server.current!.apartment(item.apartment_id);
+          if (!row.target) row.issues.push("公寓已不可用，请重新选择");
+        }
         const result = item.commit_result;
         if (result) {
           row.privateId = result.private_record_id ?? undefined;
@@ -450,7 +469,9 @@ function Session() {
                     ? "active"
                     : "private_saved";
         }
-        row.selected = item.state === "ready" || item.state === "failed";
+        row.selected =
+          (!item.apartment_id || !!row.target) &&
+          (item.state === "ready" || item.state === "failed");
         next.push(row);
       }
       if (live.current) {
@@ -460,7 +481,10 @@ function Session() {
         setLocked(server.current!.batch!.mode_locked);
         setDraftSaved(true);
         setAttested(false);
-        setStage("review");
+        setRestartRequired(next.length === 0);
+        setStage(next.length ? "review" : "select");
+        if (!next.length)
+          setError("草稿中没有已保存的识别结果，请重新选择截图");
       }
     } catch (e) {
       if (live.current)
@@ -607,6 +631,20 @@ function Session() {
       {stage === "select" ? (
         <>
           <Text style={styles.heading}>从截图整理公寓密码</Text>
+          {draftLoadBusy ? (
+            <ActivityIndicator accessibilityLabel="正在加载草稿" />
+          ) : null}
+          {draftLoadError ? (
+            <>
+              <Text style={styles.meta}>草稿暂时无法加载</Text>
+              <ActionButton
+                label="重试加载草稿"
+                secondary
+                disabled={busy}
+                onPress={() => void loadDrafts()}
+              />
+            </>
+          ) : null}
           {drafts.map((d) => (
             <ListRow
               key={d.id}
@@ -616,7 +654,7 @@ function Session() {
             />
           ))}
           <ActionButton
-            label="选择截图"
+            label={restartRequired ? "重新选择截图" : "选择截图"}
             secondary
             disabled={sources.length >= 10 || busy}
             onPress={() => void pick()}

@@ -3,7 +3,7 @@ import { parseEnv } from "node:util";
 import { Client } from "pg";
 import assert from "node:assert/strict";
 import { localTarget } from "../d0/database-target";
-import { ingestPublicApartment } from "./public-apartment-data";
+import { ingestPublicApartments } from "./public-apartment-data";
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     u = localTarget(env.DATABASE_ADMIN_URL);
@@ -20,9 +20,9 @@ async function main() {
       ).rowCount,
       1,
     );
-    await ingestPublicApartment(db);
+    await ingestPublicApartments(db);
     console.log(
-      "PASS: one independently licensed public apartment/address/building ingested into local D0; no access data, grants, GPS or automatic-match configuration",
+      "PASS: six independently licensed public apartments (four footprint-backed, two address-only) ingested into local D0; no access data, grants, GPS or automatic-match configuration",
     );
   } finally {
     await db.end();

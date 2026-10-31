@@ -165,6 +165,20 @@ for p in pages:
   p['api_contract_status']='15个端侧批次接口已实现并经本地HTTP/数据库验证；云端上传/识别3操作仍planned，真机与完整状态验收未完成'
  if p['id'] in ['H01','B02','U01','U06']:
   p['pending_extension']='端侧识别+加密草稿/确认/两阶段批次已接入；真实来源样本、完整原生异常/真机、云识别与贡献统计仍待验收或开发'
+# LA expansion + weak-network recovery acceptance slice.
+for p in pages:
+ if p['id']=='H01':
+  p['acceptance']+=' 精度圆触及相邻建筑或无边界地址点时不自动认栋；配置版本变化重新计停留；地址-only样本不伪造建筑轮廓。'
+ if p['id']=='B04':
+  p['states']+=['草稿加载超时可重试','来源已登记但无已保存识别结果']
+  p['actions'].append(dict(label='重试加载草稿',target='B04',result='仅重读本人未完成批次元数据；恢复网络后继续'))
+  p['acceptance']+=' 无已保存候选时返回选图页，用户重新选图后明确开始新批次，旧批次按TTL保留；不声称原图或未保存OCR可恢复。'
+ if p['id']=='B05':
+  p['states']+=['修改响应丢失后幂等恢复','原公寓已不可用','异端编辑冲突']
+  p['acceptance']+=' 修改和模式切换丢失响应先复用原键/原体；不吸收异端修改；旧公寓404可恢复其他候选，401/503仍报错可重试。'
+ if p['id']=='B06':
+  p['states']+=['提交完成但响应丢失']
+  p['acceptance']+=' 复用逐项稳定提交ID恢复结果，不重复私存；超时和退出取消分别处理，不自动重试写入。'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-30','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

@@ -4,6 +4,7 @@ export type ArrivalState = {
   id: string;
   since: number;
   lastObserved: number;
+  configVersion?: number;
 } | null;
 // Dwell is client-side stability only. It cannot promote a candidate to a match:
 // the authenticated server must first accept its versioned field-evidence gate.
@@ -27,13 +28,21 @@ export function assessArrival(
     (p) => p.id === result.matched_id && p.confidence !== "unverified",
   );
   if (matches.length !== 1) return { state: null, apartment: null };
+  if (previous && observedAt <= previous.lastObserved)
+    return { state: null, apartment: null };
   const same =
     previous?.id === result.matched_id &&
+    previous.configVersion === result.config_version &&
     observedAt > previous.lastObserved &&
     observedAt - previous.lastObserved <= 20_000;
   const state = same
     ? { ...previous, lastObserved: observedAt }
-    : { id: result.matched_id, since: observedAt, lastObserved: observedAt };
+    : {
+        id: result.matched_id,
+        since: observedAt,
+        lastObserved: observedAt,
+        configVersion: result.config_version,
+      };
   return {
     state,
     apartment: same && observedAt - state.since >= 8000 ? matches[0] : null,

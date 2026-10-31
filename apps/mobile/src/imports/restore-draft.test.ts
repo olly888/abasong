@@ -18,7 +18,15 @@ const item: S["ImportCandidate"] = {
 const batch = { mode: "private_only", mode_locked: false } as S["ImportBatch"];
 const client = (rows: S["ImportCandidate"][]) => ({
   batch,
-  restore: vi.fn(async () => rows),
+  restore: vi.fn(
+    async (
+      _id: string,
+      validateView?: (items: S["ImportCandidate"][]) => Promise<void>,
+    ) => {
+      await validateView?.(rows);
+      return rows;
+    },
+  ),
   apartment: vi.fn(async () => null as S["Apartment"] | null),
 });
 describe("post-process-loss import view", () => {

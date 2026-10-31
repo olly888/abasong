@@ -12,6 +12,7 @@ vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
 vi.mock("../auth/supabase", () => ({ supabase: null }));
 import { AccountError } from "../auth/api-client";
 import { ServerDraft } from "./server-draft";
+import { restoreDraftView } from "./restore-draft";
 type S = components["schemas"];
 const batch: S["ImportBatch"] = {
   id: "b",
@@ -376,6 +377,40 @@ describe("lost draft mutation responses", () => {
 });
 
 describe("draft apartment availability recovery", () => {
+  it.each([401, 503])(
+    "preserves the previous batch and durable retry after a %i apartment restore failure",
+    async (status) => {
+      mock.request.mockImplementation(async (_s, path) => {
+        if (path.startsWith("/v1/apartments/"))
+          throw new AccountError(status, "TEST-error", "暂不可用");
+        if (path.startsWith("/v1/me/import-batches/other/candidates?"))
+          return {
+            items: [
+              { ...remote, id: "other-row", apartment_id: "TEST-target" },
+            ],
+            next_cursor: null,
+          };
+        if (path.includes("/candidates?"))
+          return { items: [remote], next_cursor: null };
+        if (path === "/v1/me/import-batches/other")
+          return { ...batch, id: "other" };
+        if (path.endsWith("/commit"))
+          return { batch, results: [{ ...phase, share_status: "pending" }] };
+        return batch;
+      });
+      const client = new ServerDraft(session, new AbortController().signal);
+      await client.restore("b");
+      await expect(restoreDraftView(client, "other")).rejects.toMatchObject({
+        status,
+      });
+      expect(client.batch?.id).toBe("b");
+      await client.commit([local], [local], [], "private_and_share");
+      const writes = mock.request.mock.calls.filter((c) => c[2].method);
+      expect(writes).toHaveLength(1);
+      expect(writes[0][1]).toBe("/v1/me/import-batches/b/commit");
+      expect(writes[0][2].body.items[0].client_commit_id).toBe("retry-id");
+    },
+  );
   it("keeps a restorable draft when its old apartment has been removed", async () => {
     mock.request.mockRejectedValue(
       new AccountError(404, "NOT_FOUND", "公寓已不可用"),

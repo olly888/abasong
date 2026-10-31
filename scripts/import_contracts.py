@@ -1,9 +1,10 @@
-"""Screenshot batch design contract. Endpoints are planned, not implemented."""
+"""Screenshot contract: local on-device batch operations implemented; cloud upload/OCR remain planned."""
 from copy import deepcopy
 
 
 def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
                          nullable_id, boolean, page, op, paths):
+    obj('ImportScope', {'label':string(100)}, [])
     mode = enum('private_only', 'private_and_share')
     states = enum('created', 'uploading', 'queued', 'processing', 'needs_review',
                   'submitting', 'completed', 'partial_failed', 'failed', 'cancelled', 'expired')
@@ -27,7 +28,7 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         'mime_type': enum('image/jpeg', 'image/png', 'image/heic'),
         'byte_size': integer(1), 'width': integer(1), 'height': integer(1)},
         ['client_source_id', 'expected_batch_version', 'mime_type', 'byte_size', 'width', 'height'])
-    out('ImportSource', {'id': uid, 'state': enum('awaiting_upload', 'uploaded', 'processing',
+    out('ImportSource', {'id': uid, 'state': enum('registered', 'awaiting_upload', 'uploaded', 'processing',
         'recognized', 'failed', 'deleted'), 'version': integer(1), 'expires_at': dt,
         'error_code': string(80, nullable=True)})
     page('ImportSourcePage', 'ImportSource')
@@ -39,11 +40,11 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
     S['ImportStartInput']['properties']['source_ids'].update(minItems=1, maxItems=50, uniqueItems=True)
     obj('ImportCandidateEdit', {'expected_revision': integer(1), 'address_text': string(300),
         'apartment_id': nullable_id, 'method': deepcopy(S['AccessInput']['properties']['method']),
-        'value': string(32), 'scope': ref('AccessScope'), 'removed': boolean}, ['expected_revision'])
+        'value': string(32), 'scope': ref('ImportScope'), 'removed': boolean}, ['expected_revision'])
     out('ImportCandidate', {'id': uid, 'revision': integer(1), 'source_ids': arr(uid),
         'address_text': string(300), 'apartment_id': nullable_id,
         'method': deepcopy(S['AccessInput']['properties']['method']), 'value': string(32),
-        'scope': ref('AccessScope'), 'issues': arr(enum('missing_address', 'missing_value',
+        'scope': ref('ImportScope'), 'issues': arr(enum('missing_address', 'missing_value',
         'ambiguous_pair', 'uncertain_characters', 'unmatched_apartment', 'duplicate', 'unsupported_method')),
         'state': enum('needs_review', 'ready', 'removed', 'committed', 'failed'),
         'confirmation_revision': {'type':'integer','minimum':1,'nullable':True}})
@@ -63,13 +64,14 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         'source_attested': {'type':'boolean','enum':[True]}, 'items': arr(ref('ImportCommitItem'))},
         ['expected_batch_version', 'mode', 'source_attested', 'items'])
     S['ImportCommitInput']['properties']['items'].update(minItems=1, maxItems=100)
-    out('ImportCommitResult', {'candidate_id': uid, 'confirmed_revision': integer(1),
+    out('ImportCommitResult', {'candidate_id': uid, 'confirmed_revision': integer(1), 'client_commit_id':uid,
         'private_status': enum('not_started', 'saved', 'failed'), 'private_record_id': nullable_id,
         'share_status': enum('not_requested', 'not_started', 'active', 'pending', 'same_value', 'failed'),
         'contribution_id': nullable_id, 'error_code': string(80, nullable=True), 'retryable': boolean})
     out('ImportCommitResponse', {'batch': ref('ImportBatch'), 'results': arr(ref('ImportCommitResult'))})
+    S['ImportCandidate']['properties']['commit_result'] = ref('ImportCommitResult')
     obj('ImportDeviceCandidateInput', {'address_text': string(300), 'value': string(32),
-        'method': deepcopy(S['AccessInput']['properties']['method']), 'scope': ref('AccessScope')},
+        'method': deepcopy(S['AccessInput']['properties']['method']), 'scope': ref('ImportScope')},
         ['address_text', 'value', 'method'])
     obj('ImportDeviceExtraction', {'expected_source_version': integer(1),
         'recognizer_version': string(80), 'candidates': arr(ref('ImportDeviceCandidateInput'))},
@@ -99,5 +101,5 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         op(path, method, operation, '本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档',
            response, body, code=code, idem=idem, sensitive=True,
            list_query=operation in ['listImportBatches','listImportCandidates','listImportSources'])
-        paths[path][method]['x-implementation-status'] = 'planned'
+        paths[path][method]['x-implementation-status'] = 'planned' if operation in ['createImportSourceUpload','completeImportSource','processImportBatch'] else 'implemented_local'
         paths[path][method]['x-object-authorization'] = 'owner_id = authenticated user; parent/child ownership; 404 on mismatch'

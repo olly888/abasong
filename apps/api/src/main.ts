@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import { ImportsController } from "./imports/imports.controller";
+import { ImportsService } from "./imports/imports.service";
 import { ApartmentsController } from "./apartments/apartments.controller";
 import { ApartmentsService } from "./apartments/apartments.service";
 import { SensitiveDatabase } from "./apartments/sensitive-database";
@@ -40,7 +42,12 @@ class HealthController {
   }
 }
 @Module({
-  controllers: [HealthController, MeController, ApartmentsController],
+  controllers: [
+    HealthController,
+    MeController,
+    ApartmentsController,
+    ImportsController,
+  ],
   providers: [
     Database,
     MeService,
@@ -48,6 +55,7 @@ class HealthController {
     IdentityGuard,
     SensitiveDatabase,
     ApartmentsService,
+    ImportsService,
   ],
 })
 class AppModule {}
@@ -62,7 +70,7 @@ async function main() {
     if (req.path.startsWith("/v1/")) res.setHeader("Cache-Control", "no-store");
     next();
   });
-  app.useBodyParser("json", { limit: "16kb" });
+  app.useBodyParser("json", { limit: "128kb" });
   app.useGlobalFilters(new ApiExceptionFilter());
   app.enableShutdownHooks();
   await app.listen(

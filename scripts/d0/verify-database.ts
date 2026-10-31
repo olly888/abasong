@@ -25,6 +25,7 @@ async function main() {
     assert((await db.query("SELECT version FROM abasong.schema_version WHERE version='V12.0001'")).rowCount === 1);
     if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0002'")).rowCount) await db.query(readFileSync('database/migrations/0002_personal_apartments.sql', 'utf8'));
     if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0003'")).rowCount) await db.query(readFileSync('database/migrations/0003_apartment_buildings.sql', 'utf8'));
+    if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0004'")).rowCount) await db.query(readFileSync('database/migrations/0004_import_batches.sql', 'utf8'));
     for (const [name, password, member] of [
       ['abasong_api_local', decodeURIComponent(runtime.password), 'abasong_api'],
       ['abasong_worker_local', workerPassword, 'abasong_worker'],
@@ -36,7 +37,7 @@ async function main() {
     }
     if (!(await db.query("SELECT 1 FROM pg_roles WHERE rolname='abasong_untrusted_d0'")).rowCount) await db.query('CREATE ROLE abasong_untrusted_d0 NOLOGIN NOBYPASSRLS');
     const tables = await db.query("SELECT count(*)::int AS count, bool_and(relrowsecurity AND relforcerowsecurity) AS protected FROM pg_class c JOIN pg_namespace n ON c.relnamespace=n.oid WHERE n.nspname='abasong' AND relkind='r'");
-    assert.equal(tables.rows[0].count, 48); assert.equal(tables.rows[0].protected, true);
+    assert.equal(tables.rows[0].count, 50); assert.equal(tables.rows[0].protected, true);
     const extension = await db.query("SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON e.extnamespace=n.oid WHERE extname='postgis'");
     assert.equal(extension.rows[0].nspname, 'extensions');
     await db.query('BEGIN');
@@ -79,9 +80,9 @@ async function main() {
     try {
       const role = (await api.query('SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0];
       assert.equal(role.rolsuper, false); assert.equal(role.rolbypassrls, false);
-      assert.equal((await api.query('SELECT count(*)::int AS n FROM abasong.schema_version')).rows[0].n, 3);
+      assert.equal((await api.query('SELECT count(*)::int AS n FROM abasong.schema_version')).rows[0].n, 4);
     } finally { await api.end(); }
-    console.log('PASS: 48 migrated tables, forced RLS, PostGIS query, untrusted role denied, sensitive separation, append-only permissions, constraints, rollback, non-owner login');
+    console.log('PASS: 50 migrated tables, forced RLS, PostGIS query, untrusted role denied, sensitive separation, append-only permissions, constraints, rollback, non-owner login');
   } finally { await db.end(); }
 }
 main().catch((error: { code?: string }) => { console.error(`Database verification failed (${error.code ?? 'assertion/configuration'})`); process.exitCode = 1; });

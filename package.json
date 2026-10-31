@@ -31,7 +31,10 @@
     "preview:android": "node scripts/preview/android.mjs",
     "verify:auth-api": "tsx scripts/d1/verify-auth-api.ts",
     "verify:library-api": "tsx scripts/d1/verify-library-api.ts",
-    "data:init-local": "tsx scripts/d1/init-local-data.ts"
+    "data:init-local": "tsx scripts/d1/init-local-data.ts",
+    "data:public-apartments": "tsx scripts/d1/ingest-public-apartments.ts",
+    "verify:import-api": "tsx scripts/d1/verify-import-api.ts",
+    "data:configure-imports": "tsx scripts/d1/configure-local-imports.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

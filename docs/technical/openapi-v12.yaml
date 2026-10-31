@@ -633,10 +633,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /v1/apartments/{apartment_id}/map-context:
+    get:
+      operationId: getApartmentMapContext
+      summary: 已核对且有持久使用许可的建筑与门牌号；不含进入资料
+      tags:
+      - apartments
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApartmentMapContext'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: apartment_id
+        in: path
+        required: true
+        schema: *id001
+      x-sensitive-response: true
   /v1/apartments/resolve:
     post:
       operationId: resolveApartment
-      summary: 仅本次位置候选，不留个人轨迹；T23现场阈值验收前不自动认定公寓
+      summary: 前台位置候选；只有版本化现场证据、可信范围与精度全部满足才自动匹配，不保存轨迹
       tags:
       - apartments
       responses:
@@ -8762,6 +8839,67 @@ components:
       - postal_code
       - point
       - confidence
+    BuildingGeometry:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+          - MultiPolygon
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+                minItems: 2
+                maxItems: 2
+      required:
+      - type
+      - coordinates
+    ApartmentBuilding:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        geometry:
+          $ref: '#/components/schemas/BuildingGeometry'
+        label_point:
+          $ref: '#/components/schemas/Point'
+        street_number:
+          type: string
+          maxLength: 40
+        verified_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - geometry
+      - label_point
+      - street_number
+      - verified_at
+    ApartmentMapContext:
+      type: object
+      additionalProperties: false
+      properties:
+        apartment_id:
+          type: string
+          format: uuid
+        buildings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApartmentBuilding'
+          maxItems: 100
+      required:
+      - apartment_id
+      - buildings
     ResolveInput:
       type: object
       additionalProperties: false

@@ -24,6 +24,11 @@ import HomeMap from "../components/HomeMap";
 import type { HomeMode } from "../components/HomeChrome";
 import { readDevicePosition } from "./device-position";
 import { acquireForegroundLocation } from "./foreground-location";
+import {
+  assessArrival,
+  startForegroundRefresh,
+  type ArrivalState,
+} from "./arrival-policy";
 import { MapTools } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
 import { ListRow } from "../ui/Primitives";
@@ -122,7 +127,10 @@ function Content({
     session = auth.session!;
   const control = useRef(new AbortController()),
     generation = useRef(0),
-    locationGeneration = useRef(0);
+    locationGeneration = useRef(0),
+    fixPending = useRef(false),
+    manualLocked = useRef(!!apartmentId),
+    arrival = useRef<ArrivalState>(null);
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
     [cameraRevision, setCameraRevision] = useState(0),
@@ -130,6 +138,9 @@ function Content({
     [locationNotice, setLocationNotice] = useState<string | null>(null),
     [candidates, setCandidates] = useState<S["Apartment"][]>([]),
     [selected, setSelected] = useState<S["Apartment"] | null>(null),
+    [mapContext, setMapContext] = useState<S["ApartmentMapContext"] | null>(
+      null,
+    ),
     [records, setRecords] = useState<S["AccessRecord"][]>([]),
     [expanded, setExpanded] = useState(false),
     [busy, setBusy] = useState(false),
@@ -174,10 +185,32 @@ function Content({
       generation.current++;
     };
   }, []);
-  async function locate(ask: boolean) {
+  const refresh = useRef<() => Promise<void>>(async () => {});
+  refresh.current = () => locate(false, false);
+  useEffect(() => {
+    if (!point || expanded || (list && mode !== "公寓")) return;
+    return startForegroundRefresh(
+      () => refresh.current(),
+      () => AppState.currentState === "active",
+    );
+  }, [!!point, expanded, list, mode]);
+  function invalidateAutomaticCard() {
+    arrival.current = null;
+    if (manualLocked.current || expanded || !selected) return;
+    generation.current++;
+    setSelected(null);
+    setMapContext(null);
+    setRecords([]);
+    setLoaded(false);
+    setBusy(false);
+    setError(null);
+  }
+  async function locate(ask: boolean, follow = true) {
+    if (fixPending.current) return;
+    fixPending.current = true;
     const current = ++locationGeneration.current;
     const valid = () => alive() && current === locationGeneration.current;
-    setLocating(true);
+    if (follow) setLocating(true);
     setLocationNotice(null);
     try {
       const result = await acquireForegroundLocation(
@@ -191,6 +224,7 @@ function Content({
       );
       if (!valid()) return;
       if (result.status !== "fix") {
+        invalidateAutomaticCard();
         const isBlocked = result.status === "permission" && result.blocked;
         setBlocked(isBlocked);
         const message =
@@ -207,17 +241,21 @@ function Content({
       const { fix, approximate } = result;
       const p = { lng: fix.coords.longitude, lat: fix.coords.latitude };
       setPoint(p);
-      setCameraTarget(p);
-      setCameraRevision((v) => v + 1);
+      if (follow) {
+        setCameraTarget(p);
+        setCameraRevision((v) => v + 1);
+      }
       if (
         fix.coords.accuracy === null ||
         !Number.isFinite(fix.coords.accuracy) ||
         fix.coords.accuracy < 0
       ) {
+        invalidateAutomaticCard();
         setNotice("定位精度不足，请搜索地址");
         setLocationNotice("定位精度不足，请搜索地址");
         return;
       }
+      if (!follow && manualLocked.current) return;
       // A device fix is already available. Lookup failures must not erase its dot.
       try {
         const lookup = await request<S["ResolveResult"]>(
@@ -234,6 +272,18 @@ function Content({
         );
         if (!valid()) return;
         setCandidates(lookup.candidates);
+        const decision = assessArrival(
+          arrival.current,
+          lookup,
+          fix.timestamp,
+          Date.now(),
+          manualLocked.current || expanded,
+        );
+        arrival.current = decision.state;
+        if (selected && lookup.matched_id !== selected.id)
+          invalidateAutomaticCard();
+        if (decision.apartment && decision.apartment.id !== selected?.id)
+          void select(decision.apartment, "automatic");
         setNotice(
           lookup.status === "stale_location"
             ? "位置已过期，请重新定位"
@@ -243,11 +293,13 @@ function Content({
         );
       } catch (e) {
         if (!valid()) return;
+        invalidateAutomaticCard();
         setNotice("附近公寓资料暂不可用，请搜索地址");
         if (e instanceof AccountError && e.status < 500) setError(e.message);
       }
     } catch (e) {
       if (valid()) {
+        invalidateAutomaticCard();
         const message =
           e instanceof Error && e.message === "location_timeout"
             ? "定位超时，请重试或搜索地址"
@@ -256,7 +308,8 @@ function Content({
         setLocationNotice(message);
       }
     } finally {
-      if (valid()) setLocating(false);
+      fixPending.current = false;
+      if (alive()) setLocating(false);
     }
   }
   async function openLocationSettings() {
@@ -267,6 +320,8 @@ function Content({
     }
   }
   function returnToPosition() {
+    manualLocked.current = false;
+    arrival.current = null;
     if (blocked) {
       void openLocationSettings();
       return;
@@ -277,7 +332,11 @@ function Content({
     }
     if (!locating) void locate(true);
   }
-  async function select(p: S["Apartment"]) {
+  async function select(
+    p: S["Apartment"],
+    origin: "manual" | "automatic" = "manual",
+  ) {
+    if (origin === "manual") manualLocked.current = true;
     const version = ++generation.current;
     locationGeneration.current++;
     setLocating(false);
@@ -285,6 +344,7 @@ function Content({
     setCameraTarget(p.point);
     setCameraRevision((v) => v + 1);
     setRecords([]);
+    setMapContext(null);
     setLoaded(false);
     setReadError(false);
     setExpanded(false);
@@ -293,6 +353,21 @@ function Content({
     setFavorite(null);
     setBookmarkKnown(false);
     await Promise.all([
+      (async () => {
+        try {
+          const context = await request<S["ApartmentMapContext"]>(
+            `/v1/apartments/${p.id}/map-context`,
+          );
+          if (
+            alive() &&
+            version === generation.current &&
+            context.apartment_id === p.id
+          )
+            setMapContext(context);
+        } catch {
+          /* Geometry failure cannot invent an outline or block code lookup. */
+        }
+      })(),
       (async () => {
         try {
           if (auth.me?.capabilities.includes("access.read")) {
@@ -425,8 +500,11 @@ function Content({
       params: { apartment_id: selected.id },
     });
   const clearSelection = () => {
+    manualLocked.current = true;
+    arrival.current = null;
     generation.current++;
     setSelected(null);
+    setMapContext(null);
     setRecords([]);
     setBusy(false);
     setExpanded(false);
@@ -446,6 +524,7 @@ function Content({
           location={point}
           apartments={mode === "公寓" ? candidates : []}
           selectedId={selected?.id}
+          mapContext={mode === "公寓" ? mapContext : null}
           onSelect={(p) => void select(p)}
         />
       </View>
@@ -502,7 +581,10 @@ function Content({
           bookmarkBusy={bookmarkBusy || !bookmarkKnown}
           feedbackBusy={feedbackBusy}
           error={error ?? locationNotice}
-          onExpand={setExpanded}
+          onExpand={(value) => {
+            if (value) manualLocked.current = true;
+            setExpanded(value);
+          }}
           onAdd={add}
           onOther={clearSelection}
           onRetry={() => void select(selected)}

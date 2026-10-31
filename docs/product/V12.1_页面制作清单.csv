@@ -2,7 +2,7 @@
 A02,手机号登录,全屏二级页；保留来源意图,01-公寓闭环,5,,原型已认可·作为开发基线（状态部分覆盖）
 A03,验证码与恢复,二级页，同一认证流程,01-公寓闭环,5,bootstrapMe,原型已认可·作为开发基线（状态部分覆盖）
 A04,首次最小资料,二级页，仅新账号,01-公寓闭环,4,"bootstrapMe,patchMyProfile",原型已认可·作为开发基线（状态部分覆盖）
-H01,首页·公寓,首页根状态，公寓卡收起/展开,01-公寓闭环,14,"resolveApartment,getApartment,readAccessRecords,feedbackAccess",原节点基线已认可；截图扩展已制作待评审
+H01,首页·公寓,首页根状态，公寓卡收起/展开,01-公寓闭环,17,"resolveApartment,getApartment,getApartmentMapContext,readAccessRecords,feedbackAccess",原节点基线已认可；截图扩展已制作待评审
 H02,首页·找活,与H01同一路由的地图状态,02-找人找活,6,"listRequests,listRegions",原型已认可·作为开发基线（状态部分覆盖）
 H03,首页·找人,与H01同一路由的地图状态,02-找人找活,6,"listAvailableDrivers,listRegions",原型已认可·作为开发基线（状态部分覆盖）
 S01,搜索与筛选,二级搜索页，依来源切内容,01-公寓闭环,7,"searchApartments,suggestAddresses,retrieveAddress,listRequests,listAvailableDrivers",原型已认可·作为开发基线（状态部分覆盖）

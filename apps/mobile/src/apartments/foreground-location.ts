@@ -49,6 +49,8 @@ export async function acquireForegroundLocation(
     !Number.isFinite(fix.timestamp)
   )
     throw new Error("invalid_location");
+  if (Date.now() - fix.timestamp > 20_000 || fix.timestamp > Date.now() + 1000)
+    throw new Error("location_timeout");
   return {
     status: "fix",
     fix,

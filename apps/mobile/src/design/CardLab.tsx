@@ -19,6 +19,7 @@ const scenarios = [
   "长地址",
   "时段限制",
   "反馈失败",
+  "建筑高亮",
 ] as const;
 type Scene = (typeof scenarios)[number];
 const apartment: S["Apartment"] = {
@@ -64,6 +65,7 @@ export default function CardLab() {
 function Lab() {
   const params = useLocalSearchParams<{ case?: string }>();
   const [scene, setScene] = useState<Scene>("有密码"),
+    [mapInset, setMapInset] = useState(210),
     [expanded, setExpanded] = useState(false),
     [saved, setSaved] = useState(false),
     [error, setError] = useState<string | null>(null),
@@ -111,6 +113,7 @@ function Lab() {
       long: "长地址",
       schedule: "时段限制",
       failure: "反馈失败",
+      building: "建筑高亮",
     };
     if (params.case && map[params.case]) choose(map[params.case]);
   }, [params.case]);
@@ -161,7 +164,40 @@ function Lab() {
         </ScrollView>
       </View>
       <View style={{ flex: 1 }}>
-        <HomeMap />
+        <HomeMap
+          bottomInset={mapInset}
+          point={scene === "建筑高亮" ? apartment.point : undefined}
+          selectedId={scene === "建筑高亮" ? apartment.id : undefined}
+          mapContext={
+            scene === "建筑高亮"
+              ? {
+                  apartment_id: apartment.id,
+                  buildings: [
+                    {
+                      id: "33333333-3333-4333-8333-333333333333",
+                      street_number: "TEST",
+                      verified_at: "2026-10-30T00:00:00Z",
+                      label_point: apartment.point,
+                      geometry: {
+                        type: "MultiPolygon",
+                        coordinates: [
+                          [
+                            [
+                              [-118.244, 34.052],
+                              [-118.2434, 34.052],
+                              [-118.2434, 34.0524],
+                              [-118.244, 34.0524],
+                              [-118.244, 34.052],
+                            ],
+                          ],
+                        ],
+                      },
+                    },
+                  ],
+                }
+              : null
+          }
+        />
         <HomeChrome mode="公寓" onMode={() => {}} />
         <ApartmentSheet
           apartment={
@@ -177,6 +213,7 @@ function Lab() {
           records={records}
           status={status}
           expanded={expanded}
+          onHeight={setMapInset}
           saved={saved}
           error={error}
           onExpand={setExpanded}

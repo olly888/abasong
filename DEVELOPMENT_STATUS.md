@@ -1,8 +1,12 @@
 # Abasong development status
 
-Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-import-simple-ux`.
+Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-import-dual-qa`.
 
 ## Current snapshot — 2026-10-31
+
+[Current draft PR47](https://github.com/olly888/abasong/pull/47) targets `codex/d1-import-simple-ux`; manual Engineering checks runs against `codex/d1-import-dual-qa`. Keep draft; no merge/deploy. Remaining detailed gates and evidence are in the matrix below.
+
+Latest dual-native slice: [acceptance matrix](docs/technical/D1_截图简化流程双端验收.md). Core simplified-flow functional/default-size visual acceptance observed on both simulators: Android ten-image stop after one, edited-row retention, remaining-nine resume, same-account outage, save timeout/retry, force-stop restore and corrupt-image retry; iOS cross-device ten distinct values and transient-error cover/retry including hidden background AX. Both actual partial saves→remaining failed image in new draft→one result passed, without re-submitting old work. Native TEST private records cleaned through normal owner UI; saved drafts retain finite TTL. Fixed transient account revalidation errors unmounting unsaved import work; identity/access failures and logout still dispose it. Result rows keep selection/edit in review only. check96, final dualJS export, structural/page40/275/link checks passed. Final CI tracked in the matrix. No dependencies/API/DDL/grants/cloud changes or new native compilation. All values/images synthetic; some iOS system-picker input supplied by user. Repeated-photo content dedupe/resources/accessibility/qualified sharing/physical/field gates remain open; D1 in progress.
 
 Latest iOS error fix: native log and actual UI confirmed unhandled GO_BACK when leaving a direct-open import with no prior route. Both Leave and final Done now share a canGoBack guard with /profile fallback. Full developer reload was needed before the native retest; the initial hot-session retry still reproduced the warning. Actual iOS18Pro tests: home→import→leave returned home; terminate/direct import/reconnect Metro→leave returned My without warning. check83 (two new navigation regressions) passed; final dualJS export recorded below in design report. No account/DB/dependency/native build change; existing saved data retained. PR46 remains draft; full Android import/resource/field acceptance still pending.
 

@@ -263,7 +263,7 @@ export function AuthResolution() {
     );
   if (auth.phase === "error" && auth.session)
     return (
-      <AuthPage title="暂时无法完成登录">
+      <AuthPage title="暂时无法连接">
         <FormError message={auth.error} />
         <ActionButton label="重试" onPress={auth.retryAccount} />
         <ActionButton

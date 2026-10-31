@@ -9,7 +9,8 @@ import { setTimeout as pause } from "node:timers/promises";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
 import { Client, escapeLiteral } from "pg";
 import {
-  ingestPublicApartment,
+  ingestPublicApartments,
+  publicExpansion,
   publicApartmentId,
 } from "./public-apartment-data";
 import { localTarget } from "../d0/database-target";
@@ -94,6 +95,60 @@ async function main() {
     checks++;
     return out;
   }
+  // Real TCP fault: forward the POST, wait for the complete upstream response
+  // (therefore its DB commit), then destroy the downstream connection. Retrying
+  // must return the same durable resource, not create a second one.
+  async function dropReply(
+    path: string,
+    auth: string,
+    body: unknown,
+    key: string,
+    status: number,
+  ) {
+    let finish!: () => void, fail!: (e: unknown) => void;
+    const forwarded = new Promise<void>((resolve, reject) => {
+      finish = resolve;
+      fail = reject;
+    });
+    const proxy = createServer((_incoming, response) => {
+      void (async () => {
+        try {
+          const upstream = await fetch(base + path, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${auth}`,
+              "Content-Type": "application/json",
+              "Idempotency-Key": key,
+            },
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(10000),
+          });
+          assert.equal(upstream.status, status);
+          await upstream.arrayBuffer();
+          response.destroy();
+          finish();
+        } catch (e) {
+          response.destroy();
+          fail(e);
+        }
+      })();
+    });
+    proxy.listen(0, "127.0.0.1");
+    await once(proxy, "listening");
+    try {
+      await assert.rejects(
+        fetch(
+          `http://127.0.0.1:${(proxy.address() as { port: number }).port}/lost`,
+          { method: "POST", signal: AbortSignal.timeout(12000) },
+        ),
+      );
+      await forwarded;
+      checks++;
+    } finally {
+      proxy.closeAllConnections();
+      await new Promise<void>((resolve) => proxy.close(() => resolve()));
+    }
+  }
   try {
     await bootstrap.query(`CREATE DATABASE "${name}" TEMPLATE template0`);
     created = true;
@@ -136,36 +191,49 @@ async function main() {
     const port = (portServer.address() as { port: number }).port;
     await new Promise<void>((resolve) => portServer.close(() => resolve()));
     base = `http://127.0.0.1:${port}`;
-    api = spawn(process.execPath, ["apps/api/dist/main.js"], {
-      stdio: ["ignore", "ignore", "pipe"],
-      env: {
-        ...process.env,
-        ...env,
-        NODE_ENV: "test",
-        DATABASE_URL: runtime.href,
-        DATABASE_SENSITIVE_URL: sensitive.href,
-        DATA_ENCRYPTION_PROVIDER: "local-development",
-        LOCAL_DATA_KEK: randomBytes(32).toString("hex"),
-        AUTH_ISSUER: issuer,
-        AUTH_AUDIENCE: "authenticated",
-        AUTH_JWT_ALGORITHM: "ES256",
-        API_HOST: "127.0.0.1",
-        API_PORT: String(port),
-        IDEMPOTENCY_RETENTION_SECONDS: "3600",
-      },
-    });
-    api.stderr?.on("data", (bytes: Buffer) => {
-      const m = bytes.toString().match(/IMPORT_DB_FAILED [A-Z0-9]{5,8}/);
-      if (m) console.error(m[0]);
-    });
-    for (let i = 0; i < 80; i++) {
-      try {
-        if ((await fetch(base + "/health/live")).ok) break;
-      } catch {
-        /* test service starting */
+    const testApiEnv = {
+      ...process.env,
+      ...env,
+      NODE_ENV: "test",
+      DATABASE_URL: runtime.href,
+      DATABASE_SENSITIVE_URL: sensitive.href,
+      DATA_ENCRYPTION_PROVIDER: "local-development",
+      LOCAL_DATA_KEK: randomBytes(32).toString("hex"),
+      AUTH_ISSUER: issuer,
+      AUTH_AUDIENCE: "authenticated",
+      AUTH_JWT_ALGORITHM: "ES256",
+      API_HOST: "127.0.0.1",
+      API_PORT: String(port),
+      IDEMPOTENCY_RETENTION_SECONDS: "3600",
+    };
+    async function launchApi() {
+      api = spawn(process.execPath, ["apps/api/dist/main.js"], {
+        stdio: ["ignore", "ignore", "pipe"],
+        env: testApiEnv,
+      });
+      api.stderr?.on("data", (bytes: Buffer) => {
+        const m = bytes.toString().match(/IMPORT_DB_FAILED [A-Z0-9]{5,8}/);
+        if (m) console.error(m[0]);
+      });
+      for (let i = 0; i < 80; i++) {
+        try {
+          if (
+            (
+              await fetch(base + "/health/live", {
+                signal: AbortSignal.timeout(1000),
+              })
+            ).ok
+          )
+            return;
+        } catch {
+          /* test process starting */
+        }
+        if (api.exitCode !== null) throw new Error("Test API did not start");
+        await pause(100);
       }
-      await pause(100);
+      throw new Error("Test API startup timeout");
     }
+    await launchApi();
     const a = await token(actor),
       b = await token(other);
     const path = "/v1/me/import-batches";
@@ -228,7 +296,8 @@ async function main() {
       { unexpected: "x".repeat(140000) },
       randomUUID(),
     );
-    await ingestPublicApartment(db);
+    await ingestPublicApartments(db);
+    await ingestPublicApartments(db); // Idempotent re-ingest; never overwrite reviewed mappings.
     // Public geometry/address, simulated observation, isolated qualification and TEST code only.
     const point = (
       await db.query(
@@ -273,6 +342,67 @@ async function main() {
       200,
     );
     assert.deepEqual(noCodes.items, []);
+    // All new public addresses are durable search candidates; only verified
+    // footprint subsets may auto-match. Observations/codes below are synthetic.
+    for (const sample of publicExpansion) {
+      const row: {
+        address_line1: string;
+        has_building: boolean;
+        lng: number;
+        lat: number;
+      } = (
+        await db.query(
+          "SELECT address_line1, boundary IS NOT NULL AS has_building, extensions.ST_X(point::extensions.geometry) lng,extensions.ST_Y(point::extensions.geometry) lat FROM abasong.apartments WHERE id=$1",
+          [sample.id],
+        )
+      ).rows[0];
+      const resolved = await req("POST", "/v1/apartments/resolve", a, 200, {
+        ...fix,
+        point: { lng: row.lng, lat: row.lat },
+        accuracy_m: 1,
+        observed_at: new Date().toISOString(),
+      });
+      assert(
+        resolved.candidates.some((p: { id: string }) => p.id === sample.id),
+      );
+      assert.equal(resolved.matched_id, row.has_building ? sample.id : null);
+      const context = await req(
+        "GET",
+        `/v1/apartments/${sample.id}/map-context`,
+        a,
+        200,
+      );
+      assert.equal(context.buildings.length, row.has_building ? 1 : 0);
+      assert.deepEqual(
+        (await req("GET", `/v1/apartments/${sample.id}/access-records`, a, 200))
+          .items,
+        [],
+      );
+      const search = await req(
+        "GET",
+        "/v1/apartments?query=" + encodeURIComponent(row.address_line1),
+        a,
+        200,
+      );
+      assert(search.items.some((p: { id: string }) => p.id === sample.id));
+    }
+    const courtyard = (
+      await db.query(
+        "SELECT extensions.ST_X(p) lng,extensions.ST_Y(p) lat FROM (SELECT extensions.ST_PointOnSurface(extensions.ST_MakePolygon(extensions.ST_InteriorRingN(extensions.ST_GeometryN(boundary,1),1))) p FROM abasong.apartments WHERE id=$1) x",
+        [publicExpansion[0]!.id],
+      )
+    ).rows[0];
+    assert.equal(
+      (
+        await req("POST", "/v1/apartments/resolve", a, 200, {
+          ...fix,
+          point: courtyard,
+          accuracy_m: 1,
+          observed_at: new Date().toISOString(),
+        })
+      ).matched_id,
+      null,
+    );
     const createBody = {
       client_batch_id: randomUUID(),
       policy_version: 1,
@@ -289,6 +419,7 @@ async function main() {
     );
     await req("POST", path, a, 400, createBody);
     const createKey = randomUUID();
+    await dropReply(path, a, createBody, createKey, 201);
     let batch = await req("POST", path, a, 201, createBody, createKey);
     const bid = batch.id,
       rootBatch = path + "/" + bid;
@@ -356,6 +487,7 @@ async function main() {
       randomUUID(),
     );
     const sourceKey = randomUUID();
+    await dropReply(rootBatch + "/sources/local", a, srcInput, sourceKey, 201);
     const src = await req(
       "POST",
       rootBatch + "/sources/local",
@@ -427,6 +559,13 @@ async function main() {
       randomUUID(),
     );
     const extractKey = randomUUID();
+    await dropReply(
+      rootBatch + "/sources/" + src.id + "/extractions",
+      a,
+      extractBody,
+      extractKey,
+      201,
+    );
     const extracted = await req(
       "POST",
       rootBatch + "/sources/" + src.id + "/extractions",
@@ -541,6 +680,7 @@ async function main() {
       ],
     };
     const commitKey = randomUUID();
+    await dropReply(rootBatch + "/commit", a, commitBody, commitKey, 200);
     const result = await req(
       "POST",
       rootBatch + "/commit",
@@ -687,6 +827,19 @@ async function main() {
     assert.equal(partial.results[0].share_status, "failed");
     assert.equal(partial.batch.state, "partial_failed");
     const saved = partial.results[0].private_record_id;
+    // Kill only this isolated test API process, then reload the encrypted
+    // durable plan from the database with the same test key configuration.
+    const crashed = api!;
+    const stopped = once(crashed, "exit");
+    crashed.kill("SIGKILL");
+    await stopped;
+    await launchApi();
+    const resumed = await req("GET", sb + "/candidates", a, 200);
+    assert.equal(resumed.items[0].commit_result.private_record_id, saved);
+    assert.equal(
+      resumed.items[0].commit_result.client_commit_id,
+      shareBody.items[0]!.client_commit_id,
+    );
     await db.query("DROP TRIGGER block_shared ON abasong.access_records");
     const shared = await req(
       "POST",

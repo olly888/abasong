@@ -1,6 +1,7 @@
 import { randomUUID } from "expo-crypto";
 import type { Session } from "@supabase/supabase-js";
 import type { components } from "@abasong/contracts";
+import { AccountError } from "../auth/api-client";
 import { dataRequest } from "../apartments/client";
 import type { Candidate, Source } from "./ImportScreen";
 type S = components["schemas"];
@@ -17,6 +18,12 @@ export class ServerDraft {
   private rows = new Map<string, S["ImportCandidate"]>();
   private commitIds = new Map<string, string>();
   private pendingGroups = new Map<string, PendingGroup>();
+  private pendingWrite: {
+    path: string;
+    body: unknown;
+    key: string;
+    accept: (value: unknown) => Promise<void> | void;
+  } | null = null;
   private createId = randomUUID();
   private createKey = randomUUID();
   constructor(
@@ -27,10 +34,39 @@ export class ServerDraft {
     path: string,
     options: Parameters<typeof dataRequest>[2] = {},
   ) {
+    if (this.signal.aborted) throw new Error("操作已取消");
     return dataRequest<T>(this.session, path, {
       ...options,
       signal: this.signal,
     });
+  }
+  // Retain the exact mutation until its response is known. A lost response is
+  // not evidence that the server rejected the edit or mode change.
+  private async flushWrite() {
+    const pending = this.pendingWrite;
+    if (!pending) return;
+    let value: unknown;
+    try {
+      value = await this.request(pending.path, {
+        method: "PATCH",
+        key: pending.key,
+        body: pending.body,
+      });
+    } catch (e) {
+      if (e instanceof AccountError && e.status >= 400 && e.status < 500)
+        this.pendingWrite = null;
+      throw e;
+    }
+    await pending.accept(value);
+    this.pendingWrite = null;
+  }
+  private async write(
+    path: string,
+    body: unknown,
+    accept: (value: unknown) => Promise<void> | void,
+  ) {
+    this.pendingWrite = { path, body, accept, key: randomUUID() };
+    await this.flushWrite();
   }
   private path() {
     if (!this.batch) throw new Error("请先保存导入草稿");
@@ -43,6 +79,16 @@ export class ServerDraft {
     return page.items.filter(
       (b) => !["completed", "cancelled", "expired"].includes(b.state),
     );
+  }
+  async apartment(id: string): Promise<S["Apartment"] | null> {
+    try {
+      return await this.request<S["Apartment"]>(
+        "/v1/apartments/" + encodeURIComponent(id),
+      );
+    } catch (e) {
+      if (e instanceof AccountError && e.status === 404) return null;
+      throw e;
+    }
   }
   private async all() {
     let cursor: string | null = null;
@@ -71,6 +117,7 @@ export class ServerDraft {
     const rows = await this.all();
     this.rows.clear();
     this.pendingGroups.clear();
+    this.pendingWrite = null;
     this.commitIds.clear();
     for (const r of rows) {
       this.rows.set(r.id, r);
@@ -102,18 +149,33 @@ export class ServerDraft {
         },
       );
     }
+    await this.flushWrite();
     await this.refresh();
     if (this.batch!.mode !== mode) {
-      this.batch = await this.request<S["ImportBatch"]>(this.path(), {
-        method: "PATCH",
-        key: randomUUID(),
-        body: { expected_version: this.batch!.version, mode },
-      });
-      const remote = await this.all();
-      for (const [localId, old] of this.rows) {
-        const found = remote.find((x) => x.id === old.id);
-        if (found) this.rows.set(localId, found);
-      }
+      const before = new Map(this.rows);
+      await this.write(
+        this.path(),
+        { expected_version: this.batch!.version, mode },
+        async (value) => {
+          this.batch = value as S["ImportBatch"];
+          const remote = await this.all();
+          for (const [localId, old] of before) {
+            const found = remote.find((x) => x.id === old.id);
+            // Mode changes invalidate confirmation and increment each revision,
+            // but cannot silently absorb another device's subsequent content edit.
+            if (
+              !found ||
+              found.revision !== old.revision + 1 ||
+              found.address_text !== old.address_text ||
+              found.apartment_id !== old.apartment_id ||
+              found.value !== old.value ||
+              JSON.stringify(found.scope) !== JSON.stringify(old.scope)
+            )
+              throw new Error("草稿已在其他设备更新，请重新打开");
+            this.rows.set(localId, found);
+          }
+        },
+      );
     }
     for (const [key, group] of this.pendingGroups)
       await this.finishGroup(key, group);
@@ -188,15 +250,16 @@ export class ServerDraft {
           remote.scope.label !== data.scope?.label ||
           remote.state === "removed";
       if (changed) {
-        const updated = await this.request<S["ImportCandidate"]>(
+        await this.write(
           this.path() + "/candidates/" + remote.id,
-          {
-            method: "PATCH",
-            key: randomUUID(),
-            body: { expected_revision: remote.revision, ...data },
+          { expected_revision: remote.revision, ...data },
+          (value) => {
+            const updated = value as S["ImportCandidate"];
+            if (updated.revision !== remote.revision + 1)
+              throw new Error("草稿已在其他设备更新，请重新打开");
+            this.rows.set(localId, updated);
           },
         );
-        this.rows.set(localId, updated);
       }
     }
     return this.refresh();

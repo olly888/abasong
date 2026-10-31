@@ -20,11 +20,17 @@ export async function dataRequest<T>(
   if (!__DEV__ && !base.startsWith("https://"))
     throw new AccountError(503, "API_NOT_CONFIGURED", "资料服务暂不可用");
   async function perform(token: string): Promise<T> {
+    if (options.signal?.aborted)
+      throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+    let timedOut = false;
     const controller = new AbortController(),
       abort = () => controller.abort();
     options.signal?.addEventListener("abort", abort, { once: true });
     if (options.signal?.aborted) abort();
-    const timer = setTimeout(abort, 10000);
+    const timer = setTimeout(() => {
+      timedOut = true;
+      abort();
+    }, 10000);
     try {
       const response = await fetch(base + path, {
         method: options.method ?? "GET",
@@ -49,6 +55,10 @@ export async function dataRequest<T>(
       return value as T;
     } catch (e) {
       if (e instanceof AccountError) throw e;
+      if (options.signal?.aborted)
+        throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+      if (timedOut)
+        throw new AccountError(503, "NETWORK_TIMEOUT", "连接超时，请重试");
       throw new AccountError(
         503,
         "NETWORK_UNAVAILABLE",
@@ -62,7 +72,13 @@ export async function dataRequest<T>(
   try {
     return await perform(session.access_token);
   } catch (e) {
-    if (!(e instanceof AccountError) || e.status !== 401 || !supabase) throw e;
+    if (
+      !(e instanceof AccountError) ||
+      e.status !== 401 ||
+      !supabase ||
+      options.signal?.aborted
+    )
+      throw e;
     const result = await supabase.auth.refreshSession();
     const next = result.data.session;
     if (

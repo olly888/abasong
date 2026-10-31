@@ -1013,6 +1013,9 @@ export class ApartmentsService {
         CASE WHEN boundary IS NOT NULL AND extensions.ST_IsValid(boundary) THEN
           extensions.ST_Covers(boundary, extensions.ST_Buffer(extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))::extensions.geometry)
           ELSE false END AS inside,
+        CASE WHEN boundary IS NOT NULL AND extensions.ST_IsValid(boundary) THEN
+          extensions.ST_DWithin(boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))
+          ELSE extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1)) END AS possible,
         EXISTS(SELECT 1 FROM abasong.data_sources s WHERE s.id=apartments.source_id
           AND s.persistent_use_approved AND s.verified_at IS NOT NULL AND s.verified_at<=now()
           AND (s.expires_at IS NULL OR s.expires_at>now())) AS source_valid
@@ -1020,7 +1023,12 @@ export class ApartmentsService {
         (extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3)
           OR extensions.ST_DWithin(boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3))
         ORDER BY extensions.ST_Distance(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography),id LIMIT 20`,
-        [b.point.lng, b.point.lat, cfg.radius_m, b.accuracy_m],
+        [
+          b.point.lng,
+          b.point.lat,
+          Math.max(cfg.radius_m, b.accuracy_m, 1),
+          b.accuracy_m,
+        ],
       );
       const candidates = result.rows.map((r) => ({
         id: r.id,
@@ -1033,13 +1041,15 @@ export class ApartmentsService {
         point: { lng: r.lng, lat: r.lat },
       }));
       // Only a versioned, explicitly enabled field-evidence configuration may
-      // promote a unique verified boundary. Every competing containment vetoes it.
+      // promote a unique verified boundary. Any competing boundary touching the
+      // uncertainty circle (or unbounded address point within it) vetoes it.
       const contained = result.rows.filter((r) => r.inside);
       const match =
         cfg.auto_match?.enabled &&
         b.accuracy_permission === "precise" &&
         b.accuracy_m <= cfg.auto_match.max_accuracy_m &&
         contained.length === 1 &&
+        result.rows.filter((r) => r.possible).length === 1 &&
         contained[0].source_valid &&
         contained[0].confidence !== "unverified" &&
         result.rows.length < 20

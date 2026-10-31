@@ -57,6 +57,21 @@ describe("arrival safeguards", () => {
       assessArrival(state, matched, 10_000, 10_000, true).state,
     ).toBeNull();
   });
+  it("restarts dwell after a matching-policy version change", () => {
+    const first = assessArrival(null, matched, 1000, 1000, false);
+    expect(
+      assessArrival(
+        first.state,
+        { ...matched, config_version: 2 },
+        10000,
+        10000,
+        false,
+      ).apartment,
+    ).toBeNull();
+    expect(
+      assessArrival(first.state, matched, 900, 1000, false).state,
+    ).toBeNull();
+  });
   it("serializes refreshes and stops scheduling on cleanup", async () => {
     vi.useFakeTimers();
     let finish!: () => void;

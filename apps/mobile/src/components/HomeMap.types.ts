@@ -6,4 +6,6 @@ export type HomeMapProps = {
   apartments?: S["Apartment"][];
   selectedId?: string;
   onSelect?: (p: S["Apartment"]) => void;
+  cameraRevision?: number;
+  bottomInset?: number;
 };

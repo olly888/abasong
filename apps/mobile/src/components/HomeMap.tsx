@@ -1,6 +1,12 @@
 import Mapbox from "@rnmapbox/maps";
 import { Text, StyleSheet, View } from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import type { Camera } from "@rnmapbox/maps";
 import type { HomeMapProps } from "./HomeMap.types";
+const INITIAL_CAMERA = {
+  centerCoordinate: [-118.2437, 34.0522],
+  zoomLevel: 12,
+};
 const token = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim();
 if (token) Mapbox.setAccessToken(token);
 export default function HomeMap({
@@ -9,7 +15,38 @@ export default function HomeMap({
   apartments = [],
   selectedId,
   onSelect,
+  cameraRevision = 0,
+  bottomInset = 210,
 }: HomeMapProps = {}) {
+  const camera = useRef<Camera>(null);
+  const center = useMemo(
+    () => (point ? [point.lng, point.lat] : [-118.2437, 34.0522]),
+    [point?.lng, point?.lat],
+  );
+  const padding = useMemo(
+    () => ({
+      paddingTop: 140,
+      paddingBottom: bottomInset + 12,
+      paddingLeft: 24,
+      paddingRight: 24,
+    }),
+    [bottomInset],
+  );
+  const command = useRef({ center, padding, zoomLevel: point ? 16 : 12 });
+  command.current = { center, padding, zoomLevel: point ? 16 : 12 };
+  const applyCamera = () => {
+    const current = command.current;
+    camera.current?.setCamera({
+      centerCoordinate: current.center,
+      zoomLevel: current.zoomLevel,
+      padding: current.padding,
+      animationMode: "easeTo",
+      animationDuration: 300,
+    });
+  };
+  useEffect(() => {
+    applyCamera();
+  }, [point?.lng, point?.lat, cameraRevision]);
   if (!token) return <Text style={{ color: "#53565B" }}>地图暂不可用</Text>;
   return (
     <Mapbox.MapView
@@ -17,12 +54,14 @@ export default function HomeMap({
       styleURL={Mapbox.StyleURL.Light}
       scaleBarEnabled={false}
       compassEnabled={false}
-      logoPosition={{ top: 144, left: 16 }}
-      attributionPosition={{ top: 144, left: 106 }}
+      logoPosition={{ bottom: bottomInset + 8, left: 16 }}
+      attributionPosition={{ bottom: bottomInset + 8, left: 106 }}
+      onDidFinishLoadingMap={applyCamera}
     >
       <Mapbox.Camera
-        centerCoordinate={point ? [point.lng, point.lat] : [-118.2437, 34.0522]}
-        zoomLevel={point ? 16 : 12}
+        ref={camera}
+        defaultSettings={INITIAL_CAMERA}
+        padding={padding}
         animationDuration={300}
       />
       {location ? (

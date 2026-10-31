@@ -29,3 +29,8 @@ __pycache__/
 apps/mobile/modules/*/android/build/
 apps/mobile/modules/*/android/.gradle/
 apps/mobile/modules/*/android/.cxx/
+
+# Local Android location module generated outputs
+apps/mobile/modules/abasong-location/android/build/
+apps/mobile/modules/abasong-location/android/.gradle/
+apps/mobile/modules/abasong-location/android/.cxx/

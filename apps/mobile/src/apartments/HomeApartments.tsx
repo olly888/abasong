@@ -7,6 +7,7 @@ import {
 } from "react";
 import {
   AppState,
+  Linking,
   ActivityIndicator,
   Pressable,
   ScrollView,
@@ -20,6 +21,9 @@ import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import HomeMap from "../components/HomeMap";
+import type { HomeMode } from "../components/HomeChrome";
+import { readDevicePosition } from "./device-position";
+import { acquireForegroundLocation } from "./foreground-location";
 import { MapTools } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
 import { ListRow } from "../ui/Primitives";
@@ -31,13 +35,18 @@ type S = components["schemas"];
 export function HomeApartments({
   toolbar,
   apartmentId,
+  mode = "公寓",
+  list = false,
 }: {
   toolbar: ReactNode;
   apartmentId?: string;
+  mode?: HomeMode;
+  list?: boolean;
 }) {
   const auth = useAuth();
   const [focused, setFocused] = useState(false),
-    [active, setActive] = useState(AppState.currentState === "active");
+    [active, setActive] = useState(AppState.currentState !== "background"),
+    [obscured, setObscured] = useState(AppState.currentState !== "active");
   useFocusEffect(
     useCallback(() => {
       setFocused(true);
@@ -45,9 +54,10 @@ export function HomeApartments({
     }, []),
   );
   useEffect(() => {
-    const sub = AppState.addEventListener("change", (s) =>
-      setActive(s === "active"),
-    );
+    const sub = AppState.addEventListener("change", (s) => {
+      setActive(s !== "background");
+      setObscured(s !== "active");
+    });
     return () => sub.remove();
   }, []);
   if (!focused || !active || auth.phase !== "ready" || !auth.session)
@@ -71,20 +81,42 @@ export function HomeApartments({
       </View>
     );
   return (
-    <Content
-      key={auth.session.access_token + ":" + (apartmentId ?? "")}
-      toolbar={toolbar}
-      apartmentId={apartmentId}
-    />
+    <View style={styles.root}>
+      <View
+        style={styles.root}
+        accessibilityElementsHidden={obscured}
+        importantForAccessibility={obscured ? "no-hide-descendants" : "auto"}
+      >
+        <Content
+          key={auth.session.access_token + ":" + (apartmentId ?? "")}
+          toolbar={toolbar}
+          apartmentId={apartmentId}
+          mode={mode}
+          list={list}
+        />
+      </View>
+      {obscured ? (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: tokens.color.surface },
+          ]}
+        />
+      ) : null}
+    </View>
   );
 }
 
 function Content({
   toolbar,
   apartmentId,
+  mode = "公寓",
+  list = false,
 }: {
   toolbar: ReactNode;
   apartmentId?: string;
+  mode?: HomeMode;
+  list?: boolean;
 }) {
   const auth = useAuth(),
     session = auth.session!;
@@ -92,6 +124,10 @@ function Content({
     generation = useRef(0),
     locationGeneration = useRef(0);
   const [point, setPoint] = useState<S["Point"]>(),
+    [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
+    [cameraRevision, setCameraRevision] = useState(0),
+    [blocked, setBlocked] = useState(false),
+    [locationNotice, setLocationNotice] = useState<string | null>(null),
     [candidates, setCandidates] = useState<S["Apartment"][]>([]),
     [selected, setSelected] = useState<S["Apartment"] | null>(null),
     [records, setRecords] = useState<S["AccessRecord"][]>([]),
@@ -139,87 +175,115 @@ function Content({
     };
   }, []);
   async function locate(ask: boolean) {
-    if (ask && apartmentId) router.setParams({ apartment_id: "" });
     const current = ++locationGeneration.current;
     const valid = () => alive() && current === locationGeneration.current;
-    generation.current++;
-    setSelected(null);
-    setRecords([]);
-    setCandidates([]);
-    setExpanded(false);
-    setLoaded(false);
-    setBusy(false);
-    setError(null);
     setLocating(true);
+    setLocationNotice(null);
     try {
-      let permission = await Location.getForegroundPermissionsAsync();
-      if (ask && !permission.granted)
-        permission = await Location.requestForegroundPermissionsAsync();
+      const result = await acquireForegroundLocation(
+        {
+          permission: Location.getForegroundPermissionsAsync,
+          request: Location.requestForegroundPermissionsAsync,
+          enabled: Location.hasServicesEnabledAsync,
+          fix: () => readDevicePosition(control.current.signal),
+        },
+        ask,
+      );
       if (!valid()) return;
-      if (!permission.granted) {
-        setNotice("开启定位，或搜索公寓地址");
+      if (result.status !== "fix") {
+        const isBlocked = result.status === "permission" && result.blocked;
+        setBlocked(isBlocked);
+        const message =
+          result.status === "services_off"
+            ? "请开启系统定位服务"
+            : isBlocked
+              ? "位置权限已关闭"
+              : "开启定位，或搜索公寓地址";
+        setLocationNotice(message);
+        setNotice(message);
         return;
       }
-      // One foreground fix per visit/explicit refresh; never a background tracker.
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const fix = await Promise.race([
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(
-            () => reject(new Error("定位超时，请重试或搜索地址")),
-            20000,
-          );
-        }),
-      ]).finally(() => clearTimeout(timer));
-      if (!valid()) return;
+      setBlocked(false);
+      const { fix, approximate } = result;
       const p = { lng: fix.coords.longitude, lat: fix.coords.latitude };
       setPoint(p);
-      if (fix.coords.accuracy === null) {
+      setCameraTarget(p);
+      setCameraRevision((v) => v + 1);
+      if (
+        fix.coords.accuracy === null ||
+        !Number.isFinite(fix.coords.accuracy) ||
+        fix.coords.accuracy < 0
+      ) {
         setNotice("定位精度不足，请搜索地址");
+        setLocationNotice("定位精度不足，请搜索地址");
         return;
       }
-      const result = await request<S["ResolveResult"]>(
-        "/v1/apartments/resolve",
-        {
-          method: "POST",
-          body: {
-            point: p,
-            observed_at: new Date(fix.timestamp).toISOString(),
-            accuracy_m: fix.coords.accuracy,
-            accuracy_permission:
-              permission.ios?.accuracy === "reduced" ||
-              permission.android?.accuracy === "coarse"
-                ? "approximate"
-                : "precise",
+      // A device fix is already available. Lookup failures must not erase its dot.
+      try {
+        const lookup = await request<S["ResolveResult"]>(
+          "/v1/apartments/resolve",
+          {
+            method: "POST",
+            body: {
+              point: p,
+              observed_at: new Date(fix.timestamp).toISOString(),
+              accuracy_m: fix.coords.accuracy,
+              accuracy_permission: approximate ? "approximate" : "precise",
+            },
           },
-        },
-      );
-      if (!valid()) return;
-      setCandidates(result.candidates);
-      setNotice(
-        result.status === "stale_location"
-          ? "位置已过期，请重新定位"
-          : result.candidates.length
-            ? "确认你所在的公寓"
-            : "附近暂无已收录公寓，请搜索地址",
-      );
+        );
+        if (!valid()) return;
+        setCandidates(lookup.candidates);
+        setNotice(
+          lookup.status === "stale_location"
+            ? "位置已过期，请重新定位"
+            : lookup.candidates.length
+              ? "确认你所在的公寓"
+              : "附近暂无已收录公寓，请搜索地址",
+        );
+      } catch (e) {
+        if (!valid()) return;
+        setNotice("附近公寓资料暂不可用，请搜索地址");
+        if (e instanceof AccountError && e.status < 500) setError(e.message);
+      }
     } catch (e) {
       if (valid()) {
-        if (e instanceof AccountError) setError(e.message);
-        else {
-          setError(null);
-          setNotice("暂时无法获取位置");
-        }
+        const message =
+          e instanceof Error && e.message === "location_timeout"
+            ? "定位超时，请重试或搜索地址"
+            : "暂时无法获取位置";
+        setNotice(message);
+        setLocationNotice(message);
       }
     } finally {
       if (valid()) setLocating(false);
     }
+  }
+  async function openLocationSettings() {
+    try {
+      await Linking.openSettings();
+    } catch {
+      setLocationNotice("无法打开设置，请在系统设置中开启位置权限");
+    }
+  }
+  function returnToPosition() {
+    if (blocked) {
+      void openLocationSettings();
+      return;
+    }
+    if (point) {
+      setCameraTarget({ ...point });
+      setCameraRevision((v) => v + 1);
+    }
+    if (!locating) void locate(true);
   }
   async function select(p: S["Apartment"]) {
     const version = ++generation.current;
     locationGeneration.current++;
     setLocating(false);
     setSelected(p);
+    setCameraTarget(p.point);
+    setCameraRevision((v) => v + 1);
     setRecords([]);
     setLoaded(false);
     setReadError(false);
@@ -368,24 +432,59 @@ function Content({
     setExpanded(false);
     setNotice("确认你所在的公寓");
   };
+  const hideMap = (list && mode !== "公寓") || (expanded && mode === "公寓");
   return (
     <View style={styles.root}>
-      <HomeMap
-        point={selected?.point ?? point}
-        location={point}
-        apartments={candidates}
-        selectedId={selected?.id}
-        onSelect={(p) => void select(p)}
-      />
+      <View
+        style={[StyleSheet.absoluteFill, hideMap ? { opacity: 0 } : undefined]}
+        pointerEvents={hideMap ? "none" : "auto"}
+      >
+        <HomeMap
+          point={cameraTarget}
+          cameraRevision={cameraRevision}
+          bottomInset={mode === "公寓" ? panelHeight : 148}
+          location={point}
+          apartments={mode === "公寓" ? candidates : []}
+          selectedId={selected?.id}
+          onSelect={(p) => void select(p)}
+        />
+      </View>
       {toolbar}
-      {!expanded ? (
+      {(!expanded || mode !== "公寓") && !(list && mode !== "公寓") ? (
         <MapTools
-          bottom={panelHeight + 16}
+          bottom={(mode === "公寓" ? panelHeight : 148) + 16}
           locating={locating}
-          onLocate={() => void locate(true)}
+          canRecenter={!!point}
+          onLocate={returnToPosition}
         />
       ) : null}
-      {selected ? (
+      {mode !== "公寓" ? (
+        <View
+          style={[
+            styles.panel,
+            { padding: 22, minHeight: 148 },
+            list ? { top: 132, maxHeight: "100%" } : undefined,
+          ]}
+        >
+          <Text style={styles.title}>
+            {mode === "找活" ? "附近临时支援" : "附近可用司机"}
+          </Text>
+          <Text style={styles.muted}>暂未开放</Text>
+          {locationNotice ? (
+            <Pressable
+              accessibilityRole="button"
+              style={{ minHeight: 48, justifyContent: "center" }}
+              onPress={() =>
+                void (blocked ? openLocationSettings() : locate(true))
+              }
+            >
+              <Text style={styles.link}>
+                {blocked ? "打开系统设置" : locationNotice}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : selected ? (
         <ApartmentSheet
           apartment={selected}
           records={records}
@@ -402,7 +501,7 @@ function Content({
           saved={!!favorite?.favorite}
           bookmarkBusy={bookmarkBusy || !bookmarkKnown}
           feedbackBusy={feedbackBusy}
-          error={error}
+          error={error ?? locationNotice}
           onExpand={setExpanded}
           onAdd={add}
           onOther={clearSelection}
@@ -451,24 +550,31 @@ function Content({
                 action={
                   locating
                     ? "定位中…"
-                    : notice === "开启定位，或搜索公寓地址" ||
-                        notice === "定位查看附近公寓"
-                      ? "使用当前位置"
-                      : "搜索公寓地址"
+                    : blocked
+                      ? "打开系统设置"
+                      : notice === "开启定位，或搜索公寓地址" ||
+                          notice === "定位查看附近公寓"
+                        ? "使用当前位置"
+                        : "搜索公寓地址"
                 }
                 busy={locating}
                 onPress={() =>
-                  notice === "开启定位，或搜索公寓地址" ||
-                  notice === "定位查看附近公寓"
-                    ? void locate(true)
-                    : router.push("/apartments")
+                  blocked
+                    ? void openLocationSettings()
+                    : notice === "开启定位，或搜索公寓地址" ||
+                        notice === "定位查看附近公寓"
+                      ? void locate(true)
+                      : router.push("/apartments")
                 }
+                retryLabel={blocked ? "搜索公寓地址" : undefined}
                 onRetry={
-                  !locating &&
-                  notice !== "开启定位，或搜索公寓地址" &&
-                  notice !== "定位查看附近公寓"
-                    ? () => void locate(true)
-                    : undefined
+                  blocked
+                    ? () => router.push("/apartments")
+                    : !locating &&
+                        notice !== "开启定位，或搜索公寓地址" &&
+                        notice !== "定位查看附近公寓"
+                      ? () => void locate(true)
+                      : undefined
                 }
               />
             )}
@@ -484,12 +590,14 @@ function EmptyApartment({
   busy = false,
   onPress,
   onRetry,
+  retryLabel = "重新定位",
 }: {
   title: string;
   action: string;
   busy?: boolean;
   onPress: () => void;
   onRetry?: () => void;
+  retryLabel?: string;
 }) {
   return (
     <View style={styles.mapEmpty}>
@@ -521,7 +629,7 @@ function EmptyApartment({
           onPress={onRetry}
           style={{ minHeight: 48, justifyContent: "center" }}
         >
-          <Text style={styles.link}>重新定位</Text>
+          <Text style={styles.link}>{retryLabel}</Text>
         </Pressable>
       ) : null}
     </View>

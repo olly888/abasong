@@ -129,6 +129,7 @@ function Content({
     generation = useRef(0),
     locationGeneration = useRef(0),
     fixPending = useRef(false),
+    lastFixAt = useRef(0),
     manualLocked = useRef(!!apartmentId),
     arrival = useRef<ArrivalState>(null);
   const [point, setPoint] = useState<S["Point"]>(),
@@ -224,6 +225,7 @@ function Content({
       );
       if (!valid()) return;
       if (result.status !== "fix") {
+        setPoint(undefined);
         invalidateAutomaticCard();
         const isBlocked = result.status === "permission" && result.blocked;
         setBlocked(isBlocked);
@@ -241,6 +243,7 @@ function Content({
       const { fix, approximate } = result;
       const p = { lng: fix.coords.longitude, lat: fix.coords.latitude };
       setPoint(p);
+      lastFixAt.current = fix.timestamp;
       if (follow) {
         setCameraTarget(p);
         setCameraRevision((v) => v + 1);
@@ -250,6 +253,7 @@ function Content({
         !Number.isFinite(fix.coords.accuracy) ||
         fix.coords.accuracy < 0
       ) {
+        setPoint(undefined);
         invalidateAutomaticCard();
         setNotice("定位精度不足，请搜索地址");
         setLocationNotice("定位精度不足，请搜索地址");
@@ -299,6 +303,7 @@ function Content({
       }
     } catch (e) {
       if (valid()) {
+        setPoint(undefined);
         invalidateAutomaticCard();
         const message =
           e instanceof Error && e.message === "location_timeout"
@@ -326,7 +331,7 @@ function Content({
       void openLocationSettings();
       return;
     }
-    if (point) {
+    if (point && Date.now() - lastFixAt.current <= 20_000) {
       setCameraTarget({ ...point });
       setCameraRevision((v) => v + 1);
     }

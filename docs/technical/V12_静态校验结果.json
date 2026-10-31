@@ -37,7 +37,7 @@
   },
   "page_spec": {
     "nodes": 40,
-    "state_variants": 273,
+    "state_variants": 275,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

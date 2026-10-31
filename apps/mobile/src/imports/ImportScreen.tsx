@@ -32,6 +32,7 @@ import { recognize } from "./recognize";
 import { exactApartment } from "./match";
 import { restoreDraftView } from "./restore-draft";
 import { ServerDraft } from "./server-draft";
+import { exitImport } from "./navigation";
 import { createImageCache } from "./storage";
 type S = components["schemas"];
 const issueLabels: Record<string, string> = {
@@ -435,13 +436,13 @@ function Session() {
   function leave() {
     if (running.current) return;
     Alert.alert(
-      "离开截图导入？",
+      "离开截图添加？",
       draftSaved
-        ? "已保存的草稿可以稍后继续。"
-        : "未保存的修改将清除；此前已保存的草稿保留。",
+        ? "已保存进度，可以稍后继续。"
+        : "未保存的修改将清除，已保存进度会保留。",
       [
         { text: "继续核对", style: "cancel" },
-        { text: "离开", style: "destructive", onPress: () => router.back() },
+        { text: "离开", style: "destructive", onPress: () => exitImport(router) },
       ],
     );
   }
@@ -471,7 +472,7 @@ function Session() {
       }
     } catch (e) {
       if (live.current)
-        setError(e instanceof Error ? e.message : "草稿保存失败，请重试");
+        setError(e instanceof Error ? e.message : "进度保存失败，请重试");
     } finally {
       running.current = false;
       if (live.current) setBusy(false);
@@ -494,8 +495,7 @@ function Session() {
         setAttested(false);
         setRestartRequired(view.restartRequired);
         setStage(next.length ? "review" : "select");
-        if (!next.length)
-          setError("草稿中没有已保存的识别结果，请重新选择截图");
+        if (!next.length) setError("上次没有保存识别结果，请重新选择截图");
       }
     } catch (e) {
       if (live.current)
@@ -573,16 +573,66 @@ function Session() {
       (!r.privateId || (mode === "private_and_share" && !r.shared)),
   );
   const editor = rows.find((r) => r.id === editing);
+  function chooseMode() {
+    if (locked || busy) return;
+    const choose = (next: typeof mode) => {
+      if (next === mode) return;
+      setMode(next);
+      setAttested(false);
+      setDraftSaved(false);
+      setRows((old) =>
+        old.map((r) => ({
+          ...r,
+          selected: r.selected && (next === "private_only" || !!r.target),
+        })),
+      );
+    };
+    Alert.alert("保存方式", undefined, [
+      { text: "共享并保存", onPress: () => choose("private_and_share") },
+      { text: "仅自己保存", onPress: () => choose("private_only") },
+      { text: "取消", style: "cancel" },
+    ]);
+  }
+  function more() {
+    if (busy) return;
+    Alert.alert("更多", undefined, [
+      ...(rows.length || (server.current?.batch && !locked)
+        ? [
+            {
+              text: draftSaved ? "更新已保存进度" : "保存进度",
+              onPress: () => void saveDraft(),
+            },
+          ]
+        : []),
+      ...(!locked
+        ? [{ text: "继续添加截图", onPress: () => setStage("select") }]
+        : []),
+      { text: "取消", style: "cancel" },
+    ]);
+  }
   return (
     <ApartmentPage
       title={
         editing
           ? "核对公寓"
           : stage === "select"
-            ? "截图导入"
+            ? "从截图添加"
             : stage === "review"
               ? "确认识别结果"
               : "导入结果"
+      }
+      headerRight={
+        stage === "review" && !editing && !processing && !locked ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="更多操作"
+            disabled={busy}
+            onPress={more}
+            style={styles.headerAction}
+          >
+            <Text style={styles.link}>更多</Text>
+          </Pressable>
+        ) : undefined
       }
       onBack={() => {
         if (processing) {
@@ -610,8 +660,7 @@ function Session() {
                 onPress={() => recognitionAbort.current?.abort()}
               />
             </>
-          ) : null}
-          {editing ? (
+          ) : editing ? (
             <ActionButton
               label="完成核对"
               onPress={() => {
@@ -621,73 +670,126 @@ function Session() {
             />
           ) : stage === "select" ? (
             <ActionButton
-              label={busy ? "正在处理…" : "识别截图"}
+              label={
+                sources.length ? `识别 ${sources.length} 张截图` : "选择截图"
+              }
               busy={busy}
-              disabled={!sources.length}
-              onPress={() => void process()}
+              onPress={() => (sources.length ? void process() : void pick())}
             />
           ) : (
-            <ActionButton
-              label={
-                stage === "result"
-                  ? pending.length
-                    ? `重试 ${pending.length} 条`
-                    : "完成"
-                  : mode === "private_only"
-                    ? `确认保存 ${pending.length} 条`
-                    : `确认共享 ${pending.length} 条`
-              }
-              busy={busy}
-              disabled={
-                (stage !== "result" &&
-                  (!pending.length ||
-                    !attested ||
-                    (mode === "private_and_share" &&
-                      !auth.me?.capabilities.includes("access.contribute")))) ||
-                (stage === "result" && pending.length > 0 && !attested)
-              }
-              onPress={() =>
-                stage === "result" && !pending.length
-                  ? router.back()
-                  : void submit()
-              }
-            />
+            <>
+              {stage === "review" ? (
+                <>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`保存方式：${mode === "private_only" ? "仅自己保存" : "共享并保存"}`}
+                    accessibilityState={{ disabled: locked || busy }}
+                    disabled={locked || busy}
+                    onPress={chooseMode}
+                    style={styles.scopeRow}
+                  >
+                    <Text style={styles.meta}>保存方式</Text>
+                    <Text style={styles.label}>
+                      {mode === "private_only" ? "仅自己保存" : "共享并保存"}
+                    </Text>
+                    {!locked ? <Text style={styles.link}>更改</Text> : null}
+                  </Pressable>
+                  {mode === "private_and_share" &&
+                  !auth.me?.capabilities.includes("access.contribute") ? (
+                    <Text style={styles.error}>共享资格待核验</Text>
+                  ) : null}
+                  {pending.length ? (
+                    <Pressable
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: attested, disabled: busy }}
+                      disabled={busy}
+                      onPress={() => setAttested((x) => !x)}
+                      style={styles.check}
+                    >
+                      <Text style={styles.meta}>
+                        {attested ? "☑" : "□"} 我已核对，并有权
+                        {mode === "private_only" ? "保存" : "共享"}所选资料
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </>
+              ) : null}
+              <ActionButton
+                label={
+                  stage === "result"
+                    ? pending.length
+                      ? `重试 ${pending.length} 条`
+                      : "完成"
+                    : mode === "private_only"
+                      ? `确认保存 ${pending.length} 条`
+                      : `确认共享 ${pending.length} 条`
+                }
+                busy={busy}
+                disabled={
+                  (stage !== "result" &&
+                    (!pending.length ||
+                      !attested ||
+                      (mode === "private_and_share" &&
+                        !auth.me?.capabilities.includes(
+                          "access.contribute",
+                        )))) ||
+                  (stage === "result" && pending.length > 0 && !attested)
+                }
+                onPress={() =>
+                  stage === "result" && !pending.length
+                    ? exitImport(router)
+                    : void submit()
+                }
+              />
+            </>
           )}
         </View>
       }
     >
       {stage === "select" ? (
         <>
-          <Text style={styles.heading}>从截图整理公寓密码</Text>
           {draftLoadBusy ? (
-            <ActivityIndicator accessibilityLabel="正在加载草稿" />
+            <ActivityIndicator accessibilityLabel="正在加载已保存进度" />
           ) : null}
           {draftLoadError ? (
             <>
-              <Text style={styles.meta}>草稿暂时无法加载</Text>
+              <Text style={styles.meta}>上次进度暂时无法加载</Text>
               <ActionButton
-                label="重试加载草稿"
+                label="重试加载进度"
                 secondary
                 disabled={busy}
                 onPress={() => void loadDrafts()}
               />
             </>
           ) : null}
-          {drafts.map((d) => (
-            <ListRow
-              key={d.id}
-              title="继续未完成导入"
-              subtitle={`${d.candidate_count} 条资料`}
-              onPress={() => void restoreDraft(d.id)}
-            />
-          ))}
-          <ActionButton
-            label={restartRequired ? "重新选择截图" : "选择截图"}
-            secondary
-            disabled={sources.length >= 10 || busy}
-            onPress={() => void pick()}
-          />
-          <Text style={styles.meta}>已选 {sources.length} 张</Text>
+          {!sources.length &&
+            drafts
+              .filter((d) => d.candidate_count > 0)
+              .map((d) => (
+                <ListRow
+                  key={d.id}
+                  title="继续上次添加"
+                  subtitle={`${d.candidate_count} 条资料`}
+                  onPress={() => void restoreDraft(d.id)}
+                />
+              ))}
+          <View style={styles.scopeRow}>
+            <Text style={styles.label}>
+              {sources.length
+                ? `已选 ${sources.length} 张`
+                : "添加公寓地址和密码截图"}
+            </Text>
+            {sources.length > 0 && sources.length < 10 ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={busy}
+                onPress={() => void pick()}
+                style={styles.check}
+              >
+                <Text style={styles.link}>继续添加</Text>
+              </Pressable>
+            ) : null}
+          </View>
           <View style={styles.tiles}>
             {sources.map((s, i) => (
               <View key={s.id} style={styles.tile}>
@@ -784,51 +886,28 @@ function Session() {
             placeholder="例如：行人门"
             onChangeText={(scope) => change(editor.id, { scope })}
           />
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy}
+            style={styles.check}
+            onPress={() => {
+              setRows((old) => old.filter((x) => x.id !== editor.id));
+              setEditing(null);
+              setMatches([]);
+              setAttested(false);
+              setDraftSaved(false);
+            }}
+          >
+            <Text style={styles.error}>移除这条资料</Text>
+          </Pressable>
         </>
       ) : (
         <>
           {stage === "review" ? (
-            <>
-              <View style={styles.modeRow}>
-                {(["private_and_share", "private_only"] as const).map((m) => (
-                  <Pressable
-                    key={m}
-                    accessibilityRole="radio"
-                    accessibilityState={{
-                      checked: mode === m,
-                      disabled: locked || busy,
-                    }}
-                    disabled={locked || busy}
-                    onPress={() => {
-                      if (mode === m) return;
-                      setMode(m);
-                      setAttested(false);
-                      setDraftSaved(false);
-                      setRows((old) =>
-                        old.map((r) => ({ ...r, selected: false })),
-                      );
-                    }}
-                    style={[styles.mode, mode === m && styles.chosen]}
-                  >
-                    <Text style={styles.label}>
-                      {m === "private_only" ? "仅自己保存" : "共享并保存"}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: attested, disabled: busy }}
-                disabled={busy}
-                style={styles.check}
-                onPress={() => setAttested((x) => !x)}
-              >
-                <Text style={styles.label}>
-                  {attested ? "☑" : "□"}{" "}
-                  我已核对地址与密码，并有权保存或共享这些资料
-                </Text>
-              </Pressable>
-            </>
+            <Text style={styles.label}>
+              {rows.length} 条资料
+              {rows.length ? ` · 已选 ${pending.length} 条` : ""}
+            </Text>
           ) : null}
           {sources.some(
             (s) => s.state === "selected" || (locked && s.state === "failed"),
@@ -882,7 +961,9 @@ function Session() {
                 </Text>
               ) : null}
               <Text style={styles.code}>{r.value || "缺少密码"}</Text>
-              <Text style={styles.meta}>{r.scope || "门别待确认"}</Text>
+              {r.scope && r.scope !== "门别未注明" ? (
+                <Text style={styles.meta}>{r.scope}</Text>
+              ) : null}
               {r.error ? (
                 <Text style={styles.error}>{r.error}</Text>
               ) : r.status ? (
@@ -938,21 +1019,7 @@ function Session() {
                       setMatches([]);
                     }}
                   >
-                    <Text style={styles.link}>核对 / 修改</Text>
-                  </Pressable>
-                ) : null}
-                {!r.privateId ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={busy}
-                    style={styles.check}
-                    onPress={() => {
-                      setRows((old) => old.filter((x) => x.id !== r.id));
-                      setAttested(false);
-                      setDraftSaved(false);
-                    }}
-                  >
-                    <Text>移除</Text>
+                    <Text style={styles.link}>编辑</Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -972,34 +1039,24 @@ function Session() {
               onPress={() => setStage("review")}
             />
           ) : null}
-          {stage === "review" &&
-          (rows.length > 0 || (!!server.current?.batch && !locked)) ? (
-            <ActionButton
-              label={draftSaved ? "保存草稿修改" : "保存草稿"}
-              secondary
-              disabled={busy}
-              onPress={() => void saveDraft()}
-            />
-          ) : null}
-          {stage === "review" && !locked ? (
-            <ActionButton
-              label="继续选图"
-              secondary
-              disabled={busy}
-              onPress={() => setStage("select")}
-            />
-          ) : null}
         </>
       )}
     </ApartmentPage>
   );
 }
 const styles = StyleSheet.create({
-  heading: {
-    fontSize: 24,
-    lineHeight: 32,
-    fontWeight: "600",
-    color: tokens.color.ink,
+  headerAction: {
+    minWidth: 48,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scopeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
   },
   meta: { fontSize: 14, lineHeight: 22, color: tokens.color.textMuted },
   label: { fontSize: 16, lineHeight: 24, color: tokens.color.ink },
@@ -1018,17 +1075,6 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.color.surfaceMuted,
   },
   modeRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  mode: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tokens.color.border,
-  },
-  chosen: {
-    backgroundColor: tokens.color.brandSurface,
-    borderColor: tokens.color.brandPrimary,
-  },
   check: { minHeight: 48, justifyContent: "center", paddingVertical: 8 },
   card: {
     borderWidth: 1,

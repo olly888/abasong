@@ -60,3 +60,6 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 
 
 2026-10-31解锁补验修正：无新增依赖、原生模块、权限或DDL。ImportBatch.candidate_count明确为非removed候选；源契约和生成类型同步，返回选图页刷新草稿。复用既有Debug原生OCR执行实际TEST多图/进程恢复，不将JS热更新当作重新原生编译。
+
+
+2026-10-31截图简洁交互：无新增依赖、字体、原生模块、系统权限或API/数据库变动；使用既有原生Alert菜单和V3组件，iOS/Android既有Debug接收JS更新。不能把本批JS导出或网页原型当作新原生编译/完整双端验收。

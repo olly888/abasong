@@ -17,7 +17,10 @@ export type IconName =
   | "bookmark"
   | "close"
   | "pin"
-  | "key";
+  | "key"
+  | "list"
+  | "map"
+  | "settings";
 // Small outline icons built from native strokes: no font loading or new native dependency.
 export function Icon({
   name,
@@ -54,6 +57,46 @@ export function Icon({
     );
   let content;
   switch (name) {
+    case "settings":
+      content = (
+        <>
+          {stroke({ left: 5, top: 5, width: 14, height: 14, borderRadius: 7 })}
+          {stroke({ left: 9, top: 9, width: 6, height: 6, borderRadius: 3 })}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) =>
+            stroke(
+              {
+                left: 10 + Math.cos((angle * Math.PI) / 180) * 9,
+                top: 10 + Math.sin((angle * Math.PI) / 180) * 9,
+                width: 4,
+                height: 4,
+                borderRadius: 1,
+                backgroundColor: color,
+                transform: [{ rotate: `${angle}deg` }],
+              },
+              String(angle),
+            ),
+          )}
+        </>
+      );
+      break;
+    case "list":
+      content = (
+        <>
+          {[5, 11, 17].map((top) =>
+            stroke({ left: 4, top, width: 16, height: 0 }, String(top)),
+          )}
+        </>
+      );
+      break;
+    case "map":
+      content = (
+        <>
+          {stroke({ left: 3, top: 4, width: 18, height: 16, borderRadius: 2 })}
+          {stroke({ left: 9, top: 4, width: 0, height: 16 })}
+          {stroke({ left: 15, top: 4, width: 0, height: 16 })}
+        </>
+      );
+      break;
     case "box":
       content = (
         <>

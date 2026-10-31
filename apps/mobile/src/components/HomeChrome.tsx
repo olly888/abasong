@@ -1,4 +1,10 @@
-import { Pressable, Text, View, StyleSheet } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  View,
+  StyleSheet,
+} from "react-native";
 import { router } from "expo-router";
 import { tokens } from "@abasong/ui";
 import { Icon } from "../ui/Icon";
@@ -6,9 +12,13 @@ export type HomeMode = "公寓" | "找活" | "找人";
 export function HomeChrome({
   mode,
   onMode,
+  list = false,
+  onToggleList,
 }: {
   mode: HomeMode;
   onMode: (m: HomeMode) => void;
+  list?: boolean;
+  onToggleList?: () => void;
 }) {
   return (
     <View style={styles.toolbar} pointerEvents="box-none">
@@ -38,19 +48,34 @@ export function HomeChrome({
           <Icon name="message" />
         </Pressable>
       </View>
-      <View style={styles.tabs}>
-        {(["公寓", "找活", "找人"] as const).map((m) => (
+      <View style={styles.modeRow}>
+        <View style={styles.tabs}>
+          {(["公寓", "找活", "找人"] as const).map((m) => (
+            <Pressable
+              key={m}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: mode === m }}
+              onPress={() => onMode(m)}
+              hitSlop={{ top: 4, bottom: 4 }}
+              style={[styles.tab, mode === m && styles.selected]}
+            >
+              <Text style={[styles.label, mode === m && styles.active]}>
+                {m}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        {mode !== "公寓" && onToggleList ? (
           <Pressable
-            key={m}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: mode === m }}
-            onPress={() => onMode(m)}
-            hitSlop={{ top: 4, bottom: 4 }}
-            style={[styles.tab, mode === m && styles.selected]}
+            accessibilityRole="button"
+            accessibilityLabel={list ? "切换为地图" : "切换为列表"}
+            onPress={onToggleList}
+            style={styles.viewToggle}
           >
-            <Text style={[styles.label, mode === m && styles.active]}>{m}</Text>
+            <Icon name={list ? "map" : "list"} size={20} />
+            <Text style={styles.toggleLabel}>{list ? "地图" : "列表"}</Text>
           </Pressable>
-        ))}
+        ) : null}
       </View>
     </View>
   );
@@ -59,10 +84,12 @@ export function MapTools({
   bottom,
   locating = false,
   onLocate,
+  canRecenter = false,
 }: {
   bottom: number;
   locating?: boolean;
   onLocate?: () => void;
+  canRecenter?: boolean;
 }) {
   return (
     <View style={[styles.tools, { bottom }]}>
@@ -79,15 +106,22 @@ export function MapTools({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="我的位置"
-        accessibilityState={{ disabled: locating || !onLocate, busy: locating }}
-        disabled={locating || !onLocate}
+        accessibilityState={{
+          disabled: (locating && !canRecenter) || !onLocate,
+          busy: locating,
+        }}
+        disabled={(locating && !canRecenter) || !onLocate}
         onPress={onLocate}
         style={styles.location}
       >
-        <Icon
-          name="locate"
-          color={locating ? tokens.color.textMuted : tokens.color.ink}
-        />
+        {locating && !canRecenter ? (
+          <ActivityIndicator color={tokens.color.brandPrimary} />
+        ) : (
+          <Icon
+            name="locate"
+            color={locating ? tokens.color.textMuted : tokens.color.ink}
+          />
+        )}
       </Pressable>
     </View>
   );
@@ -127,19 +161,37 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.color.surface,
     ...shadow,
   },
-  tabs: {
+  modeRow: {
     marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  viewToggle: {
+    minHeight: 48,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: tokens.color.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    ...shadow,
+  },
+  toggleLabel: { fontSize: 14, color: tokens.color.ink },
+  tabs: {
     alignSelf: "flex-start",
     flexDirection: "row",
     padding: 4,
-    gap: 7,
+    gap: 2,
     borderRadius: 13,
     backgroundColor: tokens.color.surface,
     ...shadow,
   },
   tab: {
     minHeight: 40,
-    paddingHorizontal: 21,
+    paddingHorizontal: 15,
     borderRadius: 9,
     justifyContent: "center",
   },
@@ -150,8 +202,9 @@ const styles = StyleSheet.create({
   tools: {
     position: "absolute",
     right: 16,
-    flexDirection: "row-reverse",
-    gap: 8,
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 10,
     zIndex: 8,
   },
   location: {

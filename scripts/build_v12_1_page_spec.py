@@ -116,6 +116,22 @@ for p in pages:
   p['api_operations']=['getMyApartmentEntry','patchMyApartmentEntry','deleteMyApartmentEntry','createMyPrivateRecord','patchMyPrivateRecord','deleteMyPrivateRecord','shareMyPrivateRecord','readAccessRecords']
   p['api_contract_status']='本人记录/收藏/主动共享契约已生成；未知公寓共享提议、纠正、统计仍待后续任务'
 
+# 2026-10-30 approved unified home map controls and location recovery.
+for p in pages:
+ if p['id'] in ['H01','H02','H03']:
+  p['information'].append('搜索右侧消息；可见地图右下定位，发需求位于定位上方；地图归属避让卡片')
+  p['acceptance']+=' 三模式共享会话位置；同坐标拖图后可回位，卡片和工具栏通过camera padding避让；GPS失败、无收录与查询失败分别显示，拒绝权限可打开系统设置。'
+ if p['id']=='H01':
+  for a in p['actions']:
+   if a['label']=='定位':a['result']='刷新本人位置并回到可见地图中心；保留阅读中的卡片，候选确认后再改变公寓'
+ if p['id'] in ['H02','H03']:
+  p['information'].append('模式栏右侧列表/地图切换；切换后保留筛选、选中项、视野和列表滚动')
+  p['actions'].append(dict(label='回到我的位置',target=p['id'],result='独立定位，不被列表切换替代，不公开本人精确位置'))
+ if p['id']=='U01':
+  p['acceptance']+=' 设置只在页面底部菜单，不放顶部重复入口。'
+ if p['id']=='M01':
+  p['acceptance']+=' 首页搜索右侧为消息主入口，打开本二级页；我的顶部不重复放入口。'
+
 outdir=ROOT/'docs/product'
 outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'

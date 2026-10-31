@@ -67,11 +67,10 @@ export default function Profile() {
               icon="bookmark"
               onPress={() => router.push("/apartments/library")}
             />
-            <ActionButton
-              label="退出登录"
-              secondary
-              busy={busy}
-              onPress={() => void logout()}
+            <ListRow
+              icon="settings"
+              title="设置"
+              onPress={() => router.push("/account/settings")}
             />
           </>
         ) : auth.phase === "needs-profile" ? (

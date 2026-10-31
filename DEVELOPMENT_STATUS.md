@@ -1,13 +1,15 @@
 # Abasong development status
 
-Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-screenshot-import`.
+Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-home-location-ux`.
 
 ## Current snapshot — 2026-10-30
+
+Latest user-approved home remediation is implemented and its core slice verified: [acceptance](docs/technical/D1_首页地图与定位体验修正验收.md). Prototype/native three-mode controls, list/map switch, settings and permission/error recovery are aligned. Android uses a new foreground one-shot GPS local module after GMS/system-fused failures; real Debug build/install and synthetic GPS acquisition passed. User explicitly confirmed same-coordinate recenter on both platforms after the camera-command fix. OS GPS request stopped after the fix. Check31 passed; remaining authorized-data/field/accessibility gates belong to fullD1, not claimed complete. No cloud migrations/grants/real GPS reads.
 
 Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Prior business baseline: `a3b5a51`; latest D1 location/native slice is on `codex/d1-location` (evidence below).
 
 - Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API. Screenshot selection/on-device OCR/confirmation and session-only saving now added; server batch APIs remain planned.
-- Verified: local0001/0002 migrations (47 tables),82 business/DB+location checks,54 Auth checks,16 ranking scenarios,20 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
+- Verified: local0001/0002 migrations (47 tables),82 business/DB+location checks,54 Auth checks,16 ranking scenarios,31 unit tests + workspace checks/service smoke, dual-platform JS export. Historical native build/install/Mapbox render evidence remains valid for its scope.
 - Not yet accepted: full real-account native lifecycle/qualification scenarios, authorized-sample map/location/card acceptance, screenshot/OCR/batch backend/native flow, full corrections/withdrawal/statistics, production KMS/staging/field pilot. No cloud business migration or production deployment.
 - SMS: user identified airplane mode as cause of non-receipt; do not change providers. Both simulators are signed in and private CRUD was observed; full lifecycle/qualification acceptance remains pending.
 - Next: local0003 import batch/candidate encryption and owner/version/confirmation/two-stage API tests; then server draft/resume integration and remaining shared-data/physical-device acceptance. Native screenshot private-save core has passed on both platforms; screenshotP0 remains a priority.
@@ -172,3 +174,7 @@ Executed: workspace check20 tests;82 HTTP/PG existing library checks; full stati
 ## D1 screenshot unlock follow-up
 
 2026-10-30: User unlocked Mac; resumed native checks. Previous fixture cleanup empty state confirmed both. Android address/code/scope editing, selection+attestation gating, actual private submit completed using verified keyboard focus/paste and stable200ms press. iOS second run confirmed result continuation, unsubmitted labels, mode lock and leave warning. Same account read both newTEST items on both platforms; removed both viaApp; iOS empty observed and Android reloaded empty observed. No public contributions/grants/SMS/cloud changes. CI41142739350 for413204c SUCCESS across all jobs; workflow_dispatch only. Small repeated-current-mode selection reset found duringQA and guarded; Android target test passed: same mode retains selection/attestation, changed mode clears both; no submit in this final regression. Full check20 and dual JS exports rerun passed. Next remains local0003/batch owner/version/two-stage tests, not production release; full shared/physical-device/recovery/accessibility gates remain open.
+
+## D1 home controls / location remediation
+
+2026-10-30: User approved prototype+native home correction before import backend. Unified three map modes and right-bottom location; moved list/map toggle to mode bar; removed duplicate prototype settings, added native settings route, hid dev tools gear. Fixed GPS-vs-lookup errors, denied-settings recovery, inactive opaque cover and same-coordinate camera command (user first reported failure, then explicitly confirmed iOS and Android after fix). Android local foreground single-GPS module added after legacy GMS and SDK-next system-fused paths failed on default AVD; final application does not retain beta-next provider. Actual Debug build/install/GPS fix passed, OS provider OFF/no active app GPS request after completion. User confirmed both recenter cases. Check31 and static contract validation passed; native module lint XML zero issues. Final dual JS exports/remoteCI recorded in PR when complete. No cloud migrations/grants/SMS/real GPS; authorized active apartment data/config, physical devices and full accessibility remain fullD1 gates. Next local0003/import batch permissions/version/confirmation/two-stage tests.

@@ -183,6 +183,17 @@ function Content() {
         </>
       }
     >
+      <ActionButton
+        label="从截图添加"
+        secondary
+        disabled={busy}
+        onPress={() =>
+          router.push({
+            pathname: "/apartments/import",
+            params: { mode: isPrivate ? "private" : "shared" },
+          })
+        }
+      />
       <FormError message={error} />
       {!isPrivate && !a.me?.capabilities.includes("access.contribute") ? (
         <Text>共享贡献资格待审核</Text>

@@ -339,15 +339,35 @@ function LibraryContent() {
         <>
           <ActionButton
             label="＋ 贡献公寓密码"
-            onPress={() => router.push("/apartments/contribute")}
+            onPress={() =>
+              Alert.alert("贡献公寓密码", undefined, [
+                {
+                  text: "截图识别",
+                  onPress: () => router.push("/apartments/import"),
+                },
+                {
+                  text: "快速填写",
+                  onPress: () => router.push("/apartments/contribute"),
+                },
+                { text: "取消", style: "cancel" },
+              ])
+            }
           />
           <Pressable
             accessibilityRole="button"
             onPress={() =>
-              router.push({
-                pathname: "/apartments/contribute",
-                params: { mode: "private" },
-              })
+              Alert.alert("添加私人记录", undefined, [
+                {
+                  text: "从截图导入",
+                  onPress: () => router.push("/apartments/import?mode=private"),
+                },
+                {
+                  text: "快速填写",
+                  onPress: () =>
+                    router.push("/apartments/contribute?mode=private"),
+                },
+                { text: "取消", style: "cancel" },
+              ])
             }
             style={styles.inline}
           >

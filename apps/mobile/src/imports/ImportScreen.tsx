@@ -32,6 +32,7 @@ import { recognize } from "./recognize";
 import { exactApartment } from "./match";
 import { restoreDraftView } from "./restore-draft";
 import { ServerDraft } from "./server-draft";
+import { exitImport } from "./navigation";
 import { createImageCache } from "./storage";
 type S = components["schemas"];
 const issueLabels: Record<string, string> = {
@@ -441,7 +442,7 @@ function Session() {
         : "未保存的修改将清除，已保存进度会保留。",
       [
         { text: "继续核对", style: "cancel" },
-        { text: "离开", style: "destructive", onPress: () => router.back() },
+        { text: "离开", style: "destructive", onPress: () => exitImport(router) },
       ],
     );
   }
@@ -736,7 +737,7 @@ function Session() {
                 }
                 onPress={() =>
                   stage === "result" && !pending.length
-                    ? router.back()
+                    ? exitImport(router)
                     : void submit()
                 }
               />

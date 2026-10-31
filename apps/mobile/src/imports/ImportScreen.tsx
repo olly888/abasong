@@ -650,6 +650,7 @@ function Session() {
                     }}
                     disabled={locked || busy}
                     onPress={() => {
+                      if (mode === m) return;
                       setMode(m);
                       setAttested(false);
                       setRows((old) =>

@@ -27,8 +27,10 @@ import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
 import { ListRow, SearchBox } from "../ui/Primitives";
 import { extractCandidates } from "./extract";
+import { runRecognitionBatch, RecognitionError } from "./recognition-work";
 import { recognize } from "./recognize";
 import { exactApartment } from "./match";
+import { restoreDraftView } from "./restore-draft";
 import { ServerDraft } from "./server-draft";
 import { createImageCache } from "./storage";
 type S = components["schemas"];
@@ -130,11 +132,14 @@ function Session() {
     [draftSaved, setDraftSaved] = useState(false),
     [draftLoadError, setDraftLoadError] = useState(false),
     [draftLoadBusy, setDraftLoadBusy] = useState(false),
-    [restartRequired, setRestartRequired] = useState(false);
+    [restartRequired, setRestartRequired] = useState(false),
+    [processing, setProcessing] = useState(false),
+    [progress, setProgress] = useState({ finished: 0, total: 0 });
   const server = useRef<ServerDraft | null>(null);
   const cache = useRef<ReturnType<typeof createImageCache> | null>(null);
   const live = useRef(true),
     running = useRef(false),
+    recognitionAbort = useRef<AbortController | null>(null),
     abort = useRef(new AbortController()),
     allUris = useRef(new Set<string>()),
     rowsRef = useRef(rows),
@@ -148,6 +153,7 @@ function Session() {
     return () => {
       live.current = false;
       abort.current.abort();
+      recognitionAbort.current?.abort();
       for (const uri of allUris.current) dispose(uri);
       allUris.current.clear();
       cache.current?.dispose();
@@ -158,7 +164,10 @@ function Session() {
     path: string,
     options: Parameters<typeof dataRequest>[2] = {},
   ) =>
-    dataRequest<T>(session, path, { ...options, signal: abort.current.signal });
+    dataRequest<T>(session, path, {
+      ...options,
+      signal: options.signal ?? abort.current.signal,
+    });
   const update = (id: string, patch: Partial<Candidate>) =>
     setRows((old) => old.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   function change(id: string, patch: Partial<Candidate>) {
@@ -287,82 +296,122 @@ function Session() {
       if (live.current) setBusy(false);
     }
   }
-  async function process() {
-    if (running.current) return;
+  async function process(sourceId?: string) {
+    if (running.current || locked) return;
+    const task = new AbortController();
+    recognitionAbort.current = task;
     running.current = true;
     setBusy(true);
+    setProcessing(true);
     setError(null);
-    try {
-      for (const source of sources.filter((s) => s.state !== "recognized")) {
-        if (!live.current) break;
+    const valid = () => live.current && recognitionAbort.current === task;
+    let anyRows = rows.length > 0;
+    const sourceState = (id: string, patch: Partial<Source>) => {
+      if (valid())
         setSources((old) =>
-          old.map((s) =>
-            s.id === source.id
-              ? { ...s, state: "processing", error: undefined }
-              : s,
-          ),
+          old.map((s) => (s.id === id ? { ...s, ...patch } : s)),
         );
-        try {
-          const lines = await recognize(source.uri);
-          const extracted = extractCandidates(lines); // Whole OCR text never persisted or uploaded.
-          if (!live.current) break;
+    };
+    try {
+      const outcome = await runRecognitionBatch(
+        sources.filter(
+          (s) => s.state !== "recognized" && (!sourceId || sourceId === s.id),
+        ),
+        task.signal,
+        async (source, signal) => {
+          const lines = await recognize(source.uri, signal);
+          const extracted = extractCandidates(lines);
           const candidates: Candidate[] = [];
           for (const e of extracted) {
+            if (signal.aborted) break;
             const row = candidate(source.id, e.address, e.value, e.issues);
             if (e.address) {
               try {
                 const page = await request<S["ApartmentPage"]>(
                   "/v1/apartments?query=" +
                     encodeURIComponent(e.address.split(",")[0].slice(0, 200)),
+                  { signal },
                 );
                 row.target = exactApartment(e.address, page.items);
                 row.selected = !!row.target && !row.issues.length;
               } catch {
-                /* Matching is recoverable in the confirmation editor. */
+                /* Unavailable matching stays editable; cancellation is checked before publish. */
               }
             }
             candidates.push(row);
           }
-          if (!live.current) break;
-          setRows((old) => [
-            ...old.filter((r) => r.sourceId !== source.id),
-            ...candidates,
-          ]);
-          setSources((old) =>
-            old.map((s) =>
-              s.id === source.id
-                ? {
-                    ...s,
-                    state: extracted.length ? "recognized" : "failed",
-                    error: extracted.length ? undefined : "未识别到公寓密码",
-                  }
-                : s,
-            ),
-          );
-        } catch {
-          if (live.current)
-            setSources((old) =>
-              old.map((s) =>
-                s.id === source.id
-                  ? {
-                      ...s,
-                      state: "failed",
-                      error: "识别失败，请重试或手动填写",
-                    }
-                  : s,
-              ),
-            );
-        }
-      }
-      if (live.current) {
-        setStage("review");
+          return candidates;
+        },
+        {
+          start: (s) =>
+            sourceState(s.id, { state: "processing", error: undefined }),
+          result: (s, candidates) => {
+            if (!valid()) return;
+            anyRows ||= candidates.length > 0;
+            setRows((old) => [
+              ...old.filter((r) => r.sourceId !== s.id),
+              ...candidates,
+            ]);
+            sourceState(s.id, {
+              state: candidates.length ? "recognized" : "failed",
+              error: candidates.length ? undefined : "未识别到公寓密码",
+            });
+          },
+          failed: (s, e) =>
+            sourceState(s.id, {
+              state: "failed",
+              error:
+                e instanceof RecognitionError
+                  ? e.message
+                  : "识别失败，请重试或手动填写",
+            }),
+          paused: (s) =>
+            sourceState(s.id, { state: "selected", error: undefined }),
+          progress: (finished, total) => {
+            if (valid()) setProgress({ finished, total });
+          },
+        },
+      );
+      if (valid()) {
+        if (outcome.stopped && !task.signal.aborted)
+          setError("上一张截图仍在处理，请稍后再试");
+        setStage(task.signal.aborted && !anyRows ? "select" : "review");
         setAttested(false);
         setDraftSaved(false);
       }
     } finally {
-      running.current = false;
-      if (live.current) setBusy(false);
+      if (valid()) {
+        recognitionAbort.current = null;
+        running.current = false;
+        setProcessing(false);
+        setBusy(false);
+      }
     }
+  }
+  function continueRemainingImages() {
+    if (running.current) return;
+    if (!locked) {
+      void process();
+      return;
+    }
+    // The previous submission fixed its scope and durable plans. Continue only
+    // unfinished images in an explicit new draft; never append to that plan.
+    const remaining = sources.filter((s) => s.state !== "recognized");
+    for (const source of sources.filter((s) => s.state === "recognized")) {
+      dispose(source.uri);
+      allUris.current.delete(source.uri);
+    }
+    server.current = new ServerDraft(session, abort.current.signal);
+    setSources(
+      remaining.map((s) => ({ ...s, state: "selected", error: undefined })),
+    );
+    setRows([]);
+    setLocked(false);
+    setAttested(false);
+    setDraftSaved(false);
+    setRestartRequired(false);
+    setStage("select");
+    setError(null);
   }
   async function search() {
     if (query.trim().length < 2 || searchBusy) return;
@@ -410,7 +459,7 @@ function Session() {
     }
   }
   async function saveDraft() {
-    if (running.current || !rows.length) return;
+    if (running.current || (!rows.length && !server.current?.batch)) return;
     running.current = true;
     setBusy(true);
     setError(null);
@@ -434,54 +483,16 @@ function Session() {
     setBusy(true);
     setError(null);
     try {
-      const found = await server.current!.restore(id);
-      const next: Candidate[] = [];
-      for (const item of found) {
-        if (item.state === "removed") continue;
-        const row = candidate(
-          item.source_ids[0] ?? "",
-          item.address_text,
-          item.value,
-          item.issues,
-        );
-        row.id = item.id;
-        row.scope = item.scope.label ?? "门别未注明";
-        row.revision = item.revision;
-        if (item.apartment_id) {
-          row.target = await server.current!.apartment(item.apartment_id);
-          if (!row.target) row.issues.push("公寓已不可用，请重新选择");
-        }
-        const result = item.commit_result;
-        if (result) {
-          row.privateId = result.private_record_id ?? undefined;
-          row.shared = ["active", "pending", "same_value"].includes(
-            result.share_status,
-          );
-          row.status =
-            result.private_status === "failed" ||
-            result.share_status === "failed"
-              ? "failed"
-              : result.share_status === "pending"
-                ? "pending"
-                : result.share_status === "same_value"
-                  ? "same_value"
-                  : result.share_status === "active"
-                    ? "active"
-                    : "private_saved";
-        }
-        row.selected =
-          (!item.apartment_id || !!row.target) &&
-          (item.state === "ready" || item.state === "failed");
-        next.push(row);
-      }
+      const view = await restoreDraftView(server.current!, id);
+      const next = view.rows;
       if (live.current) {
         setRows(next);
         setSources([]);
-        setMode(server.current!.batch!.mode);
-        setLocked(server.current!.batch!.mode_locked);
+        setMode(view.mode);
+        setLocked(view.locked);
         setDraftSaved(true);
         setAttested(false);
-        setRestartRequired(next.length === 0);
+        setRestartRequired(view.restartRequired);
         setStage(next.length ? "review" : "select");
         if (!next.length)
           setError("草稿中没有已保存的识别结果，请重新选择截图");
@@ -574,7 +585,10 @@ function Session() {
               : "导入结果"
       }
       onBack={() => {
-        if (editing) {
+        if (processing) {
+          recognitionAbort.current?.abort();
+        } else if (running.current) return;
+        else if (editing) {
           setEditing(null);
           setMatches([]);
         } else if (stage === "review" && !locked) setStage("select");
@@ -583,6 +597,18 @@ function Session() {
       footer={
         <View style={{ gap: 12 }}>
           <FormError message={error} />
+          {processing ? (
+            <>
+              <Text accessibilityLiveRegion="polite" style={styles.meta}>
+                已处理 {progress.finished} / {progress.total} 张
+              </Text>
+              <ActionButton
+                label="停止识别"
+                secondary
+                onPress={() => recognitionAbort.current?.abort()}
+              />
+            </>
+          ) : null}
           {editing ? (
             <ActionButton
               label="完成核对"
@@ -802,8 +828,18 @@ function Session() {
               </Pressable>
             </>
           ) : null}
+          {sources.some(
+            (s) => s.state === "selected" || (locked && s.state === "failed"),
+          ) ? (
+            <ActionButton
+              label="继续处理剩余截图"
+              secondary
+              disabled={busy}
+              onPress={continueRemainingImages}
+            />
+          ) : null}
           {sources
-            .filter((s) => s.state === "failed")
+            .filter((s) => !locked && s.state === "failed")
             .map((s) => (
               <View key={s.id} style={styles.card}>
                 <Text>{s.error}</Text>
@@ -813,6 +849,13 @@ function Session() {
                   disabled={busy}
                   onPress={() => {
                     const r = candidate(s.id);
+                    setSources((old) =>
+                      old.map((source) =>
+                        source.id === s.id
+                          ? { ...source, state: "recognized", error: undefined }
+                          : source,
+                      ),
+                    );
                     setRows((old) => [...old, r]);
                     setEditing(r.id);
                     setQuery("");
@@ -822,7 +865,7 @@ function Session() {
                   label="重新识别"
                   secondary
                   disabled={busy || locked}
-                  onPress={() => void process()}
+                  onPress={() => void process(s.id)}
                 />
               </View>
             ))}
@@ -914,7 +957,7 @@ function Session() {
             </View>
           ))}
           {!rows.length ? (
-            <Text style={styles.meta}>暂无可确认记录，请重试或手动补充。</Text>
+            <Text style={styles.meta}>暂无待确认记录</Text>
           ) : null}
           {stage === "result" &&
           rows.some(
@@ -927,7 +970,8 @@ function Session() {
               onPress={() => setStage("review")}
             />
           ) : null}
-          {stage === "review" && rows.length ? (
+          {stage === "review" &&
+          (rows.length > 0 || (!!server.current?.batch && !locked)) ? (
             <ActionButton
               label={draftSaved ? "保存草稿修改" : "保存草稿"}
               secondary

@@ -396,3 +396,54 @@ describe("draft apartment availability recovery", () => {
     },
   );
 });
+
+it("preserves the current draft when another draft restore fails mid-pagination", async () => {
+  let failOther = false;
+  mock.request.mockImplementation(async (_s, path) => {
+    if (path.includes("/other/candidates?")) {
+      if (failOther)
+        throw new AccountError(503, "NETWORK_TIMEOUT", "TEST timeout");
+      return { items: [], next_cursor: null };
+    }
+    if (path.endsWith("/other")) return { ...batch, id: "other" };
+    if (path.includes("/candidates?"))
+      return { items: [remote], next_cursor: null };
+    return batch;
+  });
+  const client = new ServerDraft(session, new AbortController().signal);
+  await client.restore("b");
+  failOther = true;
+  await expect(client.restore("other")).rejects.toMatchObject({
+    code: "NETWORK_TIMEOUT",
+  });
+  expect(client.batch?.id).toBe("b");
+  await client.save([local], [], "private_and_share");
+  expect(client.batch?.id).toBe("b");
+});
+
+it("persists removing the last unsubmitted row without creating an empty replacement batch", async () => {
+  let row = {
+    ...remote,
+    commit_result: undefined,
+    confirmation_revision: null,
+    state: "needs_review" as S["ImportCandidate"]["state"],
+  };
+  mock.request.mockImplementation(async (_s, path, o) => {
+    if (path.includes("/candidates?"))
+      return { items: [row], next_cursor: null };
+    if (o.method === "PATCH") {
+      expect(o.body).toEqual({ expected_revision: 2, removed: true });
+      row = { ...row, revision: 3, state: "removed" };
+      return row;
+    }
+    return { ...batch, mode: "private_only", mode_locked: false };
+  });
+  const client = new ServerDraft(session, new AbortController().signal);
+  await client.restore("b");
+  await client.save([], [], "private_only");
+  expect(row.state).toBe("removed");
+  expect(mock.request.mock.calls.some((c) => c[2].method === "POST")).toBe(
+    false,
+  );
+  expect(client.batch?.id).toBe("b");
+});

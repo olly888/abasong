@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-30",
+  "date": "2026-10-31",
   "baseline": "V12.1 temporary delivery support only",
   "openapi": {
     "version": "3.0.3",
@@ -37,7 +37,7 @@
   },
   "page_spec": {
     "nodes": 40,
-    "state_variants": 268,
+    "state_variants": 273,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

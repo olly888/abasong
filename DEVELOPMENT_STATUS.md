@@ -1,8 +1,12 @@
 # Abasong development status
 
-Updated: 2026-10-30 (America/Los_Angeles). Branch: `codex/d1-la-samples-recovery`.
+Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-import-interruption`.
 
-## Current snapshot — 2026-10-30
+## Current snapshot — 2026-10-31
+
+Latest interruption slice: [acceptance](docs/technical/D1_截图多图中断与恢复验收.md). Added serial per-image progress/stop/resume, 60s bounded JS OCR wait with native single-flight quarantine, failed-image-only retry and manual-row preservation. Draft restore is atomic across pages; source-only/removed/partial results mapped without photos or copied declarations. Existing unlocked drafts can save last-row removal; no new empty batch is created. check79 and113 existing actual import HTTP/PG regression passed. No new native modules/deps/API/DDL/grants/codes/SMS. Mac is locked; async unlock request pending. No new native/visual/system-kill/multiphoto acceptance claimed. Spec40 nodes273 states. Next: unlock-dependent dual simulator scenarios listed in report, then account qualification/review. iPhone/field remains deferred.
+
+## Previous snapshot — 2026-10-30
 
 Latest LA/recovery slice: [acceptance](docs/technical/D1_洛杉矶样本扩充与弱网恢复验收.md). LocalD0 now six public address records/four footprint-backed mappings/two address-only; no grants/codes/auto-match activation/cloud DDL. Added uncertainty-circle competitor veto, policy-version dwell reset, durable lost-edit/mode-response replay, explicit draft discovery retry, missing-apartment recovery and source-only draft re-selection. check62/importHTTP113/libraryHTTP100 passed; actual TCP reply-drop retry verifies no duplicate batch/source/candidate/private record. Native both observed Del Mar 2445/courtyard holes; iOS Woodside54 shapes; Android Colony no fabricated shape. Bounded local API pause: iOS draft-error retry recovered; Android account-refresh retry restored original session/import, not a claim of Android draft-button acceptance. Final dualJS exports passed; no new native compilation. Spec40 nodes268 states. iPhone/field deferred; Android physical unavailable. Remaining native empty-draft/Android-draft-timeout/system-kill/long-task checks and real qualification/review gate stay open.
 

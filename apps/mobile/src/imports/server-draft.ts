@@ -90,14 +90,17 @@ export class ServerDraft {
       throw e;
     }
   }
-  private async all() {
+  private async all(batchId?: string) {
+    const path = batchId
+      ? "/v1/me/import-batches/" + encodeURIComponent(batchId)
+      : this.path();
     let cursor: string | null = null;
     const rows: S["ImportCandidate"][] = [];
     do {
       const p: S["ImportCandidatePage"] = await this.request<
         S["ImportCandidatePage"]
       >(
-        this.path() +
+        path +
           "/candidates?limit=50" +
           (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
       );
@@ -111,10 +114,13 @@ export class ServerDraft {
     return this.batch;
   }
   async restore(id: string) {
-    this.batch = await this.request<S["ImportBatch"]>(
+    const batch = await this.request<S["ImportBatch"]>(
       "/v1/me/import-batches/" + encodeURIComponent(id),
     );
-    const rows = await this.all();
+    const rows = await this.all(batch.id);
+    // Do not replace the current draft or its replay state until every page
+    // has arrived. A failed restore must never rebind old rows to a new batch.
+    this.batch = batch;
     this.rows.clear();
     this.pendingGroups.clear();
     this.pendingWrite = null;

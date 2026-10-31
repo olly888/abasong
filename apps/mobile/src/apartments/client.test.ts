@@ -131,3 +131,45 @@ describe("business API weak-network/session boundaries", () => {
     expect(mocks.refresh).not.toHaveBeenCalled();
   });
 });
+
+describe("session refresh under weak network", () => {
+  it("bounds a hung refresh without resending the business mutation", async () => {
+    vi.useFakeTimers();
+    fetcher.mockResolvedValueOnce(new Response("{}", { status: 401 }));
+    mocks.refresh.mockImplementation(() => new Promise(() => {}));
+    const pending = expect(
+      dataRequest(session, "/v1/me/import-batches", {
+        method: "POST",
+        key: "TEST-key",
+        body: {},
+      }),
+    ).rejects.toMatchObject({ code: "NETWORK_TIMEOUT" });
+    await vi.advanceTimersByTimeAsync(10000);
+    await pending;
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("cancels refresh waiting and ignores a later SDK result after leaving", async () => {
+    const c = new AbortController();
+    let finish!: (value: unknown) => void;
+    fetcher.mockResolvedValueOnce(new Response("{}", { status: 401 }));
+    mocks.refresh.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const pending = expect(
+      dataRequest(session, "/v1/me/import-batches", { signal: c.signal }),
+    ).rejects.toMatchObject({ code: "REQUEST_CANCELLED" });
+    await vi.waitFor(() => expect(mocks.refresh).toHaveBeenCalledTimes(1));
+    c.abort();
+    await pending;
+    finish({
+      data: { session: { ...session, access_token: "TEST-new" } },
+      error: null,
+    });
+    await Promise.resolve();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});

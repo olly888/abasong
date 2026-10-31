@@ -7,6 +7,43 @@ const base =
   (Platform.OS === "android"
     ? "http://10.0.2.2:3001"
     : "http://127.0.0.1:3001");
+async function boundedRefresh<T>(
+  run: () => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (signal?.aborted)
+    throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let cancel = () => {};
+  try {
+    return await Promise.race([
+      Promise.resolve()
+        .then(run)
+        .catch(() => {
+          throw new AccountError(
+            503,
+            "NETWORK_UNAVAILABLE",
+            "暂时无法连接，请重试",
+          );
+        }),
+      new Promise<never>((_resolve, reject) => {
+        cancel = () =>
+          reject(new AccountError(499, "REQUEST_CANCELLED", "操作已取消"));
+        signal?.addEventListener("abort", cancel, { once: true });
+        timer = setTimeout(
+          () =>
+            reject(
+              new AccountError(503, "NETWORK_TIMEOUT", "连接超时，请重试"),
+            ),
+          10000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
+  }
+}
 export async function dataRequest<T>(
   session: Session,
   path: string,
@@ -79,7 +116,10 @@ export async function dataRequest<T>(
       options.signal?.aborted
     )
       throw e;
-    const result = await supabase.auth.refreshSession();
+    const result = await boundedRefresh(
+      () => supabase!.auth.refreshSession(),
+      options.signal,
+    );
     const next = result.data.session;
     if (
       result.error ||

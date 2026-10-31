@@ -47,3 +47,6 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 2026-10-30 screenshot import: Expo58官方兼容安装后固定 expo-image-picker58.0.10、expo-file-system58.0.13；pnpm主锁与审查后的Podfile.lock同步。新增本地Expo模块AbasongOcr0.1.0：iOS Apple Vision系统框架，Android Google Maven随包Latin文本识别com.google.mlkit:text-recognition16.0.1。原图不发往云端OCR，单张串行且限制文件/像素/行数；模型输出仅是待核对文本。Android依赖由Gradle解析，后续升级须复跑双平台原生及识别样本。未选择云端OCR供应商、未增加商业账号或上传真实截图。新增原生模块已触发双平台Debug重编译，详细验收以本批记录为准。
 
 2026-10-30 首页定位修正：未改变外部依赖版本或主锁。Expo58旧Android定位及内置next系统路径在default镜像未获得样本，未保留beta next API。最终新增本地Android专用AbasongLocation0.1.0，通过现有AndroidX/系统LocationManager兼容接口请求GPS单次位置；仅粗略权限时不使用GPS。显式15秒取消、前后台/销毁/Abort清理，无新增系统权限/后台服务/GMS。Android实际重编译安装，合成GPS和用户回位补验通过；iOS仍用expo-location58.0.20，JS相机修正与用户回位补验通过。升级必须复跑提供者、权限、取消、旧位置与设备场景。expo-dev-client58.0.17现有setToolsButtonVisible(false)隐藏开发齿轮，保留开发菜单快捷方式。
+
+
+2026-10-30 D1真实定位/建筑首批：不增加依赖或权限，复用expo-location58与已有Android前台单次定位模块串行刷新；rnmapbox10.3.16现有ShapeSource/FillLayer/LineLayer/SymbolLayer绘制经核对几何。刷新5秒/停留8秒仅开发保护，等待现场参数冻结；不启用beta定位API或后台服务。Mapbox临时样本请求只记录覆盖统计，不存供应商返回坐标/轮廓。0003新增独立建筑映射，截图批次迁移顺延0004。

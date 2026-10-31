@@ -14,6 +14,7 @@ export default function HomeMap({
   location,
   apartments = [],
   selectedId,
+  mapContext,
   onSelect,
   cameraRevision = 0,
   bottomInset = 210,
@@ -64,6 +65,61 @@ export default function HomeMap({
         padding={padding}
         animationDuration={300}
       />
+      {mapContext &&
+      mapContext.apartment_id === selectedId &&
+      mapContext.buildings.length ? (
+        <>
+          <Mapbox.ShapeSource
+            id="selected-building-outline"
+            shape={{
+              type: "FeatureCollection",
+              features: mapContext.buildings.map((b) => ({
+                type: "Feature",
+                id: b.id,
+                geometry: b.geometry as GeoJSON.MultiPolygon,
+                properties: {},
+              })),
+            }}
+          >
+            <Mapbox.FillLayer
+              id="selected-building-fill"
+              style={{ fillColor: "#1467D8", fillOpacity: 0.18 }}
+            />
+            <Mapbox.LineLayer
+              id="selected-building-line"
+              style={{ lineColor: "#1467D8", lineWidth: 2 }}
+            />
+          </Mapbox.ShapeSource>
+          <Mapbox.ShapeSource
+            id="selected-building-numbers"
+            shape={{
+              type: "FeatureCollection",
+              features: mapContext.buildings.map((b) => ({
+                type: "Feature",
+                id: b.id,
+                geometry: {
+                  type: "Point",
+                  coordinates: [b.label_point.lng, b.label_point.lat],
+                },
+                properties: { street_number: b.street_number },
+              })),
+            }}
+          >
+            <Mapbox.SymbolLayer
+              id="selected-building-label"
+              minZoomLevel={16}
+              style={{
+                textField: ["get", "street_number"],
+                textSize: 17,
+                textColor: "#104EAA",
+                textHaloColor: "#FFFFFF",
+                textHaloWidth: 2,
+                textAllowOverlap: false,
+              }}
+            />
+          </Mapbox.ShapeSource>
+        </>
+      ) : null}
       {location ? (
         <Mapbox.PointAnnotation
           id="current-location"

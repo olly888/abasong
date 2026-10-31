@@ -7,7 +7,7 @@ function device(granted = true, canAskAgain = true) {
     enabled: vi.fn(async () => true),
     fix: vi.fn(async () => ({
       coords: { longitude: 0, latitude: 0, accuracy: 10 },
-      timestamp: 1000,
+      timestamp: Date.now(),
     })),
   };
 }
@@ -41,6 +41,18 @@ describe("foreground device acquisition", () => {
       status: "services_off",
     });
     expect(d.fix).not.toHaveBeenCalled();
+  });
+  it("rejects stale and future fixes on every platform", async () => {
+    for (const timestamp of [Date.now() - 60_000, Date.now() + 60_000]) {
+      const d = device();
+      d.fix.mockResolvedValue({
+        coords: { longitude: 0, latitude: 0, accuracy: 10 },
+        timestamp,
+      });
+      await expect(acquireForegroundLocation(d, false)).rejects.toThrow(
+        "location_timeout",
+      );
+    }
   });
   it("bounds a hung OS fix and releases its timer", async () => {
     vi.useFakeTimers();

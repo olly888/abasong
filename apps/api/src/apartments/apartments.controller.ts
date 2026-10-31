@@ -97,6 +97,10 @@ export class ApartmentsController {
   @Get("me/contributions") contributions(@Req() r: ApiRequest) {
     return this.service.contributions(this.actor(r), r.query);
   }
+  @Get("apartments/:apartment_id/map-context")
+  mapContext(@Req() r: ApiRequest, @Param("apartment_id") id: string) {
+    return this.service.mapContext(this.noQuery(r), id);
+  }
   @Post("apartments/resolve")
   @HttpCode(200)
   resolve(@Req() r: ApiRequest, @Body() b: unknown) {

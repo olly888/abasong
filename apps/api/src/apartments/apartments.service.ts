@@ -885,6 +885,39 @@ export class ApartmentsService {
       };
     });
   }
+  async mapContext(
+    a: VerifiedIdentity,
+    rid: string,
+  ): Promise<S["ApartmentMapContext"]> {
+    parse(id, rid);
+    return this.tx(a, async (c) => {
+      const apartment = await c.query(
+        "SELECT id FROM abasong.apartments WHERE id=$1 AND status='active'",
+        [rid],
+      );
+      if (!apartment.rowCount) throw missing();
+      const result = await c.query(
+        `SELECT b.id,b.street_number,b.verified_at,
+        extensions.ST_AsGeoJSON(b.footprint)::json AS geometry,
+        extensions.ST_X(b.label_point) AS lng,extensions.ST_Y(b.label_point) AS lat
+        FROM abasong.apartment_buildings b JOIN abasong.data_sources s ON s.id=b.source_id
+        WHERE b.apartment_id=$1 AND b.verified_at<=now() AND s.persistent_use_approved
+        AND s.verified_at IS NOT NULL AND s.verified_at<=now()
+        AND (s.expires_at IS NULL OR s.expires_at>now()) ORDER BY b.id LIMIT 100`,
+        [rid],
+      );
+      return {
+        apartment_id: rid,
+        buildings: result.rows.map((b) => ({
+          id: b.id,
+          geometry: b.geometry,
+          label_point: { lng: b.lng, lat: b.lat },
+          street_number: b.street_number,
+          verified_at: b.verified_at.toISOString(),
+        })),
+      };
+    });
+  }
   async resolve(
     a: VerifiedIdentity,
     body: unknown,
@@ -913,6 +946,14 @@ export class ApartmentsService {
       ).rows[0];
       const settings = z
         .object({
+          auto_match: z
+            .object({
+              enabled: z.boolean(),
+              evidence_ref: z.string().min(1).max(300),
+              max_accuracy_m: z.number().finite().positive().max(50),
+            })
+            .strict()
+            .optional(),
           radius_m: z.number().finite().positive().max(1000),
           max_age_seconds: z.number().finite().positive().max(300),
           future_tolerance_seconds: z.number().finite().min(0).max(30),
@@ -945,11 +986,18 @@ export class ApartmentsService {
         };
       const result = await c.query(
         `SELECT id,name,address_line1,city,state,postal_code,confidence,
-        extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat
+        extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat,
+        CASE WHEN boundary IS NOT NULL AND extensions.ST_IsValid(boundary) THEN
+          extensions.ST_Covers(boundary, extensions.ST_Buffer(extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))::extensions.geometry)
+          ELSE false END AS inside,
+        EXISTS(SELECT 1 FROM abasong.data_sources s WHERE s.id=apartments.source_id
+          AND s.persistent_use_approved AND s.verified_at IS NOT NULL AND s.verified_at<=now()
+          AND (s.expires_at IS NULL OR s.expires_at>now())) AS source_valid
         FROM abasong.apartments WHERE status='active' AND
-        extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3)
+        (extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3)
+          OR extensions.ST_DWithin(boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3))
         ORDER BY extensions.ST_Distance(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography),id LIMIT 20`,
-        [b.point.lng, b.point.lat, cfg.radius_m],
+        [b.point.lng, b.point.lat, cfg.radius_m, b.accuracy_m],
       );
       const candidates = result.rows.map((r) => ({
         id: r.id,
@@ -961,10 +1009,26 @@ export class ApartmentsService {
         confidence: r.confidence,
         point: { lng: r.lng, lat: r.lat },
       }));
-      // Automatic matching stays off until LA field thresholds are accepted (T23).
+      // Only a versioned, explicitly enabled field-evidence configuration may
+      // promote a unique verified boundary. Every competing containment vetoes it.
+      const contained = result.rows.filter((r) => r.inside);
+      const match =
+        cfg.auto_match?.enabled &&
+        b.accuracy_permission === "precise" &&
+        b.accuracy_m <= cfg.auto_match.max_accuracy_m &&
+        contained.length === 1 &&
+        contained[0].source_valid &&
+        contained[0].confidence !== "unverified" &&
+        result.rows.length < 20
+          ? contained[0].id
+          : null;
       return {
-        status: candidates.length ? "candidates" : "unknown",
-        matched_id: null,
+        status: match
+          ? "matched"
+          : candidates.length
+            ? "candidates"
+            : "unknown",
+        matched_id: match,
         candidates,
         config_version: config.version,
       };

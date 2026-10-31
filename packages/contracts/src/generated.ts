@@ -125,6 +125,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/apartments/{apartment_id}/map-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已核对且有持久使用许可的建筑与门牌号；不含进入资料 */
+        get: operations["getApartmentMapContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/apartments/resolve": {
         parameters: {
             query?: never;
@@ -134,7 +151,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 仅本次位置候选，不留个人轨迹；T23现场阈值验收前不自动认定公寓 */
+        /** 前台位置候选；只有版本化现场证据、可信范围与精度全部满足才自动匹配，不保存轨迹 */
         post: operations["resolveApartment"];
         delete?: never;
         options?: never;
@@ -1520,6 +1537,25 @@ export interface components {
             point: components["schemas"]["Point"];
             /** @enum {string} */
             confidence: "unverified" | "field_verified" | "authorized_source";
+        };
+        BuildingGeometry: {
+            /** @enum {string} */
+            type: "MultiPolygon";
+            coordinates: number[][][][];
+        };
+        ApartmentBuilding: {
+            /** Format: uuid */
+            id: string;
+            geometry: components["schemas"]["BuildingGeometry"];
+            label_point: components["schemas"]["Point"];
+            street_number: string;
+            /** Format: date-time */
+            verified_at: string;
+        };
+        ApartmentMapContext: {
+            /** Format: uuid */
+            apartment_id: string;
+            buildings: components["schemas"]["ApartmentBuilding"][];
         };
         ResolveInput: {
             point: components["schemas"]["Point"];
@@ -3236,6 +3272,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicConfig"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getApartmentMapContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                apartment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApartmentMapContext"];
                 };
             };
             /** @description 输入或跨字段约束错误 */

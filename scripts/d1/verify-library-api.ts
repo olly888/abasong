@@ -97,7 +97,11 @@ async function main() {
     runtime.pathname = `/${name}`;
     db = new Client({ connectionString: admin.href });
     await db.connect();
-    for (const file of ["0001_v12_initial.sql", "0002_personal_apartments.sql"])
+    for (const file of [
+      "0001_v12_initial.sql",
+      "0002_personal_apartments.sql",
+      "0003_apartment_buildings.sql",
+    ])
       await db.query(readFileSync(`database/migrations/${file}`, "utf8"));
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
@@ -268,6 +272,134 @@ async function main() {
       ),
       [aid],
     );
+    // Spatial evidence is synthetic, disposable and never enables persistent D0 auto-match.
+    await db.query(
+      "UPDATE abasong.apartments SET confidence='field_verified', boundary=extensions.ST_Multi(extensions.ST_GeomFromText('POLYGON((-118.251 34.049,-118.249 34.049,-118.249 34.051,-118.251 34.051,-118.251 34.049))',4326)) WHERE id=$1",
+      [aid],
+    );
+    const spatialFix = { ...fix, observed_at: new Date().toISOString() };
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, spatialFix)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.data_sources SET verified_at=now() WHERE id=$1",
+      [source],
+    );
+    await db.query(
+      `UPDATE abasong.config_versions SET config=jsonb_set(config,'{apartment_resolve,auto_match}',$1::jsonb) WHERE version=1`,
+      [
+        JSON.stringify({
+          enabled: true,
+          evidence_ref: "SYNTHETIC-TEST-ONLY",
+          max_accuracy_m: 20,
+        }),
+      ],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, spatialFix)).matched_id,
+      aid,
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...spatialFix,
+          accuracy_permission: "approximate",
+        })
+      ).matched_id,
+      null,
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...spatialFix,
+          accuracy_m: 21,
+        })
+      ).matched_id,
+      null,
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...spatialFix,
+          point: { lng: -118.24901, lat: 34.05 },
+        })
+      ).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.apartments SET status='active',confidence='unverified',boundary=(SELECT boundary FROM abasong.apartments WHERE id=$1) WHERE id=$2",
+      [aid, second],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, spatialFix)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.apartments SET status='pending',boundary=NULL WHERE id=$1",
+      [second],
+    );
+    const mapPath = `/v1/apartments/${aid}/map-context`;
+    await req("GET", mapPath, undefined, 401);
+    await req("GET", mapPath + "?extra=1", a, 400);
+    await req("GET", `/v1/apartments/${randomUUID()}/map-context`, a, 404);
+    assert.deepEqual((await req("GET", mapPath, a, 200)).buildings, []);
+    const building = randomUUID();
+    await db.query(
+      `INSERT INTO abasong.apartment_buildings(id,apartment_id,source_id,footprint,label_point,street_number,verified_at)
+      SELECT $1,id,source_id,boundary,point::extensions.geometry,'TEST',now() FROM abasong.apartments WHERE id=$2`,
+      [building, aid],
+    );
+    const map = await req("GET", mapPath, a, 200);
+    assert.equal(map.buildings[0].street_number, "TEST");
+    assert.deepEqual(Object.keys(map).sort(), ["apartment_id", "buildings"]);
+    assert.deepEqual(Object.keys(map.buildings[0]).sort(), [
+      "geometry",
+      "id",
+      "label_point",
+      "street_number",
+      "verified_at",
+    ]);
+    await db.query(
+      "UPDATE abasong.data_sources SET expires_at=now()-interval '1 minute' WHERE id=$1",
+      [source],
+    );
+    assert.deepEqual((await req("GET", mapPath, a, 200)).buildings, []);
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, spatialFix)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.data_sources SET expires_at=NULL WHERE id=$1",
+      [source],
+    );
+    await db.query(
+      "UPDATE abasong.apartments SET status='pending' WHERE id=$1",
+      [aid],
+    );
+    await req("GET", mapPath, a, 404);
+    await db.query(
+      "UPDATE abasong.apartments SET status='active',boundary=NULL,confidence='unverified' WHERE id=$1",
+      [aid],
+    );
+    // API/service roles can read map metadata, never create their own verified association.
+    const mappingClient = new Client({ connectionString: runtime.href });
+    await mappingClient.connect();
+    try {
+      await assert.rejects(
+        mappingClient.query(
+          "UPDATE abasong.apartment_buildings SET street_number='spoof' WHERE id=$1",
+          [building],
+        ),
+        /permission denied/,
+      );
+      checks++;
+    } finally {
+      await mappingClient.end();
+    }
+    await db.query("DELETE FROM abasong.apartment_buildings WHERE id=$1", [
+      building,
+    ]);
     await db.query("DELETE FROM abasong.apartments WHERE id=$1", [second]);
     await db.query("DELETE FROM abasong.config_versions WHERE version=1");
     await req("GET", root, undefined, 401);

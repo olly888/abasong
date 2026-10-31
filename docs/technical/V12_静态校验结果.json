@@ -4,15 +4,20 @@
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
-    "paths": 82,
-    "operations": 107,
-    "schemas": 123,
+    "paths": 83,
+    "operations": 108,
+    "schemas": 126,
     "spec_validation": "passed"
   },
   "sql": {
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0003": {
+      "top_level_parse": "passed",
+      "statements": 12,
+      "database_execution": "see D1 arrival verification record"
+    },
     "incremental_migration_0002": {
       "top_level_parse": "passed",
       "tables": [
@@ -27,7 +32,7 @@
   },
   "page_spec": {
     "nodes": 40,
-    "state_variants": 259,
+    "state_variants": 262,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

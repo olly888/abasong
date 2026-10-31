@@ -1129,6 +1129,51 @@ async function main() {
       "UPDATE abasong.import_batches SET version=version-1,payload=$2 WHERE id=$1",
       [bid, encrypted],
     );
+    // Removed rows are retained in encrypted owner history but must not
+    // inflate the resume-list count or resurrect after client process loss.
+    const emptyDraft = await req(
+      "POST",
+      path,
+      a,
+      201,
+      { ...createBody, client_batch_id: randomUUID() },
+      randomUUID(),
+    );
+    const emptyPath = path + "/" + emptyDraft.id;
+    const emptySource = await req(
+      "POST",
+      emptyPath + "/sources/local",
+      a,
+      201,
+      {
+        ...srcInput,
+        client_source_id: randomUUID(),
+        expected_batch_version: emptyDraft.version,
+      },
+      randomUUID(),
+    );
+    const emptyRows = await req(
+      "POST",
+      emptyPath + "/sources/" + emptySource.id + "/extractions",
+      a,
+      201,
+      extractBody,
+      randomUUID(),
+    );
+    for (const candidate of emptyRows.items)
+      await req(
+        "PATCH",
+        emptyPath + "/candidates/" + candidate.id,
+        a,
+        200,
+        { expected_revision: candidate.revision, removed: true },
+        randomUUID(),
+      );
+    assert.equal((await req("GET", emptyPath, a, 200)).candidate_count, 0);
+    const emptyMetadata = (await req("GET", path, a, 200)).items.find(
+      (draft: { id: string }) => draft.id === emptyDraft.id,
+    );
+    assert.equal(emptyMetadata.candidate_count, 0);
     await db.query(
       "UPDATE abasong.config_versions SET config=jsonb_set(config,'{import_policy,daily_image_limit}','1') WHERE version=1",
     );

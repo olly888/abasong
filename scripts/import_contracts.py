@@ -19,7 +19,7 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         'origin_apartment_id': uid}, ['client_batch_id', 'policy_version', 'mode', 'origin'])
     out('ImportBatch', {'id': uid, 'state': states, 'version': integer(1),
         'generation': integer(1), 'mode': mode, 'mode_locked': boolean, 'policy_version': integer(1),
-        'expires_at': dt, 'sources_count': integer(), 'candidate_count': integer(),
+        'expires_at': dt, 'sources_count': integer(), 'candidate_count': {**integer(), 'description':'Number of non-removed candidates; removed rows remain only in owner draft history until expiry.'},
         'private_saved_count': integer(), 'shared_count': integer(), 'pending_count': integer(),
         'failed_count': integer(), 'updated_at': dt})
     page('ImportBatchPage', 'ImportBatch')

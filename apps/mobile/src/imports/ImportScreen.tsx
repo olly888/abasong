@@ -591,8 +591,10 @@ function Session() {
         else if (editing) {
           setEditing(null);
           setMatches([]);
-        } else if (stage === "review" && !locked) setStage("select");
-        else leave();
+        } else if (stage === "review" && !locked) {
+          setStage("select");
+          void loadDrafts();
+        } else leave();
       }}
       footer={
         <View style={{ gap: 12 }}>

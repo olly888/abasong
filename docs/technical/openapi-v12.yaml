@@ -11218,6 +11218,8 @@ components:
         candidate_count:
           type: integer
           minimum: 0
+          description: Number of non-removed candidates; removed rows remain only
+            in owner draft history until expiry.
         private_saved_count:
           type: integer
           minimum: 0

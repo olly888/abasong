@@ -265,7 +265,9 @@ export class ImportsService {
       expires_at: r.expires_at.toISOString(),
       updated_at: r.updated_at.toISOString(),
       sources_count: b.sources.length,
-      candidate_count: b.candidates.length,
+      candidate_count: b.candidates.filter(
+        (candidate) => candidate.state !== "removed",
+      ).length,
       private_saved_count: plans.filter(
         (p) => p.result.private_status === "saved",
       ).length,

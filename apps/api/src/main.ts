@@ -70,7 +70,16 @@ async function main() {
     if (req.path.startsWith("/v1/")) res.setHeader("Cache-Control", "no-store");
     next();
   });
-  app.useBodyParser("json", { limit: "128kb" });
+  // Only batch candidate JSON needs the larger budget; retain the existing
+  // 16 KiB protection for authentication and every other business route.
+  app.useBodyParser("json", {
+    limit: "128kb",
+    type: (req) =>
+      /^\/v1\/me\/import-batches(?:\/|$)/.test(
+        (req.url ?? "").split("?")[0] ?? "",
+      ) && /^application\/json(?:;|$)/i.test(req.headers["content-type"] ?? ""),
+  });
+  app.useBodyParser("json", { limit: "16kb" });
   app.useGlobalFilters(new ApiExceptionFilter());
   app.enableShutdownHooks();
   await app.listen(

@@ -210,6 +210,24 @@ async function main() {
       (await req("GET", "/v1/me/import-policy", a, 200)).recognition_mode,
       "on_device",
     );
+    // Batch JSON accepts >16 KiB for many candidates, but remains bounded;
+    // unknown fields still fail DTO validation rather than being accepted.
+    await req(
+      "POST",
+      path,
+      a,
+      400,
+      { unexpected: "x".repeat(20000) },
+      randomUUID(),
+    );
+    await req(
+      "POST",
+      path,
+      a,
+      413,
+      { unexpected: "x".repeat(140000) },
+      randomUUID(),
+    );
     await ingestPublicApartment(db);
     // Public geometry/address, simulated observation, isolated qualification and TEST code only.
     const point = (

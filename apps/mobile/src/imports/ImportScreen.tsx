@@ -34,6 +34,7 @@ import { restoreDraftView } from "./restore-draft";
 import { ServerDraft } from "./server-draft";
 import { exitImport } from "./navigation";
 import { createImageCache } from "./storage";
+import { keepImportSession } from "./session-gate";
 type S = components["schemas"];
 const issueLabels: Record<string, string> = {
   missing_address: "缺少地址",
@@ -97,15 +98,26 @@ export default function ImportScreen() {
     );
     return () => sub.remove();
   }, []);
-  if (!auth.session || !["ready", "loading-account"].includes(auth.phase))
-    return <AuthResolution />;
+  if (!keepImportSession(auth)) return <AuthResolution />;
+  const covered = !active || !focused || auth.phase !== "ready";
   // System picker causes inactive state: cover, rather than unmounting its pending promise.
   return (
     <View style={{ flex: 1 }}>
-      <Session key={auth.session.user.id} />
-      {(!active || !focused || auth.phase !== "ready") && (
+      <View
+        style={{ flex: 1 }}
+        pointerEvents={covered ? "none" : "auto"}
+        accessibilityElementsHidden={covered}
+        importantForAccessibility={covered ? "no-hide-descendants" : "auto"}
+      >
+        <Session key={auth.session!.user.id} />
+      </View>
+      {covered && (
         <View style={StyleSheet.absoluteFill} pointerEvents="auto">
-          <View style={{ flex: 1, backgroundColor: tokens.color.surface }} />
+          {auth.phase === "error" ? (
+            <AuthResolution />
+          ) : (
+            <View style={{ flex: 1, backgroundColor: tokens.color.surface }} />
+          )}
         </View>
       )}
     </View>
@@ -442,7 +454,11 @@ function Session() {
         : "未保存的修改将清除，已保存进度会保留。",
       [
         { text: "继续核对", style: "cancel" },
-        { text: "离开", style: "destructive", onPress: () => exitImport(router) },
+        {
+          text: "离开",
+          style: "destructive",
+          onPress: () => exitImport(router),
+        },
       ],
     );
   }
@@ -991,38 +1007,40 @@ function Session() {
                     .join(" · ")}
                 </Text>
               ) : null}
-              <View style={styles.modeRow}>
-                <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityLabel={`选择第 ${index + 1} 条`}
-                  accessibilityState={{
-                    checked: r.selected,
-                    disabled: busy || !complete(r) || !!r.privateId,
-                  }}
-                  disabled={busy || !complete(r) || !!r.privateId}
-                  style={styles.check}
-                  onPress={() => {
-                    update(r.id, { selected: !r.selected });
-                    setAttested(false);
-                  }}
-                >
-                  <Text>{r.selected ? "☑" : "□"} 选择</Text>
-                </Pressable>
-                {!r.privateId ? (
+              {stage === "review" ? (
+                <View style={styles.modeRow}>
                   <Pressable
-                    accessibilityRole="button"
-                    disabled={busy}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={`选择第 ${index + 1} 条`}
+                    accessibilityState={{
+                      checked: r.selected,
+                      disabled: busy || !complete(r) || !!r.privateId,
+                    }}
+                    disabled={busy || !complete(r) || !!r.privateId}
                     style={styles.check}
                     onPress={() => {
-                      setEditing(r.id);
-                      setQuery(r.address.split(",")[0]);
-                      setMatches([]);
+                      update(r.id, { selected: !r.selected });
+                      setAttested(false);
                     }}
                   >
-                    <Text style={styles.link}>编辑</Text>
+                    <Text>{r.selected ? "☑" : "□"} 选择</Text>
                   </Pressable>
-                ) : null}
-              </View>
+                  {!r.privateId ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={busy}
+                      style={styles.check}
+                      onPress={() => {
+                        setEditing(r.id);
+                        setQuery(r.address.split(",")[0]);
+                        setMatches([]);
+                      }}
+                    >
+                      <Text style={styles.link}>编辑</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
           ))}
           {!rows.length ? (

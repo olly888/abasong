@@ -35,7 +35,7 @@ G01,更多/举报/屏蔽,公共操作面板,01-公寓闭环,5,"submitReport,bloc
 G02,分享需求,公共分享面板，仅发布者,02-找人找活,6,"createRequestShare,revokeRequestShare",原型已认可·作为开发基线（状态部分覆盖）
 X01,外部公开需求摘要,H5公开页，App深链/登录桥接,02-找人找活,5,getPublicRequestShare,原型已认可·作为开发基线（状态部分覆盖）
 G03,确认/错误/恢复,全局组件状态，不是独立路由,01-公寓闭环,6,,原型已认可·作为开发基线（状态部分覆盖）
-B04,截图导入,全屏二级页；三导航外,01-公寓闭环,10,"getImportPolicy,listImportBatches,createImportBatch,getImportBatch,registerImportLocalSource,submitImportDeviceExtraction",已制作本地合成交互·待用户评审；非真实OCR
-B05,识别结果确认,二级页；行内编辑和候选面板复用,01-公寓闭环,19,"listImportCandidates,editImportCandidate,confirmImportCandidate,confirmImportSelection,editImportBatchMode,deleteImportDraft",已制作本地合成交互·待用户评审；非真实OCR
-B06,导入进度与结果,二级页；同批次状态与结果,01-公寓闭环,11,"getImportBatch,listImportSources,commitImportCandidates,cancelImportBatch",已制作本地合成交互·待用户评审；非真实OCR
+B04,截图导入,全屏二级页；三导航外,01-公寓闭环,13,"getImportPolicy,listImportBatches,createImportBatch,getImportBatch,registerImportLocalSource,submitImportDeviceExtraction",已制作本地合成交互·待用户评审；非真实OCR
+B05,识别结果确认,二级页；行内编辑和候选面板复用,01-公寓闭环,20,"listImportCandidates,editImportCandidate,confirmImportCandidate,confirmImportSelection,editImportBatchMode,deleteImportDraft",已制作本地合成交互·待用户评审；非真实OCR
+B06,导入进度与结果,二级页；同批次状态与结果,01-公寓闭环,12,"getImportBatch,listImportSources,commitImportCandidates,cancelImportBatch",已制作本地合成交互·待用户评审；非真实OCR
 U09,公寓详情与我的记录,二级页；私存与共享两个分区,01-公寓闭环,8,"getMyApartmentEntry,patchMyApartmentEntry,deleteMyApartmentEntry,createMyPrivateRecord,patchMyPrivateRecord,deleteMyPrivateRecord,shareMyPrivateRecord,readAccessRecords",已制作本地合成交互·待用户评审；非真实OCR

@@ -2328,6 +2328,7 @@ export interface components {
             /** Format: date-time */
             expires_at: string;
             sources_count: number;
+            /** @description Number of non-removed candidates; removed rows remain only in owner draft history until expiry. */
             candidate_count: number;
             private_saved_count: number;
             shared_count: number;

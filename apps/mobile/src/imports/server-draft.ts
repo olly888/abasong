@@ -90,14 +90,17 @@ export class ServerDraft {
       throw e;
     }
   }
-  private async all() {
+  private async all(batchId?: string) {
+    const path = batchId
+      ? "/v1/me/import-batches/" + encodeURIComponent(batchId)
+      : this.path();
     let cursor: string | null = null;
     const rows: S["ImportCandidate"][] = [];
     do {
       const p: S["ImportCandidatePage"] = await this.request<
         S["ImportCandidatePage"]
       >(
-        this.path() +
+        path +
           "/candidates?limit=50" +
           (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
       );
@@ -110,11 +113,18 @@ export class ServerDraft {
     this.batch = await this.request<S["ImportBatch"]>(this.path());
     return this.batch;
   }
-  async restore(id: string) {
-    this.batch = await this.request<S["ImportBatch"]>(
+  async restore(
+    id: string,
+    validateView?: (rows: S["ImportCandidate"][]) => Promise<void>,
+  ) {
+    const batch = await this.request<S["ImportBatch"]>(
       "/v1/me/import-batches/" + encodeURIComponent(id),
     );
-    const rows = await this.all();
+    const rows = await this.all(batch.id);
+    // Apartment reads may also fail after candidate pagination. Adopt the
+    // target only once its full view is ready, preserving old replay state.
+    await validateView?.(rows);
+    this.batch = batch;
     this.rows.clear();
     this.pendingGroups.clear();
     this.pendingWrite = null;

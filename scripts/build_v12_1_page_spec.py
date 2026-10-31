@@ -193,6 +193,17 @@ for p in pages:
  if p['id']=='B06':
   p['states']+=['恢复分页失败保留当前批次']
   p['acceptance']+=' 新批次元数据与全部候选读取完成前，不替换当前草稿和重试状态。'
+# Driver-first screenshot UI: secondary controls are progressively disclosed.
+for p in pages:
+ if p['id']=='B04':
+  p['information']=['标题与返回','已保存且非空的上次进度（仅空选择时）','所选图片和数量、继续添加/移除','底部唯一主动作：未选图选择截图，选图后识别N张截图','识别中仅处理进度与停止识别']
+  p['acceptance']+=' 不让0条空进度占用入口；识别中不重复显示不可操作的主按钮；不改变空草稿有限留存。'
+ if p['id']=='B05':
+  p['information']=['顶部返回与更多','资料数量/已选数量','卡片直接显示地址和密码；必要问题突出，未知门别不作常驻占位','每条可选择与编辑；移除和原图在编辑层','底部清晰显示保存方式及更改入口、一次核对声明和唯一确认N条按钮']
+  p['actions']=[a for a in p['actions'] if a['label']!='稍后继续']
+  p['actions'] += [dict(label='更多：保存进度',target='B05',result='本人受保护草稿，仍需主动保存；首次空内容不创建批次'),dict(label='更多：继续添加截图',target='B04',result='保留当前已识别内容，不重复处理已完成图片'),dict(label='更改保存方式',target='B05',result='显式选择共享并保存或仅自己保存；原有清确认/范围锁保持')]
+  p['states']+=['更多辅助操作菜单','保存方式选择菜单']
+  p['acceptance']+=' 正常页没有常驻保存草稿/继续选图大按钮；不展示批次ID、版本或技术备注；完整且无异常记录可批量选中，异常不擅自发布。'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-31','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

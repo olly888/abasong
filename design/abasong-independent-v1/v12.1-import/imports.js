@@ -9,7 +9,7 @@
     { id:'s5', title:'两处公寓资料', lines:['1200 W Pine Ave, Los Angeles, CA','Pedestrian gate: 0146#','1228 W Pine Ave, Los Angeles, CA','Side gate: *1020'], rows:[{apt:'a1',code:'0146#',scope:'行人门',status:'ready'},{apt:'a2',code:'*1020',scope:'侧门',status:'ready'}] },
     { id:'s6', title:'新公寓 · 尚未收录', lines:['Cedar Flats','1610 W Cedar Ave, Los Angeles, CA','Main gate: 0073*'], rows:[{apt:null,address:'1610 W Cedar Ave, Los Angeles, CA',name:'Cedar Flats',code:'0073*',scope:'大门',status:'needs_review',reason:'尚未匹配到公寓'}] },
   ];
-  let jobs=[], selected=new Set(), gallery=false, current=null, serial=0, editing=null, editDraft=null, entryIntent='share';
+  let jobs=[], selected=new Set(), gallery=false, current=null, serial=0, editing=null, editDraft=null, entryIntent='share', adding=false;
   const finished=new Set(['submitted','duplicate','pending','saved_private']);
   const statusText={ready:'已匹配',needs_review:'待处理',submitted:'已贡献',duplicate:'已有相同记录',pending:'待审核',failed:'保存失败',saved_private:'仅自己保存',removed:'已移除'};
   const source=id=>fixtures.find(f=>f.id===id);
@@ -20,39 +20,41 @@
   const secondary=(action,label,extra='')=>btn('import-'+action,label,'button secondary',extra);
   const attr=id=>`data-id="${esc(id)}"`;
   const getRow=id=>batch()?.rows.find(r=>r.id===id);
-  function frame(title,body,footer='') {
-    return `<div class="root-content import-page"><div class="page-scroll">${header(title)}${body}</div>${footer?`<div class="import-actions">${footer}</div>`:''}</div>`;
+  function frame(title,body,footer='',extra='') {
+    return `<div class="root-content import-page"><div class="page-scroll">${header(title,extra)}${body}</div>${footer?`<div class="import-actions">${footer}</div>`:''}</div>`;
   }
   function gate() {
     return frame('贡献公寓资料',empty(state.logged?'贡献资格待核验':'请先登录',''),control(state.logged?'home':'login',state.logged?'返回首页':'登录'));
   }
   function open(intent='share') {
     if(!state.logged){beginAuth(()=>open(intent));return;}
-    entryIntent=intent==='private'?'private':'share';selected=new Set();gallery=false;editing=null;nav('importUpload');
+    adding=false;entryIntent=intent==='private'?'private':'share';selected=new Set();gallery=false;editing=null;nav('importUpload');
   }
   function uploadPage() {
     if(blocked())return gate();
     if(gallery)return frame('选择截图',`<div class="import-grid">${fixtures.map(f=>`<button class="import-photo ${selected.has(f.id)?'selected':''}" data-action="import-select" ${attr(f.id)} aria-label="选择${esc(f.title)}" aria-pressed="${selected.has(f.id)}"><img src="samples/${f.id}.svg" alt="${esc(f.title)}"><span class="photo-check">${selected.has(f.id)?I('check'):''}</span><span class="photo-title">${esc(f.title)}</span></button>`).join('')}</div>`,control('chosen',`添加 ${selected.size} 张`,selected.size?'':'disabled'));
-    return frame(entryIntent==='share'?'截图贡献':'导入私存',`<div class="import-intro"><span class="import-emblem">${I('copy')}</span><h2>把已有的公寓资料<br>一次整理好</h2></div>${selected.size?`<div class="import-count"><b>已选 ${selected.size} 张</b>${btn('import-gallery','继续添加','text-btn')}</div><div class="import-grid">${[...selected].map(id=>`<article class="import-photo"><img src="samples/${id}.svg" alt="${esc(source(id).title)}">${ib('import-remove-source','close','移除'+source(id).title,attr(id))}<span class="photo-title">${esc(source(id).title)}</span></article>`).join('')}</div>`:`<button class="import-picker" data-action="import-gallery">${I('plus')}<b>选择截图</b><span>支持一次选择多张</span></button>`}`,control('recognize','识别截图',selected.size?'':'disabled'));
+    return frame('从截图添加',`${selected.size?`<div class="import-count"><b>已选 ${selected.size} 张</b>${btn('import-gallery','继续添加','text-btn')}</div><div class="import-grid">${[...selected].map(id=>`<article class="import-photo"><img src="samples/${id}.svg" alt="${esc(source(id).title)}">${ib('import-remove-source','close','移除'+source(id).title,attr(id))}</article>`).join('')}</div>`:'<p class="import-empty">添加公寓地址和密码截图</p>'}`,control(selected.size?'recognize':'gallery',selected.size?`识别 ${selected.size} 张截图`:'选择截图'));
+
   }
   function address(r){return apartment(r.apt)?.address||r.address||'尚未确认地址';}
   function item(r) {
     const editable=!finished.has(r.status)&&r.status!=='removed';
-    return `<article class="import-row ${r.status==='needs_review'?'attention':''}" data-import-row="${r.id}"><div class="import-row-head">${r.status==='ready'?`<input type="checkbox" data-import-check="${r.id}" aria-label="提交${esc(address(r))} ${esc(r.scope)} ${esc(r.code)}" ${r.selected?'checked':''}>`:I(r.status==='needs_review'?'warning':'check')}<div class="import-row-main"><b>${esc(apartment(r.apt)?.name||r.name||'公寓待确认')}</b><div class="address">${esc(address(r))}</div></div><span class="import-badge ${r.status==='needs_review'||r.status==='failed'?'warning':''}">${r.propose&&r.status==='ready'?'公寓提议':statusText[r.status]}</span></div><div class="import-code">${esc(r.code)}</div><div class="caption">${esc(r.scope||'大门')} · 资料日期未知</div>${r.reason&&!finished.has(r.status)?`<p class="import-issue">${esc(r.reason)}</p>`:''}<div class="import-row-actions">${btn('import-preview','查看截图','text-btn',attr(r.source))}${editable?btn('import-edit','修改','text-btn',attr(r.id))+btn('import-remove-row','移除','text-btn',attr(r.id)):''}</div></article>`;
+    return `<article class="import-row ${r.status==='needs_review'?'attention':''}" data-import-row="${r.id}"><div class="import-row-head">${r.status==='ready'?`<input type="checkbox" data-import-check="${r.id}" aria-label="提交${esc(address(r))} ${esc(r.scope)} ${esc(r.code)}" ${r.selected?'checked':''}>`:I(r.status==='needs_review'?'warning':'check')}<div class="import-row-main"><b>${esc(apartment(r.apt)?.name||r.name||'公寓待确认')}</b><div class="address">${esc(address(r))}</div></div><span class="import-badge ${r.status==='needs_review'||r.status==='failed'?'warning':''}">${r.propose&&r.status==='ready'?'公寓提议':statusText[r.status]}</span></div><div class="import-code">${esc(r.code)}</div><div class="caption">${esc(r.scope||'大门')}</div>${r.reason&&!finished.has(r.status)?`<p class="import-issue">${esc(r.reason)}</p>`:''}<div class="import-row-actions">${editable?btn('import-edit','编辑','text-btn',attr(r.id)):''}</div></article>`;
   }
   function editor(original) {
     const r=editDraft||original;
-    return `<form class="import-editor" data-submit="import-edit"><h2>核对这一条</h2><label class="field"><span class="field-label">所属公寓</span><select name="apt"><option value="">选择公寓</option>${model.apartments.map(a=>`<option value="${a.id}" ${r.apt===a.id?'selected':''}>${esc(a.name)} · ${esc(a.address)}</option>`).join('')}<option value="new" ${r.propose?'selected':''}>提交尚未收录的公寓</option></select></label><label class="field"><span class="field-label">未收录公寓的英文地址</span><input name="address" value="${esc(r.address||'')}" maxlength="300" placeholder="选择已有公寓时无需填写"></label><label class="field"><span class="field-label">密码</span><input name="code" value="${esc(r.code)}" maxlength="32" autocomplete="off" spellcheck="false"></label><label class="field"><span class="field-label">适用门别</span><input name="scope" value="${esc(r.scope)}" maxlength="100"></label>${state.errors.import?`<p class="error" role="alert">${esc(state.errors.import)}</p>`:''}<div class="import-editor-actions"><button class="button" type="submit">确认修改</button>${secondary('cancel-edit','取消修改')}</div></form>`;
+    return `<form class="import-editor" data-submit="import-edit">${btn('import-preview','查看截图','text-btn',attr(r.source))}<label class="field"><span class="field-label">所属公寓</span><select name="apt"><option value="">选择公寓</option>${model.apartments.map(a=>`<option value="${a.id}" ${r.apt===a.id?'selected':''}>${esc(a.name)} · ${esc(a.address)}</option>`).join('')}<option value="new" ${r.propose?'selected':''}>提交尚未收录的公寓</option></select></label><label class="field"><span class="field-label">未收录公寓的英文地址</span><input name="address" value="${esc(r.address||'')}" maxlength="300" placeholder="选择已有公寓时无需填写"></label><label class="field"><span class="field-label">密码</span><input name="code" value="${esc(r.code)}" maxlength="32" autocomplete="off" spellcheck="false"></label><label class="field"><span class="field-label">适用门别</span><input name="scope" value="${esc(r.scope)}" maxlength="100"></label>${state.errors.import?`<p class="error" role="alert">${esc(state.errors.import)}</p>`:''}<div class="import-editor-actions"><button class="button" type="submit">确认修改</button>${secondary('cancel-edit','取消修改')}${btn('import-remove-row','移除这条资料','text-btn danger',attr(r.id))}</div></form>`;
   }
   function reviewPage() {
     if(blocked())return gate();const j=batch();if(!j)return frame('识别结果',empty('暂无待确认资料',''),secondary('open','选择截图'));
+    if(editing&&getRow(editing))return frame('编辑资料',editor(getRow(editing)));
     const ready=j.rows.filter(r=>r.status==='ready'), pending=j.rows.filter(r=>r.status==='needs_review'||r.status==='failed');
     const n=ready.filter(r=>r.selected).length;
-    return frame('确认公寓资料',`<div class="import-summary"><b>${ready.length}</b> 条可提交 <span>· ${pending.length} 条待处理</span></div>${editing&&getRow(editing)?editor(getRow(editing)):''}${ready.length?`<h2 class="import-section">可提交 ${ready.length}</h2>${ready.map(item).join('')}`:''}${pending.length?`<h2 class="import-section">待处理 ${pending.length}</h2>${pending.map(item).join('')}`:''}${!ready.length&&!pending.length?empty('本批资料已处理','可以返回查看导入结果。'):''}${j.failedSources.length?`<div class="flat-card"><b>${j.failedSources.length} 张截图识别失败</b>${secondary('retry-ocr','重试失败截图')}</div>`:''}<button class="text-btn" data-action="import-later">稍后继续</button>`,`<fieldset class="import-scope" ${j.modeLocked?'disabled':''}><legend>提交范围</legend><label><input type="radio" name="import-scope" data-import-mode value="share" ${j.share?'checked':''}>共享贡献</label><label><input type="radio" name="import-scope" data-import-mode value="private" ${!j.share?'checked':''}>仅自己保存</label></fieldset>${j.share?'<p class="caption">共享给有资格的司机，同时保存到我的公寓。</p>':''}${j.share&&!state.qualified?'<p class="error">共享资格待核验；可选择仅自己保存。</p>':''}${n?`<label class="check-row import-consent"><input type="checkbox" data-import-consent ${j.confirmed?'checked':''}><span>${j.share?'我已核对所选资料，并有权共享':'我已核对所选公寓与密码'}</span></label>`:''}${control('submit',`${j.share?'确认共享':'仅自己保存'} ${n} 条`,n&&j.confirmed&&!editing&&(!j.share||state.qualified)?'':'disabled')}`);
+    return frame('确认识别结果',`${j.paused?secondary('resume-recognize','继续识别剩余截图'):''}<div class="import-summary">${ready.length+pending.length} 条资料 · 已选 ${n} 条</div>${ready.map(item).join('')}${pending.length?`<h2 class="import-section">需要补充 ${pending.length}</h2>${pending.map(item).join('')}`:''}${!ready.length&&!pending.length?empty('没有待确认资料',''):''}${j.failedSources.length?`<div class="flat-card"><b>${j.failedSources.length} 张未识别成功</b>${secondary('retry-ocr','重试这些截图')}</div>`:''}`,`<button class="import-scope-summary" data-action="import-scope-menu" ${j.modeLocked?'disabled':''}><span>保存方式</span><b>${j.share?'共享并保存':'仅自己保存'}</b>${j.modeLocked?'':'<em>更改</em>'}</button>${j.share&&!state.qualified?'<p class="error">共享资格待核验</p>':''}${n?`<label class="check-row import-consent"><input type="checkbox" data-import-consent ${j.confirmed?'checked':''}><span>我已核对，并有权${j.share?'共享':'保存'}所选资料</span></label>`:''}${control('submit',`${j.share?'确认共享':'确认保存'} ${n} 条`,n&&j.confirmed&&(!j.share||state.qualified)?'':'disabled')}`,j.modeLocked?'':ib('import-more','more','更多操作'));
   }
   function resultPage() {
     if(blocked())return gate();const j=batch();if(!j)return frame('导入记录',empty('还没有导入记录',''),control('open','选择截图'));
-    if(j.status==='processing'||j.status==='submitting')return frame(j.status==='processing'?'正在整理截图':'正在提交',`<div class="import-working"><span class="import-spinner"></span><h2>${j.status==='processing'?'正在匹配公寓':'保存已确认的资料'}</h2><p>${j.sources.length} 张截图</p></div>`,secondary('later','稍后查看')+btn('import-cancel','取消未完成任务','text-btn danger'));
+    if(j.status==='processing'||j.status==='submitting')return frame(j.status==='processing'?'正在整理截图':'正在提交',`<div class="import-working"><span class="import-spinner"></span><h2>${j.status==='processing'?'正在匹配公寓':'保存已确认的资料'}</h2><p>${j.sources.length} 张截图</p></div>`,j.status==='processing'?secondary('pause','停止识别'):'');
     if(j.status==='cancelled')return frame('导入已取消',empty('未提交的资料已清除','已贡献记录不受影响。'),control('open','重新选择截图'));
     const count=s=>j.rows.filter(r=>r.status===s).length;
     const needs=j.rows.filter(r=>['needs_review','ready','failed'].includes(r.status)).length;
@@ -61,6 +63,7 @@
   }
   function createBatch() {
     if(blocked()||!selected.size)return;
+    const previous=batch();if(adding&&previous&&!previous.modeLocked){previous.sources.push(...[...selected].filter(id=>!previous.sources.includes(id)));adding=false;editing=null;nav('importResult');process(previous,false);return;}
     const j={id:'import-'+(++serial),sources:[...selected],rows:[],failedSources:[],confirmed:false,share:entryIntent==='share',modeLocked:false,status:'processing',generation:0,created:new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})};jobs.unshift(j);current=j.id;editing=null;nav('importResult');process(j,false);
   }
   function process(j,retry) {
@@ -107,14 +110,21 @@
     const j=batch();
     switch(a){
       case'gallery':gallery=true;render();break;
+      case'more':modal('menu',{title:'更多',items:[{action:'import-save-progress',label:'保存进度'},{action:'import-add-more',label:'继续添加截图'}]});break;
+      case'save-progress':closeModal();toast('本页进度已保留');break;
+      case'add-more':closeModal();adding=true;selected=new Set();gallery=true;nav('importUpload');break;
+      case'scope-menu':if(!j.modeLocked)modal('menu',{title:'保存方式',items:[{action:'import-scope-share',label:'共享并保存'},{action:'import-scope-private',label:'仅自己保存'}]});break;
+      case'scope-share':case'scope-private':if(!j.modeLocked){j.share=a==='scope-share';j.confirmed=false;closeModal();render();}break;
       case'select':selected.has(id)?selected.delete(id):selected.add(id);render();break;
       case'chosen':gallery=false;render();break;
       case'remove-source':selected.delete(id);render();break;
       case'recognize':createBatch();break;
+      case'pause':j.generation++;j.paused=true;j.status='needs_review';nav('importReview');break;
+      case'resume-recognize':j.paused=false;nav('importResult');process(j,false);break;
       case'review':openReview();break;
       case'edit':editing=id;editDraft={...getRow(id)};state.errors.import=null;if(state.route.view!=='importReview')nav('importReview');else render();$('.import-editor input[name="code"]')?.focus();break;
       case'cancel-edit':editing=null;editDraft=null;state.errors.import=null;render();break;
-      case'remove-row':{const r=getRow(id);if(r&&!finished.has(r.status)){r.status='removed';r.selected=false;j.confirmed=false;render();}break;}
+      case'remove-row':{const r=getRow(id);if(r&&!finished.has(r.status)){r.status='removed';r.selected=false;j.confirmed=false;editing=null;editDraft=null;render();}break;}
       case'preview':modal('import-preview',{id});break;
       case'submit':publish(j);break;
       case'retry-submit':publish(j,true);break;

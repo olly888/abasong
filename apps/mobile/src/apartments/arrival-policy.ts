@@ -45,7 +45,36 @@ export function assessArrival(
       };
   return {
     state,
-    apartment: same && observedAt - state.since >= 8000 ? matches[0] : null,
+    apartment: same && observedAt - state.since >= 8000 ? matches[0]! : null,
+  };
+}
+
+// An existing automatic card is valid only while the current observation still
+// supports that apartment under the same policy. A new candidate keeps its own
+// dwell timer when the previous card is cleared.
+export function assessHomeArrival(
+  previous: ArrivalState,
+  selectedId: string | undefined,
+  result: S["ResolveResult"],
+  observedAt: number,
+  now: number,
+  manualLocked: boolean,
+) {
+  const decision = assessArrival(
+    previous,
+    result,
+    observedAt,
+    now,
+    manualLocked,
+  );
+  return {
+    ...decision,
+    clearAutomaticCard:
+      !manualLocked &&
+      !!selectedId &&
+      (!decision.state ||
+        decision.state.id !== selectedId ||
+        previous?.configVersion !== decision.state.configVersion),
   };
 }
 

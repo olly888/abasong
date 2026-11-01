@@ -9,6 +9,7 @@ import { setTimeout as pause } from "node:timers/promises";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
 import { Client, escapeLiteral } from "pg";
 import { localTarget } from "../d0/database-target";
+import { verifyPublicArrival } from "./verify-public-arrival";
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     admin = localTarget(env.DATABASE_ADMIN_URL),
@@ -1139,6 +1140,7 @@ async function main() {
       [other],
     );
     await req("GET", directPath, b, 403);
+    await verifyPublicArrival(db, req, a, b);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

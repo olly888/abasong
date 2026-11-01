@@ -1,6 +1,10 @@
 # Abasong development status
 
-Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-contribution-entry`.
+Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-exit-arrival-verification`.
+
+## Latest execution — return/exit and automatic-card retry (2026-10-31)
+
+[Acceptance record](docs/technical/D1_返回退出与自动查码续验.md). User confirmed iOS native side-swipe prompts and cancel retains 1 TEST image; Android system BACK/cancel observed. Both simulators force-terminated with 1 unsubmitted TEST image and reopened a fresh empty import, no cross-session resume. Fixed automatic-card read retry incorrectly locking manual selection; invalid/stale/untrusted/policy-changed matches clear the automatic card, while switching apartments retains the new dwell timer. Both native TEST scenes observed auto arrival→read failure→retry code→departure clears card/highlight. check107, libraryHTTP159 (27 new requests using six public LA fixtures in a disposable local database) and dual JS exports PASS. No new native compilation, dependency/schema/cloud/grant/deploy. Normal auto-match still disabled; physical/field, stationary real-GPS timing, in-flight-submit termination, Android predictive gesture and remaining resource/accessibility checks are open. TEST injection stopped; current branch is local, previous PR/CI does not cover this batch.
 
 ## Latest steering — unified contribution / single session (2026-10-31)
 

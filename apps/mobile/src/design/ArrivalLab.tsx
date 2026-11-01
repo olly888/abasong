@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppState, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -26,11 +26,13 @@ const scenes = [
   "多候选",
   "无候选",
   "读取失败",
+  "重试恢复",
   "查询失败",
   "无资格",
 ] as const;
 type Scene = (typeof scenes)[number];
 function adapter(scene: Scene) {
+  let reads = 0;
   return {
     canRead: scene !== "无资格",
     read: async (
@@ -106,7 +108,9 @@ function adapter(scene: Scene) {
           ],
         };
       if (path.endsWith("/access-records")) {
-        if (scene === "读取失败") throw new Error("资料暂时无法加载");
+        reads++;
+        if (scene === "读取失败" || (scene === "重试恢复" && reads === 1))
+          throw new Error("资料暂时无法加载");
         return {
           items:
             scene === "无密码" || scene === "无资格"
@@ -156,6 +160,7 @@ export default function ArrivalLab() {
   const [scene, setScene] = useState<Scene>(
     scenes.includes(params.scene as Scene) ? (params.scene as Scene) : "有密码",
   );
+  const sceneAdapter = useMemo(() => adapter(scene), [scene]);
   if (auth.phase !== "ready" || !auth.session) return <AuthResolution />;
   if (!focused || !active)
     return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
@@ -183,7 +188,7 @@ export default function ArrivalLab() {
       <HomeApartmentContent
         key={scene}
         testData={{
-          ...adapter(scene),
+          ...sceneAdapter,
           onObservation: () => setObservations((n) => n + 1),
         }}
         toolbar={<HomeChrome mode="公寓" onMode={() => {}} />}

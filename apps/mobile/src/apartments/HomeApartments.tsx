@@ -26,7 +26,7 @@ import { watchDevicePosition } from "./location-stream";
 import type { ForegroundFix } from "./foreground-location";
 import { serialLatest } from "./serial-latest";
 import { HomeArrivalPanel } from "./HomeArrivalPanel";
-import { assessArrival, type ArrivalState } from "./arrival-policy";
+import { assessHomeArrival, type ArrivalState } from "./arrival-policy";
 import { MapTools } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
 import { ApartmentSheet } from "./ApartmentSheet";
@@ -212,16 +212,16 @@ export function HomeApartmentContent({
           ? "nearby"
           : "empty",
     );
-    const decision = assessArrival(
+    const decision = assessHomeArrival(
       arrival.current,
+      selectionRef.current?.id,
       lookup,
       fix.timestamp,
       Date.now(),
       manualLocked.current,
     );
+    if (decision.clearAutomaticCard) invalidateAutomaticCard();
     arrival.current = decision.state;
-    if (selectionRef.current && lookup.matched_id !== selectionRef.current.id)
-      invalidateAutomaticCard();
     if (
       decision.apartment &&
       decision.apartment.id !== selectionRef.current?.id
@@ -398,7 +398,7 @@ export function HomeApartmentContent({
   }
   async function select(
     p: S["Apartment"],
-    origin: "manual" | "automatic" = "manual",
+    origin: "manual" | "automatic" | "retry" = "manual",
   ) {
     if (origin === "manual") manualLocked.current = true;
     const version = ++generation.current;
@@ -413,7 +413,7 @@ export function HomeApartmentContent({
     setMapContext(null);
     setLoaded(false);
     setReadError(false);
-    setExpanded(false);
+    if (origin !== "retry") setExpanded(false);
     setError(null);
     setBusy(true);
     setFavorite(null);
@@ -661,7 +661,7 @@ export function HomeApartmentContent({
           }}
           onAdd={add}
           onOther={clearSelection}
-          onRetry={() => void select(selected)}
+          onRetry={() => void select(selected, "retry")}
           onBookmark={() => void save()}
           onFeedback={feedback}
           onHeight={setPanelHeight}

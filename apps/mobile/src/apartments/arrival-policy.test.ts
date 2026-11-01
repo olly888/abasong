@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { assessArrival, startForegroundRefresh } from "./arrival-policy";
+import {
+  assessArrival,
+  assessHomeArrival,
+  startForegroundRefresh,
+} from "./arrival-policy";
 import type { components } from "@abasong/contracts";
 const p: components["schemas"]["Apartment"] = {
   id: "a",
@@ -71,6 +75,93 @@ describe("arrival safeguards", () => {
     expect(
       assessArrival(first.state, matched, 900, 1000, false).state,
     ).toBeNull();
+  });
+  it("clears an automatic card when its match is stale or no longer trusted", () => {
+    const previous = {
+      id: "a",
+      since: 1000,
+      lastObserved: 9000,
+      configVersion: 1,
+    };
+    for (const result of [
+      { ...matched, status: "candidates" as const },
+      { ...matched, candidates: [] },
+      { ...matched, config_version: 2 },
+      { ...matched, candidates: [{ ...p, confidence: "unverified" as const }] },
+    ]) {
+      const next = assessHomeArrival(
+        previous,
+        "a",
+        result,
+        11000,
+        11000,
+        false,
+      );
+      expect(next.clearAutomaticCard).toBe(true);
+      expect(next.apartment).toBeNull();
+    }
+    expect(
+      assessHomeArrival(previous, "a", matched, 11000, 40000, false)
+        .clearAutomaticCard,
+    ).toBe(true);
+    expect(
+      assessHomeArrival(previous, "a", matched, 11000, 11000, false)
+        .clearAutomaticCard,
+    ).toBe(false);
+  });
+  it("starts the new apartment's dwell at the first observation while clearing the old card", () => {
+    const previous = {
+      id: "a",
+      since: 1000,
+      lastObserved: 9000,
+      configVersion: 1,
+    };
+    const nextMatch = {
+      ...matched,
+      matched_id: "b",
+      candidates: [{ ...p, id: "b" }],
+    };
+    const first = assessHomeArrival(
+      previous,
+      "a",
+      nextMatch,
+      11000,
+      11000,
+      false,
+    );
+    expect(first.clearAutomaticCard).toBe(true);
+    expect(first.apartment).toBeNull();
+    const next = assessHomeArrival(
+      first.state,
+      undefined,
+      nextMatch,
+      19000,
+      19000,
+      false,
+    );
+    expect(next.apartment?.id).toBe("b");
+  });
+  it("preserves an explicitly opened card until the user returns to automatic location", () => {
+    const previous = {
+      id: "a",
+      since: 1000,
+      lastObserved: 9000,
+      configVersion: 1,
+    };
+    const empty = {
+      ...matched,
+      status: "unknown" as const,
+      matched_id: null,
+      candidates: [],
+    };
+    expect(
+      assessHomeArrival(previous, "a", empty, 11000, 11000, true)
+        .clearAutomaticCard,
+    ).toBe(false);
+    expect(
+      assessHomeArrival(null, "a", empty, 11000, 11000, false)
+        .clearAutomaticCard,
+    ).toBe(true);
   });
   it("serializes refreshes and stops scheduling on cleanup", async () => {
     vi.useFakeTimers();

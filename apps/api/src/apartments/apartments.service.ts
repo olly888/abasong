@@ -995,6 +995,7 @@ export class ApartmentsService {
       if (age > cfg.max_age_seconds || age < -cfg.future_tolerance_seconds)
         return {
           status: "stale_location",
+          reason: "stale_location",
           matched_id: null,
           candidates: [],
           config_version: config.version,
@@ -1003,6 +1004,7 @@ export class ApartmentsService {
       if (b.accuracy_m > cfg.max_accuracy_m)
         return {
           status: "unknown",
+          reason: "imprecise",
           matched_id: null,
           candidates: [],
           config_version: config.version,
@@ -1012,16 +1014,26 @@ export class ApartmentsService {
         extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat,
         CASE WHEN boundary IS NOT NULL AND extensions.ST_IsValid(boundary) THEN
           extensions.ST_Covers(boundary, extensions.ST_Buffer(extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))::extensions.geometry)
-          ELSE false END AS inside,
+          ELSE false END OR COALESCE(e.entry_inside,false) AS inside,
+        COALESCE(e.entry_inside,false) AS entrance_inside,
         CASE WHEN boundary IS NOT NULL AND extensions.ST_IsValid(boundary) THEN
           extensions.ST_DWithin(boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))
-          ELSE extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1)) END AS possible,
+          ELSE extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1)) END OR COALESCE(e.entry_possible,false) AS possible,
         EXISTS(SELECT 1 FROM abasong.data_sources s WHERE s.id=apartments.source_id
           AND s.persistent_use_approved AND s.verified_at IS NOT NULL AND s.verified_at<=now()
           AND (s.expires_at IS NULL OR s.expires_at>now())) AS source_valid
-        FROM abasong.apartments WHERE status='active' AND
+        FROM abasong.apartments
+        LEFT JOIN LATERAL (
+          SELECT bool_or(extensions.ST_Covers(z.area, extensions.ST_Buffer(extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))::extensions.geometry)
+            AND ds.persistent_use_approved AND ds.verified_at IS NOT NULL AND ds.verified_at<=now() AND (ds.expires_at IS NULL OR ds.expires_at>now())) AS entry_inside,
+            bool_or(extensions.ST_DWithin(z.area::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))) AS entry_possible,
+            bool_or(extensions.ST_DWithin(z.area::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3)) AS entry_near
+          FROM abasong.apartment_arrival_areas z JOIN abasong.data_sources ds ON ds.id=z.source_id
+          WHERE z.apartment_id=apartments.id AND z.status='active' AND z.verified_at<=now() AND (z.expires_at IS NULL OR z.expires_at>now())
+        ) e ON true
+        WHERE apartments.status='active' AND
         (extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3)
-          OR extensions.ST_DWithin(boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3))
+          OR extensions.ST_DWithin(boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,$3) OR COALESCE(e.entry_near,false))
         ORDER BY extensions.ST_Distance(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography),id LIMIT 20`,
         [
           b.point.lng,
@@ -1061,6 +1073,22 @@ export class ApartmentsService {
           : candidates.length
             ? "candidates"
             : "unknown",
+        reason: match
+          ? "matched"
+          : result.rows.filter((r) => r.possible).length > 1
+            ? "ambiguous"
+            : !candidates.length
+              ? "no_coverage"
+              : !cfg.auto_match?.enabled
+                ? "policy_disabled"
+                : "nearby",
+        ...(match
+          ? {
+              match_basis: contained[0].entrance_inside
+                ? ("entrance" as const)
+                : ("boundary" as const),
+            }
+          : {}),
         matched_id: match,
         candidates,
         config_version: config.version,

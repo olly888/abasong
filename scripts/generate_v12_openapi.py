@@ -37,6 +37,8 @@ out('ApartmentBuilding',{'id':uid,'geometry':ref('BuildingGeometry'),'label_poin
 out('ApartmentMapContext',{'apartment_id':uid,'buildings':{**arr(ref('ApartmentBuilding')),'maxItems':100}})
 obj('ResolveInput',{'point':ref('Point'),'observed_at':dt,'accuracy_m':{'type':'number','minimum':0,'maximum':100000},'accuracy_permission':enum('precise','approximate')},['point','observed_at','accuracy_m','accuracy_permission'])
 out('ResolveResult',{'status':enum('matched','candidates','unknown','stale_location'),'matched_id':nullable_id,'candidates':arr(ref('Apartment')),'config_version':integer(1)})
+S['ResolveResult']['properties']['reason']=enum('matched','ambiguous','nearby','no_coverage','imprecise','stale_location','policy_disabled')
+S['ResolveResult']['properties']['match_basis']=enum('boundary','entrance')
 obj('AddressSuggestInput',{'query':string(200,minLength=2),'session_token':uid},['query','session_token'])
 out('AddressSuggestion',{'provider_result_id':string(500),'label':string(300)})
 out('AddressSuggestions',{'items':arr(ref('AddressSuggestion')),'session_token':uid,'use_mode':enum('temporary')})

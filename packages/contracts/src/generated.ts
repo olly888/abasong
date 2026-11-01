@@ -1572,6 +1572,10 @@ export interface components {
             matched_id: string | null;
             candidates: components["schemas"]["Apartment"][];
             config_version: number;
+            /** @enum {string} */
+            reason?: "matched" | "ambiguous" | "nearby" | "no_coverage" | "imprecise" | "stale_location" | "policy_disabled";
+            /** @enum {string} */
+            match_basis?: "boundary" | "entrance";
         };
         AddressSuggestInput: {
             query: string;

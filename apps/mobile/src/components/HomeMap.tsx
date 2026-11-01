@@ -41,8 +41,8 @@ export default function HomeMap({
       centerCoordinate: current.center,
       zoomLevel: current.zoomLevel,
       padding: current.padding,
-      animationMode: "easeTo",
-      animationDuration: 300,
+      animationMode: "moveTo",
+      animationDuration: 0,
     });
   };
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function HomeMap({
         ref={camera}
         defaultSettings={INITIAL_CAMERA}
         padding={padding}
-        animationDuration={300}
+        animationDuration={0}
       />
       {mapContext &&
       mapContext.apartment_id === selectedId &&

@@ -16,22 +16,18 @@ import {
   View,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
-import * as Location from "expo-location";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import HomeMap from "../components/HomeMap";
 import type { HomeMode } from "../components/HomeChrome";
-import { readDevicePosition } from "./device-position";
-import { acquireForegroundLocation } from "./foreground-location";
-import {
-  assessArrival,
-  startForegroundRefresh,
-  type ArrivalState,
-} from "./arrival-policy";
+import { watchDevicePosition } from "./location-stream";
+import type { ForegroundFix } from "./foreground-location";
+import { serialLatest } from "./serial-latest";
+import { HomeArrivalPanel } from "./HomeArrivalPanel";
+import { assessArrival, type ArrivalState } from "./arrival-policy";
 import { MapTools } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
-import { ListRow } from "../ui/Primitives";
 import { ApartmentSheet } from "./ApartmentSheet";
 import { useAuth } from "../auth/AuthProvider";
 import { AccountError } from "../auth/api-client";
@@ -92,7 +88,7 @@ export function HomeApartments({
         accessibilityElementsHidden={obscured}
         importantForAccessibility={obscured ? "no-hide-descendants" : "auto"}
       >
-        <Content
+        <HomeApartmentContent
           key={auth.session.access_token + ":" + (apartmentId ?? "")}
           toolbar={toolbar}
           apartmentId={apartmentId}
@@ -112,23 +108,33 @@ export function HomeApartments({
   );
 }
 
-function Content({
+export function HomeApartmentContent({
   toolbar,
   apartmentId,
   mode = "公寓",
   list = false,
+  testData,
 }: {
   toolbar: ReactNode;
   apartmentId?: string;
   mode?: HomeMode;
   list?: boolean;
+  testData?: {
+    read: (
+      path: string,
+      options: Parameters<typeof dataRequest>[2],
+    ) => Promise<unknown>;
+    canRead: boolean;
+    onObservation?: () => void;
+  };
 }) {
   const auth = useAuth(),
     session = auth.session!;
   const control = useRef(new AbortController()),
     generation = useRef(0),
-    locationGeneration = useRef(0),
-    fixPending = useRef(false),
+    stream = useRef<AbortController | null>(null),
+    disposeLookup = useRef<(() => void) | null>(null),
+    selectionRef = useRef<S["Apartment"] | null>(null),
     lastFixAt = useRef(0),
     manualLocked = useRef(!!apartmentId),
     arrival = useRef<ArrivalState>(null);
@@ -154,15 +160,20 @@ function Content({
     [readError, setReadError] = useState(false),
     [panelHeight, setPanelHeight] = useState(210),
     [error, setError] = useState<string | null>(null),
-    [notice, setNotice] = useState("定位查看附近公寓");
+    [notice, setNotice] = useState("正在定位"),
+    [lookupState, setLookupState] = useState<
+      "loading" | "nearby" | "ambiguous" | "empty" | "error"
+    >("loading");
   const request = <T,>(
     path: string,
     options: Parameters<typeof dataRequest>[2] = {},
   ) =>
-    dataRequest<T>(session, path, {
-      ...options,
-      signal: control.current.signal,
-    });
+    __DEV__ && testData
+      ? (testData.read(path, options) as Promise<T>)
+      : dataRequest<T>(session, path, {
+          ...options,
+          signal: options.signal ?? control.current.signal,
+        });
   const alive = () => !control.current.signal.aborted;
   useEffect(() => {
     control.current = new AbortController();
@@ -179,26 +190,54 @@ function Content({
             setError(null);
           }
         });
-    else void locate(false);
+    void locate(false, !apartmentId);
     return () => {
       control.current.abort();
-      locationGeneration.current++;
+      stream.current?.abort();
+      disposeLookup.current?.();
       generation.current++;
     };
   }, []);
-  const refresh = useRef<() => Promise<void>>(async () => {});
-  refresh.current = () => locate(false, false);
-  useEffect(() => {
-    if (!point || expanded || (list && mode !== "公寓")) return;
-    return startForegroundRefresh(
-      () => refresh.current(),
-      () => AppState.currentState === "active",
+  const onLookup = useRef<
+    (fix: ForegroundFix, lookup: S["ResolveResult"]) => void
+  >(() => {});
+  onLookup.current = (fix, lookup) => {
+    setCandidates(lookup.candidates);
+    if (lookup.reason === "imprecise") setLocationNotice("位置不够准确");
+    setLookupState(
+      lookup.reason === "ambiguous"
+        ? "ambiguous"
+        : lookup.candidates.length
+          ? "nearby"
+          : "empty",
     );
-  }, [!!point, expanded, list, mode]);
+    const decision = assessArrival(
+      arrival.current,
+      lookup,
+      fix.timestamp,
+      Date.now(),
+      manualLocked.current,
+    );
+    arrival.current = decision.state;
+    if (selectionRef.current && lookup.matched_id !== selectionRef.current.id)
+      invalidateAutomaticCard();
+    if (
+      decision.apartment &&
+      decision.apartment.id !== selectionRef.current?.id
+    )
+      void select(decision.apartment, "automatic");
+    if (lookup.status === "stale_location") setLocationNotice("位置已过期");
+  };
+  const onFailure = useRef<() => void>(() => {});
+  onFailure.current = () => {
+    invalidateAutomaticCard();
+    setLookupState("error");
+  };
   function invalidateAutomaticCard() {
     arrival.current = null;
-    if (manualLocked.current || expanded || !selected) return;
+    if (manualLocked.current || !selectionRef.current) return;
     generation.current++;
+    selectionRef.current = null;
     setSelected(null);
     setMapContext(null);
     setRecords([]);
@@ -207,114 +246,133 @@ function Content({
     setError(null);
   }
   async function locate(ask: boolean, follow = true) {
-    if (fixPending.current) return;
-    fixPending.current = true;
-    const current = ++locationGeneration.current;
-    const valid = () => alive() && current === locationGeneration.current;
-    if (follow) setLocating(true);
+    stream.current?.abort();
+    disposeLookup.current?.();
+    const controller = new AbortController();
+    stream.current = controller;
+    const valid = () => alive() && !controller.signal.aborted;
+    let first = follow;
+    setLocating(true);
     setLocationNotice(null);
+    setNotice("正在定位");
+    const queue = serialLatest<
+      { fix: ForegroundFix; approximate: boolean },
+      S["ResolveResult"]
+    >(
+      ({ fix, approximate }) =>
+        request<S["ResolveResult"]>("/v1/apartments/resolve", {
+          method: "POST",
+          signal: controller.signal,
+          body: {
+            point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
+            observed_at: new Date(fix.timestamp).toISOString(),
+            accuracy_m: fix.coords.accuracy,
+            accuracy_permission: approximate ? "approximate" : "precise",
+          },
+        }),
+      ({ fix }, lookup) => {
+        if (valid() && !manualLocked.current) onLookup.current(fix, lookup);
+      },
+      () => {
+        if (valid()) onFailure.current();
+      },
+      (a, b) =>
+        a.fix.coords.longitude === b.fix.coords.longitude &&
+        a.fix.coords.latitude === b.fix.coords.latitude &&
+        a.approximate === b.approximate &&
+        a.fix.coords.accuracy === b.fix.coords.accuracy,
+      2000,
+    );
+    disposeLookup.current = () => queue.dispose();
+    const fail = (reason: string) => {
+      if (!valid()) return;
+      queue.invalidate();
+      setLocating(false);
+      setPoint(undefined);
+      invalidateAutomaticCard();
+      const message =
+        reason === "blocked"
+          ? "位置权限已关闭"
+          : reason === "permission"
+            ? "开启位置，查找公寓"
+            : reason === "services_off"
+              ? "请开启系统定位服务"
+              : reason === "stale"
+                ? "位置已过期"
+                : "暂时无法获取位置";
+      terminalError = ["blocked", "permission", "services_off"].includes(
+        reason,
+      );
+      setBlocked(reason === "blocked");
+      setNotice(message);
+      setLocationNotice(message);
+    };
+    let staleReported = false,
+      terminalError = false;
+    const started = Date.now();
+    const expiry = setInterval(() => {
+      if (
+        valid() &&
+        !terminalError &&
+        !staleReported &&
+        Date.now() - Math.max(started, lastFixAt.current) > 20_000
+      ) {
+        staleReported = true;
+        fail("stale");
+      }
+    }, 2000);
+    controller.signal.addEventListener(
+      "abort",
+      () => {
+        clearInterval(expiry);
+        queue.dispose();
+      },
+      { once: true },
+    );
     try {
-      const result = await acquireForegroundLocation(
-        {
-          permission: Location.getForegroundPermissionsAsync,
-          request: Location.requestForegroundPermissionsAsync,
-          enabled: Location.hasServicesEnabledAsync,
-          fix: () => readDevicePosition(control.current.signal),
+      await watchDevicePosition(
+        (fix, approximate) => {
+          if (!valid()) return;
+          const { latitude, longitude, accuracy } = fix.coords;
+          if (
+            !Number.isFinite(latitude) ||
+            !Number.isFinite(longitude) ||
+            Math.abs(latitude) > 90 ||
+            Math.abs(longitude) > 180 ||
+            !Number.isFinite(fix.timestamp) ||
+            Date.now() - fix.timestamp > 20_000 ||
+            fix.timestamp > Date.now() + 1000
+          )
+            return;
+          if (fix.timestamp < lastFixAt.current) return;
+          staleReported = false;
+          terminalError = false;
+          lastFixAt.current = fix.timestamp;
+          if (__DEV__) testData?.onObservation?.();
+          const p = { lng: longitude, lat: latitude };
+          setPoint(p);
+          setBlocked(false);
+          setLocating(false);
+          setLocationNotice(null);
+          if (first) {
+            first = false;
+            setCameraTarget(p);
+            setCameraRevision((v) => v + 1);
+          }
+          if (accuracy === null || !Number.isFinite(accuracy) || accuracy < 0) {
+            queue.invalidate();
+            invalidateAutomaticCard();
+            setLocationNotice("位置不够准确");
+            return;
+          }
+          if (!manualLocked.current) queue.offer({ fix, approximate });
         },
+        fail,
+        controller.signal,
         ask,
       );
-      if (!valid()) return;
-      if (result.status !== "fix") {
-        setPoint(undefined);
-        invalidateAutomaticCard();
-        const isBlocked = result.status === "permission" && result.blocked;
-        setBlocked(isBlocked);
-        const message =
-          result.status === "services_off"
-            ? "请开启系统定位服务"
-            : isBlocked
-              ? "位置权限已关闭"
-              : "开启定位，或搜索公寓地址";
-        setLocationNotice(message);
-        setNotice(message);
-        return;
-      }
-      setBlocked(false);
-      const { fix, approximate } = result;
-      const p = { lng: fix.coords.longitude, lat: fix.coords.latitude };
-      setPoint(p);
-      lastFixAt.current = fix.timestamp;
-      if (follow) {
-        setCameraTarget(p);
-        setCameraRevision((v) => v + 1);
-      }
-      if (
-        fix.coords.accuracy === null ||
-        !Number.isFinite(fix.coords.accuracy) ||
-        fix.coords.accuracy < 0
-      ) {
-        setPoint(undefined);
-        invalidateAutomaticCard();
-        setNotice("定位精度不足，请搜索地址");
-        setLocationNotice("定位精度不足，请搜索地址");
-        return;
-      }
-      if (!follow && manualLocked.current) return;
-      // A device fix is already available. Lookup failures must not erase its dot.
-      try {
-        const lookup = await request<S["ResolveResult"]>(
-          "/v1/apartments/resolve",
-          {
-            method: "POST",
-            body: {
-              point: p,
-              observed_at: new Date(fix.timestamp).toISOString(),
-              accuracy_m: fix.coords.accuracy,
-              accuracy_permission: approximate ? "approximate" : "precise",
-            },
-          },
-        );
-        if (!valid()) return;
-        setCandidates(lookup.candidates);
-        const decision = assessArrival(
-          arrival.current,
-          lookup,
-          fix.timestamp,
-          Date.now(),
-          manualLocked.current || expanded,
-        );
-        arrival.current = decision.state;
-        if (selected && lookup.matched_id !== selected.id)
-          invalidateAutomaticCard();
-        if (decision.apartment && decision.apartment.id !== selected?.id)
-          void select(decision.apartment, "automatic");
-        setNotice(
-          lookup.status === "stale_location"
-            ? "位置已过期，请重新定位"
-            : lookup.candidates.length
-              ? "确认你所在的公寓"
-              : "附近暂无已收录公寓，请搜索地址",
-        );
-      } catch (e) {
-        if (!valid()) return;
-        invalidateAutomaticCard();
-        setNotice("附近公寓资料暂不可用，请搜索地址");
-        if (e instanceof AccountError && e.status < 500) setError(e.message);
-      }
-    } catch (e) {
-      if (valid()) {
-        setPoint(undefined);
-        invalidateAutomaticCard();
-        const message =
-          e instanceof Error && e.message === "location_timeout"
-            ? "定位超时，请重试或搜索地址"
-            : "暂时无法获取位置";
-        setNotice(message);
-        setLocationNotice(message);
-      }
-    } finally {
-      fixPending.current = false;
-      if (alive()) setLocating(false);
+    } catch {
+      fail("unavailable");
     }
   }
   async function openLocationSettings() {
@@ -343,11 +401,13 @@ function Content({
   ) {
     if (origin === "manual") manualLocked.current = true;
     const version = ++generation.current;
-    locationGeneration.current++;
     setLocating(false);
+    selectionRef.current = p;
     setSelected(p);
-    setCameraTarget(p.point);
-    setCameraRevision((v) => v + 1);
+    if (origin === "manual") {
+      setCameraTarget(p.point);
+      setCameraRevision((v) => v + 1);
+    }
     setRecords([]);
     setMapContext(null);
     setLoaded(false);
@@ -375,7 +435,11 @@ function Content({
       })(),
       (async () => {
         try {
-          if (auth.me?.capabilities.includes("access.read")) {
+          if (
+            __DEV__ && testData
+              ? testData.canRead
+              : auth.me?.capabilities.includes("access.read")
+          ) {
             const result = await request<S["AccessList"]>(
               `/v1/apartments/${p.id}/access-records`,
             );
@@ -497,7 +561,10 @@ function Content({
       if (alive() && version === generation.current) setBookmarkBusy(false);
     }
   }
-  const canRead = auth.me?.capabilities.includes("access.read");
+  const canRead =
+    __DEV__ && testData
+      ? testData.canRead
+      : auth.me?.capabilities.includes("access.read");
   const add = () =>
     selected &&
     router.push({
@@ -508,12 +575,13 @@ function Content({
     manualLocked.current = true;
     arrival.current = null;
     generation.current++;
+    selectionRef.current = null;
     setSelected(null);
     setMapContext(null);
     setRecords([]);
     setBusy(false);
     setExpanded(false);
-    setNotice("确认你所在的公寓");
+    setLookupState("ambiguous");
   };
   const hideMap = (list && mode !== "公寓") || (expanded && mode === "公寓");
   return (
@@ -611,60 +679,28 @@ function Content({
                 {error}
               </Text>
             ) : null}
-            {candidates.length ? (
-              <>
-                <Text style={styles.title}>你在哪栋公寓？</Text>
-                <Text style={styles.muted}>选择对应地址</Text>
-                {candidates.map((p) => (
-                  <ListRow
-                    key={p.id}
-                    title={p.name ?? "公寓"}
-                    subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
-                    onPress={() => void select(p)}
-                  />
-                ))}
-              </>
-            ) : (
-              <EmptyApartment
-                title={
-                  locating
-                    ? "正在查找当前公寓"
-                    : notice === "定位查看附近公寓" ||
-                        notice === "开启定位，或搜索公寓地址"
-                      ? "开启位置，找到当前公寓"
-                      : notice
-                }
-                action={
-                  locating
-                    ? "定位中…"
-                    : blocked
-                      ? "打开系统设置"
-                      : notice === "开启定位，或搜索公寓地址" ||
-                          notice === "定位查看附近公寓"
-                        ? "使用当前位置"
-                        : "搜索公寓地址"
-                }
-                busy={locating}
-                onPress={() =>
-                  blocked
+            <HomeArrivalPanel
+              state={
+                locationNotice ? "location" : locating ? "loading" : lookupState
+              }
+              message={locationNotice ?? notice}
+              candidates={candidates}
+              onSelect={(p) => void select(p)}
+              onContribute={() =>
+                router.push({
+                  pathname: "/apartments/import",
+                  params: { mode: "shared" },
+                })
+              }
+              onRetry={() =>
+                locationNotice
+                  ? blocked
                     ? void openLocationSettings()
-                    : notice === "开启定位，或搜索公寓地址" ||
-                        notice === "定位查看附近公寓"
-                      ? void locate(true)
-                      : router.push("/apartments")
-                }
-                retryLabel={blocked ? "搜索公寓地址" : undefined}
-                onRetry={
-                  blocked
-                    ? () => router.push("/apartments")
-                    : !locating &&
-                        notice !== "开启定位，或搜索公寓地址" &&
-                        notice !== "定位查看附近公寓"
-                      ? () => void locate(true)
-                      : undefined
-                }
-              />
-            )}
+                    : void locate(true)
+                  : void locate(false, false)
+              }
+              blocked={blocked}
+            />
           </ScrollView>
         </View>
       )}

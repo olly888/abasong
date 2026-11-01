@@ -103,6 +103,12 @@ async function main() {
       "0003_apartment_buildings.sql",
     ])
       await db.query(readFileSync(`database/migrations/${file}`, "utf8"));
+    await db.query(
+      readFileSync(
+        "database/migrations/0005_apartment_arrival_areas.sql",
+        "utf8",
+      ),
+    );
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,
@@ -373,6 +379,119 @@ async function main() {
       "UPDATE abasong.apartments SET status='pending',point='SRID=4326;POINT(-118.2501 34.05)'::extensions.geography WHERE id=$1",
       [second],
     );
+    // A driver can be outside the footprint at a verified gate approach.
+    const arrivalId = randomUUID();
+    const outside = {
+      ...spatialFix,
+      observed_at: new Date().toISOString(),
+      point: { lng: -118.25, lat: 34.0515 },
+      accuracy_m: 5,
+    };
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, outside)).matched_id,
+      null,
+    );
+    await db.query(
+      `INSERT INTO abasong.apartment_arrival_areas(id,apartment_id,source_id,area,status,verified_at)
+      VALUES($1,$2,$3,extensions.ST_Multi(extensions.ST_MakeEnvelope(-118.2502,34.0513,-118.2498,34.0517,4326)),'active',now())`,
+      [arrivalId, aid, source],
+    );
+    const atGate = await req("POST", resolvePath, a, 200, outside);
+    assert.equal(atGate.matched_id, aid);
+    assert.equal(atGate.match_basis, "entrance");
+    assert.equal(atGate.reason, "matched");
+    assert(!JSON.stringify(atGate).includes("area"));
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...outside,
+          accuracy_permission: "approximate",
+        })
+      ).matched_id,
+      null,
+    );
+    assert.equal(
+      (
+        await req("POST", resolvePath, a, 200, {
+          ...outside,
+          point: { lng: -118.24981, lat: 34.0515 },
+        })
+      ).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.apartment_arrival_areas SET status='pending' WHERE id=$1",
+      [arrivalId],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, outside)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.apartment_arrival_areas SET status='active',verified_at=now()-interval '2 days',expires_at=now()-interval '1 day' WHERE id=$1",
+      [arrivalId],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, outside)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.apartment_arrival_areas SET verified_at=now()+interval '1 day',expires_at=NULL WHERE id=$1",
+      [arrivalId],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, outside)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.apartment_arrival_areas SET verified_at=now() WHERE id=$1",
+      [arrivalId],
+    );
+    await db.query(
+      "UPDATE abasong.data_sources SET expires_at=now()-interval '1 minute' WHERE id=$1",
+      [source],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, outside)).matched_id,
+      null,
+    );
+    await db.query(
+      "UPDATE abasong.data_sources SET expires_at=NULL WHERE id=$1",
+      [source],
+    );
+    await db.query(
+      "UPDATE abasong.apartments SET status='active' WHERE id=$1",
+      [second],
+    );
+    const competingArrival = randomUUID();
+    await db.query(
+      `INSERT INTO abasong.apartment_arrival_areas(id,apartment_id,source_id,area,status,verified_at)
+      SELECT $1,$2,source_id,area,'active',now() FROM abasong.apartment_arrival_areas WHERE id=$3`,
+      [competingArrival, second, arrivalId],
+    );
+    const atTwoGates = await req("POST", resolvePath, a, 200, outside);
+    assert.equal(atTwoGates.matched_id, null);
+    assert.equal(atTwoGates.reason, "ambiguous");
+    await db.query(
+      "UPDATE abasong.apartment_arrival_areas SET status='withdrawn' WHERE id=$1",
+      [competingArrival],
+    );
+    await db.query(
+      "UPDATE abasong.apartments SET status='pending' WHERE id=$1",
+      [second],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, outside)).matched_id,
+      aid,
+    );
+    await db.query(
+      "UPDATE abasong.apartment_arrival_areas SET status='withdrawn' WHERE id=$1",
+      [arrivalId],
+    );
+    assert.equal(
+      (await req("POST", resolvePath, a, 200, outside)).matched_id,
+      null,
+    );
     const mapPath = `/v1/apartments/${aid}/map-context`;
     await req("GET", mapPath, undefined, 401);
     await req("GET", mapPath + "?extra=1", a, 400);
@@ -434,6 +553,10 @@ async function main() {
     await db.query("DELETE FROM abasong.apartment_buildings WHERE id=$1", [
       building,
     ]);
+    await db.query(
+      "DELETE FROM abasong.apartment_arrival_areas WHERE id=ANY($1::uuid[])",
+      [[arrivalId, competingArrival]],
+    );
     await db.query("DELETE FROM abasong.apartments WHERE id=$1", [second]);
     await db.query("DELETE FROM abasong.config_versions WHERE version=1");
     await req("GET", root, undefined, 401);

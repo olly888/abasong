@@ -1,5 +1,11 @@
 # Abasong development status
 
+## Latest acceptance — moving / stable / departure native follow-up (2026-11-01)
+
+User unlocked Mac. Actual iPhone18Pro/iOS27.0 and AndroidAPI37 development-build TEST route verified with the production home/OS observation/arrival/card components: alternating positions about37m apart every6s kept candidates without an early code; stable fresh observations automatically showed the TEST address/code/highlight; leaving the synthetic region cleared code/selection/highlight to the contribution entry. No candidate/card/recenter taps used to trigger selection. Android fixed-coordinate stationary case passed; iOS exact repeated simctl-set coordinates stopped callbacks and correctly expired, then <1m jitter restored fresh observations and automatic selection without code/threshold changes. This limits the stationary result; not a physical-device long-stop or timing benchmark.
+
+[Native evidence and cleanup](docs/technical/D1_移动停稳离开双端原生补验.md). Six local ignored screenshots and phase checkpoints saved. Injection driver stopped, iOS location cleared, both ordinary home pages observed without TEST UI; API/Metro and existing iPhone preview retained. No source/native/API/DDL/data/grant/cloud change and no new native build or automated-suite execution; previous150/224/8 checks retain their original scope. Prior lock-screen native gate is closed for these three synthetic scenarios. Next: verify public gate/approach scope, then scoped iPhone field arrival; normal auto-match remains off and Android physical/D1 remain open.
+
 ## Latest execution — public gates / spatially stable dwell (2026-11-01)
 
 Refreshed official OSM node/parent-way evidence for Woodside G1/G2. Candidate-only GeoJSON and offline operator SVG/PNG prepared; no actual arrival polygon imported/activated. Added isolated public-gate HTTP regression, source-expiry/ambiguity/uncertainty/card-clear checks. Found the existing dwell policy could count two distinct entrances of the same apartment as a stationary stay: regression first failed, then fixed by requiring a valid observation, the same match basis/config/apartment and a15m window anchored to the initial point before8s promotion. Gradual movement resets dwell too; no GPS logging/persistence or new UI controls. Home uses actual foreground-fix coordinates, not the apartment centroid.

@@ -9,6 +9,9 @@ import {
   ScrollView,
   View,
   Text,
+  Pressable,
+  PanResponder,
+  useWindowDimensions,
   StyleSheet,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
@@ -16,6 +19,7 @@ import {
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { AddressLine } from "./AddressLine";
+import { compactCardHeight, cardHandleHeight } from "./card-layout";
 type C = components["schemas"]["NearbyCandidate"];
 export function NearbyCarousel(p: {
   items: C[];
@@ -23,13 +27,25 @@ export function NearbyCarousel(p: {
   onSelect: (c: C) => void;
   onSwipeStart: () => void;
   onHeight: (h: number) => void;
-  children: (onHeight: (h: number) => void) => ReactNode;
+  onExpand?: () => void;
+  children: () => ReactNode;
 }) {
   const [width, setWidth] = useState(0),
-    [height, setHeight] = useState(250),
     scroll = useRef<ComponentRef<typeof ScrollView>>(null),
     dragging = useRef(false),
     timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const height = compactCardHeight(useWindowDimensions().fontScale);
+  const expand = useRef(p.onExpand);
+  expand.current = p.onExpand;
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        Math.abs(g.dy) > 8 && Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderRelease: (_, g) => {
+        if (g.dy < -24) expand.current?.();
+      },
+    }),
+  ).current;
   const index = Math.max(
     0,
     p.items.findIndex((c) => c.key === p.selectedKey),
@@ -67,7 +83,7 @@ export function NearbyCarousel(p: {
         decelerationRate="fast"
         disableIntervalMomentum
         directionalLockEnabled
-        style={{ height: height + 44 }}
+        style={{ height: height + 16 }}
         contentContainerStyle={{
           paddingHorizontal: multi ? 32 : 16,
           paddingVertical: 8,
@@ -88,20 +104,24 @@ export function NearbyCarousel(p: {
         {p.items.map((c) => (
           <View
             key={c.key}
-            style={[s.card, { width: w, minHeight: height + 28 }]}
+            style={[s.card, { width: w, height }]}
             accessibilityElementsHidden={c.key !== p.selectedKey}
             importantForAccessibility={
               c.key !== p.selectedKey ? "no-hide-descendants" : "auto"
             }
           >
             <View
-              style={s.caption}
+              {...pan.panHandlers}
+              style={s.handleArea}
+              onAccessibilityTap={
+                c.key === p.selectedKey ? p.onExpand : undefined
+              }
               accessible={c.key === p.selectedKey}
-              accessibilityRole={multi ? "adjustable" : "text"}
+              accessibilityRole={multi ? "adjustable" : "button"}
               accessibilityLabel={
                 multi
-                  ? `附近公寓，第${index + 1}处，共${p.items.length}处`
-                  : "附近公寓"
+                  ? `${c.address?.address_line1 ?? "公寓地址待核对"}，第${index + 1}处，共${p.items.length}处`
+                  : "展开公寓卡片"
               }
               accessibilityActions={
                 multi
@@ -117,15 +137,16 @@ export function NearbyCarousel(p: {
                 if (p.items[n]) p.onSelect(p.items[n]!);
               }}
             >
-              <Text style={s.meta}>附近公寓</Text>
-              {multi ? (
-                <Text style={s.meta}>
-                  {p.items.indexOf(c) + 1}/{p.items.length}
-                </Text>
-              ) : null}
+              <Pressable
+                accessible={false}
+                style={s.handleArea}
+                onPress={c.key === p.selectedKey ? p.onExpand : undefined}
+              >
+                <View style={s.handle} />
+              </Pressable>
             </View>
             {c.key === p.selectedKey ? (
-              p.children(setHeight)
+              p.children()
             ) : (
               <View style={s.preview}>
                 {c.address ? (
@@ -144,7 +165,7 @@ export function NearbyCarousel(p: {
 const s = StyleSheet.create({
   panel: {
     position: "absolute",
-    bottom: 12,
+    bottom: 4,
     left: 0,
     right: 0,
     paddingTop: 0,
@@ -164,18 +185,16 @@ const s = StyleSheet.create({
     elevation: 5,
     overflow: "hidden",
   },
-  caption: {
-    paddingHorizontal: 22,
-    paddingTop: 8,
-    paddingBottom: 4,
-    flexDirection: "row",
-    justifyContent: "space-between",
+  handleArea: {
+    height: cardHandleHeight,
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  meta: { fontSize: 12, color: tokens.color.textSecondary },
+  handle: { width: 35, height: 4, borderRadius: 4, backgroundColor: "#D9DDE2" },
   preview: {
-    padding: 16,
-
-    minHeight: 180,
+    paddingHorizontal: 22,
+    paddingTop: 4,
   },
   title: { fontSize: 20, color: tokens.color.ink },
 });

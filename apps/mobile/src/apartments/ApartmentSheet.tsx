@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentRef } from "react";
+import { useEffect, useRef, type ComponentRef } from "react";
 import {
   ActivityIndicator,
   PanResponder,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
@@ -23,6 +24,7 @@ import {
 } from "./presentation";
 import { AddressLine } from "./AddressLine";
 import { locality } from "./address-presentation";
+import { compactCardHeight, cardHandleHeight } from "./card-layout";
 type S = components["schemas"];
 export type SheetProps = {
   apartment: S["Apartment"];
@@ -51,7 +53,7 @@ export function ApartmentSheet(p: SheetProps) {
     offset = useRef(0),
     anchor = useRef<Anchor | null>(null),
     mounted = useRef(true);
-  const [contentHeight, setContentHeight] = useState(210);
+  const collapsedHeight = compactCardHeight(useWindowDimensions().fontScale);
   const canRead = p.status === "ready",
     records = canRead ? p.records : [];
   const current = useRef(p);
@@ -101,9 +103,6 @@ export function ApartmentSheet(p: SheetProps) {
       <View
         style={[styles.codeBlock, r.method === "keypad" && styles.keypadBlock]}
       >
-        {r.method === "keypad" ? (
-          <Text style={styles.codeLabel}>门禁密码</Text>
-        ) : null}
         <Text
           accessibilityLabel={
             r.method === "keypad" ? `密码 ${r.value}` : methodLabel(r)
@@ -126,7 +125,7 @@ export function ApartmentSheet(p: SheetProps) {
       onLayout={(e) => p.onHeight?.(e.nativeEvent.layout.height)}
       style={[
         styles.panel,
-        { height: contentHeight + 37 },
+        { height: collapsedHeight - (p.embedded ? cardHandleHeight : 0) },
         p.expanded && styles.expanded,
         p.embedded && {
           position: "relative",
@@ -140,21 +139,22 @@ export function ApartmentSheet(p: SheetProps) {
         },
       ]}
     >
-      <View {...pan.panHandlers}>
-        <Pressable
-          focusable
-          accessibilityRole="button"
-          accessibilityLabel={p.expanded ? "收起卡片" : "展开卡片"}
-          accessibilityState={{ expanded: p.expanded }}
-          onPress={() => p.onExpand(!p.expanded)}
-          style={styles.handleArea}
-        >
-          <View style={styles.handle} />
-        </Pressable>
-      </View>
+      {!p.embedded ? (
+        <View {...pan.panHandlers}>
+          <Pressable
+            focusable
+            accessibilityRole="button"
+            accessibilityLabel={p.expanded ? "收起卡片" : "展开卡片"}
+            accessibilityState={{ expanded: p.expanded }}
+            onPress={() => p.onExpand(!p.expanded)}
+            style={styles.handleArea}
+          >
+            <View style={styles.handle} />
+          </Pressable>
+        </View>
+      ) : null}
       <ScrollView
         style={{ flex: 1 }}
-        onContentSizeChange={(_, h) => setContentHeight(h)}
         keyboardShouldPersistTaps="handled"
         ref={scroll}
         scrollEventThrottle={16}
@@ -169,7 +169,7 @@ export function ApartmentSheet(p: SheetProps) {
             accessibilityRole="button"
             accessibilityLabel={`${p.expanded ? "收起" : "展开"}公寓详情，${p.apartment.address_line1}, ${locality(p.apartment)}`}
             onPress={() => p.onExpand(!p.expanded)}
-            style={{ flex: 1, gap: 4, minHeight: 48 }}
+            style={{ flex: 1, gap: 4, minHeight: p.expanded ? 48 : 40 }}
           >
             <AddressLine
               line={p.apartment.address_line1}
@@ -202,31 +202,31 @@ export function ApartmentSheet(p: SheetProps) {
           ) : null}
         </View>
         {p.status === "loading" ? (
-          <View style={styles.state}>
+          <View style={[styles.state, !p.expanded && styles.compactState]}>
             <ActivityIndicator color={tokens.color.brandPrimary} />
             <Text style={styles.meta}>正在读取</Text>
           </View>
         ) : null}
         {p.status === "denied" ? (
-          <View style={styles.state}>
+          <View style={[styles.state, !p.expanded && styles.compactState]}>
             <Text style={styles.stateTitle}>暂未获得资料查看资格</Text>
           </View>
         ) : null}
         {p.status === "error" ? (
-          <View style={styles.state}>
+          <View style={[styles.state, !p.expanded && styles.compactState]}>
             <Text accessibilityRole="alert" style={styles.body}>
               暂时无法读取密码
             </Text>
             <ActionButton label="重新读取" onPress={p.onRetry} />
           </View>
         ) : null}
-        {p.error ? (
+        {p.expanded && p.error && p.status !== "error" ? (
           <Text accessibilityRole="alert" style={styles.error}>
             {p.error}
           </Text>
         ) : null}
         {canRead && !records.length ? (
-          <View style={styles.state}>
+          <View style={[styles.state, !p.expanded && styles.compactState]}>
             <Text style={styles.stateTitle}>暂无共享密码</Text>
             {!p.expanded ? (
               <ActionButton label="添加密码" onPress={p.onAdd} />
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     backgroundColor: tokens.color.surface,
     zIndex: 20,
-    paddingBottom: 12,
+    paddingBottom: 8,
     shadowColor: "#1B2D44",
     shadowOpacity: 0.08,
     shadowRadius: 16,
@@ -352,7 +352,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   expanded: { height: "86%", maxHeight: "86%", zIndex: 30 },
-  handleArea: { height: 25, alignItems: "center", justifyContent: "center" },
+  handleArea: {
+    height: cardHandleHeight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   handle: { width: 35, height: 4, borderRadius: 4, backgroundColor: "#D9DDE2" },
   inner: { paddingHorizontal: 22, paddingBottom: 8 },
   heading: { flexDirection: "row", alignItems: "flex-start" },
@@ -366,7 +370,6 @@ const styles = StyleSheet.create({
   meta: { fontSize: 14, lineHeight: 22, color: tokens.color.textMuted },
   codeBlock: { minWidth: 0, alignSelf: "stretch" },
   keypadBlock: { flexDirection: "row", alignItems: "center", gap: 12 },
-  codeLabel: { fontSize: 12, color: tokens.color.textMuted, flexShrink: 0 },
   code: {
     fontSize: 40,
     lineHeight: 52,
@@ -374,8 +377,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     fontVariant: ["tabular-nums"],
     color: tokens.color.ink,
-    paddingTop: 9,
-    paddingBottom: 2,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   recordCode: {
     fontSize: 29,
@@ -417,14 +420,15 @@ const styles = StyleSheet.create({
     borderColor: tokens.color.brandPrimary,
   },
   state: { paddingVertical: 20, gap: 14 },
+  compactState: { paddingVertical: 12, gap: 8 },
   stateTitle: { fontSize: 22, fontWeight: "600", color: tokens.color.ink },
   linkRow: {
-    minHeight: 48,
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
-    marginTop: 8,
+    marginTop: 0,
   },
   link: { fontSize: 14, color: tokens.color.brandPrimary },
   error: {

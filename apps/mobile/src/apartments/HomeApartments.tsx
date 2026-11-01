@@ -1,4 +1,5 @@
 import { NearbyCarousel } from "./NearbyCarousel";
+import { compactCardHeight, cardHandleHeight } from "./card-layout";
 import { mergeNearby, distanceM } from "./nearby-policy";
 import { setNearbyContribution } from "./nearby-contribution";
 import { AddressLine } from "./AddressLine";
@@ -26,6 +27,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { randomUUID } from "expo-crypto";
@@ -155,6 +157,7 @@ export function HomeApartmentContent({
     onObservation?: () => void;
   };
 }) {
+  const collapsedHeight = compactCardHeight(useWindowDimensions().fontScale);
   const auth = useAuth(),
     session = auth.session!;
   const ownerId =
@@ -908,7 +911,12 @@ export function HomeApartmentContent({
               />
             ) : (
               <View
-                style={{ padding: 22, minHeight: 220, gap: 14 }}
+                style={{
+                  paddingHorizontal: 22,
+                  paddingBottom: 12,
+                  height: collapsedHeight - cardHandleHeight,
+                  gap: 14,
+                }}
                 onLayout={(e) => height(e.nativeEvent.layout.height)}
               >
                 {providerSelected?.address ? (
@@ -953,8 +961,16 @@ export function HomeApartmentContent({
                 setReadError(false);
               }}
               onHeight={setPanelHeight}
+              onExpand={
+                selected
+                  ? () => {
+                      manualLocked.current = true;
+                      setExpanded(true);
+                    }
+                  : undefined
+              }
             >
-              {(height) => card(height)}
+              {() => card(() => {})}
             </NearbyCarousel>
           ) : (
             card(onCardHeight)

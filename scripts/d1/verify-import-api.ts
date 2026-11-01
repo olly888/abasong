@@ -271,6 +271,16 @@ async function main() {
               enabled: true,
               evidence_ref: "DISPOSABLE-TEST-ONLY",
               max_accuracy_m: 5,
+              scopes: [
+                publicApartmentId,
+                ...publicExpansion.map((s) => s.id),
+              ].map((apartment_id) => ({
+                apartment_id,
+                match_bases: ["boundary"],
+                evidence_ref: "DISPOSABLE-TEST-ONLY",
+                verified_at: new Date(Date.now() - 60_000).toISOString(),
+                expires_at: new Date(Date.now() + 3600_000).toISOString(),
+              })),
             },
           },
         }),

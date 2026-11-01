@@ -26,6 +26,7 @@ export async function verifyPublicArrival(
   req: Request,
   contributor: string,
   readerWithoutCapability: string,
+  reader: string,
 ) {
   await ingestPublicApartments(db);
   const delMar = publicExpansion.find((s) => s.slug === "del-mar")!.id;
@@ -78,6 +79,7 @@ export async function verifyPublicArrival(
     delMar,
   ]);
   await req("GET", "/v1/apartments?query=2445", undefined, 401);
+  const ids = [publicApartmentId, ...publicExpansion.map((s) => s.id)];
   const configuration = {
     radius_m: 150,
     max_age_seconds: 120,
@@ -87,13 +89,19 @@ export async function verifyPublicArrival(
       enabled: true,
       evidence_ref: "ISOLATED-PUBLIC-GEOMETRY-TEST-NOT-FIELD",
       max_accuracy_m: 20,
+      scopes: ids.map((apartment_id) => ({
+        apartment_id,
+        match_bases: ["boundary"],
+        evidence_ref: "ISOLATED-PUBLIC-GEOMETRY-TEST-NOT-FIELD",
+        verified_at: new Date(Date.now() - 60_000).toISOString(),
+        expires_at: new Date(Date.now() + 3600_000).toISOString(),
+      })),
     },
   };
   await db.query(
     "UPDATE abasong.config_versions SET config=jsonb_set(config,'{apartment_resolve}',$1::jsonb) WHERE version=1",
     [JSON.stringify(configuration)],
   );
-  const ids = [publicApartmentId, ...publicExpansion.map((s) => s.id)];
   const samples = (
     await db.query<{ id: string; boundary: boolean; lng: number; lat: number }>(
       `SELECT id,boundary IS NOT NULL AS boundary,extensions.ST_X(point::extensions.geometry) AS lng,
@@ -170,6 +178,79 @@ export async function verifyPublicArrival(
     false,
   );
   assert.equal(arrived.apartment?.id, publicApartmentId);
+  const updatePolicy = (auto: unknown) =>
+    db.query(
+      "UPDATE abasong.config_versions SET config=jsonb_set(config,'{apartment_resolve,auto_match}',$1::jsonb) WHERE version=1",
+      [JSON.stringify(auto)],
+    );
+  const scoped = configuration.auto_match.scopes.find(
+    (s) => s.apartment_id === sample.id,
+  )!;
+  for (const scopes of [
+    undefined, // Legacy global enable is no longer enough.
+    [],
+    configuration.auto_match.scopes.filter((s) => s.apartment_id !== sample.id),
+    [{ ...scoped, match_bases: ["entrance"] }], // Boundary evidence is separate.
+    [
+      {
+        ...scoped,
+        verified_at: new Date(now - 120_000).toISOString(),
+        expires_at: new Date(now - 60_000).toISOString(),
+      },
+    ],
+    [{ ...scoped, verified_at: new Date(now + 60_000).toISOString() }],
+    [{ ...scoped, apartment_id: "*" }],
+  ]) {
+    await updatePolicy({ ...configuration.auto_match, scopes });
+    const restricted = (await req(
+      "POST",
+      "/v1/apartments/resolve",
+      reader,
+      200,
+      fix(sample),
+    )) as S["ResolveResult"];
+    assert.equal(restricted.matched_id, null);
+    assert.equal(restricted.reason, "policy_disabled");
+    assert(restricted.candidates.some((p) => p.id === sample.id));
+    assert.equal(
+      assessHomeArrival(
+        arrived.state,
+        sample.id,
+        restricted,
+        now + 1000,
+        now + 1000,
+        false,
+      ).clearAutomaticCard,
+      true,
+    );
+    assert.equal(
+      assessHomeArrival(
+        arrived.state,
+        sample.id,
+        restricted,
+        now + 1000,
+        now + 1000,
+        true,
+      ).clearAutomaticCard,
+      false,
+    );
+    assert(!JSON.stringify(restricted).includes("evidence_ref"));
+  }
+  await updatePolicy(configuration.auto_match);
+  await req("POST", "/v1/apartments/resolve", reader, 400, {
+    ...fix(sample),
+    auto_match: configuration.auto_match,
+  });
+  // A different authorized reader obtains the same real match; read eligibility
+  // remains a separate endpoint permission rather than part of map recognition.
+  const independentMatch = (await req(
+    "POST",
+    "/v1/apartments/resolve",
+    reader,
+    200,
+    fix(sample),
+  )) as S["ResolveResult"];
+  assert.equal(independentMatch.matched_id, sample.id);
   const context = (await req(
     "GET",
     `/v1/apartments/${publicApartmentId}/map-context`,
@@ -197,6 +278,66 @@ export async function verifyPublicArrival(
   assert.equal(codes.items.length, 1);
   assert.equal(codes.items[0]?.value, value);
   await req("GET", path, readerWithoutCapability, 403);
+  // An independently authorized synthetic reader sees the contribution at the
+  // matched apartment through the real encrypted-data endpoint, without review.
+  const read = () => req("GET", path, reader, 200) as Promise<S["AccessList"]>;
+  const firstRead = await read();
+  const originalId = firstRead.items[0]?.id;
+  assert.equal(firstRead.items[0]?.value, value);
+  assert.equal(firstRead.items[0]?.effective_useful, false);
+  assert.equal(firstRead.items[0]?.my_feedback, null);
+  const originalTime = firstRead.items[0]?.contributed_at;
+  await req(
+    "POST",
+    path,
+    contributor,
+    201,
+    {
+      method: "keypad",
+      value: "TEST-PUBLIC-NEWER",
+      scope: { label: "TEST only" },
+      source_attested: true,
+    },
+    randomUUID(),
+  );
+  const newer = await read();
+  assert.equal(newer.items[0]?.value, "TEST-PUBLIC-NEWER");
+  const event = { client_event_id: randomUUID(), value: "useful" };
+  const feedbackPath = `/v1/access-records/${originalId}/feedback`;
+  await req("PUT", feedbackPath, readerWithoutCapability, 403, event);
+  const accepted = await req("PUT", feedbackPath, reader, 200, event);
+  assert.deepEqual(
+    await req("PUT", feedbackPath, reader, 200, event),
+    accepted,
+  );
+  const useful = await read();
+  assert.equal(useful.items[0]?.id, originalId);
+  assert.equal(useful.items[0]?.effective_useful, true);
+  assert.equal(useful.items[0]?.my_feedback, "useful");
+  assert.equal(useful.items[0]?.contributed_at, originalTime);
+  const ownerView = (await req(
+    "GET",
+    path,
+    contributor,
+    200,
+  )) as S["AccessList"];
+  assert.equal(ownerView.items[0]?.id, originalId);
+  assert.equal(ownerView.items[0]?.my_feedback, null);
+  // Changing the same reader's verdict must not leave an obsolete useful rank.
+  await req("PUT", feedbackPath, reader, 200, {
+    client_event_id: randomUUID(),
+    value: "not_useful",
+  });
+  const rejected = await read();
+  assert.equal(rejected.items[0]?.value, "TEST-PUBLIC-NEWER");
+  assert.equal(
+    rejected.items.find((r) => r.id === originalId)?.my_feedback,
+    "not_useful",
+  );
+  assert.equal(
+    rejected.items.find((r) => r.id === originalId)?.contributed_at,
+    originalTime,
+  );
   const departureResult = (await req(
     "POST",
     "/v1/apartments/resolve",

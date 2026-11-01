@@ -304,6 +304,15 @@ async function main() {
           enabled: true,
           evidence_ref: "SYNTHETIC-TEST-ONLY",
           max_accuracy_m: 20,
+          scopes: [
+            {
+              apartment_id: aid,
+              match_bases: ["boundary", "entrance"],
+              evidence_ref: "SYNTHETIC-TEST-ONLY",
+              verified_at: new Date(Date.now() - 60_000).toISOString(),
+              expires_at: new Date(Date.now() + 3600_000).toISOString(),
+            },
+          ],
         }),
       ],
     );
@@ -1141,7 +1150,13 @@ async function main() {
       [other],
     );
     await req("GET", directPath, b, 403);
-    await verifyPublicArrival(db, req, a, b);
+    const arrivalReader = randomUUID();
+    await db.query("INSERT INTO abasong.users(id) VALUES($1)", [arrivalReader]);
+    await db.query(
+      "INSERT INTO abasong.capabilities(user_id,capability,reason) VALUES($1,'access.read','disposable public-arrival test')",
+      [arrivalReader],
+    );
+    await verifyPublicArrival(db, req, a, b, await token(arrivalReader));
     await verifySearchMatching(db, sensitive.href, actor, issued);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,

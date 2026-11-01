@@ -10,6 +10,10 @@ import { SensitiveDatabase } from "./sensitive-database";
 import { LocalEnvelope } from "./envelope";
 import { buildAccessRankingQuery } from "../access/access-ranking.query";
 import { apartmentSearchQuery } from "./apartment-search.query";
+import {
+  automaticMatchBasis,
+  automaticMatchPolicy,
+} from "./automatic-match-policy";
 type S = components["schemas"];
 const text = (max: number) =>
   z
@@ -977,19 +981,12 @@ export class ApartmentsService {
     return this.tx(a, async (c) => {
       const config = (
         await c.query(
-          "SELECT version,config FROM abasong.config_versions WHERE activated_at<=now() ORDER BY version DESC LIMIT 1",
+          "SELECT version,config,extract(epoch FROM now())*1000 AS evaluated_at_ms FROM abasong.config_versions WHERE activated_at<=now() ORDER BY version DESC LIMIT 1",
         )
       ).rows[0];
       const settings = z
         .object({
-          auto_match: z
-            .object({
-              enabled: z.boolean(),
-              evidence_ref: z.string().min(1).max(300),
-              max_accuracy_m: z.number().finite().positive().max(50),
-            })
-            .strict()
-            .optional(),
+          auto_match: z.unknown().optional(),
           radius_m: z.number().finite().positive().max(1000),
           max_age_seconds: z.number().finite().positive().max(300),
           future_tolerance_seconds: z.number().finite().min(0).max(30),
@@ -1004,6 +1001,10 @@ export class ApartmentsService {
           "附近公寓暂不可用，请搜索地址",
         );
       const cfg = settings.data;
+      const auto = automaticMatchPolicy(
+        cfg.auto_match,
+        Number(config.evaluated_at_ms),
+      );
       const age = (Date.now() - Date.parse(b.observed_at)) / 1000;
       if (age > cfg.max_age_seconds || age < -cfg.future_tolerance_seconds)
         return {
@@ -1027,7 +1028,7 @@ export class ApartmentsService {
         extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat,
         CASE WHEN boundary IS NOT NULL AND extensions.ST_IsValid(boundary) THEN
           extensions.ST_Covers(boundary, extensions.ST_Buffer(extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))::extensions.geometry)
-          ELSE false END OR COALESCE(e.entry_inside,false) AS inside,
+          ELSE false END AS boundary_inside,
         COALESCE(e.entry_inside,false) AS entrance_inside,
         CASE WHEN boundary IS NOT NULL AND extensions.ST_IsValid(boundary) THEN
           extensions.ST_DWithin(boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,GREATEST($4::double precision,1))
@@ -1065,14 +1066,18 @@ export class ApartmentsService {
         confidence: r.confidence,
         point: { lng: r.lng, lat: r.lat },
       }));
-      // Only a versioned, explicitly enabled field-evidence configuration may
-      // promote a unique verified boundary. Any competing boundary touching the
-      // uncertainty circle (or unbounded address point within it) vetoes it.
-      const contained = result.rows.filter((r) => r.inside);
+      // Scope only restricts promotion; out-of-scope buildings still veto a
+      // competing match. Never filter the spatial query by the pilot allowlist.
+      const contained = result.rows.filter(
+        (r) => r.boundary_inside || r.entrance_inside,
+      );
+      const matchBasis =
+        contained.length === 1 ? automaticMatchBasis(auto, contained[0]) : null;
       const match =
-        cfg.auto_match?.enabled &&
+        auto &&
+        matchBasis &&
         b.accuracy_permission === "precise" &&
-        b.accuracy_m <= cfg.auto_match.max_accuracy_m &&
+        b.accuracy_m <= auto.maxAccuracyM &&
         contained.length === 1 &&
         result.rows.filter((r) => r.possible).length === 1 &&
         contained[0].source_valid &&
@@ -1092,14 +1097,12 @@ export class ApartmentsService {
             ? "ambiguous"
             : !candidates.length
               ? "no_coverage"
-              : !cfg.auto_match?.enabled
+              : !auto || (contained.length === 1 && !matchBasis)
                 ? "policy_disabled"
                 : "nearby",
         ...(match
           ? {
-              match_basis: contained[0].entrance_inside
-                ? ("entrance" as const)
-                : ("boundary" as const),
+              match_basis: matchBasis!,
             }
           : {}),
         matched_id: match,

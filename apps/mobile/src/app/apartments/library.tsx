@@ -1,3 +1,4 @@
+import { openContributionMenu } from "../../apartments/contribution-entry";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, router } from "expo-router";
@@ -345,19 +346,7 @@ function LibraryContent() {
         <>
           <ActionButton
             label="＋ 贡献公寓密码"
-            onPress={() =>
-              Alert.alert("贡献公寓密码", undefined, [
-                {
-                  text: "截图识别",
-                  onPress: () => router.push("/apartments/import"),
-                },
-                {
-                  text: "快速填写",
-                  onPress: () => router.push("/apartments/contribute"),
-                },
-                { text: "取消", style: "cancel" },
-              ])
-            }
+            onPress={openContributionMenu}
           />
           <Pressable
             accessibilityRole="button"

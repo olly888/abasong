@@ -224,6 +224,56 @@ for p in pages:
  if p['id']=='B06':
   p['information']=[x.replace('私存/共享/同码/待审核/待处理/失败独立计数','私存/共享/同码/待处理/失败独立计数；历史未发布不计入共享成功') for x in p['information']]
   p['states']=[x.replace('待审核','历史尚未发布') for x in p['states']]
+# ADD-12: a shared contribution menu and fresh screenshot sessions.
+for p in pages:
+ if p['id'] in ['H01','U01','U06','B04','B05','B06']:
+  p['requirements'].append('ADD-12')
+ if p['id'] in ['H01','U01','U06']:
+  p['acceptance']+=' ADD-12：通用贡献按钮复用我的页面的截图识别/快速填写菜单；返回原页面，不按当前位置预选公寓。'
+  for a in p['actions']:
+   if a['label'] in ['共享公寓密码','贡献公寓密码']:
+    a['label']='贡献公寓密码';a['result']='打开统一贡献菜单：截图识别或快速填写；取消留在原页面'
+ if p['id']=='B04':
+  p['information']=['标题与返回','每次新进入都是空白选择，无旧批次列表或恢复请求','所选图片和数量；本次可继续添加/移除','底部唯一主动作：选择截图或识别N张截图','识别中处理进度与停止识别']
+  p['api_operations']=['getImportPolicy']
+ if p['id'] in ['B04','B05','B06','U06']:
+  p['states']=[x for x in p['states'] if not any(w in x for w in ['恢复','草稿','进度','继续上次'])]
+  p['actions']=[a for a in p['actions'] if not any(w in a['label'] for w in ['保存进度','稍后继续','上次','恢复'])]
+ if p['id']=='B05':
+  p['information']=[x.replace('顶部返回与更多','顶部返回与添加截图') for x in p['information']]
+  for a in p['actions']:
+   a['label']=a['label'].replace('更多：继续添加截图','添加截图')
+  p['states']=[x for x in p['states'] if x!='更多辅助操作菜单']
+ if p['id']=='B06':
+  p['actions']=[{**a,'result':a['result'].replace('恢复待确认项','在本次内处理待确认项')} for a in p['actions']]
+ for key in ['information']:
+  p[key]=[x.replace('导入记录与继续入口','已保存/共享资料').replace('本人导入批次进度和继续处理入口','已保存/共享资料') for x in p[key]]
+ if p['id'] in ['B04','B05','B06']:
+  p['states']+=['退出后重新进入为空','短暂切换保留本次内容']
+  p['acceptance']=p['acceptance'].replace('恢复草稿', '本次重试').replace('空草稿', '空批次')
+  p['acceptance']+=' ADD-12覆盖旧续填要求：移除历史恢复/保存进度，仅同次失败重试。退出有未提交内容只提醒一次，空白或全完成不提醒；重进不恢复，已保存或共享资料保留。'
+# Current page definitions must not retain historical resume actions.
+for p in pages:
+ if p['id']=='U06':
+  p['information']=[x for x in p['information'] if '本人导入批次' not in x]
+  p['actions']=[a for a in p['actions'] if a['label']!='继续导入']
+  p['acceptance']=p['acceptance'].replace('本人审核进度','本人贡献记录')
+ if p['id']=='B04':
+  p['entry']='H01/U01/U06统一贡献菜单、本人私存入口或B02截图添加'
+  p['actions']=[a for a in p['actions'] if a['label']!='重试加载草稿']
+  for a in p['actions']:
+   if a['label']=='识别截图':a['result']='端侧识别并核对；仅确认提交时登记本人加密批次'
+   if a['label']=='返回':a['result']='有未提交内容只确认一次；离开清除本次内容，成功记录保留'
+  p['acceptance']='单/多图无须逐条录地址；不读取其他APP账户，不自动公开原图或识别正文。每次新进入为空，无历史加载请求。原生任务未结束前不并发新识别，迟到结果不覆盖当前内容。停止后保留本次已完成结果，后续只处理剩余图片。系统相册、短暂后台和临时网络错误不清空本次内容；主动离开有未提交内容只提醒一次，空白或全完成不提醒。'
+ if p['id']=='B05':
+  p['entry']='本次B06识别完成或待继续处理'
+  p['acceptance']='不强制逐条打勾；OCR不能代替用户确认，低置信项不默认共享。地址与密码直显；顶部直接添加截图，编辑和返回选图保留本次内容。不显示历史续填、保存进度或技术批次信息。失败可在本次内重试，修改或模式响应丢失复用原请求；共享范围锁定后不可扩大。确认后正常记录直接共享，同码不刷新贡献时间、不自动投有用票。'
+ if p['id']=='B06':
+  p['entry']='本次B04启动识别、B05确认提交'
+  p['api_operations']+=['createImportBatch','registerImportLocalSource','submitImportDeviceExtraction']
+  p['actions']=[a for a in p['actions'] if a['label']!='返回我的贡献']
+  p['actions'].append(dict(label='完成',target='G03',result='返回发起页面；成功记录保留，无历史续填'))
+  p['acceptance']='识别、提交、保存与共享结果分开；短暂切后台保留本次会话。稳定提交标识支持同次重试，不重复私存或共享已成功项，不自动重试写入。未提交内容退出仅一次确认，全部完成直接返回来源页面；下次进入空白选图。取消未提交内容不删除已成功记录。'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-31','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']
@@ -231,7 +281,7 @@ with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newli
  for p in pages:
   batch='01-公寓闭环' if p['id'] in ['A02','A03','A04','H01','S01','L01','B01','B02','B04','B05','B06','U06','U09','G01','G03'] else '02-找人找活' if p['id'] in ['H02','H03','P01','P03','P04','D01','P08','P09','P10','D02','U03','G02','X01'] else '03-消息与常联系' if p['id'] in ['M01','M02','U08'] else '04-社区与我的'
   w.writerow(dict(id=p['id'],name=p['name'],surface=p['surface'],batch=batch,state_count=len(p['states']),api_operations=','.join(p['api_operations']),status=p['prototype_status']))
-lines=['# Abasong V12.1 页面功能、信息与交互规格','', '日期：2026-10-31。状态：含截图P0扩展；端侧15接口与部分原生流程已有验证，新增长任务/恢复状态仍待逐项原生验收，云上传/OCR3接口仍规划。产品依据：[V12 PRD](../../Abasong_PRD_V12_首版产品需求.md)及[V12.1补充决策](../Abasong_V12.1_需求补充与原型决策.md)。颜色/组件依据：[V3设计系统](../design/Abasong_设计系统_V3_原型制作基线.md)。', '', '## 1. 全局规则','', '产品只做临时配送支援与灵活运力协作，不设置长期招聘/司机招募流程。根导航固定首页/司机圈/我的；公寓/找活/找人为同一首页路由的状态。二级页面和公共面板可暂时隐藏导航，返回恢复来源视图、选中对象、筛选与滚动。登录后回到发起动作前的对象，但重新读取当前条件，不自动提交过期报名。', '', '每个界面只保留必要信息和一项当前主动作；空/错误/审核/来源/地图归属属于必要状态，设计说明、策略备注、合成数据说明留在原型外壳，不能成为产品首页常驻文案。', '', '普通草稿可保留；手动密码/进入信息明文只在编辑会话内存保留，不写通用持久草稿。截图批次另采用本人专属、有限保留的服务端加密草稿，详见[截图补充](Abasong_V12.1_截图批量贡献需求补充.md)。用户切账号、退出或资格被撤销后清理敏感缓存。需求、私聊、进入资料各自鉴权，不因显示同一地图就共享访问权。', '', '菜单按对象权限显示：发布者管理自己的需求，报名者管理自己的报名；司机与DSP不切换客户端或导航。当前没有支付、交接履约、司机排名、会员密码付费墙。', '', '原型使用合成资料和模拟请求；每个状态应可在原型外的场景控制中触发。开发说明/测试开关不出现在产品画面。', '', '## 2. 页面总览','', '| ID | 名称 | 载体 | 状态数 |','|---|---|---|---|']
+lines=['# Abasong V12.1 页面功能、信息与交互规格','', '日期：2026-10-31。状态：含截图P0扩展；端侧15接口与部分原生流程已有验证，新增长任务/恢复状态仍待逐项原生验收，云上传/OCR3接口仍规划。产品依据：[V12 PRD](../../Abasong_PRD_V12_首版产品需求.md)及[V12.1补充决策](../Abasong_V12.1_需求补充与原型决策.md)。颜色/组件依据：[V3设计系统](../design/Abasong_设计系统_V3_原型制作基线.md)。', '', '## 1. 全局规则','', '产品只做临时配送支援与灵活运力协作，不设置长期招聘/司机招募流程。根导航固定首页/司机圈/我的；公寓/找活/找人为同一首页路由的状态。二级页面和公共面板可暂时隐藏导航，返回恢复来源视图、选中对象、筛选与滚动。登录后回到发起动作前的对象，但重新读取当前条件，不自动提交过期报名。', '', '每个界面只保留必要信息和一项当前主动作；空/错误/审核/来源/地图归属属于必要状态，设计说明、策略备注、合成数据说明留在原型外壳，不能成为产品首页常驻文案。', '', '普通草稿可保留；手动密码/进入信息明文只在编辑会话内存保留，不写通用持久草稿。截图仅保留本次添加内容，不提供跨次续填；服务端批次只支持本次提交一致性与重试，既有有限留存策略保留，详见[ADD-12](Abasong_V12.1_统一贡献入口与单次截图添加.md)。用户切账号、退出或资格被撤销后清理敏感缓存。需求、私聊、进入资料各自鉴权，不因显示同一地图就共享访问权。', '', '菜单按对象权限显示：发布者管理自己的需求，报名者管理自己的报名；司机与DSP不切换客户端或导航。当前没有支付、交接履约、司机排名、会员密码付费墙。', '', '原型使用合成资料和模拟请求；每个状态应可在原型外的场景控制中触发。开发说明/测试开关不出现在产品画面。', '', '## 2. 页面总览','', '| ID | 名称 | 载体 | 状态数 |','|---|---|---|---|']
 for p in pages: lines.append(f"| {p['id']} | {p['name']} | {p['surface']} | {len(p['states'])} |")
 lines+=['','## 3. 逐页规格','']
 for p in pages:

@@ -30,8 +30,7 @@
     if(!state.logged)return loggedOut();
     const selected=saved.filter(e=>region==='all'||e.region===region);
     const shares=entries();
-    const batches=window.abasongImports.list();
-    return frame('我的公寓',`<div class="library-tabs" role="tablist" aria-label="我的公寓分类">${btn('lib-tab','我保存的','library-tab '+(tab==='saved'?'active':''),'data-id="saved" role="tab" aria-selected="'+(tab==='saved')+'"')}${btn('lib-tab','我共享的','library-tab '+(tab==='shared'?'active':''),'data-id="shared" role="tab" aria-selected="'+(tab==='shared')+'"')}</div>${tab==='saved'?`<label class="library-region">区域<select aria-label="筛选保存的公寓区域" data-library-region><option value="all">全部区域</option>${[...new Set(saved.map(e=>e.region))].map(r=>`<option ${r===region?'selected':''}>${esc(r)}</option>`).join('')}</select></label>${selected.length?selected.map(savedCard).join(''):empty('这个区域还没有公寓','可以收藏地图中的公寓，或添加自己的资料。')}`:`<p class="library-caption">反馈按记录展示；被查看不等于成功进入。</p>${shares.length?shares.map(({a,c})=>sharedCard(a,c)).join(''):empty('还没有共享记录','私存资料可在确认后主动共享。')}`}${batches.length?`<h2 class="import-section">导入记录</h2>${batches.map(j=>`<button class="import-batch" data-action="lib-batch" data-id="${j.id}"><span><b>截图导入 · ${esc(j.created)}</b><small>${j.status==='processing'?'正在整理':j.status==='submitting'?'正在保存':j.status==='cancelled'?'已取消':`${j.done} 条已处理 · ${j.pending} 条待处理`}</small></span>${I('chevron')}</button>`).join('')}`:''}`,act('contribute','贡献公寓密码')+`<div class="library-inline">${act('import','导入私存','text-btn')}${act('new','添加私人记录','text-btn')}</div>`);
+    return frame('我的公寓',`<div class="library-tabs" role="tablist" aria-label="我的公寓分类">${btn('lib-tab','我保存的','library-tab '+(tab==='saved'?'active':''),'data-id="saved" role="tab" aria-selected="'+(tab==='saved')+'"')}${btn('lib-tab','我共享的','library-tab '+(tab==='shared'?'active':''),'data-id="shared" role="tab" aria-selected="'+(tab==='shared')+'"')}</div>${tab==='saved'?`<label class="library-region">区域<select aria-label="筛选保存的公寓区域" data-library-region><option value="all">全部区域</option>${[...new Set(saved.map(e=>e.region))].map(r=>`<option ${r===region?'selected':''}>${esc(r)}</option>`).join('')}</select></label>${selected.length?selected.map(savedCard).join(''):empty('这个区域还没有公寓','可以收藏地图中的公寓，或添加自己的资料。')}`:`<p class="library-caption">反馈按记录展示；被查看不等于成功进入。</p>${shares.length?shares.map(({a,c})=>sharedCard(a,c)).join(''):empty('还没有共享记录','私存资料可在确认后主动共享。')}`}`,act('contribute','贡献公寓密码')+`<div class="library-inline">${act('import','导入私存','text-btn')}${act('new','添加私人记录','text-btn')}</div>`);
   }
   function sharedCard(a,c){
     const stats=c.stats||{views:0,useful:0,notUseful:0,last:null};
@@ -62,6 +61,7 @@
   };
   const baseRender=render;
   render=function(){
+    window.abasongImports.syncRoute();
     if(state.route.view==='contributions'||state.route.view==='notebook'){
       history.replaceState({abPrototype:true,route:structuredClone(state.route),stack:structuredClone(state.stack)},'',location.pathname+location.search+'#'+state.route.view);
       $('#app').innerHTML=state.route.view==='contributions'?list():detail();$('#screen-title').textContent=state.route.view==='contributions'?'我的公寓':'公寓详情与我的记录';$('#screen-id').textContent=state.route.view==='contributions'?'U06':'U09';renderModal();return;
@@ -86,7 +86,6 @@
       case'contribute':modal('library-contribute');break;
       case'contribute-screenshots':closeModal();window.abasongImports.open('share');break;
       case'contribute-manual':modal('library-choose-apartment');break;
-      case'batch':window.abasongImports.resume(id);break;
       case'new':openPrivate(null,null);break;
       case'region':modal('library-region',{id});break;
       case'new-private':openPrivate(id,null);break;

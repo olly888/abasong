@@ -1,3 +1,4 @@
+import { openContributionMenu } from "./contribution-entry";
 import {
   useCallback,
   useEffect,
@@ -686,12 +687,7 @@ export function HomeApartmentContent({
               message={locationNotice ?? notice}
               candidates={candidates}
               onSelect={(p) => void select(p)}
-              onContribute={() =>
-                router.push({
-                  pathname: "/apartments/import",
-                  params: { mode: "shared" },
-                })
-              }
+              onContribute={openContributionMenu}
               onRetry={() =>
                 locationNotice
                   ? blocked

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   AppState,
+  BackHandler,
   Image,
   Platform,
   Pressable,
@@ -10,7 +11,12 @@ import {
   Text,
   View,
 } from "react-native";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  usePreventRemove,
+} from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { File, Paths } from "expo-file-system";
 import { randomUUID } from "expo-crypto";
@@ -30,7 +36,7 @@ import { extractCandidates } from "./extract";
 import { runRecognitionBatch, RecognitionError } from "./recognition-work";
 import { recognize } from "./recognize";
 import { exactApartment } from "./match";
-import { restoreDraftView } from "./restore-draft";
+import { hasUnsubmittedImportWork } from "./exit-policy";
 import { ServerDraft } from "./server-draft";
 import { exitImport } from "./navigation";
 import { createImageCache } from "./storage";
@@ -141,11 +147,7 @@ function Session() {
     [query, setQuery] = useState(""),
     [matches, setMatches] = useState<S["Apartment"][]>([]),
     [searchBusy, setSearchBusy] = useState(false),
-    [drafts, setDrafts] = useState<S["ImportBatch"][]>([]),
-    [draftSaved, setDraftSaved] = useState(false),
-    [draftLoadError, setDraftLoadError] = useState(false),
-    [draftLoadBusy, setDraftLoadBusy] = useState(false),
-    [restartRequired, setRestartRequired] = useState(false),
+    [exitAccepted, setExitAccepted] = useState(false),
     [processing, setProcessing] = useState(false),
     [progress, setProgress] = useState({ finished: 0, total: 0 });
   const server = useRef<ServerDraft | null>(null);
@@ -162,7 +164,6 @@ function Session() {
     live.current = true;
     abort.current = new AbortController();
     server.current = new ServerDraft(session, abort.current.signal);
-    void loadDrafts();
     return () => {
       live.current = false;
       abort.current.abort();
@@ -192,7 +193,6 @@ function Session() {
       selected: false,
     });
     setAttested(false);
-    setDraftSaved(false);
   }
   function candidate(
     sourceId: string,
@@ -236,14 +236,6 @@ function Session() {
       if (!live.current) {
         for (const a of result.assets) dispose(a.uri);
         return;
-      }
-      if (restartRequired) {
-        // The user explicitly reselected images; do not reuse a source-only
-        // batch whose original image and unsubmitted OCR were never uploaded.
-        server.current = new ServerDraft(session, abort.current.signal);
-        setRestartRequired(false);
-        setDraftSaved(false);
-        setLocked(false);
       }
       const next: Source[] = [];
       let bytes = sources.reduce((sum, s) => {
@@ -301,7 +293,6 @@ function Session() {
         });
       }
       setSources((old) => [...old, ...next]);
-      setDraftSaved(false);
     } catch {
       if (live.current) setError("无法选择图片，请重试");
     } finally {
@@ -390,7 +381,6 @@ function Session() {
           setError("上一张截图仍在处理，请稍后再试");
         setStage(task.signal.aborted && !anyRows ? "select" : "review");
         setAttested(false);
-        setDraftSaved(false);
       }
     } finally {
       if (valid()) {
@@ -421,8 +411,6 @@ function Session() {
     setRows([]);
     setLocked(false);
     setAttested(false);
-    setDraftSaved(false);
-    setRestartRequired(false);
     setStage("select");
     setError(null);
   }
@@ -445,82 +433,55 @@ function Session() {
         setSearchBusy(false);
     }
   }
+  const exitPromptOpen = useRef(false);
+  usePreventRemove(
+    !exitAccepted && (busy || hasUnsubmittedImportWork(rows, sources, mode)),
+    ({ repeat }) => {
+      if (running.current || exitPromptOpen.current) return;
+      exitPromptOpen.current = true;
+      const dismiss = () => {
+        exitPromptOpen.current = false;
+      };
+      Alert.alert(
+        "离开截图添加？",
+        "未提交的内容将清除，已保存或共享的资料会保留。",
+        [
+          { text: "继续添加", style: "cancel", onPress: dismiss },
+          {
+            text: "离开",
+            style: "destructive",
+            onPress: () => {
+              dismiss();
+              setExitAccepted(true);
+              repeat();
+            },
+          },
+        ],
+        { cancelable: true, onDismiss: dismiss },
+      );
+    },
+  );
   function leave() {
-    if (running.current) return;
-    Alert.alert(
-      "离开截图添加？",
-      draftSaved
-        ? "已保存进度，可以稍后继续。"
-        : "未保存的修改将清除，已保存进度会保留。",
-      [
-        { text: "继续核对", style: "cancel" },
-        {
-          text: "离开",
-          style: "destructive",
-          onPress: () => exitImport(router),
-        },
-      ],
-    );
+    if (!running.current) exitImport(router);
   }
-  async function loadDrafts() {
-    if (!server.current || draftLoadBusy) return;
-    setDraftLoadBusy(true);
-    setDraftLoadError(false);
-    try {
-      const items = await server.current.available();
-      if (live.current) setDrafts(items);
-    } catch {
-      if (live.current) setDraftLoadError(true);
-    } finally {
-      if (live.current) setDraftLoadBusy(false);
-    }
+  function backWithinImport() {
+    if (processing) recognitionAbort.current?.abort();
+    else if (running.current) return;
+    else if (editing) {
+      setEditing(null);
+      setMatches([]);
+    } else if (stage === "review" && !locked) setStage("select");
+    else leave();
   }
-  async function saveDraft() {
-    if (running.current || (!rows.length && !server.current?.batch)) return;
-    running.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      const batch = await server.current!.save(rows, sources, mode);
-      if (live.current) {
-        setDraftSaved(true);
-        setLocked(batch.mode_locked);
-      }
-    } catch (e) {
-      if (live.current)
-        setError(e instanceof Error ? e.message : "进度保存失败，请重试");
-    } finally {
-      running.current = false;
-      if (live.current) setBusy(false);
-    }
-  }
-  async function restoreDraft(id: string) {
-    if (running.current) return;
-    running.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      const view = await restoreDraftView(server.current!, id);
-      const next = view.rows;
-      if (live.current) {
-        setRows(next);
-        setSources([]);
-        setMode(view.mode);
-        setLocked(view.locked);
-        setDraftSaved(true);
-        setAttested(false);
-        setRestartRequired(view.restartRequired);
-        setStage(next.length ? "review" : "select");
-        if (!next.length) setError("上次没有保存识别结果，请重新选择截图");
-      }
-    } catch (e) {
-      if (live.current)
-        setError(e instanceof Error ? e.message : "无法恢复草稿");
-    } finally {
-      running.current = false;
-      if (live.current) setBusy(false);
-    }
-  }
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        backWithinImport();
+        return true;
+      });
+      return () => sub.remove();
+    }, [processing, editing, stage, locked]),
+  );
   async function submit() {
     if (running.current || !attested) return;
     const selected = rows.filter(
@@ -564,7 +525,6 @@ function Session() {
               : undefined,
           });
         setLocked(!!server.current!.batch?.mode_locked);
-        setDraftSaved(true);
         setStage("result");
       }
     } catch (e) {
@@ -595,7 +555,6 @@ function Session() {
       if (next === mode) return;
       setMode(next);
       setAttested(false);
-      setDraftSaved(false);
       setRows((old) =>
         old.map((r) => ({
           ...r,
@@ -606,23 +565,6 @@ function Session() {
     Alert.alert("保存方式", undefined, [
       { text: "共享并保存", onPress: () => choose("private_and_share") },
       { text: "仅自己保存", onPress: () => choose("private_only") },
-      { text: "取消", style: "cancel" },
-    ]);
-  }
-  function more() {
-    if (busy) return;
-    Alert.alert("更多", undefined, [
-      ...(rows.length || (server.current?.batch && !locked)
-        ? [
-            {
-              text: draftSaved ? "更新已保存进度" : "保存进度",
-              onPress: () => void saveDraft(),
-            },
-          ]
-        : []),
-      ...(!locked
-        ? [{ text: "继续添加截图", onPress: () => setStage("select") }]
-        : []),
       { text: "取消", style: "cancel" },
     ]);
   }
@@ -641,27 +583,16 @@ function Session() {
         stage === "review" && !editing && !processing && !locked ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="更多操作"
+            accessibilityLabel="添加截图"
             disabled={busy}
-            onPress={more}
+            onPress={() => setStage("select")}
             style={styles.headerAction}
           >
-            <Text style={styles.link}>更多</Text>
+            <Text style={styles.link}>添加截图</Text>
           </Pressable>
         ) : undefined
       }
-      onBack={() => {
-        if (processing) {
-          recognitionAbort.current?.abort();
-        } else if (running.current) return;
-        else if (editing) {
-          setEditing(null);
-          setMatches([]);
-        } else if (stage === "review" && !locked) {
-          setStage("select");
-          void loadDrafts();
-        } else leave();
-      }}
+      onBack={backWithinImport}
       footer={
         <View style={{ gap: 12 }}>
           <FormError message={error} />
@@ -753,7 +684,7 @@ function Session() {
                 }
                 onPress={() =>
                   stage === "result" && !pending.length
-                    ? exitImport(router)
+                    ? leave()
                     : void submit()
                 }
               />
@@ -764,31 +695,6 @@ function Session() {
     >
       {stage === "select" ? (
         <>
-          {draftLoadBusy ? (
-            <ActivityIndicator accessibilityLabel="正在加载已保存进度" />
-          ) : null}
-          {draftLoadError ? (
-            <>
-              <Text style={styles.meta}>上次进度暂时无法加载</Text>
-              <ActionButton
-                label="重试加载进度"
-                secondary
-                disabled={busy}
-                onPress={() => void loadDrafts()}
-              />
-            </>
-          ) : null}
-          {!sources.length &&
-            drafts
-              .filter((d) => d.candidate_count > 0)
-              .map((d) => (
-                <ListRow
-                  key={d.id}
-                  title="继续上次添加"
-                  subtitle={`${d.candidate_count} 条资料`}
-                  onPress={() => void restoreDraft(d.id)}
-                />
-              ))}
           <View style={styles.scopeRow}>
             <Text style={styles.label}>
               {sources.length
@@ -911,7 +817,6 @@ function Session() {
               setEditing(null);
               setMatches([]);
               setAttested(false);
-              setDraftSaved(false);
             }}
           >
             <Text style={styles.error}>移除这条资料</Text>

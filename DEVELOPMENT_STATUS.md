@@ -1,6 +1,10 @@
 # Abasong development status
 
-Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-direct-sharing`.
+Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-contribution-entry`.
+
+## Latest steering — unified contribution / single session (2026-10-31)
+
+[ADD-12](docs/product/Abasong_V12.1_统一贡献入口与单次截图添加.md) approved. Implemented one shared menu for home/My/library; removed cross-session draft discovery/save/resume from screenshot UI. Existing committed records and same-attempt retries remain. Old restoration tests/evidence stay historical and no longer define driver-facing scope. No backend/schema/grant/dependency change. Execution record: [entry/session acceptance](docs/technical/D1_统一贡献入口与单次截图添加验收.md). check104, static page40/282 validation, JS syntax and dual-platform JS exports PASS. Both simulators observed matching home/My menus, picker selection, cancel-exit preservation, confirmed exit/fresh reentry, empty exit and manual form entry. Prototype mixed-review, no history list and fresh entry observed; bumped script versions to resolve cached legacy list call. Native swipe/system-back, new partial-write exit and physical/field checks remain unverified. Evidence is in the acceptance record; no complete D1 claim.
 
 ## Latest steering — direct contribution (2026-10-31)
 

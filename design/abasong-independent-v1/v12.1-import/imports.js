@@ -10,6 +10,8 @@
     { id:'s6', title:'新公寓 · 尚未收录', lines:['Cedar Flats','1610 W Cedar Ave, Los Angeles, CA','Main gate: 0073*'], rows:[{apt:null,address:'1610 W Cedar Ave, Los Angeles, CA',name:'Cedar Flats',code:'0073*',scope:'大门',status:'needs_review',reason:'尚未匹配到公寓'}] },
   ];
   let jobs=[], selected=new Set(), gallery=false, current=null, serial=0, editing=null, editDraft=null, entryIntent='share', adding=false;
+  let origin=null, originStack=[], sessionOpen=false;
+  const importViews=['importUpload','importReview','importResult'];
   const finished=new Set(['submitted','duplicate','pending','saved_private']);
   const statusText={ready:'已匹配',needs_review:'待处理',submitted:'已贡献',duplicate:'已有相同记录',pending:'尚未发布',failed:'保存失败',saved_private:'仅自己保存',removed:'已移除'};
   const source=id=>fixtures.find(f=>f.id===id);
@@ -26,9 +28,27 @@
   function gate() {
     return frame('贡献公寓资料',empty(state.logged?'贡献资格待核验':'请先登录',''),control(state.logged?'home':'login',state.logged?'返回首页':'登录'));
   }
+  function clearSession() {
+    jobs.forEach(j=>j.generation++); jobs=[]; current=null; selected=new Set();
+    gallery=false; editing=null; editDraft=null; adding=false; sessionOpen=false;
+  }
   function open(intent='share') {
     if(!state.logged){beginAuth(()=>open(intent));return;}
-    adding=false;entryIntent=intent==='private'?'private':'share';selected=new Set();gallery=false;editing=null;nav('importUpload');
+    if(!importViews.includes(state.route.view)){origin={...state.route,args:{...state.route.args}};originStack=[...state.stack];}
+    clearSession();sessionOpen=true;entryIntent=intent==='private'?'private':'share';nav('importUpload');
+  }
+  function unfinished() {
+    const j=batch();
+    return j ? j.status==='processing'||j.rows.some(r=>!finished.has(r.status)&&r.status!=='removed')||j.failedSources.length>0||j.paused||[...selected].some(id=>!j.sources.includes(id)) : selected.size>0;
+  }
+  function leave() {
+    const j=batch();if(j?.status==='submitting')return;
+    const finish=()=>{
+      const dest=origin||{view:'home',args:{}};clearSession();closeModal();
+      state.stack=[...originStack];nav(dest.view,dest.args,true);
+    };
+    if(unfinished())modal('confirm',{title:'离开截图添加？',text:'未提交的内容将清除，已保存或共享的资料会保留。',confirm:finish,danger:true,confirmLabel:'离开',cancelLabel:'继续添加'});
+    else finish();
   }
   function uploadPage() {
     if(blocked())return gate();
@@ -50,7 +70,7 @@
     if(editing&&getRow(editing))return frame('编辑资料',editor(getRow(editing)));
     const ready=j.rows.filter(r=>r.status==='ready'), pending=j.rows.filter(r=>r.status==='needs_review'||r.status==='failed');
     const n=ready.filter(r=>r.selected).length;
-    return frame('确认识别结果',`${j.paused?secondary('resume-recognize','继续识别剩余截图'):''}<div class="import-summary">${ready.length+pending.length} 条资料 · 已选 ${n} 条</div>${ready.map(item).join('')}${pending.length?`<h2 class="import-section">需要补充 ${pending.length}</h2>${pending.map(item).join('')}`:''}${!ready.length&&!pending.length?empty('没有待确认资料',''):''}${j.failedSources.length?`<div class="flat-card"><b>${j.failedSources.length} 张未识别成功</b>${secondary('retry-ocr','重试这些截图')}</div>`:''}`,`<button class="import-scope-summary" data-action="import-scope-menu" ${j.modeLocked?'disabled':''}><span>保存方式</span><b>${j.share?'共享并保存':'仅自己保存'}</b>${j.modeLocked?'':'<em>更改</em>'}</button>${j.share&&!state.qualified?'<p class="error">共享资格待核验</p>':''}${n?`<label class="check-row import-consent"><input type="checkbox" data-import-consent ${j.confirmed?'checked':''}><span>我已核对，并有权${j.share?'共享':'保存'}所选资料</span></label>`:''}${control('submit',`${j.share?'确认共享':'确认保存'} ${n} 条`,n&&j.confirmed&&(!j.share||state.qualified)?'':'disabled')}`,j.modeLocked?'':ib('import-more','more','更多操作'));
+    return frame('确认识别结果',`${j.paused?secondary('resume-recognize','继续识别剩余截图'):''}<div class="import-summary">${ready.length+pending.length} 条资料 · 已选 ${n} 条</div>${ready.map(item).join('')}${pending.length?`<h2 class="import-section">需要补充 ${pending.length}</h2>${pending.map(item).join('')}`:''}${!ready.length&&!pending.length?empty('没有待确认资料',''):''}${j.failedSources.length?`<div class="flat-card"><b>${j.failedSources.length} 张未识别成功</b>${secondary('retry-ocr','重试这些截图')}</div>`:''}`,`<button class="import-scope-summary" data-action="import-scope-menu" ${j.modeLocked?'disabled':''}><span>保存方式</span><b>${j.share?'共享并保存':'仅自己保存'}</b>${j.modeLocked?'':'<em>更改</em>'}</button>${j.share&&!state.qualified?'<p class="error">共享资格待核验</p>':''}${n?`<label class="check-row import-consent"><input type="checkbox" data-import-consent ${j.confirmed?'checked':''}><span>我已核对，并有权${j.share?'共享':'保存'}所选资料</span></label>`:''}${control('submit',`${j.share?'确认共享':'确认保存'} ${n} 条`,n&&j.confirmed&&(!j.share||state.qualified)?'':'disabled')}`,j.modeLocked?'':btn('import-add-more','添加截图','text-btn'));
   }
   function resultPage() {
     if(blocked())return gate();const j=batch();if(!j)return frame('导入记录',empty('还没有导入记录',''),control('open','选择截图'));
@@ -59,11 +79,11 @@
     const count=s=>j.rows.filter(r=>r.status===s).length;
     const needs=j.rows.filter(r=>['needs_review','ready','failed'].includes(r.status)).length;
     const visible=j.rows.filter(r=>r.status!=='removed');
-    return frame('导入结果',`<div class="import-result-title">${I(needs||j.failedSources.length?'clock':'check')}<h2>${needs||j.failedSources.length?'还有资料待处理':'本批资料已处理'}</h2></div><div class="import-metrics"><div><b>${count('submitted')}</b><span>已贡献</span></div><div><b>${count('saved_private')}</b><span>仅自己保存</span></div><div><b>${count('duplicate')}</b><span>相同记录</span></div><div><b>${needs+j.failedSources.length}</b><span>待处理</span></div></div>${visible.map(item).join('')}${j.failedSources.length?`<div class="flat-card">${j.failedSources.length} 张截图识别失败${secondary('retry-ocr','重试失败截图')}</div>`:''}${btn('import-cancel','移除未提交资料','text-btn danger')}`,`${count('failed')?control('retry-submit','重试提交失败项'):needs?control('review','继续确认'):control('contributions','查看我的公寓')}${secondary('later','稍后继续')}`);
+    return frame('导入结果',`<div class="import-result-title">${I(needs||j.failedSources.length?'clock':'check')}<h2>${needs||j.failedSources.length?'还有资料待处理':'本批资料已处理'}</h2></div><div class="import-metrics"><div><b>${count('submitted')}</b><span>已贡献</span></div><div><b>${count('saved_private')}</b><span>仅自己保存</span></div><div><b>${count('duplicate')}</b><span>相同记录</span></div><div><b>${needs+j.failedSources.length}</b><span>待处理</span></div></div>${visible.map(item).join('')}${j.failedSources.length?`<div class="flat-card">${j.failedSources.length} 张截图识别失败${secondary('retry-ocr','重试失败截图')}</div>`:''}${btn('import-cancel','移除未提交资料','text-btn danger')}`,`${count('failed')?control('retry-submit','重试提交失败项'):needs?control('review','继续确认'):control('done','完成')}`);
   }
   function createBatch() {
     if(blocked()||!selected.size)return;
-    const previous=batch();if(adding&&previous&&!previous.modeLocked){previous.sources.push(...[...selected].filter(id=>!previous.sources.includes(id)));adding=false;editing=null;nav('importResult');process(previous,false);return;}
+    const previous=batch();if(previous&&!previous.modeLocked){previous.sources.push(...[...selected].filter(id=>!previous.sources.includes(id)));adding=false;editing=null;nav('importResult');process(previous,false);return;}
     const j={id:'import-'+(++serial),sources:[...selected],rows:[],failedSources:[],confirmed:false,share:entryIntent==='share',modeLocked:false,status:'processing',generation:0,created:new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})};jobs.unshift(j);current=j.id;editing=null;nav('importResult');process(j,false);
   }
   function process(j,retry) {
@@ -104,20 +124,18 @@
   function importAction(a,b) {
     const id=b?.dataset.id;
     if(a==='open'){open();return;}
-    if(a==='login'){beginAuth(()=>open(intent));return;}
+    if(a==='login'){beginAuth(()=>open(entryIntent));return;}
     if(a==='home'){nav('home');return;}
     if(blocked()){toast('请先登录');render();return;}
     const j=batch();
     switch(a){
       case'gallery':gallery=true;render();break;
-      case'more':modal('menu',{title:'更多',items:[{action:'import-save-progress',label:'保存进度'},{action:'import-add-more',label:'继续添加截图'}]});break;
-      case'save-progress':closeModal();toast('本页进度已保留');break;
       case'add-more':closeModal();adding=true;selected=new Set();gallery=true;nav('importUpload');break;
       case'scope-menu':if(!j.modeLocked)modal('menu',{title:'保存方式',items:[{action:'import-scope-share',label:'共享并保存'},{action:'import-scope-private',label:'仅自己保存'}]});break;
       case'scope-share':case'scope-private':if(!j.modeLocked){j.share=a==='scope-share';j.confirmed=false;closeModal();render();}break;
       case'select':selected.has(id)?selected.delete(id):selected.add(id);render();break;
       case'chosen':gallery=false;render();break;
-      case'remove-source':selected.delete(id);render();break;
+      case'remove-source':selected.delete(id);if(j&&!j.modeLocked){j.sources=j.sources.filter(x=>x!==id);j.rows=j.rows.filter(r=>r.source!==id);j.confirmed=false;}render();break;
       case'recognize':createBatch();break;
       case'pause':j.generation++;j.paused=true;j.status='needs_review';nav('importReview');break;
       case'resume-recognize':j.paused=false;nav('importResult');process(j,false);break;
@@ -129,17 +147,18 @@
       case'submit':publish(j);break;
       case'retry-submit':publish(j,true);break;
       case'retry-ocr':process(j,true);nav('importResult');break;
-      case'later':editing=null;nav('contributions');break;
-      case'contributions':nav('contributions');break;
-      case'resume':current=id;nav('importResult');break;
+      case'done':leave();break;
       case'cancel':if(j)confirmAction('移除未提交资料？','已经贡献的记录会保留。',()=>{j.generation++;j.status='cancelled';j.rows=j.rows.filter(r=>finished.has(r.status));j.failedSources=[];j.sources=[];closeModal();render();},true);break;
     }
   }
   Object.assign(screens,{importUpload:['B04','截图导入'],importReview:['B05','识别结果确认'],importResult:['B06','导入进度与结果']});
   for(const view of ['importUpload','importReview','importResult']){const o=document.createElement('option');o.value=view;o.textContent=screens[view].join(' · ');$('#inspect-page').append(o);}
+  function syncRoute(){if(sessionOpen&&!importViews.includes(state.route.view))clearSession();}
   const baseRender=render;
   render=function(){
-    if(['importUpload','importReview','importResult'].includes(state.route.view)) {
+    syncRoute();
+    if(importViews.includes(state.route.view)) {
+      if(!sessionOpen){clearSession();sessionOpen=true;state.route={view:'importUpload',args:{}};}
       history.replaceState({abPrototype:true,route:structuredClone(state.route),stack:structuredClone(state.stack)},'',location.pathname+location.search+'#'+state.route.view);
       $('#app').innerHTML=state.route.view==='importUpload'?uploadPage():state.route.view==='importReview'?reviewPage():resultPage();
       $('#screen-title').textContent=screens[state.route.view][1];$('#screen-id').textContent=screens[state.route.view][0];renderModal();return;
@@ -147,21 +166,29 @@
     baseRender();const v=state.route.view;
     if(v==='me'&&state.logged)$('.menu-section')?.insertAdjacentHTML('afterbegin',menu('贡献公寓资料','','import-open'));
     if(v==='code')$('[data-submit="code"]')?.insertAdjacentHTML('beforebegin',secondary('open','截图贡献多个公寓'));
-    if(v==='contributions'){
-      const sc=$('.page-scroll');sc?.querySelector('.page-head')?.insertAdjacentHTML('afterend',`<div class="import-contribute">${control('open','从截图添加')}</div>${state.logged?jobs.map(j=>`<button class="import-batch" data-action="import-resume" ${attr(j.id)}><span><b>截图导入 · ${esc(j.created)}</b><small>${j.status==='cancelled'?'已取消':j.status==='processing'?'正在识别':j.status==='submitting'?'正在提交':`${j.rows.filter(r=>finished.has(r.status)).length} 条已处理 · ${j.rows.filter(r=>['ready','needs_review','failed'].includes(r.status)).length+j.failedSources.length} 条待处理`}</small></span>${I('chevron')}</button>`).join(''):''}`);
-    }
+
   };
   const baseModal=renderModal;
   renderModal=function(){if(state.modal?.type==='import-preview'){const f=source(state.modal.id);$('#overlay').innerHTML=`<section class="dialog import-preview" role="dialog" aria-modal="true" aria-label="截图预览"><div class="close-row"><h2>截图预览</h2>${ib('close-modal','close','关闭')}</div><img src="samples/${f.id}.svg" alt="${esc(f.title)}"></section>`;}else baseModal();};
   const baseActions=actions;
-  actions=function(a,b){if(a.startsWith('import-')){importAction(a.slice(7),b);return;}if(a==='back'&&state.route.view==='importUpload'&&gallery){gallery=false;render();return;}if(a==='back'&&state.route.view==='importReview'&&editing){editing=null;render();return;}baseActions(a,b);};
+  actions=function(a,b){
+    if(a.startsWith('import-')){importAction(a.slice(7),b);return;}
+    if(a==='back'&&importViews.includes(state.route.view)){
+      if(state.route.view==='importUpload'&&gallery){gallery=false;render();return;}
+      if(state.route.view==='importReview'&&editing){editing=null;editDraft=null;render();return;}
+      if(batch()?.status==='processing'){importAction('pause');return;}
+      if(state.route.view==='importReview'&&!batch()?.modeLocked){nav('importUpload',{},true);return;}
+      leave();return;
+    }
+    baseActions(a,b);
+  };
   document.addEventListener('change',e=>{const box=e.target;if(box.matches('[data-import-mode]')){const j=batch();if(!j.modeLocked){j.share=box.value==='share';j.confirmed=false;capture();render();}}if(box.matches('[data-import-check]')){const r=getRow(box.dataset.importCheck);if(r&&r.status==='ready'){r.selected=box.checked;batch().confirmed=false;capture();render();}}if(box.matches('[data-import-consent]')){batch().confirmed=box.checked;capture();render();}});
   document.addEventListener('input',e=>{if(!e.target.closest('[data-submit="import-edit"]')||!editDraft)return;const t=e.target;if(t.name==='apt'){editDraft.apt=t.value==='new'?null:t.value;editDraft.propose=t.value==='new';}else if(['code','scope','address'].includes(t.name))editDraft[t.name]=t.value;});
   document.addEventListener('submit',e=>{if(!e.target.matches('[data-submit="import-edit"]'))return;e.preventDefault();if(blocked())return;const r=getRow(editing);if(!r)return;const fd=new FormData(e.target),apt=String(fd.get('apt')||''),code=String(fd.get('code')||'').trim(),addr=String(fd.get('address')||'').trim();if(!apt||!code||(apt==='new'&&!addr)){state.errors.import='请确认公寓和密码；新公寓需填写英文地址';render();return;}if(batch().share&&apt==='new'){state.errors.import='共享前请选择所属公寓，也可以先仅自己保存';render();return;}r.apt=apt==='new'?null:apt;r.propose=apt==='new';r.address=addr;r.code=code;r.scope=String(fd.get('scope')||'').trim()||'大门';r.status='ready';r.selected=true;r.reason='';batch().confirmed=false;editing=null;state.errors.import=null;render();});
   const baseReset=resetPrototype;
   resetPrototype=function(){jobs.forEach(j=>j.generation++);jobs=[];selected.clear();current=null;editing=null;gallery=false;serial=0;for(const id of ['import-submit-fail','import-ocr-fail'])$('#'+id).checked=false;baseReset();};
-  document.querySelectorAll('[data-import-lab]').forEach(b=>b.addEventListener('click',()=>{state.logged=true;state.qualified=true;state.scenario='normal';$('#scenario').value='normal';if(b.dataset.importLab==='mixed'){selected=new Set(fixtures.map(f=>f.id));createBatch();}else open();}));
-  window.abasongImports={open,list:()=>jobs.map(j=>({id:j.id,created:j.created,status:j.status,done:j.rows.filter(r=>finished.has(r.status)).length,pending:j.rows.filter(r=>['ready','needs_review','failed'].includes(r.status)).length+j.failedSources.length})),resume:id=>importAction('resume',{dataset:{id}})};
+  document.querySelectorAll('[data-import-lab]').forEach(b=>b.addEventListener('click',()=>{state.logged=true;state.qualified=true;state.scenario='normal';$('#scenario').value='normal';if(b.dataset.importLab==='mixed'){open();selected=new Set(fixtures.map(f=>f.id));createBatch();}else open();}));
+  window.abasongImports={open,syncRoute};
   if(new URLSearchParams(location.search).get('flow')==='screenshots'){state.route={view:'importUpload',args:{}};state.stack=[];}
   render();
 })();

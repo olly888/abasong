@@ -1,5 +1,6 @@
+import { openContributionMenu } from "../../apartments/contribution-entry";
 import { useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "../../auth/AuthProvider";
@@ -47,20 +48,8 @@ export default function Profile() {
                 : "资料查看资格待审核"}
             </Text>
             <ActionButton
-              label="贡献公寓密码"
-              onPress={() =>
-                Alert.alert("贡献公寓密码", undefined, [
-                  {
-                    text: "截图识别",
-                    onPress: () => router.push("/apartments/import"),
-                  },
-                  {
-                    text: "快速填写",
-                    onPress: () => router.push("/apartments/contribute"),
-                  },
-                  { text: "取消", style: "cancel" },
-                ])
-              }
+              label="＋ 贡献公寓密码"
+              onPress={openContributionMenu}
             />
             <ListRow
               title="我的公寓"

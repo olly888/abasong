@@ -47,3 +47,10 @@ CLI 自动写入的个人 appleTeamId 与附带 Android permissions 已从项目
 本批只部署和记录，不把此前 107 单测、159 接口检查当作本批重新执行。实际编译日志和设备命令结果保留在忽略目录 `.tooling/`；最终状态以本记录及 DEVELOPMENT_STATUS 最新补记为准。
 
 参考：[Expo 本地开发构建](https://docs.expo.dev/guides/local-app-development/)、[Expo iOS Developer Mode](https://docs.expo.dev/guides/ios-developer-mode/)、[Expo/Xcode 开发签名](https://github.com/expo/fyi/blob/main/setup-xcode-signing.md)。
+
+
+## 2026-10-31 预览重新连接
+
+上一批按临时授权关闭真机服务后，用户重新打开开发版停在URL输入页。已恢复原授权局域网API3002、Metro8082与桥接，未扩大监听范围；API健康200、Metro运行状态200、iOS启动清单200且代码地址指向正确局域网入口，未登录业务请求仍为401。用户需要在开发客户端填入当前Mac的8082地址并连接，同一可信Wi-Fi、Mac与开发进程保持运行；此开发版本依赖Metro，USB连接本身不替代局域网服务。实际手机重新进入界面仍待用户确认。
+
+本次仅恢复预览服务，没有重新授予资料能力或恢复TEST密码；前一批清理结果继续有效。后续停止预览前应明确告知用户，避免把服务器关闭误认为业务页面故障。

@@ -21,7 +21,7 @@ export function extractCandidates(input: OcrLine[]): Extracted[] {
   return lines
     .flatMap((line) => {
       const match = codePattern.exec(line.text.trim());
-      if (!match) return [];
+      if (!match || match[1] === undefined) return [];
       const nearby = addresses.filter(
         (a) =>
           a.y <= line.y &&

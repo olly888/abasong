@@ -131,6 +131,10 @@ for p in pages:
  if p['id']=='M01':
   p['acceptance']+=' 首页搜索右侧为消息主入口，打开本二级页；我的顶部不重复放入口。'
 
+for p in pages:
+ if p['id']=='S01':
+  p['requirements'].append('ADD-16')
+  p['planned_address_photo']='已批准拍面单查地址：搜索内相机、端侧提取、同页核对后查找、复用地址候选；不进密码贡献批次、不移动GPS。当前仅L1识别实验，L2原型与原生状态待接入，详见ADD-16。'
 outdir=ROOT/'docs/product'
 outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'
@@ -310,6 +314,7 @@ for p in pages:
  lines+=['','| 元素/动作 | 目标 | 操作结果 |','|---|---|---|']+[f"| {a['label']} | {a['target']} | {a['result']} |" for a in p['actions']]
  lines+=['', '**必须制作的状态：** '+'；'.join(p['states'])+'。','', '**接口 operationId：** '+(p['api_contract_status'] if p.get('api_contract_status') else '、'.join(p['api_operations']) if p['api_operations'] else 'Auth SDK或纯客户端/来源动作；不新建无业务价值的接口')+'。', '', '**验收：** '+p['acceptance'], '', '**需求映射：** '+ '、'.join(p['requirements'])+'。','']
  if p.get('pending_extension'): lines += ['**截图扩展：** '+p['pending_extension'],'']
+ if p.get('planned_address_photo'): lines += ['**计划增量：** '+p['planned_address_photo']+' [ADD-16](Abasong_V12.1_拍面单查地址补充.md)。','']
 lines+=['## 4. 制作与变更规则','', '本次39个节点包含B04/B05/B06及重新定义的公寓U09；B01大字页按ADD-15移除，密码在卡片直接阅读。原36节点原型保留历史，不等于39条原生独立路由，也不是所有状态各复制一页。原有V1.1的B03/P02/P06/P07/C05/M03/U07/U12–U14在本版合并；C04生活专用表单/非公寓综合收藏/完整组织成员管理继续后置；U09仅做公寓私存工具。', '', '每个动作目标必须能到达，空白按钮不得伪装完成。接口由openapi-v12.yaml提供，operationId在目录中可机器检查；该文件保留名称，版本升为12.1。新增功能需更新补充决策→页面目录→接口/数据→原型与验收，不在画稿时临时加业务。', '', '后续先做公寓完整闭环，再做找人找活/分享，再做消息与常联系，最后补最小社区/我的；所有批次遵循同一套品牌和组件，不把多个历史版本混在同一原型。']
 (outdir/'Abasong_V12.1_页面功能信息与交互规格.md').write_text('\n'.join(lines)+'\n')
 print(f'{len(pages)} design nodes; {sum(len(p["states"]) for p in pages)} required state variants')

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import type { Client } from "pg";
 import type { components } from "../../packages/contracts/src/generated";
 import { assessHomeArrival } from "../../apps/mobile/src/apartments/arrival-policy";
@@ -143,6 +144,57 @@ export async function verifyPublicArrival(
       200,
     )) as S["AccessList"];
     assert.deepEqual(empty.items, []);
+  }
+  // Real public outlines include courtyards and gaps between buildings. Those
+  // are not verified arrival areas. Test synthetic observations there through
+  // the real service; buffering a whole property would create false matches.
+  const holes = (
+    await db.query<{ lng: number; lat: number }>(
+      `WITH rings AS (
+      SELECT (extensions.ST_DumpRings((extensions.ST_Dump(boundary)).geom)).*
+      FROM abasong.apartments WHERE id=$1
+    ), points AS (
+      SELECT extensions.ST_PointOnSurface(geom) AS p FROM rings WHERE path[1]>0
+    ) SELECT extensions.ST_X(p) AS lng,extensions.ST_Y(p) AS lat FROM points`,
+      [delMar],
+    )
+  ).rows;
+  assert.equal(
+    holes.length,
+    3,
+    "Del Mar's three courtyard holes must survive ingestion",
+  );
+  const woodside = publicExpansion.find((s) => s.slug === "woodside-village")!;
+  const dataset = JSON.parse(
+    readFileSync("data/public-apartments/la-expansion.geojson", "utf8"),
+  );
+  const property = dataset.features[1].properties.property_area;
+  const gap = (
+    await db.query<{ lng: number; lat: number; clear: boolean }>(
+      `WITH spaces AS (
+      SELECT boundary,extensions.ST_PointOnSurface(extensions.ST_Difference(
+        extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($2::text),4326),
+        extensions.ST_Buffer(boundary::extensions.geography,5)::extensions.geometry
+      )) AS p FROM abasong.apartments WHERE id=$1
+    ) SELECT extensions.ST_X(p) AS lng,extensions.ST_Y(p) AS lat,
+      NOT extensions.ST_DWithin(boundary::extensions.geography,p::extensions.geography,2) AS clear
+      FROM spaces`,
+      [woodside.id, JSON.stringify(property)],
+    )
+  ).rows[0]!;
+  assert.equal(gap.clear, true);
+  for (const point of [...holes, gap]) {
+    const result = (await req("POST", "/v1/apartments/resolve", reader, 200, {
+      point: { lng: point.lng, lat: point.lat },
+      observed_at: new Date().toISOString(),
+      accuracy_m: 2,
+      accuracy_permission: "precise",
+    })) as S["ResolveResult"];
+    assert.equal(result.matched_id, null);
+    assert.equal(
+      assessHomeArrival(null, undefined, result, now, now, false).apartment,
+      null,
+    );
   }
   const sample = samples.find((s) => s.id === publicApartmentId)!;
   const firstResult = (await req(

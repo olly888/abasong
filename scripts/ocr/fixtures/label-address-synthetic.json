@@ -1,0 +1,387 @@
+{
+  "synthetic_only": true,
+  "samples": [
+    {
+      "id": "to-after-from",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "From: TEST Sender",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "900 Sender Road",
+          "x": 0.06,
+          "y": 0.14500000000000002
+        },
+        {
+          "text": "Origin, CA 90000",
+          "x": 0.06,
+          "y": 0.19
+        },
+        {
+          "text": "",
+          "x": 0.06,
+          "y": 0.23500000000000001
+        },
+        {
+          "text": "To: TEST Recipient",
+          "x": 0.06,
+          "y": 0.28
+        },
+        {
+          "text": "120 Example Ave",
+          "x": 0.06,
+          "y": 0.32499999999999996
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.37
+        },
+        {
+          "text": "Phone: 555-555-0100",
+          "x": 0.06,
+          "y": 0.41500000000000004
+        },
+        {
+          "text": "TEST TRACK 123456789",
+          "x": 0.06,
+          "y": 0.45999999999999996
+        },
+        {
+          "text": "Stop 18",
+          "x": 0.06,
+          "y": 0.505
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "two-columns",
+      "font": 24,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "From:",
+          "x": 0.05,
+          "y": 0.1
+        },
+        {
+          "text": "To:",
+          "x": 0.55,
+          "y": 0.1
+        },
+        {
+          "text": "900 Sender Road",
+          "x": 0.05,
+          "y": 0.15
+        },
+        {
+          "text": "120 Example Ave",
+          "x": 0.55,
+          "y": 0.15
+        },
+        {
+          "text": "Origin, CA 90000",
+          "x": 0.05,
+          "y": 0.2
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.55,
+          "y": 0.2
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "unit-inline",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "To:",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "120 Example Ave Apt 28",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "split-city",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "SHIP TO:",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "120 Example Ave",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Unit #28",
+          "x": 0.06,
+          "y": 0.18
+        },
+        {
+          "text": "Testville",
+          "x": 0.06,
+          "y": 0.21
+        },
+        {
+          "text": "CA 90000-1234",
+          "x": 0.06,
+          "y": 0.24
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "inline-to",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "To: 120 Example Ave",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "cropped-address",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "120 Example Ave",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "only-sender",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "From: TEST Sender",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "900 Sender Road",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Origin, CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "numbers-only",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "To: TEST Recipient",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "Stop 18",
+          "x": 0.06,
+          "y": 0.15000000000000002
+        },
+        {
+          "text": "CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        },
+        {
+          "text": "Apt 28",
+          "x": 0.06,
+          "y": 0.25
+        },
+        {
+          "text": "C 020",
+          "x": 0.06,
+          "y": 0.30000000000000004
+        },
+        {
+          "text": "TEST TRACK 123456789",
+          "x": 0.06,
+          "y": 0.35
+        },
+        {
+          "text": "Phone: 555-555-0100",
+          "x": 0.06,
+          "y": 0.4
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "two-recipients",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "To:",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "120 Example Ave",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        },
+        {
+          "text": "To:",
+          "x": 0.06,
+          "y": 0.4
+        },
+        {
+          "text": "220 Sample Road",
+          "x": 0.06,
+          "y": 0.45
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.5
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000",
+        "220 Sample Road, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "small-text",
+      "font": 13,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "To:",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "120 Example Ave",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "blurred-text",
+      "font": 28,
+      "blur": 2,
+      "lines": [
+        {
+          "text": "To:",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "120 Example Ave",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Testville, CA 90000",
+          "x": 0.06,
+          "y": 0.2
+        }
+      ],
+      "expected": [
+        "120 Example Ave, Testville, CA 90000"
+      ]
+    },
+    {
+      "id": "missing-locality",
+      "font": 28,
+      "blur": 0,
+      "lines": [
+        {
+          "text": "To:",
+          "x": 0.06,
+          "y": 0.1
+        },
+        {
+          "text": "120 Example Ave",
+          "x": 0.06,
+          "y": 0.15
+        },
+        {
+          "text": "Phone: 555-555-0100",
+          "x": 0.06,
+          "y": 0.2
+        }
+      ],
+      "expected": [
+        "120 Example Ave"
+      ]
+    }
+  ]
+}

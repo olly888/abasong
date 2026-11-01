@@ -70,7 +70,8 @@ for name in ('LibraryCreate','LibraryPatch','PrivateRecordCreate','PrivateRecord
  assert not {'owner_id','status','capabilities','payload'}.intersection(contract['components']['schemas'][name]['properties'])
 catalog=json.loads((ROOT/'docs/product/V12.1_页面与状态目录.json').read_text())
 page_ids={p['id'] for p in catalog['pages']}
-assert len(page_ids)==len(catalog['pages'])==40
+assert len(page_ids)==len(catalog['pages'])==39
+assert 'B01' not in page_ids  # ADD-15: password text is read inline.
 assert {'B04','B05','B06','U09'}.issubset(page_ids)
 for page in catalog['pages']:
     if page['id'] in {'B04','B05','B06'}:

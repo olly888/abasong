@@ -46,8 +46,8 @@
     "postgis_and_role_integration": "not_run"
   },
   "page_spec": {
-    "nodes": 40,
-    "state_variants": 287,
+    "nodes": 39,
+    "state_variants": 284,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

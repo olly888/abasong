@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import {
   ActivityIndicator,
-  Modal,
   PanResponder,
   Pressable,
   ScrollView,
@@ -9,7 +8,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { ActionButton } from "../auth/AuthControls";
@@ -50,10 +48,8 @@ export function ApartmentSheet(p: SheetProps) {
     anchor = useRef<Anchor | null>(null),
     mounted = useRef(true);
   const [contentHeight, setContentHeight] = useState(210);
-  const [largeId, setLargeId] = useState<string | null>(null);
   const canRead = p.status === "ready",
-    records = canRead ? p.records : [],
-    large = canRead ? records.find((r) => r.id === largeId) : undefined;
+    records = canRead ? p.records : [];
   const current = useRef(p);
   current.current = p;
   const pan = useRef(
@@ -72,9 +68,6 @@ export function ApartmentSheet(p: SheetProps) {
       mounted.current = false;
     };
   }, []);
-  useEffect(() => {
-    if (!canRead) setLargeId(null);
-  }, [canRead]);
   useEffect(() => {
     let second = 0;
     const frame = requestAnimationFrame(() => {
@@ -101,21 +94,19 @@ export function ApartmentSheet(p: SheetProps) {
   }
   function code(r: S["AccessRecord"], big = false) {
     return (
-      <Pressable
-        focusable
-        accessibilityRole="button"
-        accessibilityLabel={
-          r.method === "keypad" ? `密码 ${r.value}，放大查看` : "放大进入方式"
-        }
-        onPress={() => setLargeId(r.id)}
-      >
-        <Text style={big ? styles.code : styles.recordCode}>
+      <View style={styles.codeBlock}>
+        <Text
+          accessibilityLabel={
+            r.method === "keypad" ? `密码 ${r.value}` : methodLabel(r)
+          }
+          style={big ? styles.code : styles.recordCode}
+        >
           {r.method === "keypad" ? r.value : methodLabel(r)}
         </Text>
         {r.method !== "keypad" ? (
           <Text style={styles.body}>{r.value}</Text>
         ) : null}
-      </Pressable>
+      </View>
     );
   }
   return (
@@ -313,45 +304,6 @@ export function ApartmentSheet(p: SheetProps) {
           </>
         ) : null}
       </ScrollView>
-      {large ? (
-        <Modal
-          visible
-          animationType="fade"
-          onRequestClose={() => setLargeId(null)}
-        >
-          <SafeAreaView style={styles.modal}>
-            <View style={styles.modalHead}>
-              <IconButton
-                name="back"
-                label="返回密码记录"
-                onPress={() => setLargeId(null)}
-              />
-              <Text style={styles.title}>进入信息</Text>
-              <View style={{ width: 48 }} />
-            </View>
-            <ScrollView contentContainerStyle={styles.largeContent}>
-              <Text style={styles.title}>{p.apartment.name ?? "公寓"}</Text>
-              <Text style={styles.body}>
-                {p.apartment.address_line1}, {p.apartment.city},{" "}
-                {p.apartment.state}
-              </Text>
-              {large ? (
-                <>
-                  <Text selectable style={styles.largeCode}>
-                    {large.method === "keypad"
-                      ? large.value
-                      : methodLabel(large)}
-                  </Text>
-                  {large.method !== "keypad" ? (
-                    <Text style={styles.body}>{large.value}</Text>
-                  ) : null}
-                  <Text style={styles.body}>{scopeLabel(large.scope)}</Text>
-                </>
-              ) : null}
-            </ScrollView>
-          </SafeAreaView>
-        </Modal>
-      ) : null}
     </View>
   );
 }
@@ -386,6 +338,7 @@ const styles = StyleSheet.create({
   },
   body: { fontSize: 14, lineHeight: 21, color: tokens.color.textSecondary },
   meta: { fontSize: 14, lineHeight: 22, color: tokens.color.textMuted },
+  codeBlock: { minWidth: 0, alignSelf: "stretch" },
   code: {
     fontSize: 40,
     lineHeight: 52,
@@ -401,6 +354,7 @@ const styles = StyleSheet.create({
     lineHeight: 38,
     fontWeight: "600",
     letterSpacing: 1,
+    fontVariant: ["tabular-nums"],
     color: tokens.color.ink,
   },
   record: {
@@ -450,29 +404,5 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: tokens.color.danger,
     paddingVertical: 8,
-  },
-  modal: { flex: 1, backgroundColor: tokens.color.surface },
-  modalHead: {
-    minHeight: 64,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  largeContent: {
-    flexGrow: 1,
-    padding: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 14,
-  },
-  largeCode: {
-    fontSize: 56,
-    fontWeight: "700",
-    letterSpacing: 2,
-    color: tokens.color.ink,
-    textAlign: "center",
-    paddingVertical: 28,
-    fontVariant: ["tabular-nums"],
   },
 });

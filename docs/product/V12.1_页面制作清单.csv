@@ -2,11 +2,11 @@
 A02,手机号登录,全屏二级页；保留来源意图,01-公寓闭环,5,,原型已认可·作为开发基线（状态部分覆盖）
 A03,验证码与恢复,二级页，同一认证流程,01-公寓闭环,5,bootstrapMe,原型已认可·作为开发基线（状态部分覆盖）
 A04,首次最小资料,二级页，仅新账号,01-公寓闭环,4,"bootstrapMe,patchMyProfile",原型已认可·作为开发基线（状态部分覆盖）
-H01,首页·公寓,首页根状态，公寓卡收起/展开,01-公寓闭环,24,"resolveApartment,getApartment,getApartmentMapContext,readAccessRecords,feedbackAccess",原节点基线已认可；截图扩展已制作待评审
+H01,首页·公寓,首页根状态，公寓卡收起/展开,01-公寓闭环,26,"resolveApartment,getApartment,getApartmentMapContext,readAccessRecords,feedbackAccess",原节点基线已认可；截图扩展已制作待评审
 H02,首页·找活,与H01同一路由的地图状态,02-找人找活,6,"listRequests,listRegions",原型已认可·作为开发基线（状态部分覆盖）
 H03,首页·找人,与H01同一路由的地图状态,02-找人找活,6,"listAvailableDrivers,listRegions",原型已认可·作为开发基线（状态部分覆盖）
-S01,搜索与筛选,二级搜索页，依来源切内容,01-公寓闭环,7,"searchApartments,suggestAddresses,retrieveAddress,listRequests,listAvailableDrivers",原型已认可·作为开发基线（状态部分覆盖）
-L01,选择正确公寓,地图底部选择面板,01-公寓闭环,4,"getApartment,proposeApartment,correctApartment",原型已认可·作为开发基线（状态部分覆盖）
+S01,搜索与筛选,二级搜索页，依来源切内容,01-公寓闭环,10,"searchApartments,suggestAddresses,retrieveAddress,listRequests,listAvailableDrivers",原型已认可·作为开发基线（状态部分覆盖）
+L01,选择正确公寓,地图底部选择面板,01-公寓闭环,4,"retrieveAddress,getApartment",原型已认可·作为开发基线（状态部分覆盖）
 B01,密码大字,轻量全屏/弹层,01-公寓闭环,3,readAccessRecords,原型已认可·作为开发基线（状态部分覆盖）
 B02,贡献密码/进入方式,编辑面板，可随键盘展开,01-公寓闭环,8,"contributeAccess,proposeApartment",原节点基线已认可；截图扩展已制作待评审
 P01,统一发需求选择,首页工具展开面板，合并旧P02,02-找人找活,3,createDraft,原型已认可·作为开发基线（状态部分覆盖）

@@ -6,7 +6,7 @@
     "contract_version": "12.1.0",
     "paths": 83,
     "operations": 108,
-    "schemas": 127,
+    "schemas": 128,
     "spec_validation": "passed"
   },
   "sql": {
@@ -47,7 +47,7 @@
   },
   "page_spec": {
     "nodes": 40,
-    "state_variants": 282,
+    "state_variants": 287,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

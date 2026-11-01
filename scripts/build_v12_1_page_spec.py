@@ -283,6 +283,19 @@ for p in pages:
   p['information'].append('普通建筑灰色门牌；选中建筑蓝色高亮与内部强调门牌，保留中庭空洞；无轮廓不画建筑')
   for a in p['actions']:
    if a['label']=='定位':a['result']='回到新鲜蓝点并解除选卡锁定，恢复自动匹配'
+# ADD-14: current address search/destination behaviour, separate from GPS arrival.
+for p in pages:
+ if p['id'] in ['S01','L01','H01']:p['requirements'].append('ADD-14')
+ if p['id']=='S01':
+  p['information']=['返回/输入/清除','公寓：2字符、300ms并行目录和Mapbox候选，完整地址去重','名称或门牌街道＋城市/州','供应商归属、加载/错误重试','找活找人筛选仍按原范围后置']
+  p['states']+=['部分服务失败保留可用结果','取消旧查询','过期候选重新搜索']
+  p['acceptance']+=' ADD-14：不保存历史；点选后收键盘；唯一明确匹配才打开公寓，多个实体选择、未匹配临时目的地；不移动GPS蓝点。'
+ if p['id']=='L01':
+  p['information']=['当前候选名称/完整地址','多个匹配公寓可选','未匹配显示暂未匹配到公寓资料和搜索其他地址','临时目的地菱形标记/供应商归属']
+  p['actions']=[dict(label='选择公寓',target='H01',result='加载明确选中公寓，仍检查密码资格'),dict(label='搜索其他地址',target='S01',result='重新搜索'),dict(label='回到当前位置',target='H01',result='清理临时目的地，恢复GPS位置和原匹配流程')]
+  p['api_operations']=['retrieveAddress','getApartment']
+  p['acceptance']='ADD-14：不把附近公寓当作匹配，不从临时供应商结果直接建档；完整街道门牌/城市/州一致且250米内方可匹配，多实体由用户选择。临时结果只在会话内存，切后台清理。'
+ if p['id']=='H01':p['states']+=['手选外部地址未匹配','外部地址多实体待选择']
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-31','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

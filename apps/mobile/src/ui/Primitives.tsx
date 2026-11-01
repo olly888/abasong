@@ -6,15 +6,19 @@ export function ListRow({
   subtitle,
   onPress,
   icon = "pin",
+  disabled = false,
 }: {
   title: string;
   subtitle?: string;
   onPress: () => void;
   icon?: IconName;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{disabled}}
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,

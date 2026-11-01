@@ -3,6 +3,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type { PoolClient } from "pg";
 import type { components } from "@abasong/contracts";
+import { addressIdentity } from "@abasong/contracts";
 import type { VerifiedIdentity } from "../common/request-context";
 import { ApiError } from "../common/api-error";
 import { SensitiveDatabase } from "./sensitive-database";
@@ -1127,6 +1128,39 @@ export class ApartmentsService {
         confidence: r.confidence,
         point: { lng: r.lng, lat: r.lat },
       };
+    });
+  }
+  async matchSearchAddress(
+    a: VerifiedIdentity,
+    address: S["SearchAddress"] | null,
+    point: S["Point"],
+  ): Promise<S["Apartment"][]> {
+    const key = addressIdentity(address);
+    if (!key) return [];
+    return this.tx(a, async (c) => {
+      // Matching a manually selected address requires both its exact canonical
+      // postal identity and nearby geometry. Proximity alone never picks a home.
+      const found = await c.query(
+        `SELECT id,name,address_line1,city,state,postal_code,confidence,
+        extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat
+        FROM abasong.apartments WHERE status='active'
+        AND extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,250)
+        ORDER BY id LIMIT 101`,
+        [point.lng, point.lat],
+      );
+      if (found.rows.length > 100) return [];
+      const matched = found.rows.filter((r) => addressIdentity(r) === key);
+      if (matched.length > 20) return [];
+      return matched.map((r) => ({
+        id: r.id,
+        name: r.name,
+        address_line1: r.address_line1,
+        city: r.city,
+        state: r.state,
+        postal_code: r.postal_code,
+        confidence: r.confidence,
+        point: { lng: r.lng, lat: r.lat },
+      }));
     });
   }
   async search(

@@ -8979,6 +8979,28 @@ components:
       required:
       - query
       - session_token
+    SearchAddress:
+      type: object
+      additionalProperties: false
+      properties:
+        address_line1:
+          type: string
+          maxLength: 200
+        city:
+          type: string
+          maxLength: 100
+        state:
+          type: string
+          maxLength: 2
+        postal_code:
+          type: string
+          maxLength: 12
+          nullable: true
+      required:
+      - address_line1
+      - city
+      - state
+      - postal_code
     AddressSuggestion:
       type: object
       additionalProperties: false
@@ -8989,9 +9011,26 @@ components:
         label:
           type: string
           maxLength: 300
+        title:
+          type: string
+          maxLength: 200
+        subtitle:
+          type: string
+          maxLength: 300
+        address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
       required:
       - provider_result_id
       - label
+      - title
+      - subtitle
+      - address
     AddressSuggestions:
       type: object
       additionalProperties: false
@@ -9007,10 +9046,14 @@ components:
           type: string
           enum:
           - temporary
+        attribution:
+          type: string
+          maxLength: 2000
       required:
       - items
       - session_token
       - use_mode
+      - attribution
     AddressRetrieveInput:
       type: object
       additionalProperties: false
@@ -9031,16 +9074,36 @@ components:
         label:
           type: string
           maxLength: 300
+        title:
+          type: string
+          maxLength: 200
         point:
           $ref: '#/components/schemas/Point'
         use_mode:
           type: string
           enum:
           - temporary
+        attribution:
+          type: string
+          maxLength: 2000
+        match_status:
+          type: string
+          enum:
+          - matched
+          - ambiguous
+          - unmatched
+        apartments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Apartment'
       required:
       - label
+      - title
       - point
       - use_mode
+      - attribution
+      - match_status
+      - apartments
     ApartmentProposalInput:
       type: object
       additionalProperties: false

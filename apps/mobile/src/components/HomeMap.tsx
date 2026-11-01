@@ -13,6 +13,7 @@ if (token) Mapbox.setAccessToken(token);
 export default function HomeMap({
   point,
   location,
+  destination,
   apartments = [],
   selectedId,
   mapContext,
@@ -66,7 +67,10 @@ export default function HomeMap({
               [
                 "in",
                 ["to-string", ["get", "house_num"]],
-                ["literal", [...new Set(buildings.map((b) => b.street_number))]],
+                [
+                  "literal",
+                  [...new Set(buildings.map((b) => b.street_number))],
+                ],
               ],
             ],
           ]
@@ -248,6 +252,23 @@ export default function HomeMap({
             />
           </Mapbox.ShapeSource>
         </>
+      ) : null}
+      {destination ? (
+        <Mapbox.PointAnnotation
+          id="search-destination"
+          coordinate={[destination.lng, destination.lat]}
+        >
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              backgroundColor: "#FFFFFF",
+              borderColor: "#1467D8",
+              borderWidth: 4,
+              transform: [{ rotate: "45deg" }],
+            }}
+          />
+        </Mapbox.PointAnnotation>
       ) : null}
       {location ? (
         <Mapbox.PointAnnotation

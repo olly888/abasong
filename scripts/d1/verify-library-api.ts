@@ -1,3 +1,4 @@
+import { verifySearchMatching } from "./verify-search-matching";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { once } from "node:events";
@@ -1141,6 +1142,7 @@ async function main() {
     );
     await req("GET", directPath, b, 403);
     await verifyPublicArrival(db, req, a, b);
+    await verifySearchMatching(db, sensitive.href, actor, issued);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

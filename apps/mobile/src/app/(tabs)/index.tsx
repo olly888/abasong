@@ -6,15 +6,18 @@ import { tokens } from "@abasong/ui";
 import { HomeChrome, type HomeMode } from "../../components/HomeChrome";
 import { HomeApartments } from "../../apartments/HomeApartments";
 export default function Home() {
-  const params = useLocalSearchParams<{ apartment_id?: string }>();
+  const params = useLocalSearchParams<{
+    apartment_id?: string;
+    destination_key?: string;
+  }>();
   const [mode, setMode] = useState<HomeMode>("公寓");
   const [list, setList] = useState(false);
   useEffect(() => {
-    if (params.apartment_id) {
+    if (params.apartment_id || params.destination_key) {
       setMode("公寓");
       setList(false);
     }
-  }, [params.apartment_id]);
+  }, [params.apartment_id, params.destination_key]);
   const toolbar = (
     <HomeChrome
       mode={mode}
@@ -32,6 +35,11 @@ export default function Home() {
         toolbar={toolbar}
         mode={mode}
         list={list}
+        destinationKey={
+          typeof params.destination_key === "string"
+            ? params.destination_key
+            : undefined
+        }
         apartmentId={
           typeof params.apartment_id === "string"
             ? params.apartment_id

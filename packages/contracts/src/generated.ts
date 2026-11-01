@@ -1582,9 +1582,18 @@ export interface components {
             /** Format: uuid */
             session_token: string;
         };
+        SearchAddress: {
+            address_line1: string;
+            city: string;
+            state: string;
+            postal_code: string | null;
+        };
         AddressSuggestion: {
             provider_result_id: string;
             label: string;
+            title: string;
+            subtitle: string;
+            address: components["schemas"]["SearchAddress"] | (never | null);
         };
         AddressSuggestions: {
             items: components["schemas"]["AddressSuggestion"][];
@@ -1592,6 +1601,7 @@ export interface components {
             session_token: string;
             /** @enum {string} */
             use_mode: "temporary";
+            attribution: string;
         };
         AddressRetrieveInput: {
             provider_result_id: string;
@@ -1600,9 +1610,14 @@ export interface components {
         };
         TemporaryAddress: {
             label: string;
+            title: string;
             point: components["schemas"]["Point"];
             /** @enum {string} */
             use_mode: "temporary";
+            attribution: string;
+            /** @enum {string} */
+            match_status: "matched" | "ambiguous" | "unmatched";
+            apartments: components["schemas"]["Apartment"][];
         };
         ApartmentProposalInput: {
             name?: string;

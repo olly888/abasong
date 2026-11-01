@@ -1,3 +1,9 @@
+import {
+  clearSearchDestination,
+  getSearchDestination,
+} from "./search-destination";
+import { ListRow } from "../ui/Primitives";
+import { ActionButton } from "../auth/AuthControls";
 import { openContributionMenu } from "./contribution-entry";
 import {
   useCallback,
@@ -37,11 +43,13 @@ type S = components["schemas"];
 export function HomeApartments({
   toolbar,
   apartmentId,
+  destinationKey,
   mode = "公寓",
   list = false,
 }: {
   toolbar: ReactNode;
   apartmentId?: string;
+  destinationKey?: string;
   mode?: HomeMode;
   list?: boolean;
 }) {
@@ -57,11 +65,15 @@ export function HomeApartments({
   );
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => {
+      if (s === "background") clearSearchDestination();
       setActive(s !== "background");
       setObscured(s !== "active");
     });
     return () => sub.remove();
   }, []);
+  useEffect(() => {
+    if (auth.phase !== "ready") clearSearchDestination();
+  }, [auth.phase]);
   if (!focused || !active || auth.phase !== "ready" || !auth.session)
     return (
       <View style={styles.root}>
@@ -90,9 +102,16 @@ export function HomeApartments({
         importantForAccessibility={obscured ? "no-hide-descendants" : "auto"}
       >
         <HomeApartmentContent
-          key={auth.session.access_token + ":" + (apartmentId ?? "")}
+          key={
+            auth.session.access_token +
+            ":" +
+            (apartmentId ?? "") +
+            ":" +
+            (destinationKey ?? "")
+          }
           toolbar={toolbar}
           apartmentId={apartmentId}
+          destinationKey={destinationKey}
           mode={mode}
           list={list}
         />
@@ -112,12 +131,14 @@ export function HomeApartments({
 export function HomeApartmentContent({
   toolbar,
   apartmentId,
+  destinationKey,
   mode = "公寓",
   list = false,
   testData,
 }: {
   toolbar: ReactNode;
   apartmentId?: string;
+  destinationKey?: string;
   mode?: HomeMode;
   list?: boolean;
   testData?: {
@@ -131,13 +152,17 @@ export function HomeApartmentContent({
 }) {
   const auth = useAuth(),
     session = auth.session!;
+  const initialDestination = useRef(
+    getSearchDestination(destinationKey, session.user.id),
+  );
+  const [temporary, setTemporary] = useState(initialDestination.current);
   const control = useRef(new AbortController()),
     generation = useRef(0),
     stream = useRef<AbortController | null>(null),
     disposeLookup = useRef<(() => void) | null>(null),
     selectionRef = useRef<S["Apartment"] | null>(null),
     lastFixAt = useRef(0),
-    manualLocked = useRef(!!apartmentId),
+    manualLocked = useRef(!!apartmentId || !!initialDestination.current),
     arrival = useRef<ArrivalState>(null);
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
@@ -180,7 +205,12 @@ export function HomeApartmentContent({
   const alive = () => !control.current.signal.aborted;
   useEffect(() => {
     control.current = new AbortController();
-    if (apartmentId)
+    if (initialDestination.current) {
+      setCameraTarget(initialDestination.current.point);
+      setCameraZoom(18);
+      setCameraRevision((v) => v + 1);
+      setCandidates(initialDestination.current.apartments);
+    } else if (apartmentId)
       void request<S["Apartment"]>(
         "/v1/apartments/" + encodeURIComponent(apartmentId),
       )
@@ -193,7 +223,7 @@ export function HomeApartmentContent({
             setError(null);
           }
         });
-    void locate(false, !apartmentId);
+    void locate(false, !apartmentId && !initialDestination.current);
     return () => {
       control.current.abort();
       stream.current?.abort();
@@ -388,6 +418,11 @@ export function HomeApartmentContent({
     }
   }
   function returnToPosition() {
+    clearSearchDestination();
+    if (temporary) {
+      setTemporary(undefined);
+      setCandidates([]);
+    }
     manualLocked.current = false;
     arrival.current = null;
     if (blocked) {
@@ -406,7 +441,11 @@ export function HomeApartmentContent({
     p: S["Apartment"],
     origin: "manual" | "automatic" | "retry" = "manual",
   ) {
-    if (origin === "manual") manualLocked.current = true;
+    if (origin === "manual") {
+      manualLocked.current = true;
+      clearSearchDestination();
+      setTemporary(undefined);
+    }
     const version = ++generation.current;
     setLocating(false);
     selectionRef.current = p;
@@ -606,6 +645,7 @@ export function HomeApartmentContent({
           frameSelected={mode === "公寓" && frameSelected}
           bottomInset={mode === "公寓" ? panelHeight : 148}
           location={point}
+          destination={mode === "公寓" ? temporary?.point : undefined}
           apartments={mode === "公寓" ? candidates : []}
           selectedId={selected?.id}
           mapContext={mode === "公寓" ? mapContext : null}
@@ -646,6 +686,39 @@ export function HomeApartmentContent({
               </Text>
             </Pressable>
           ) : null}
+        </View>
+      ) : temporary ? (
+        <View
+          onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
+          style={styles.panel}
+        >
+          <View style={styles.handleSpace}>
+            <View style={styles.handle} />
+          </View>
+          <ScrollView contentContainerStyle={[styles.inner, { gap: 12 }]}>
+            <Text style={styles.title}>{temporary.title}</Text>
+            <Text style={styles.address}>{temporary.label}</Text>
+            <Text style={styles.muted}>
+              {temporary.match_status === "ambiguous"
+                ? "请选择对应公寓"
+                : "暂未匹配到公寓资料"}
+            </Text>
+            {temporary.apartments.map((p) => (
+              <ListRow
+                key={p.id}
+                title={p.name ?? p.address_line1}
+                subtitle={p.address_line1}
+                onPress={() => void select(p)}
+              />
+            ))}
+            <ActionButton
+              label="搜索其他地址"
+              onPress={() => router.push("/apartments")}
+            />
+            <Text style={{ fontSize: 11, color: tokens.color.textMuted }}>
+              {temporary.attribution}
+            </Text>
+          </ScrollView>
         </View>
       ) : selected ? (
         <ApartmentSheet

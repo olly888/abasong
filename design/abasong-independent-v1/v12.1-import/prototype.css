@@ -15,3 +15,5 @@
 .map-scale i{display:block;width:76px;height:5px;border:solid #53565b;border-width:0 1.5px 1.5px;margin-top:2px}
 .map-house-number{fill:#53565b;font-size:11px;paint-order:stroke;stroke:#fff;stroke-width:2px;stroke-linejoin:round}
 .map-house-number.selected{fill:#104eaa;font-size:17px;font-weight:700;stroke-width:3px}
+
+.destination-pin{position:absolute;left:58%;top:38%;width:22px;height:22px;background:white;border:4px solid #1467d8;transform:rotate(45deg);box-shadow:0 2px 4px #0002}

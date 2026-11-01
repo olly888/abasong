@@ -1,4 +1,7 @@
 import "reflect-metadata";
+import { SearchController } from "./search/search.controller";
+import { SearchService } from "./search/search.service";
+import { MapboxSearchProvider } from "./search/mapbox-search.provider";
 import { ImportsController } from "./imports/imports.controller";
 import { ImportsService } from "./imports/imports.service";
 import { ApartmentsController } from "./apartments/apartments.controller";
@@ -47,6 +50,7 @@ class HealthController {
     MeController,
     ApartmentsController,
     ImportsController,
+    SearchController,
   ],
   providers: [
     Database,
@@ -56,6 +60,8 @@ class HealthController {
     SensitiveDatabase,
     ApartmentsService,
     ImportsService,
+    SearchService,
+    { provide: MapboxSearchProvider, useFactory: () => new MapboxSearchProvider() },
   ],
 })
 class AppModule {}

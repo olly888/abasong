@@ -38,6 +38,7 @@ async function main() {
       await db.query(`GRANT ${member} TO ${name}`);
     }
     if (!(await db.query("SELECT 1 FROM pg_roles WHERE rolname='abasong_untrusted_d0'")).rowCount) await db.query('CREATE ROLE abasong_untrusted_d0 NOLOGIN NOBYPASSRLS');
+    if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0007'")).rowCount) await db.query(readFileSync('database/migrations/0007_nearby_address_contributions.sql', 'utf8'));
     const tables = await db.query("SELECT count(*)::int AS count, bool_and(relrowsecurity AND relforcerowsecurity) AS protected FROM pg_class c JOIN pg_namespace n ON c.relnamespace=n.oid WHERE n.nspname='abasong' AND relkind='r'");
     assert.equal(tables.rows[0].count, 51); assert.equal(tables.rows[0].protected, true);
     const extension = await db.query("SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON e.extnamespace=n.oid WHERE extname='postgis'");
@@ -83,7 +84,7 @@ async function main() {
     try {
       const role = (await api.query('SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0];
       assert.equal(role.rolsuper, false); assert.equal(role.rolbypassrls, false);
-      assert.equal((await api.query('SELECT count(*)::int AS n FROM abasong.schema_version')).rows[0].n, 6);
+      assert.equal((await api.query('SELECT count(*)::int AS n FROM abasong.schema_version')).rows[0].n, 7);
     } finally { await api.end(); }
     console.log('PASS: 51 migrated tables, forced RLS, PostGIS query, untrusted role denied, sensitive separation, append-only permissions, constraints, rollback, non-owner login');
   } finally { await db.end(); }

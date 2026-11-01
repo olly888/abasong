@@ -1,4 +1,7 @@
 import "reflect-metadata";
+import { NearbyController } from "./nearby/nearby.controller";
+import { NearbyService } from "./nearby/nearby.service";
+import { MapboxNearbyProvider } from "./nearby/mapbox-nearby.provider";
 import { SearchController } from "./search/search.controller";
 import { SearchService } from "./search/search.service";
 import { MapboxSearchProvider } from "./search/mapbox-search.provider";
@@ -35,9 +38,9 @@ class HealthController {
   @Get("ready") async ready() {
     try {
       const result = await this.db.pool.query(
-        "SELECT version FROM abasong.schema_version WHERE version IN ('V12.0001','V12.0002')",
+        "SELECT version FROM abasong.schema_version WHERE version IN ('V12.0001','V12.0002','V12.0003','V12.0004','V12.0005','V12.0006','V12.0007')",
       );
-      if (result.rowCount !== 2) throw new Error("schema");
+      if (result.rowCount !== 7) throw new Error("schema");
       return { status: "ready" };
     } catch {
       throw new ServiceUnavailableException({ status: "unavailable" });
@@ -51,6 +54,7 @@ class HealthController {
     ApartmentsController,
     ImportsController,
     SearchController,
+    NearbyController,
   ],
   providers: [
     Database,
@@ -61,7 +65,15 @@ class HealthController {
     ApartmentsService,
     ImportsService,
     SearchService,
-    { provide: MapboxSearchProvider, useFactory: () => new MapboxSearchProvider() },
+    NearbyService,
+    {
+      provide: MapboxNearbyProvider,
+      useFactory: () => new MapboxNearbyProvider(),
+    },
+    {
+      provide: MapboxSearchProvider,
+      useFactory: () => new MapboxSearchProvider(),
+    },
   ],
 })
 class AppModule {}

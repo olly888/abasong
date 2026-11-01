@@ -45,6 +45,13 @@ out('AddressSuggestion',{'provider_result_id':string(500),'label':string(300),'t
 out('AddressSuggestions',{'items':arr(ref('AddressSuggestion')),'session_token':uid,'use_mode':enum('temporary'),'attribution':string(2000)})
 obj('AddressRetrieveInput',{'provider_result_id':string(500),'session_token':uid},['provider_result_id','session_token'])
 out('TemporaryAddress',{'label':string(300),'title':string(200),'point':ref('Point'),'use_mode':enum('temporary'),'attribution':string(2000),'match_status':enum('matched','ambiguous','unmatched'),'apartments':arr(ref('Apartment'))})
+# ADD-18: discovery is not a claim of arrival and never contains secret values.
+out('NearbyCandidate',{'key':string(100),'source':enum('catalog','mapbox'),'apartment':{'allOf':[ref('Apartment')],'nullable':True},'address':{'allOf':[ref('SearchAddress')],'nullable':True},'point':ref('Point'),'distance_m':{'type':'number','minimum':0},'classification':enum('catalog_community','apartments'),'requires_address_confirmation':boolean})
+out('NearbyDiscovery',{'items':{**arr(ref('NearbyCandidate')),'maxItems':20},'radius_m':integer(200),'expires_at':dt,'truncated':boolean,'provider_status':enum('not_requested','ok','unavailable'),'attribution':string(2000),'use_mode':enum('temporary')})
+obj('ConfirmedAddressAccessScope',{'label':string(100,minLength=1)},['label'])
+obj('AddressContributionInput',{'address':ref('SearchAddress'),'method':enum('keypad'),'value':string(32,minLength=1),'scope':ref('ConfirmedAddressAccessScope'),'source_attested':{'type':'boolean','enum':[True]},'address_confirmed':{'type':'boolean','enum':[True]}},['address','method','value','source_attested','address_confirmed'])
+out('AddressContributionResult',{'apartment':ref('Apartment'),'contribution':ref('ContributionResult')})
+S['TemporaryAddress']['properties']['address']={'allOf':[ref('SearchAddress')],'nullable':True}
 obj('ApartmentProposalInput',{'name':string(160),'address_line1':string(200),'city':string(100),'state':string(2),'postal_code':string(12),'point':ref('Point'),'source_attested':{'type':'boolean','enum':[True]}},['address_line1','city','state','point','source_attested'])
 obj('CorrectionInput',{'apartment_id':uid,'proposed_address':string(300),'reason':string(500,minLength=1)},['reason'])
 out('Submitted',{'id':uid,'status':enum('pending')})
@@ -168,6 +175,9 @@ op('/v1/apartments','get','searchApartments','自有公寓检索，无密码','A
 op('/v1/apartments/{apartment_id}','get','getApartment','公寓元信息，无密码','Apartment')
 op('/v1/search/addresses/suggest','post','suggestAddresses','Mapbox临时地址联想；不落永久库','AddressSuggestions','AddressSuggestInput',sensitive=True)
 op('/v1/search/addresses/retrieve','post','retrieveAddress','临时地址选择；来源用途受限','TemporaryAddress','AddressRetrieveInput',sensitive=True)
+op('/v1/apartments/discover','post','discoverNearbyApartments','附近200米目录公寓；边界距离优先；不代表到达，不返回密码','NearbyDiscovery','ResolveInput',sensitive=True)
+op('/v1/apartments/discover/mapbox','post','discoverMapboxApartments','会话临时apartments分类候选，地址需确认；无临时结果落库','NearbyDiscovery','ResolveInput',sensitive=True)
+op('/v1/apartments/address-contributions','post','contributeAtConfirmedAddress','核对地址后直接共享；新位置只接受服务端永久许可地理编码；同事务幂等','AddressContributionResult','AddressContributionInput',code=201,cap=['access.contribute'],idem=True,sensitive=True)
 op('/v1/apartments/proposals','post','proposeApartment','自有/授权来源的新公寓提议，待核验','Submitted','ApartmentProposalInput',code=201,cap=['access.contribute'],idem=True)
 op('/v1/apartment-corrections','post','correctApartment','提交错栋/地址更正','Submitted','CorrectionInput',code=201,idem=True)
 op('/v1/apartments/{apartment_id}/access-records','get','readAccessRecords','资格和对象校验后返回密码；有用优先+贡献时间倒序','AccessList',cap=['access.read'],list_query=True,sensitive=True)

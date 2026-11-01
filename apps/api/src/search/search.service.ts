@@ -137,6 +137,7 @@ export class SearchService {
       detail.point,
     );
     return {
+      address: detail.address,
       label: detail.label,
       title: detail.title,
       point: detail.point,

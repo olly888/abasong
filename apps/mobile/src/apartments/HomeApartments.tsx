@@ -1,3 +1,6 @@
+import { NearbyCarousel } from "./NearbyCarousel";
+import { mergeNearby, distanceM } from "./nearby-policy";
+import { setNearbyContribution } from "./nearby-contribution";
 import { AddressLine } from "./AddressLine";
 import { locality } from "./address-presentation";
 import {
@@ -34,11 +37,6 @@ import { watchDevicePosition } from "./location-stream";
 import type { ForegroundFix } from "./foreground-location";
 import { serialLatest } from "./serial-latest";
 import { HomeArrivalPanel } from "./HomeArrivalPanel";
-import {
-  arrivalNeedsReset,
-  assessHomeArrival,
-  type ArrivalState,
-} from "./arrival-policy";
 import { MapTools } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
 import { ApartmentSheet } from "./ApartmentSheet";
@@ -153,13 +151,16 @@ export function HomeApartmentContent({
       options: Parameters<typeof dataRequest>[2],
     ) => Promise<unknown>;
     canRead: boolean;
+    userId?: string;
     onObservation?: () => void;
   };
 }) {
   const auth = useAuth(),
     session = auth.session!;
+  const ownerId =
+    (__DEV__ ? testData?.userId : undefined) ?? session?.user.id ?? "";
   const initialDestination = useRef(
-    getSearchDestination(destinationKey, session.user.id),
+    getSearchDestination(destinationKey, ownerId),
   );
   const [temporary, setTemporary] = useState(initialDestination.current);
   const control = useRef(new AbortController()),
@@ -168,8 +169,18 @@ export function HomeApartmentContent({
     disposeLookup = useRef<(() => void) | null>(null),
     selectionRef = useRef<S["Apartment"] | null>(null),
     lastFixAt = useRef(0),
-    manualLocked = useRef(!!apartmentId || !!initialDestination.current),
-    arrival = useRef<ArrivalState>(null);
+    manualLocked = useRef(!!apartmentId || !!initialDestination.current);
+  const catalogRef = useRef<S["NearbyCandidate"][]>([]),
+    providerRef = useRef<{
+      items: S["NearbyCandidate"][];
+      until: number;
+      point: S["Point"];
+    } | null>(null);
+  const discoveryAnchor = useRef<{ point: S["Point"]; at: number } | null>(
+      null,
+    ),
+    providerLast = useRef(0),
+    providerEpoch = useRef(0);
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
     [cameraZoom, setCameraZoom] = useState(17),
@@ -180,6 +191,10 @@ export function HomeApartmentContent({
     [cameraRevision, setCameraRevision] = useState(0),
     [blocked, setBlocked] = useState(false),
     [locationNotice, setLocationNotice] = useState<string | null>(null),
+    [nearbyItems, setNearbyItems] = useState<S["NearbyCandidate"][]>([]),
+    [providerSelected, setProviderSelected] = useState<
+      S["NearbyCandidate"] | null
+    >(null),
     [candidates, setCandidates] = useState<S["Apartment"][]>([]),
     [selected, setSelected] = useState<S["Apartment"] | null>(null),
     [mapContext, setMapContext] = useState<S["ApartmentMapContext"] | null>(
@@ -240,48 +255,104 @@ export function HomeApartmentContent({
       generation.current++;
     };
   }, []);
+  function updateNearby(items: S["NearbyCandidate"][]) {
+    setNearbyItems(items);
+    setCandidates(items.flatMap((c) => (c.apartment ? [c.apartment] : [])));
+    setLookupState(items.length ? "nearby" : "empty");
+    const current = selectionRef.current?.id;
+    if (current && items.some((c) => c.apartment?.id === current)) return;
+    if (items[0]) void chooseNearby(items[0], false);
+    else invalidateAutomaticCard();
+  }
   const onLookup = useRef<
-    (fix: ForegroundFix, lookup: S["ResolveResult"]) => void
+    (fix: ForegroundFix, lookup: S["NearbyDiscovery"]) => void
   >(() => {});
   onLookup.current = (fix, lookup) => {
-    setCandidates(lookup.candidates);
-    if (lookup.reason === "imprecise") setLocationNotice("位置不够准确");
-    setLookupState(
-      lookup.reason === "ambiguous"
-        ? "ambiguous"
-        : lookup.candidates.length
-          ? "nearby"
-          : "empty",
-    );
-    const decision = assessHomeArrival(
-      arrival.current,
-      selectionRef.current?.id,
-      lookup,
-      fix.timestamp,
-      Date.now(),
-      manualLocked.current,
-      { lng: fix.coords.longitude, lat: fix.coords.latitude },
-    );
-    if (decision.clearAutomaticCard) invalidateAutomaticCard();
-    arrival.current = decision.state;
+    if (Date.parse(lookup.expires_at) <= Date.now()) return;
+    discoveryAnchor.current = {
+      point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
+      at: Date.now(),
+    };
+    catalogRef.current = lookup.items;
+    const cache = providerRef.current;
     if (
-      decision.apartment &&
-      decision.apartment.id !== selectionRef.current?.id
+      cache &&
+      (cache.until <= Date.now() ||
+        distanceM(cache.point, discoveryAnchor.current.point) > 50)
     )
-      void select(decision.apartment, "automatic", {
-        lng: fix.coords.longitude,
-        lat: fix.coords.latitude,
+      providerRef.current = null;
+    updateNearby(mergeNearby(lookup.items, providerRef.current?.items ?? []));
+    if (Date.now() - providerLast.current < 30000) return;
+    providerLast.current = Date.now();
+    const epoch = ++providerEpoch.current;
+    void request<S["NearbyDiscovery"]>("/v1/apartments/discover/mapbox", {
+      method: "POST",
+      signal: stream.current?.signal,
+      body: {
+        point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
+        observed_at: new Date(fix.timestamp).toISOString(),
+        accuracy_m: fix.coords.accuracy,
+        accuracy_permission: "precise",
+      },
+    })
+      .then((extra) => {
+        if (
+          !alive() ||
+          manualLocked.current ||
+          epoch !== providerEpoch.current ||
+          Date.parse(extra.expires_at) <= Date.now() ||
+          !discoveryAnchor.current ||
+          distanceM(discoveryAnchor.current.point, {
+            lng: fix.coords.longitude,
+            lat: fix.coords.latitude,
+          }) > 50
+        )
+          return;
+        if (extra.provider_status === "ok") {
+          providerRef.current = {
+            items: extra.items,
+            until: Date.parse(extra.expires_at),
+            point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
+          };
+          updateNearby(mergeNearby(catalogRef.current, extra.items));
+        }
+      })
+      .catch(() => {
+        /* Catalog remains usable when optional map enrichment fails. */
       });
-    if (lookup.status === "stale_location") setLocationNotice("位置已过期");
   };
+  function chooseNearby(c: S["NearbyCandidate"], manual = true) {
+    if (manual) manualLocked.current = true;
+    if (c.apartment) {
+      setProviderSelected(null);
+      return select(c.apartment, manual ? "manual" : "automatic");
+    }
+    generation.current++;
+    selectionRef.current = null;
+    setSelected(null);
+    setRecords([]);
+    setMapContext(null);
+    setLoaded(false);
+    setReadError(false);
+    setBusy(false);
+    setProviderSelected(c);
+    setExpanded(false);
+    if (manual) {
+      setCameraIntent("explicit");
+      setFrameSelected(false);
+      setCameraTarget(c.point);
+      setCameraRevision((v) => v + 1);
+    }
+  }
   const onFailure = useRef<() => void>(() => {});
   onFailure.current = () => {
+    providerEpoch.current++;
     invalidateAutomaticCard();
     setLookupState("error");
   };
   function invalidateAutomaticCard() {
-    arrival.current = null;
-    if (manualLocked.current || !selectionRef.current) return;
+    if (manualLocked.current) return;
+    setProviderSelected(null);
     generation.current++;
     selectionRef.current = null;
     setSelected(null);
@@ -303,10 +374,10 @@ export function HomeApartmentContent({
     setNotice("正在定位");
     const queue = serialLatest<
       { fix: ForegroundFix; approximate: boolean },
-      S["ResolveResult"]
+      S["NearbyDiscovery"]
     >(
       ({ fix, approximate }) =>
-        request<S["ResolveResult"]>("/v1/apartments/resolve", {
+        request<S["NearbyDiscovery"]>("/v1/apartments/discover", {
           method: "POST",
           signal: controller.signal,
           body: {
@@ -331,13 +402,16 @@ export function HomeApartmentContent({
     );
     disposeLookup.current = () => queue.dispose();
     const resetUnconfirmedLookup = () => {
+      providerEpoch.current++;
       queue.invalidate();
       invalidateAutomaticCard();
       setCandidates([]);
+      setNearbyItems([]);
       setLookupState("empty");
     };
     const fail = (reason: string) => {
       if (!valid()) return;
+      providerEpoch.current++;
       queue.invalidate();
       setLocating(false);
       setPoint(undefined);
@@ -373,7 +447,9 @@ export function HomeApartmentContent({
         fail("stale");
       } else if (
         valid() &&
-        arrivalNeedsReset(arrival.current, Date.now(), manualLocked.current)
+        !manualLocked.current &&
+        !!discoveryAnchor.current &&
+        Date.now() - discoveryAnchor.current.at > 20000
       ) {
         resetUnconfirmedLookup();
       }
@@ -426,14 +502,19 @@ export function HomeApartmentContent({
             return;
           }
           if (
-            arrivalNeedsReset(
-              arrival.current,
-              Date.now(),
-              manualLocked.current,
-              { fix, approximate },
-            )
+            !manualLocked.current &&
+            discoveryAnchor.current &&
+            distanceM(discoveryAnchor.current.point, p) > 200
           )
             resetUnconfirmedLookup();
+          if (approximate) {
+            queue.invalidate();
+            invalidateAutomaticCard();
+            setNearbyItems([]);
+            setCandidates([]);
+            setLocationNotice("请开启精确位置，或搜索地址");
+            return;
+          }
           if (!manualLocked.current) queue.offer({ fix, approximate });
         },
         fail,
@@ -458,6 +539,10 @@ export function HomeApartmentContent({
       setCandidates([]);
     }
     manualLocked.current = false;
+    providerLast.current = 0;
+    providerRef.current = null;
+    providerEpoch.current++;
+    setNearbyItems([]);
     invalidateAutomaticCard();
     if (blocked) {
       void openLocationSettings();
@@ -482,6 +567,7 @@ export function HomeApartmentContent({
       clearSearchDestination();
       setTemporary(undefined);
     }
+    setProviderSelected(null);
     const version = ++generation.current;
     setLocating(false);
     selectionRef.current = p;
@@ -536,6 +622,8 @@ export function HomeApartmentContent({
               `/v1/apartments/${p.id}/access-records`,
             );
             if (alive() && version === generation.current) {
+              if (result.items.some((r) => r.apartment_id !== p.id))
+                throw new Error("密码资料与地址不一致，请重试");
               setRecords(result.items);
               setLoaded(true);
             }
@@ -664,16 +752,11 @@ export function HomeApartmentContent({
       params: { apartment_id: selected.id },
     });
   const clearSelection = () => {
-    manualLocked.current = true;
-    arrival.current = null;
-    generation.current++;
-    selectionRef.current = null;
-    setSelected(null);
-    setMapContext(null);
-    setRecords([]);
-    setBusy(false);
     setExpanded(false);
-    setLookupState("ambiguous");
+    const n = nearbyItems.findIndex((c) => c.apartment?.id === selected?.id);
+    if (nearbyItems.length > 1)
+      void chooseNearby(nearbyItems[(n + 1) % nearbyItems.length]!);
+    else router.push("/apartments");
   };
   const hideMap = (list && mode !== "公寓") || (expanded && mode === "公寓");
   return (
@@ -690,7 +773,11 @@ export function HomeApartmentContent({
           frameSelected={mode === "公寓" && frameSelected}
           bottomInset={mode === "公寓" ? panelHeight : 148}
           location={point}
-          destination={mode === "公寓" ? temporary?.point : undefined}
+          destination={
+            mode === "公寓"
+              ? (providerSelected?.point ?? temporary?.point)
+              : undefined
+          }
           apartments={mode === "公寓" ? candidates : []}
           selectedId={selected?.id}
           mapContext={mode === "公寓" ? mapContext : null}
@@ -756,6 +843,21 @@ export function HomeApartmentContent({
                 onPress={() => void select(p)}
               />
             ))}
+            {temporary.address ? (
+              <ActionButton
+                label="添加密码"
+                onPress={() => {
+                  const key = randomUUID();
+                  setNearbyContribution(key, ownerId, {
+                    address: temporary.address!,
+                  });
+                  router.push({
+                    pathname: "/apartments/contribute",
+                    params: { nearby_key: key },
+                  });
+                }}
+              />
+            ) : null}
             <ActionButton
               label="搜索其他地址"
               onPress={() => router.push("/apartments")}
@@ -765,35 +867,99 @@ export function HomeApartmentContent({
             </Text>
           </ScrollView>
         </View>
-      ) : selected ? (
-        <ApartmentSheet
-          apartment={selected}
-          records={records}
-          status={
-            !canRead
-              ? "denied"
-              : readError
-                ? "error"
-                : !loaded && busy
-                  ? "loading"
-                  : "ready"
-          }
-          expanded={expanded}
-          saved={!!favorite?.favorite}
-          bookmarkBusy={bookmarkBusy || !bookmarkKnown}
-          feedbackBusy={feedbackBusy}
-          error={error ?? locationNotice}
-          onExpand={(value) => {
-            if (value) manualLocked.current = true;
-            setExpanded(value);
-          }}
-          onAdd={add}
-          onOther={clearSelection}
-          onRetry={() => void select(selected, "retry")}
-          onBookmark={() => void save()}
-          onFeedback={feedback}
-          onHeight={setPanelHeight}
-        />
+      ) : selected || providerSelected ? (
+        (() => {
+          const onCardHeight = expanded
+            ? setPanelHeight
+            : (h: number) => setPanelHeight(h + 38);
+          const card = (height: (h: number) => void) =>
+            selected ? (
+              <ApartmentSheet
+                apartment={selected}
+                records={records}
+                status={
+                  !canRead
+                    ? "denied"
+                    : readError
+                      ? "error"
+                      : !loaded && busy
+                        ? "loading"
+                        : "ready"
+                }
+                expanded={expanded}
+                saved={!!favorite?.favorite}
+                bookmarkBusy={bookmarkBusy || !bookmarkKnown}
+                feedbackBusy={feedbackBusy}
+                error={error ?? locationNotice}
+                onExpand={(value) => {
+                  if (value) manualLocked.current = true;
+                  setExpanded(value);
+                }}
+                onAdd={add}
+                onOther={clearSelection}
+                onRetry={() => void select(selected, "retry")}
+                onBookmark={() => void save()}
+                onFeedback={feedback}
+                embedded={
+                  !expanded &&
+                  nearbyItems.some((c) => c.apartment?.id === selected.id)
+                }
+                onHeight={height}
+              />
+            ) : (
+              <View
+                style={{ padding: 22, minHeight: 220, gap: 14 }}
+                onLayout={(e) => height(e.nativeEvent.layout.height)}
+              >
+                {providerSelected?.address ? (
+                  <AddressLine line={providerSelected.address.address_line1} />
+                ) : (
+                  <Text style={styles.title}>公寓 · 地址待核对</Text>
+                )}
+                <Text style={styles.muted}>请核对地址后添加密码</Text>
+                <ActionButton
+                  label={providerSelected?.address ? "添加密码" : "核对地址"}
+                  onPress={() => {
+                    if (!providerSelected) return;
+                    const key = randomUUID();
+                    setNearbyContribution(
+                      key,
+                      session.user.id,
+                      providerSelected,
+                    );
+                    router.push({
+                      pathname: "/apartments/contribute",
+                      params: { nearby_key: key },
+                    });
+                  }}
+                />
+              </View>
+            );
+          const key = selected?.id ?? providerSelected!.key;
+          return !expanded &&
+            nearbyItems.some(
+              (c) => c.key === key || c.apartment?.id === key,
+            ) ? (
+            <NearbyCarousel
+              items={nearbyItems}
+              selectedKey={key}
+              onSelect={(c) => void chooseNearby(c)}
+              onSwipeStart={() => {
+                manualLocked.current = true;
+                generation.current++;
+                setRecords([]);
+                setLoaded(false);
+                setBusy(true);
+                setReadError(false);
+              }}
+              onHeight={setPanelHeight}
+            >
+              {(height) => card(height)}
+            </NearbyCarousel>
+          ) : (
+            card(onCardHeight)
+          );
+        })()
       ) : (
         <View
           onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}

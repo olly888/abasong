@@ -5,11 +5,10 @@ import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { HomeApartmentContent } from "../apartments/HomeApartments";
 import { HomeChrome } from "../components/HomeChrome";
-import { useAuth } from "../auth/AuthProvider";
-import { AuthResolution } from "../auth/AuthControls";
+
 type S = components["schemas"];
 // Explicitly synthetic adapter. Real OS observations still drive the very same
-// stream/queue/arrival/card component. Server geometry has separate HTTP tests.
+// stream/queue/nearby-card component. Server geometry has separate HTTP tests.
 const apartment: S["Apartment"] = {
   id: "11111111-1111-4111-8111-111111111111",
   name: "TEST Apartments",
@@ -27,6 +26,8 @@ const scenes = [
   "轮廓失败",
   "无密码",
   "多候选",
+  "快切慢网",
+  "地址待核对",
   "无候选",
   "读取失败",
   "重试恢复",
@@ -58,54 +59,93 @@ function adapter(scene: Scene) {
       path: string,
       options: { body?: unknown; signal?: AbortSignal } = {},
     ): Promise<unknown> => {
-      if (path.endsWith("/resolve")) {
-        if (scene === "查询失败") throw new Error("TEST lookup unavailable");
-        const { point } = options.body as S["ResolveInput"];
-        const inside =
-          point.lng >= -118.244 &&
-          point.lng <= -118.2434 &&
-          point.lat >= 34.0519 &&
-          point.lat <= 34.05265;
-        const empty =
-          scene === "无候选" ||
-          Math.abs(point.lng + 118.2437) > 0.002 ||
-          Math.abs(point.lat - 34.0522) > 0.002;
-        const matched = inside && scene !== "多候选" && !empty;
-        if (scene === "离开慢网" && !inside) await delay(options.signal);
+      if (path.endsWith("/discover/mapbox")) {
+        if (scene === "地址待核对") await delay(options.signal, 4000);
         return {
-          status: matched ? "matched" : empty ? "unknown" : "candidates",
-          matched_id: matched ? apartment.id : null,
-          candidates: empty
-            ? []
-            : scene === "多候选"
+          items:
+            scene === "地址待核对"
               ? [
-                  apartment,
                   {
-                    ...apartment,
-                    id: "11111111-1111-4111-8111-111111111112",
-                    name: "TEST Neighbor",
-                    address_line1: "102 TEST Arrival Ave",
+                    key: "TEST-temporary",
+                    source: "mapbox",
+                    apartment: null,
+                    address: null,
+                    point: apartment.point,
+                    distance_m: 10,
+                    classification: "apartments",
+                    requires_address_confirmation: true,
                   },
                 ]
-              : [apartment],
-          config_version: 1,
-          reason: matched
-            ? "matched"
-            : scene === "多候选"
-              ? "ambiguous"
-              : empty
-                ? "no_coverage"
-                : "nearby",
-          ...(matched
-            ? { match_basis: point.lat > 34.0525 ? "entrance" : "boundary" }
-            : {}),
+              : [],
+          radius_m: 200,
+          expires_at: new Date(Date.now() + 60000).toISOString(),
+          truncated: false,
+          provider_status: "ok",
+          attribution: "TEST",
+          use_mode: "temporary",
+        };
+      }
+      if (path.endsWith("/discover")) {
+        if (scene === "查询失败") throw new Error("TEST lookup unavailable");
+        const { point } = options.body as S["ResolveInput"];
+        const empty =
+          scene === "无候选" ||
+          scene === "地址待核对" ||
+          Math.abs(point.lng + 118.2437) > 0.002 ||
+          Math.abs(point.lat - 34.0522) > 0.002;
+        if (scene === "离开慢网" && empty) await delay(options.signal);
+        const list = empty
+          ? []
+          : scene === "多候选" || scene === "快切慢网"
+            ? [
+                apartment,
+                {
+                  ...apartment,
+                  id: "11111111-1111-4111-8111-111111111112",
+                  address_line1: "102 TEST Arrival Ave",
+                  point: { lng: -118.2435, lat: 34.0522 },
+                },
+                {
+                  ...apartment,
+                  id: "11111111-1111-4111-8111-111111111113",
+                  address_line1: "104 TEST Arrival Ave",
+                  point: { lng: -118.2433, lat: 34.0522 },
+                },
+              ]
+            : [apartment];
+        return {
+          items: list.map((a, i) => ({
+            key: a.id,
+            source: "catalog",
+            apartment: a,
+            address: {
+              address_line1: a.address_line1,
+              city: a.city,
+              state: a.state,
+              postal_code: a.postal_code,
+            },
+            point: a.point,
+            distance_m: i * 20,
+            classification: "catalog_community",
+            requires_address_confirmation: false,
+          })),
+          radius_m: 200,
+          expires_at: new Date(Date.now() + 20000).toISOString(),
+          truncated: false,
+          provider_status: "not_requested",
+          attribution: "",
+          use_mode: "temporary",
         };
       }
       if (path.endsWith("/map-context")) {
         if (scene === "轮廓失败") throw new Error("TEST geometry unavailable");
-        if (scene === "资料慢网") await delay(options.signal, 30000);
+        if (
+          (scene === "资料慢网" || scene === "快切慢网") &&
+          !path.includes("111111111112")
+        )
+          await delay(options.signal, 9000);
         return {
-          apartment_id: apartment.id,
+          apartment_id: path.split("/")[3] ?? apartment.id,
           buildings: [
             {
               id: "33333333-3333-4333-8333-333333333333",
@@ -124,27 +164,37 @@ function adapter(scene: Scene) {
                 ],
               },
               label_point: apartment.point,
-              street_number: "TEST100",
+              street_number: path.includes("111111111112")
+                ? "TEST102"
+                : "TEST100",
               verified_at: new Date().toISOString(),
             },
           ],
         };
       }
       if (path.endsWith("/access-records")) {
-        if (scene === "资料慢网") await delay(options.signal, 30000);
+        if (
+          (scene === "资料慢网" || scene === "快切慢网") &&
+          !path.includes("111111111112")
+        )
+          await delay(options.signal, 9000);
         reads++;
         if (scene === "读取失败" || (scene === "重试恢复" && reads === 1))
           throw new Error("资料暂时无法加载");
         return {
           items:
-            scene === "无密码" || scene === "无资格"
+            scene === "无密码" ||
+            path.includes("111111111113") ||
+            scene === "无资格"
               ? []
               : [
                   {
                     id: "22222222-2222-4222-8222-222222222221",
-                    apartment_id: apartment.id,
+                    apartment_id: path.split("/")[3] ?? apartment.id,
                     method: "keypad",
-                    value: "TEST-01#",
+                    value: path.includes("111111111112")
+                      ? "TEST-02#"
+                      : "TEST-01#",
                     scope: { label: "行人门", timezone: "America/Los_Angeles" },
                     contributed_at: new Date().toISOString(),
                     last_success_at: null,
@@ -164,7 +214,6 @@ function adapter(scene: Scene) {
   };
 }
 export default function ArrivalLab() {
-  const auth = useAuth();
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState(AppState.currentState === "active");
   useFocusEffect(
@@ -179,13 +228,16 @@ export default function ArrivalLab() {
     );
     return () => subscription.remove();
   }, []);
-  const params = useLocalSearchParams<{ scene?: string }>();
+  const params = useLocalSearchParams<{ scene?: string; run?: string }>();
   const [observations, setObservations] = useState(0);
   const [scene, setScene] = useState<Scene>(
     scenes.includes(params.scene as Scene) ? (params.scene as Scene) : "有密码",
   );
+  useEffect(() => {
+    if (scenes.includes(params.scene as Scene)) setScene(params.scene as Scene);
+  }, [params.scene, params.run]);
   const sceneAdapter = useMemo(() => adapter(scene), [scene]);
-  if (auth.phase !== "ready" || !auth.session) return <AuthResolution />;
+
   if (!focused || !active)
     return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
   return (
@@ -210,9 +262,10 @@ export default function ArrivalLab() {
         </ScrollView>
       </View>
       <HomeApartmentContent
-        key={scene}
+        key={scene + ":" + (params.run ?? "")}
         testData={{
           ...sceneAdapter,
+          userId: "99999999-9999-4999-8999-999999999999",
           onObservation: () => setObservations((n) => n + 1),
         }}
         toolbar={<HomeChrome mode="公寓" onMode={() => {}} />}

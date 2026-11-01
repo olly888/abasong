@@ -1,3 +1,4 @@
+import { getNearbyContribution } from "../../apartments/nearby-contribution";
 import { AddressLine } from "../../apartments/AddressLine";
 import { locality } from "../../apartments/address-presentation";
 import { useEffect, useRef, useState } from "react";
@@ -28,9 +29,30 @@ export default function Contribute() {
 function Content() {
   const a = useAuth(),
     session = a.session!,
-    params = useLocalSearchParams<{ mode?: string; apartment_id?: string }>(),
+    params = useLocalSearchParams<{
+      mode?: string;
+      apartment_id?: string;
+      nearby_key?: string;
+    }>(),
     isPrivate = params.mode === "private",
     controller = useRef(new AbortController());
+  const initial = useRef(
+    getNearbyContribution(params.nearby_key, session.user.id),
+  );
+  const [newAddress, setNewAddress] = useState<S["SearchAddress"]>(
+    initial.current?.address ?? {
+      address_line1: "",
+      city: "",
+      state: "CA",
+      postal_code: null,
+    },
+  );
+  const validNew =
+    !!newAddress.address_line1.trim() &&
+    !!newAddress.city.trim() &&
+    /^[A-Z]{2}$/.test(newAddress.state) &&
+    (!newAddress.postal_code ||
+      /^\d{5}(?:-\d{4})?$/.test(newAddress.postal_code));
   const [query, setQuery] = useState(""),
     [matches, setMatches] = useState<S["Apartment"][]>([]),
     [target, setTarget] = useState<S["Apartment"] | null>(null),
@@ -92,7 +114,13 @@ function Content() {
     setError(null);
     const body = isPrivate
       ? { target: target?.id ?? null, address, value, scope }
-      : { target: target?.id ?? null, value, scope, confirmed };
+      : {
+          target: target?.id ?? null,
+          value,
+          scope,
+          confirmed,
+          ...(target ? {} : { address: newAddress }),
+        };
     const fingerprint = JSON.stringify(body);
     if (attempt.current?.fingerprint !== fingerprint)
       attempt.current = {
@@ -118,20 +146,40 @@ function Content() {
         });
         router.replace("/apartments/library");
       } else {
-        if (!target || !confirmed) throw new Error("请核对公寓并确认共享来源");
-        const result = await request<S["ContributionResult"]>(
-          "/v1/apartments/" + target.id + "/access-records",
-          {
-            method: "POST",
-            key: intent.recordKey,
-            body: {
-              method: "keypad",
-              value,
-              scope: { label: scope },
-              source_attested: true,
+        if (!confirmed || (!target && !validNew))
+          throw new Error("请核对公寓并确认共享来源");
+        let registered: S["AddressContributionResult"] | undefined;
+        if (!target)
+          registered = await request<S["AddressContributionResult"]>(
+            "/v1/apartments/address-contributions",
+            {
+              method: "POST",
+              key: intent.recordKey,
+              body: {
+                address: newAddress,
+                address_confirmed: true,
+                method: "keypad",
+                value,
+                scope: { label: scope },
+                source_attested: true,
+              },
             },
-          },
-        );
+          );
+        const result =
+          registered?.contribution ??
+          (await request<S["ContributionResult"]>(
+            "/v1/apartments/" + target!.id + "/access-records",
+            {
+              method: "POST",
+              key: intent.recordKey,
+              body: {
+                method: "keypad",
+                value,
+                scope: { label: scope },
+                source_attested: true,
+              },
+            },
+          ));
         setValue("");
         setConfirmed(false);
         attempt.current = null;
@@ -141,7 +189,12 @@ function Content() {
             ? "已有相同密码，已记录你的贡献。"
             : undefined,
         );
-        router.back();
+        if (registered)
+          router.replace({
+            pathname: "/",
+            params: { apartment_id: registered.apartment.id },
+          });
+        else router.back();
       }
     } catch (e) {
       if (!controller.current.signal.aborted)
@@ -161,7 +214,7 @@ function Content() {
             disabled={
               !value.trim() ||
               !scope.trim() ||
-              (!target && (!isPrivate || !address.trim())) ||
+              (!target && (isPrivate ? !address.trim() : !validNew)) ||
               (!isPrivate &&
                 (!confirmed ||
                   !a.me?.capabilities.includes("access.contribute")))
@@ -242,6 +295,47 @@ function Content() {
           ))}
         </>
       )}
+      {!isPrivate && !target ? (
+        <View style={{ gap: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: "600" }}>核对公寓地址</Text>
+          <Field
+            label="门牌号与街道"
+            value={newAddress.address_line1}
+            onChangeText={(v) => {
+              setNewAddress((x) => ({ ...x, address_line1: v }));
+              setConfirmed(false);
+            }}
+            maxLength={200}
+          />
+          <Field
+            label="城市"
+            value={newAddress.city}
+            onChangeText={(v) => {
+              setNewAddress((x) => ({ ...x, city: v }));
+              setConfirmed(false);
+            }}
+            maxLength={100}
+          />
+          <Field
+            label="州"
+            value={newAddress.state}
+            onChangeText={(v) => {
+              setNewAddress((x) => ({ ...x, state: v.toUpperCase() }));
+              setConfirmed(false);
+            }}
+            maxLength={2}
+          />
+          <Field
+            label="邮编（选填）"
+            value={newAddress.postal_code ?? ""}
+            onChangeText={(v) => {
+              setNewAddress((x) => ({ ...x, postal_code: v || null }));
+              setConfirmed(false);
+            }}
+            maxLength={10}
+          />
+        </View>
+      ) : null}
       {isPrivate && !target ? (
         <Field
           label="未收录公寓的英文地址"

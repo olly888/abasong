@@ -958,6 +958,204 @@ export class ApartmentsService {
       };
     });
   }
+  async discoverCatalog(
+    a: VerifiedIdentity,
+    p: S["Point"],
+  ): Promise<S["NearbyCandidate"][]> {
+    return this.tx(a, async (c) => {
+      const rows = (
+        await c.query(
+          `WITH q AS (SELECT extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography AS g)
+      SELECT a.id,a.name,a.address_line1,a.city,a.state,a.postal_code,a.confidence,
+      extensions.ST_X(a.point::extensions.geometry) AS lng,extensions.ST_Y(a.point::extensions.geometry) AS lat,
+      LEAST(extensions.ST_Distance(a.point,q.g),COALESCE(extensions.ST_Distance(a.boundary::extensions.geography,q.g),'Infinity'::double precision),COALESCE(b.distance,'Infinity'::double precision)) AS distance
+      FROM abasong.apartments a CROSS JOIN q LEFT JOIN LATERAL
+      (SELECT min(extensions.ST_Distance(footprint::extensions.geography,q.g)) AS distance FROM abasong.apartment_buildings WHERE apartment_id=a.id) b ON true
+      WHERE a.status='active' AND (extensions.ST_DWithin(a.point,q.g,200) OR extensions.ST_DWithin(a.boundary::extensions.geography,q.g,200) OR b.distance<=200)
+      ORDER BY distance,a.id LIMIT 20`,
+          [p.lng, p.lat],
+        )
+      ).rows;
+      return rows.map((r) => ({
+        key: r.id,
+        source: "catalog",
+        apartment: this.apartmentView(r),
+        address: {
+          address_line1: r.address_line1,
+          city: r.city,
+          state: r.state,
+          postal_code: r.postal_code,
+        },
+        point: { lng: r.lng, lat: r.lat },
+        distance_m: Number(r.distance),
+        classification: "catalog_community",
+        requires_address_confirmation: false,
+      }));
+    });
+  }
+  async uncoveredDiscoveryPoints(
+    a: VerifiedIdentity,
+    points: Array<{ point: S["Point"]; distance_m: number }>,
+  ) {
+    return this.tx(a, async (c) => {
+      const keep: typeof points = [];
+      for (const b of points) {
+        const covered = await c.query(
+          `SELECT 1 FROM abasong.apartments a WHERE a.status='active' AND (
+        extensions.ST_DWithin(a.boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,1)
+        OR EXISTS(SELECT 1 FROM abasong.apartment_buildings x WHERE x.apartment_id=a.id AND extensions.ST_DWithin(x.footprint::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,1))) LIMIT 1`,
+          [b.point.lng, b.point.lat],
+        );
+        if (!covered.rowCount) keep.push(b);
+      }
+      return keep;
+    });
+  }
+  private apartmentView(r: {
+    id: string;
+    name: string | null;
+    address_line1: string;
+    city: string;
+    state: string;
+    postal_code: string | null;
+    confidence: S["Apartment"]["confidence"];
+    lng: number;
+    lat: number;
+  }): S["Apartment"] {
+    return {
+      id: r.id,
+      name: r.name,
+      address_line1: r.address_line1,
+      city: r.city,
+      state: r.state,
+      postal_code: r.postal_code,
+      confidence: r.confidence,
+      point: { lng: Number(r.lng), lat: Number(r.lat) },
+    };
+  }
+  private async addressRows(c: PoolClient, address: S["SearchAddress"]) {
+    const found = await c.query(
+      `SELECT id,name,address_line1,city,state,postal_code,confidence,extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat FROM abasong.apartments WHERE status='active' AND upper(state)=upper($1) AND lower(city)=lower($2) ORDER BY id LIMIT 501`,
+      [address.state, address.city],
+    );
+    if (found.rows.length > 500)
+      throw new ApiError(
+        503,
+        "ADDRESS_LOOKUP_LIMIT",
+        "地址资料较多，请从搜索结果选择公寓",
+      );
+    const key = addressIdentity(address);
+    return found.rows.filter((r) => addressIdentity(r) === key);
+  }
+  async findConfirmedAddress(a: VerifiedIdentity, address: S["SearchAddress"]) {
+    return this.tx(a, async (c) => {
+      const r = await this.addressRows(c, address);
+      if (r.length > 1)
+        throw new ApiError(
+          409,
+          "AMBIGUOUS_ADDRESS",
+          "同一地址有多个公寓，请从搜索结果选择",
+        );
+      return r.map((x) => this.apartmentView(x));
+    });
+  }
+  async contributeAddress(
+    a: VerifiedIdentity,
+    b: S["AddressContributionInput"],
+    key: string,
+    permanent?: { point: S["Point"]; address: S["SearchAddress"] },
+  ): Promise<S["AddressContributionResult"]> {
+    const canonical = addressIdentity(b.address);
+    if (!canonical) throw invalid();
+    return this.tx(
+      a,
+      async (c) => {
+        const result = async (aid: string) => ({
+          apartment: this.apartmentView(
+            (
+              await c.query(
+                `SELECT *,extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat FROM abasong.apartments WHERE id=$1 AND status='active'`,
+                [aid],
+              )
+            ).rows[0] ??
+              (() => {
+                throw missing();
+              })(),
+          ),
+          contribution: await this.contributeTx(
+            c,
+            a,
+            aid,
+            {
+              method: "keypad",
+              value: b.value,
+              scope: b.scope?.label ? { label: b.scope.label } : undefined,
+              source_attested: true,
+            },
+            key,
+            `address-code:${aid}`,
+            b,
+          ),
+        });
+        return this.write(
+          c,
+          a,
+          "address-contribution",
+          key,
+          b,
+          async () => {
+            await c.query(
+              "SELECT pg_advisory_xact_lock(hashtextextended($1,0))",
+              ["address:" + canonical],
+            );
+            const rows = await this.addressRows(c, b.address);
+            if (rows.length > 1)
+              throw new ApiError(
+                409,
+                "AMBIGUOUS_ADDRESS",
+                "同一地址有多个公寓，请从搜索结果选择",
+              );
+            let aid = rows[0]?.id as string | undefined;
+            if (!aid) {
+              if (
+                !permanent ||
+                addressIdentity(permanent.address) !== canonical
+              )
+                throw new ApiError(
+                  503,
+                  "ADDRESS_STORAGE_UNAVAILABLE",
+                  "新地址保存暂不可用，填写内容已保留",
+                );
+              const source = (
+                await c.query(
+                  `INSERT INTO abasong.data_sources(source_type,provider,product,license_reference,persistent_use_approved,verified_at) VALUES('provider_permanent','Mapbox','geocoding-v6-permanent','Mapbox Permanent Geocoding; confirmed contributor address',true,now()) RETURNING id`,
+                )
+              ).rows[0].id;
+              aid = (
+                await c.query(
+                  `INSERT INTO abasong.apartments(address_line1,city,state,postal_code,point,source_id,status,confidence,address_key) VALUES($1,$2,$3,$4,extensions.ST_SetSRID(extensions.ST_MakePoint($5,$6),4326)::extensions.geography,$7,'active','unverified',$8) RETURNING id`,
+                  [
+                    b.address.address_line1,
+                    b.address.city,
+                    b.address.state,
+                    b.address.postal_code,
+                    permanent.point.lng,
+                    permanent.point.lat,
+                    source,
+                    canonical,
+                  ],
+                )
+              ).rows[0].id;
+            }
+            return { object: aid!, result: await result(aid!) };
+          },
+          result,
+        );
+      },
+      "access.contribute",
+    );
+  }
+
   async resolve(
     a: VerifiedIdentity,
     body: unknown,

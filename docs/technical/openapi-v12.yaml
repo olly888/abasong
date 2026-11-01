@@ -1104,6 +1104,247 @@ paths:
             schema:
               $ref: '#/components/schemas/AddressRetrieveInput'
       x-sensitive-response: true
+  /v1/apartments/discover:
+    post:
+      operationId: discoverNearbyApartments
+      summary: 附近200米目录公寓；边界距离优先；不代表到达，不返回密码
+      tags:
+      - apartments
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearbyDiscovery'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveInput'
+      x-sensitive-response: true
+  /v1/apartments/discover/mapbox:
+    post:
+      operationId: discoverMapboxApartments
+      summary: 会话临时apartments分类候选，地址需确认；无临时结果落库
+      tags:
+      - apartments
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearbyDiscovery'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveInput'
+      x-sensitive-response: true
+  /v1/apartments/address-contributions:
+    post:
+      operationId: contributeAtConfirmedAddress
+      summary: 核对地址后直接共享；新位置只接受服务端永久许可地理编码；同事务幂等
+      tags:
+      - apartments
+      responses:
+        '201':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressContributionResult'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressContributionInput'
+      x-required-capabilities:
+      - access.contribute
+      x-sensitive-response: true
   /v1/apartments/proposals:
     post:
       operationId: proposeApartment
@@ -9096,6 +9337,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Apartment'
+        address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
       required:
       - label
       - title
@@ -9104,6 +9353,144 @@ components:
       - attribution
       - match_status
       - apartments
+    NearbyCandidate:
+      type: object
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          maxLength: 100
+        source:
+          type: string
+          enum:
+          - catalog
+          - mapbox
+        apartment:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/Apartment'
+          - type: object
+            nullable: true
+            enum:
+            - null
+        address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
+        point:
+          $ref: '#/components/schemas/Point'
+        distance_m:
+          type: number
+          minimum: 0
+        classification:
+          type: string
+          enum:
+          - catalog_community
+          - apartments
+        requires_address_confirmation:
+          type: boolean
+      required:
+      - key
+      - source
+      - apartment
+      - address
+      - point
+      - distance_m
+      - classification
+      - requires_address_confirmation
+    NearbyDiscovery:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NearbyCandidate'
+          maxItems: 20
+        radius_m:
+          type: integer
+          minimum: 200
+        expires_at:
+          type: string
+          format: date-time
+        truncated:
+          type: boolean
+        provider_status:
+          type: string
+          enum:
+          - not_requested
+          - ok
+          - unavailable
+        attribution:
+          type: string
+          maxLength: 2000
+        use_mode:
+          type: string
+          enum:
+          - temporary
+      required:
+      - items
+      - radius_m
+      - expires_at
+      - truncated
+      - provider_status
+      - attribution
+      - use_mode
+    ConfirmedAddressAccessScope:
+      type: object
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          maxLength: 100
+          minLength: 1
+      required:
+      - label
+    AddressContributionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        address:
+          $ref: '#/components/schemas/SearchAddress'
+        method:
+          type: string
+          enum:
+          - keypad
+        value:
+          type: string
+          maxLength: 32
+          minLength: 1
+        scope:
+          $ref: '#/components/schemas/ConfirmedAddressAccessScope'
+        source_attested:
+          type: boolean
+          enum:
+          - true
+        address_confirmed:
+          type: boolean
+          enum:
+          - true
+      required:
+      - address
+      - method
+      - value
+      - source_attested
+      - address_confirmed
+    AddressContributionResult:
+      type: object
+      additionalProperties: false
+      properties:
+        apartment:
+          $ref: '#/components/schemas/Apartment'
+        contribution:
+          $ref: '#/components/schemas/ContributionResult'
+      required:
+      - apartment
+      - contribution
     ApartmentProposalInput:
       type: object
       additionalProperties: false

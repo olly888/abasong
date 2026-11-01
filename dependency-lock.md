@@ -86,3 +86,5 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 ## 2026-11-01 独立 iPhone 入口核对版
 
 无新增依赖、锁文件或后台权限。复用已锁 Expo58.0.21 / rnmapbox10.3.16 / expo-location58.0.20，本地Release与独立registerRootComponent入口打包公开Woodside资料；普通Expo Router入口不变。独立bundle ID/scheme避免覆盖业务开发版；构建时不加载业务API/Auth模块，结束恢复普通原生配置。Expo58 prebuild必须显式`--no-clean`保留Pods；首轮误清生成目录后已按审查锁文件执行Pods部署安装恢复，没有升级。实际证据见[独立现场版方案](docs/technical/D1_独立现场版与HTTPS测试环境方案.md)。AWS北加州/KMS仍为既有部署方向，未创建资源；不以免费休眠服务或公网隧道替代现场查码就绪条件。
+
+2026-11-01 ADD-18 nearby carousel: no new dependency/native module. Reuse Nest/pg/zod/Node24 fetch, existing RN ScrollView and Mapbox. Separate catalog and bounded temporary Tilequery/reverse enrichment; explicitly configured permanent Geocoding v6 is required for new stored coordinates. Public sample entitlement tested and enabled only in ignored local.env; sample default false. No persistent storage of temporary provider responses, cloud change or new native compile. Caption accessibility follows [React Native0.88](https://reactnative.dev/docs/accessibility), runtime remains [Expo58](https://docs.expo.dev/versions/v58.0.0/).

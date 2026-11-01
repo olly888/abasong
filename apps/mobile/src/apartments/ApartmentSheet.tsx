@@ -26,6 +26,7 @@ import { locality } from "./address-presentation";
 type S = components["schemas"];
 export type SheetProps = {
   apartment: S["Apartment"];
+  embedded?: boolean;
   records: S["AccessRecord"][];
   status: "loading" | "ready" | "denied" | "error";
   expanded: boolean;
@@ -127,6 +128,16 @@ export function ApartmentSheet(p: SheetProps) {
         styles.panel,
         { height: contentHeight + 37 },
         p.expanded && styles.expanded,
+        p.embedded && {
+          position: "relative",
+          left: undefined,
+          right: undefined,
+          bottom: undefined,
+          maxHeight: undefined,
+          borderRadius: 16,
+          shadowOpacity: 0,
+          elevation: 0,
+        },
       ]}
     >
       <View {...pan.panHandlers}>

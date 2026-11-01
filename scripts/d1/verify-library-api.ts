@@ -1,3 +1,4 @@
+import { verifyNearby } from "./verify-nearby";
 import { verifySearchMatching } from "./verify-search-matching";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
@@ -114,6 +115,12 @@ async function main() {
     );
     await db.query(
       readFileSync("database/migrations/0006_direct_contribution.sql", "utf8"),
+    );
+    await db.query(
+      readFileSync(
+        "database/migrations/0007_nearby_address_contributions.sql",
+        "utf8",
+      ),
     );
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
@@ -1160,6 +1167,7 @@ async function main() {
     await verifyPublicArrival(db, req, a, b, await token(arrivalReader));
     await verifyPublicEntrances(db, req, await token(arrivalReader));
     await verifySearchMatching(db, sensitive.href, actor, issued);
+    await verifyNearby(db, sensitive.href, issued);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

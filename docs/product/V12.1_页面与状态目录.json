@@ -141,7 +141,8 @@
         "普通建筑灰色门牌；选中建筑蓝色高亮与内部强调门牌，保留中庭空洞；无轮廓不画建筑",
         "收起仅街道单行；展开补城市/州/邮编与公寓名",
         "门禁密码小标签同行；原样保留#、*、前导零，4–6位为常见格式而非硬性限制",
-        "贡献元信息：今天8:20 AM贡献·用户名；历史明确日期，按记录当地时区"
+        "贡献元信息：今天8:20 AM贡献·用户名；历史明确日期，按记录当地时区",
+        "ADD-18：附近200米公寓横向滑卡，门牌街道同行；有权密码直显，无资料可添加，不依赖入口或8秒停稳。"
       ],
       "actions": [
         {
@@ -229,14 +230,20 @@
         "外部地址多实体待选择",
         "离开时查询未返回",
         "离开后密码或建筑迟到",
-        "轮廓请求失败仍可查码"
+        "轮廓请求失败仍可查码",
+        "附近多公寓横向滑动及1/N计数",
+        "滑动期间立即隐藏旧密码，迟到响应丢弃",
+        "Mapbox临时公寓地址待核对",
+        "阅读锁定及主动定位恢复附近推荐"
       ],
       "api_operations": [
         "resolveApartment",
         "getApartment",
         "getApartmentMapContext",
         "readAccessRecords",
-        "feedbackAccess"
+        "feedbackAccess",
+        "discoverNearbyApartments",
+        "discoverMapboxApartments"
       ],
       "requirements": [
         "V12-01",
@@ -590,7 +597,8 @@
       ],
       "api_operations": [
         "contributeAccess",
-        "proposeApartment"
+        "proposeApartment",
+        "contributeAtConfirmedAddress"
       ],
       "requirements": [
         "V12-04",

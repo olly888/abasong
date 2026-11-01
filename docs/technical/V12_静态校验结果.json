@@ -1,18 +1,23 @@
 {
-  "date": "2026-10-31",
+  "date": "2026-11-01",
   "baseline": "V12.1 temporary delivery support only",
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
-    "paths": 83,
-    "operations": 108,
-    "schemas": 128,
+    "paths": 86,
+    "operations": 111,
+    "schemas": 133,
     "spec_validation": "passed"
   },
   "sql": {
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0007": {
+      "top_level_parse": "passed",
+      "statements": 8,
+      "database_execution": "see D1 nearby cards verification record"
+    },
     "incremental_migration_0006": {
       "top_level_parse": "passed",
       "statements": 5,
@@ -47,7 +52,7 @@
   },
   "page_spec": {
     "nodes": 39,
-    "state_variants": 295,
+    "state_variants": 299,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

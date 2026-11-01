@@ -5,6 +5,7 @@ import ImageIO
 public class AbasongOcrModule: Module {
   public func definition() -> ModuleDefinition {
     Name("AbasongOcr")
+    Constant("addressCameraVersion") { 1 }
     AsyncFunction("recognize") { (uri: String) -> [[String: Any]] in
       // Only picker-created cache copies; no remote URL, documents or arbitrary paths.
       guard let url = URL(string: uri), url.isFileURL,
@@ -23,7 +24,8 @@ public class AbasongOcrModule: Module {
       request.recognitionLanguages = ["en-US"]
       request.usesLanguageCorrection = false
       do {
-        try VNImageRequestHandler(url: url).perform([request])
+        let orientation = CGImagePropertyOrientation(rawValue: (properties[kCGImagePropertyOrientation] as? NSNumber)?.uint32Value ?? 1) ?? .up
+        try VNImageRequestHandler(url: url, orientation: orientation).perform([request])
         return (request.results ?? []).prefix(600).compactMap { observation in
           guard let candidate = observation.topCandidates(1).first else { return nil }
           let box = observation.boundingBox

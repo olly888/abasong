@@ -1,5 +1,13 @@
 # Abasong development status
 
+## Latest execution — photo address search native integration (2026-10-31)
+
+ADD-16 L2: S01 single-photo camera/local OCR/address review integrated; only explicit confirmation runs existing authenticated autocomplete, then user chooses a result. Reuses locked dependencies, no API/DDL/cloud changes. Camera permission requires rebuilt native apps; old-module guard prevents old binary camera launch. Cancellation/stale results, Android background camera retention, scoped cache cleanup and photo orientation implemented. Failed retake/cancel cannot silently submit an unconfirmed address. Prototype and generated page catalog updated:39 nodes/292 states.
+
+Actual check146/25 files PASS; static83 paths/108 ops/128 schemas PASS; JS iOS/Android/Web exports PASS. Android ARM64, iOS simulator and signed iphoneos native builds/install PASS. iOS DEV synthetic confirmation→real public search→DelMar card, multiple/empty/cancel observed; Android user confirmed confirmation→2445 map/card. User confirmed iPhone real TEST-page capture/review/search and retake cancellation usable. System-permission/Android physical/kill-cleanup/30-sample L3 remain open. Evidence: [native photo acceptance](docs/technical/D1_拍面单搜索原生接入与验收.md).
+
+No new test-code grants; normal apartment automatic matching stays off pending bounded entrance/field evidence. Existing authorized iPhone LAN preview retained (health200); do not stop it without telling the user. D1 not complete. Next: bounded public entrance verification/field automatic-card acceptance, alongside Android system-camera and remaining photo recovery/quality matrix. Prior entries below are historical scopes.
+
 ## Latest execution — entrance evidence / label-address experiment (2026-10-31)
 
 [ADD-16](docs/product/Abasong_V12.1_拍面单查地址补充.md) approved: single-photo address search inside S01, after the core home auto-lookup flow and before D2 expansion; separate from contribution/import batches. Added a pure address extractor and 9 regression tests, bounded synthetic fixture generator and offline Apple Vision evaluator. Actual macOS experiment: 11/12 exact, 0 false address candidates across 2 negative samples; blurred ZIP misread despite high confidence retained as a failure. No carrier image, recipient data, external geocoding or upload used. Camera/photo cleanup/confirmation UI, prototype and iOS/Android camera acceptance remain pending. Shared screenshot parser only gained an explicit required-regex-capture guard for the strict script typecheck.

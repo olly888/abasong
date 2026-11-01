@@ -134,7 +134,7 @@ for p in pages:
 for p in pages:
  if p['id']=='S01':
   p['requirements'].append('ADD-16')
-  p['planned_address_photo']='已批准拍面单查地址：搜索内相机、端侧提取、同页核对后查找、复用地址候选；不进密码贡献批次、不移动GPS。当前仅L1识别实验，L2原型与原生状态待接入，详见ADD-16。'
+  p['planned_address_photo']='已批准拍面单查地址：搜索内相机、端侧提取、同页核对后查找、复用地址候选；不进密码贡献批次、不移动GPS。L1已记录；L2搜索页与原生相机已接入，双端/真机验收按专项记录，详见ADD-16。'
 outdir=ROOT/'docs/product'
 outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'
@@ -299,6 +299,13 @@ for p in pages:
   p['api_operations']=['retrieveAddress','getApartment']
   p['acceptance']='ADD-14：不把附近公寓当作匹配，不从临时供应商结果直接建档；完整街道门牌/城市/州一致且250米内方可匹配，多实体由用户选择。临时结果只在会话内存，切后台清理。'
  if p['id']=='H01':p['states']+=['手选外部地址未匹配','外部地址多实体待选择']
+# ADD-16: photo search is a state of S01, not another batch/page.
+for p in pages:
+ if p['id']=='S01':
+  p['information']+=['公寓搜索框相机入口：拍面单查地址','端侧单张识别；完整收件地址核对/修改；主操作查找此地址、次操作重新拍照']
+  p['states']+=['相机权限请求/拒绝','系统单张拍照/取消','正在识别/取消等待','唯一地址待核对','多个地址待选择','未识别到收件地址','重新拍照失败保留输入','退出/迟到结果丢弃']
+  p['actions']+=[dict(label='拍面单查地址',target='S01',result='只拍一张；端侧识别后回同页核对，确认前不调用地址接口'),dict(label='查找此地址',target='S01',result='核对可编辑地址后请求既有联想；候选仍由用户点选'),dict(label='重新拍照/取消',target='S01',result='重拍；取消保留原输入与核对态，迟到结果不能覆盖新输入')]
+  p['acceptance']+=' ADD-16：不上传原图、不记录整段OCR；拒绝权限可手输；临时照片等原生任务实际结束再清理，退出无跨次续填。真实拍摄与DEV合成UI分别验收。'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-31','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

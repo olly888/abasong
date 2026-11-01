@@ -13,6 +13,7 @@ import java.io.File
 class AbasongOcrModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("AbasongOcr")
+    Constant("addressCameraVersion") { 1 }
     AsyncFunction("recognize") { uri: String, promise: Promise ->
       val context = appContext.reactContext
       var recognizer: com.google.mlkit.vision.text.TextRecognizer? = null
@@ -31,11 +32,14 @@ class AbasongOcrModule : Module() {
         val client = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         recognizer = client
         client.process(image).addOnSuccessListener { result ->
+          val rotated = image.rotationDegrees == 90 || image.rotationDegrees == 270
+          val uprightWidth = if (rotated) image.height else image.width
+          val uprightHeight = if (rotated) image.width else image.height
           val rows = result.textBlocks.flatMap { it.lines }.take(600).mapNotNull { line ->
             val box = line.boundingBox ?: return@mapNotNull null
             mapOf("text" to line.text.take(500), "confidence" to (line.confidence ?: 0f).toDouble(),
-              "x" to box.left.toDouble() / image.width, "y" to box.top.toDouble() / image.height,
-              "width" to box.width().toDouble() / image.width, "height" to box.height().toDouble() / image.height)
+              "x" to box.left.toDouble() / uprightWidth, "y" to box.top.toDouble() / uprightHeight,
+              "width" to box.width().toDouble() / uprightWidth, "height" to box.height().toDouble() / uprightHeight)
           }
           client.close()
           promise.resolve(rows)

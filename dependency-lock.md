@@ -72,3 +72,9 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 2026-10-31 建筑门牌/尺度：明确固定 Mapbox light-v11 样式URL，复用其 composite/Streets v8 housenum_label，不新增逐建筑搜索请求或自建门牌数据源。继续 rnmapbox10.3.16 的 existing VectorSource、SymbolLayer、Fill/Line 和原生英制比例尺；自选公寓按 Mercator/512逻辑像素视野适配、最大zoom18，手动最大20。无新增依赖/锁文件/原生权限，本批为JS更新与双平台导出/现有原生运行，不称重新原生编译。公开Tilequery仅作有界覆盖诊断，不持久化供应商几何或用户位置。
 
 2026-10-31 Mapbox Search Box：通过既有Nest/Node fetch接suggest/retrieve，无新依赖或原生重编译。公开token仅本机.env；临时数据不入永久库，路由只传内存交接键。地址身份规范化共享在contracts；无DDL/云改动。生产多实例需集中限流和会话设计，本批单进程保护仅开发环境。
+
+## 2026-10-31 拍面单查地址
+
+复用已锁定的 Expo58.0.21、expo-image-picker58.0.10、expo-file-system58.0.13及现有 Apple Vision/ML Kit 本地模块，无新依赖或锁版本变化。image-picker cameraPermission由禁用改为明确中文用途；microphonePermission仍false，Android合并Manifest只新增所需CAMERA而无RECORD_AUDIO。需重新prebuild、锁定Pods安装及双端原生编译；不能只热刷新。原生OCR模块常量addressCameraVersion=1用于旧包保护；iOS显式照片方向、Android旋转后文字坐标归一化。签名团队只从既有本机产物读取，不写入公共配置。
+
+本批按安装版本阅读[Expo58 ImagePicker](https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/)、[FileSystem](https://docs.expo.dev/versions/v58.0.0/sdk/filesystem/)和Apple Vision方向初始化文档。系统相机/强杀恢复/照片缓存与JS合成状态的验收分开记录。

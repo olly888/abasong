@@ -2,6 +2,7 @@ import { View, type ViewStyle } from "react-native";
 import { tokens } from "@abasong/ui";
 export type IconName =
   | "box"
+  | "camera"
   | "refresh"
   | "home"
   | "people"
@@ -57,6 +58,23 @@ export function Icon({
     );
   let content;
   switch (name) {
+    case "camera":
+      content = (
+        <>
+          {stroke({ left: 2, top: 6, width: 20, height: 15, borderRadius: 3 })}
+          {stroke({
+            left: 8,
+            top: 3,
+            width: 8,
+            height: 3,
+            borderBottomWidth: 0,
+            borderTopLeftRadius: 2,
+            borderTopRightRadius: 2,
+          })}
+          {stroke({ left: 8, top: 10, width: 8, height: 8, borderRadius: 4 })}
+        </>
+      );
+      break;
     case "settings":
       content = (
         <>

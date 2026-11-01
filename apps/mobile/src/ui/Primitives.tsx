@@ -17,7 +17,7 @@ export function ListRow({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{disabled}}
+      accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -106,11 +106,13 @@ export function SearchBox({
   onChange,
   onSearch,
   busy = false,
+  onCamera,
 }: {
   value: string;
   onChange: (v: string) => void;
   onSearch: () => void;
   busy?: boolean;
+  onCamera?: () => void;
 }) {
   return (
     <View
@@ -162,9 +164,17 @@ export function SearchBox({
           label="清空搜索"
           onPress={() => onChange("")}
         />
-      ) : (
+      ) : !onCamera ? (
         <View style={{ width: 16 }} />
-      )}
+      ) : null}
+      {onCamera ? (
+        <IconButton
+          name="camera"
+          label="拍面单查地址"
+          onPress={onCamera}
+          disabled={busy}
+        />
+      ) : null}
     </View>
   );
 }

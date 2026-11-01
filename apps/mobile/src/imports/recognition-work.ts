@@ -49,6 +49,27 @@ export class RecognitionGate {
     }
   }
 }
+// A cancelled JS wait does not mean native OCR has released its input file.
+export async function recognizeOwned<T>(
+  gate: RecognitionGate,
+  work: () => Promise<T>,
+  release: () => void,
+  signal?: AbortSignal,
+) {
+  let started = false;
+  try {
+    return await gate.run(async () => {
+      started = true;
+      try {
+        return await work();
+      } finally {
+        release();
+      }
+    }, signal);
+  } finally {
+    if (!started) release();
+  }
+}
 export async function runRecognitionBatch<T, R>(
   items: T[],
   signal: AbortSignal,

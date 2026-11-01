@@ -1,5 +1,11 @@
 # Abasong development status
 
+## Latest verification — Android system-camera return (2026-11-01)
+
+User completed the pending Android simulator system-camera check and replied “已经验证”: using “While using the app”, capture the simulator's text-free image, confirm, return to search with the no-recipient-address state and retake/manual-entry actions. Recorded as user-assisted PASS for this bounded path, alongside the earlier iPhone TEST capture and Android address-confirmation→map acceptance. The earlier long camera stay with “Only this time” remains a separate unresolved observation, not a failure reproduced under this permission choice or a completed process-recovery test.
+
+[Updated acceptance record](docs/technical/D1_拍面单搜索原生接入与验收.md). Documentation-only follow-up; no code, permission, service or data changes, no new build/test execution. Previous 146 tests/native builds retain their original execution scope. Remaining: permission revocation/Activity destruction/weak-network and L3 sample quality; D1 core priority remains public entrance evidence and physical automatic apartment/code-card acceptance. Android physical device remains unavailable; normal auto-match stays off pending scoped evidence.
+
 ## Latest execution — photo address search native integration (2026-10-31)
 
 ADD-16 L2: S01 single-photo camera/local OCR/address review integrated; only explicit confirmation runs existing authenticated autocomplete, then user chooses a result. Reuses locked dependencies, no API/DDL/cloud changes. Camera permission requires rebuilt native apps; old-module guard prevents old binary camera launch. Cancellation/stale results, Android background camera retention, scoped cache cleanup and photo orientation implemented. Failed retake/cancel cannot silently submit an unconfirmed address. Prototype and generated page catalog updated:39 nodes/292 states.

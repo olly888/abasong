@@ -1,6 +1,10 @@
 # Abasong development status
 
-Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-exit-arrival-verification`.
+Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-iphone-validation`.
+
+## Latest execution — physical iPhone connected (2026-10-31)
+
+[Physical-device record](docs/technical/D1_iPhone真机部署与首轮验收.md). User connected iPhone 13 Pro / iOS27.0.1; developer pairing and Developer Mode confirmed. Actual iphoneos Debug build/code-signature/profile checks and USB install succeeded using the currently logged-in Personal Team after an old certificate/account mismatch. User personally trusted the developer; launch and Device Hub guest-home/Mapbox rendering observed. User explicitly authorized temporary LAN API3002 and Metro8082 after automatic review rejected the initial bind; separate listeners preserve simulator services and auth (unauthenticated API401). No project credential/config/dependency/business-code/cloud/grant change. User self-login and precise-location/blue-dot confirmation requested; actual GPS, foreground/static updates, field apartment recognition and full D1 still pending. Do not inject simulator coordinates into physical device. Temporary listeners remain for this active acceptance and must stop when it ends; normal auto-match remains disabled.
 
 ## Latest execution — return/exit and automatic-card retry (2026-10-31)
 

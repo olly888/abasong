@@ -1,0 +1,44 @@
+# D1 iPhone 真机部署与首轮验收
+
+2026-10-31；分支 `codex/d1-iphone-validation`，应用代码基于 `e0ab331`。用户已连接自己的 iPhone；本批推进安装与首轮设备检查，不等于现场公寓识别或完整 D1 验收。
+
+## 设备与部署
+
+- 实体设备：iPhone 13 Pro，iOS 27.0.1，通过 USB 连接。已完成开发配对，读取到 Developer Mode 已开启；没有向真机注入模拟位置。
+- 首次 Expo 构建选择到旧证书对应的未登录团队，Xcode 返回 No Account / No profiles。随后使用 Xcode 当前已登录的个人团队执行开发构建；没有使用公司团队、付费升级或 App Store 发布。
+- `xcodebuild` Debug / iphoneos / arm64 实际构建成功；`codesign --verify --deep --strict` 通过。配置描述文件包含本次设备、未过期，应用标识与开发权限一致。
+- `devicectl device install app` 返回 success，开发版实际安装到手机。首次启动被 iOS 信任保护拦截；用户亲自完成个人开发者信任后，重新启动命令成功。
+- Device Hub 已实际观察实体 iPhone 上的 Abasong 访客首页、Mapbox 地图、三导航和登录入口。尚未用此画面证明 GPS、账号接口或密码读取通过。
+
+CLI 自动写入的个人 appleTeamId 与附带 Android permissions 已从项目配置中撤回；本机生成工程和构建产物保持忽略，不把个人签名配置提交到公共仓库。业务代码、依赖、数据库和接口契约未改。
+
+## 临时真机网络
+
+普通 API/Metro 原来只监听回环地址，手机不能把自身的 localhost 当成 Mac。首次局域网启动被自动审批拦截后，用户明确授权临时局域网 API 和预览连接。
+
+- API 另起实例，绑定本机获授权的局域网地址 3002；保留认证、对象权限和现有本地开发数据库。
+- 真机 Metro 使用独立 8082，内部监听回环；局域网入口只绑定获授权的 IPv4 地址，通过本机 TCP 转发到该 Metro。没有公网隧道、防火墙放宽或其他网络接口监听。
+- 真机专用 `EXPO_PUBLIC_API_BASE_URL` 仅传入该进程，不覆盖模拟器 `.env.local`；原有 3001/8081 服务保留。
+- 本机请求 API ready、Metro status 通过；局域网 API 的无认证 `/v1/me` 请求返回 401。真实手机的账号 API 连通性须待用户完成登录确认，不能用本机请求代替。
+- 验收进行期间临时服务保持运行；验收结束后应停止本批 API、Metro 和 LAN 转发进程。若 Wi‑Fi 地址改变，需要重新配置本批入口，不使用旧地址冒充可用连接。
+
+## 首轮验收状态
+
+| 项目 | 状态 |
+|---|---|
+| USB 识别、开发配对、Developer Mode | 已检查 |
+| 真机原生编译、签名有效性 | 通过 |
+| 真机安装、用户开发者信任 | 完成 |
+| 连接真机 Metro、访客首页地图 | 已观察 |
+| 用户自行短信登录 | 已请求，待结果 |
+| 使用期间定位、精确位置和真实蓝点 | 已请求，待用户核对；不收集具体坐标 |
+| 静止位置更新、拖图回位、前后台恢复 | 待验 |
+| 公寓门外/相邻建筑识别 | 待现场公开样本与限定范围验证 |
+| 真实资格/共享码原生闭环 | 未通过；未给账号扩权或导入真实密码 |
+| Android 真机 | 用户暂无设备，仍待验 |
+
+不记录验证码、手机号、精确 GPS 或真实门禁资料。不打开真机照片库进行未授权的真实截图导入。普通自动认定仍关闭；现有六个公开样本与合成接口验收不能替代真实门口证据。
+
+本批只部署和记录，不把此前 107 单测、159 接口检查当作本批重新执行。实际编译日志和设备命令结果保留在忽略目录 `.tooling/`；最终状态以本记录及 DEVELOPMENT_STATUS 最新补记为准。
+
+参考：[Expo 本地开发构建](https://docs.expo.dev/guides/local-app-development/)、[Expo iOS Developer Mode](https://docs.expo.dev/guides/ios-developer-mode/)、[Expo/Xcode 开发签名](https://github.com/expo/fyi/blob/main/setup-xcode-signing.md)。

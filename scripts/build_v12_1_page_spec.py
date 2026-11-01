@@ -321,6 +321,11 @@ for p in pages:
  if p['id']=='B02':p['information']+=['目标公寓地址优先且完整可核对；名称次级']
  if p['id']=='U06':p['information']+=['保存/共享列表先地址再名称；现有权限下密码直显保持']
  if p['id']=='U09':p['information']+=['完整地址优先于公寓名称；共享记录贡献时间与用户名']
+# Automatic evidence expires independently of fresh GPS / slow responses.
+for p in pages:
+ if p['id']=='H01':
+  p['states']+=['离开时查询未返回','离开后密码或建筑迟到','轮廓请求失败仍可查码']
+  p['acceptance']+=' 弱网：新位置离开15米停留窗口或变粗略，先撤销自动卡和高亮、使旧查询失效，再查询；GPS持续更新不延长旧匹配，20秒未获新匹配即撤销。迟到密码/轮廓不得恢复已撤销对象。手动阅读仍锁定，定位按钮立即解除旧选卡。新公寓自动到达时，未手动拖缩地图可按当次GPS一次回到17级；已经拖缩则保留用户视野，不以公寓质心移动蓝点。'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-11-01','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

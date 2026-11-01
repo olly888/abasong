@@ -1,3 +1,4 @@
+import type { ForegroundFix } from "./foreground-location";
 import type { components } from "@abasong/contracts";
 type S = components["schemas"];
 export type ArrivalState = {
@@ -25,6 +26,39 @@ function distanceM(a: S["Point"], b: S["Point"]) {
       Math.cos(b.lat * rad) *
       Math.sin(((b.lng - a.lng) * rad) / 2) ** 2;
   return 2 * 6371008.8 * Math.asin(Math.sqrt(Math.min(1, h)));
+}
+// A fresh GPS stream is not evidence that the last server match is still fresh.
+// Invalidate before awaiting the next lookup; this can only remove a match,
+// never infer membership or grant a password-reading capability.
+export function arrivalNeedsReset(
+  state: ArrivalState,
+  now: number,
+  manualLocked: boolean,
+  observation?: { fix: ForegroundFix; approximate: boolean },
+) {
+  if (!state || manualLocked) return false;
+  if (
+    !Number.isFinite(now) ||
+    !Number.isFinite(state.lastObserved) ||
+    now - state.lastObserved > 20_000 ||
+    state.lastObserved > now + 1000
+  )
+    return true;
+  if (!observation) return false;
+  const { fix, approximate } = observation;
+  const point = { lng: fix.coords.longitude, lat: fix.coords.latitude };
+  return (
+    approximate ||
+    !validPoint(point) ||
+    !validPoint(state.anchor) ||
+    !Number.isFinite(fix.timestamp) ||
+    now - fix.timestamp > 20_000 ||
+    fix.timestamp > now + 1000 ||
+    fix.coords.accuracy === null ||
+    !Number.isFinite(fix.coords.accuracy) ||
+    fix.coords.accuracy < 0 ||
+    distanceM(state.anchor, point) > maxDwellMovementM
+  );
 }
 // Dwell is client-side stability only. It cannot promote a candidate to a match:
 // the authenticated server must first accept its versioned field-evidence gate.

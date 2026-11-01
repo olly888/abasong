@@ -1,5 +1,13 @@
 # Abasong development status
 
+## Latest implementation — slow-lookup departure / arrival camera (2026-11-01)
+
+Reproduced native TEST stale card/highlight while a departure resolve was delayed9s. New OS fixes that leave the15m dwell window or become coarse/invalid now invalidate the pending query epoch and automatic selection before another response; a20s server-match observation lease expires independently of live GPS. Late code/geometry cannot restore an invalidated selection. Recenter immediately releases the old reading; manual reading otherwise remains locked. Automatic arrival can issue one17-level camera command at the actual observation if the map was untouched, preserving user map interaction.
+
+Actual check158/26 PASS; three-platform JS export and static39 nodes/295 states PASS. Dual-native TEST departure/pending data/geometry failure observed; completed late-response check after73s without source reload. No API/DDL/dependency/native rebuild/cloud or account grant changes; no unrelated HTTP/PG suite claimed. [Evidence and remaining scope](docs/technical/D1_自动卡片弱网离开与到达视野验收.md).
+
+User selected Woodside Village for field follow-up. G1/G2 identity/service/approach scope remains unverified; normal matching stays off. [Field steps and connection readiness](docs/technical/D1_Woodside现场核对与连接准备.md): current LAN API/Metro cannot be assumed reachable by cellular away from Mac. Prepare independent phone field connectivity before automatic-card field acceptance; no public tunnel/deployment authorized by the LAN grant. D1 remains incomplete, Android physical unavailable.
+
 ## Latest implementation — address-first cards and contributor identity (2026-11-01)
 
 [ADD-17](docs/product/Abasong_V12.1_地址优先与单行密码卡片补充.md) implemented in current prototype and native home/candidates/search/contribution/library/photo review presentation. Collapsed street stays on one line with full door-token emphasis; locality/property name move to expanded details. Preserve #/*/leading zero and 32-character wrapping; common4–6digits are not new validation limits. Contribution text uses existing server display name plus record-local time/date, with complete expanded metadata. Display parsing never changes matching or map building-number associations.

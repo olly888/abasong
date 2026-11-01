@@ -34,7 +34,11 @@ import { watchDevicePosition } from "./location-stream";
 import type { ForegroundFix } from "./foreground-location";
 import { serialLatest } from "./serial-latest";
 import { HomeArrivalPanel } from "./HomeArrivalPanel";
-import { assessHomeArrival, type ArrivalState } from "./arrival-policy";
+import {
+  arrivalNeedsReset,
+  assessHomeArrival,
+  type ArrivalState,
+} from "./arrival-policy";
 import { MapTools } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
 import { ApartmentSheet } from "./ApartmentSheet";
@@ -169,6 +173,9 @@ export function HomeApartmentContent({
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
     [cameraZoom, setCameraZoom] = useState(17),
+    [cameraIntent, setCameraIntent] = useState<"explicit" | "arrival">(
+      "explicit",
+    ),
     [frameSelected, setFrameSelected] = useState(false),
     [cameraRevision, setCameraRevision] = useState(0),
     [blocked, setBlocked] = useState(false),
@@ -261,7 +268,10 @@ export function HomeApartmentContent({
       decision.apartment &&
       decision.apartment.id !== selectionRef.current?.id
     )
-      void select(decision.apartment, "automatic");
+      void select(decision.apartment, "automatic", {
+        lng: fix.coords.longitude,
+        lat: fix.coords.latitude,
+      });
     if (lookup.status === "stale_location") setLocationNotice("位置已过期");
   };
   const onFailure = useRef<() => void>(() => {});
@@ -320,6 +330,12 @@ export function HomeApartmentContent({
       2000,
     );
     disposeLookup.current = () => queue.dispose();
+    const resetUnconfirmedLookup = () => {
+      queue.invalidate();
+      invalidateAutomaticCard();
+      setCandidates([]);
+      setLookupState("empty");
+    };
     const fail = (reason: string) => {
       if (!valid()) return;
       queue.invalidate();
@@ -355,6 +371,11 @@ export function HomeApartmentContent({
       ) {
         staleReported = true;
         fail("stale");
+      } else if (
+        valid() &&
+        arrivalNeedsReset(arrival.current, Date.now(), manualLocked.current)
+      ) {
+        resetUnconfirmedLookup();
       }
     }, 2000);
     controller.signal.addEventListener(
@@ -392,6 +413,7 @@ export function HomeApartmentContent({
           setLocationNotice(null);
           if (first) {
             first = false;
+            setCameraIntent("explicit");
             setCameraZoom(17);
             setFrameSelected(false);
             setCameraTarget(p);
@@ -403,6 +425,15 @@ export function HomeApartmentContent({
             setLocationNotice("位置不够准确");
             return;
           }
+          if (
+            arrivalNeedsReset(
+              arrival.current,
+              Date.now(),
+              manualLocked.current,
+              { fix, approximate },
+            )
+          )
+            resetUnconfirmedLookup();
           if (!manualLocked.current) queue.offer({ fix, approximate });
         },
         fail,
@@ -427,12 +458,13 @@ export function HomeApartmentContent({
       setCandidates([]);
     }
     manualLocked.current = false;
-    arrival.current = null;
+    invalidateAutomaticCard();
     if (blocked) {
       void openLocationSettings();
       return;
     }
     if (point && Date.now() - lastFixAt.current <= 20_000) {
+      setCameraIntent("explicit");
       setCameraZoom(17);
       setFrameSelected(false);
       setCameraTarget({ ...point });
@@ -443,6 +475,7 @@ export function HomeApartmentContent({
   async function select(
     p: S["Apartment"],
     origin: "manual" | "automatic" | "retry" = "manual",
+    arrivalPoint?: S["Point"],
   ) {
     if (origin === "manual") {
       manualLocked.current = true;
@@ -453,7 +486,15 @@ export function HomeApartmentContent({
     setLocating(false);
     selectionRef.current = p;
     setSelected(p);
+    if (origin === "automatic" && arrivalPoint) {
+      setCameraIntent("arrival");
+      setCameraZoom(17);
+      setFrameSelected(false);
+      setCameraTarget(arrivalPoint);
+      setCameraRevision((v) => v + 1);
+    }
     if (origin === "manual") {
+      setCameraIntent("explicit");
       setCameraZoom(18);
       setFrameSelected(true);
       setCameraTarget(p.point);
@@ -644,6 +685,7 @@ export function HomeApartmentContent({
         <HomeMap
           point={cameraTarget}
           cameraRevision={cameraRevision}
+          cameraIntent={mode === "公寓" ? cameraIntent : "explicit"}
           cameraZoom={mode === "公寓" ? cameraZoom : 14}
           frameSelected={mode === "公寓" && frameSelected}
           bottomInset={mode === "公寓" ? panelHeight : 148}

@@ -22,6 +22,9 @@ const apartment: S["Apartment"] = {
 };
 const scenes = [
   "有密码",
+  "离开慢网",
+  "资料慢网",
+  "轮廓失败",
   "无密码",
   "多候选",
   "无候选",
@@ -31,13 +34,29 @@ const scenes = [
   "无资格",
 ] as const;
 type Scene = (typeof scenes)[number];
+// Synthetic delayed completions, no real network/account fault injection.
+function delay(signal?: AbortSignal, milliseconds = 9000) {
+  return new Promise<void>((resolve, reject) => {
+    const cancel = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", cancel);
+      reject(new Error("TEST request cancelled"));
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", cancel);
+      resolve();
+    }, milliseconds);
+    if (signal?.aborted) cancel();
+    else signal?.addEventListener("abort", cancel, { once: true });
+  });
+}
 function adapter(scene: Scene) {
   let reads = 0;
   return {
     canRead: scene !== "无资格",
     read: async (
       path: string,
-      options: { body?: unknown } = {},
+      options: { body?: unknown; signal?: AbortSignal } = {},
     ): Promise<unknown> => {
       if (path.endsWith("/resolve")) {
         if (scene === "查询失败") throw new Error("TEST lookup unavailable");
@@ -52,6 +71,7 @@ function adapter(scene: Scene) {
           Math.abs(point.lng + 118.2437) > 0.002 ||
           Math.abs(point.lat - 34.0522) > 0.002;
         const matched = inside && scene !== "多候选" && !empty;
+        if (scene === "离开慢网" && !inside) await delay(options.signal);
         return {
           status: matched ? "matched" : empty ? "unknown" : "candidates",
           matched_id: matched ? apartment.id : null,
@@ -81,7 +101,9 @@ function adapter(scene: Scene) {
             : {}),
         };
       }
-      if (path.endsWith("/map-context"))
+      if (path.endsWith("/map-context")) {
+        if (scene === "轮廓失败") throw new Error("TEST geometry unavailable");
+        if (scene === "资料慢网") await delay(options.signal, 30000);
         return {
           apartment_id: apartment.id,
           buildings: [
@@ -107,7 +129,9 @@ function adapter(scene: Scene) {
             },
           ],
         };
+      }
       if (path.endsWith("/access-records")) {
+        if (scene === "资料慢网") await delay(options.signal, 30000);
         reads++;
         if (scene === "读取失败" || (scene === "重试恢复" && reads === 1))
           throw new Error("资料暂时无法加载");

@@ -9,6 +9,7 @@ export type HomeMapProps = {
   mapContext?: S["ApartmentMapContext"] | null;
   onSelect?: (p: S["Apartment"]) => void;
   cameraRevision?: number;
+  cameraIntent?: "explicit" | "arrival";
   cameraZoom?: number;
   frameSelected?: boolean;
   bottomInset?: number;

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  arrivalNeedsReset,
   assessArrival,
   assessHomeArrival,
   startForegroundRefresh,
@@ -290,4 +291,75 @@ it("rejects invalid observations or a match with no recognition basis", () => {
       position,
     ).state,
   ).toBeNull();
+});
+
+describe("automatic card while the next lookup is slow", () => {
+  const stable = assessArrival(
+    null,
+    matched,
+    1000,
+    1000,
+    false,
+    position,
+  ).state;
+  const fix = (lng = 0, timestamp = 11000) => ({
+    coords: { longitude: lng, latitude: 0, accuracy: 2 },
+    timestamp,
+  });
+  it("invalidates departure on the new observation before any server response", () => {
+    expect(
+      arrivalNeedsReset(stable, 11000, false, {
+        fix: fix(0.0004),
+        approximate: false,
+      }),
+    ).toBe(true);
+    expect(
+      arrivalNeedsReset(stable, 11000, false, {
+        fix: fix(0.000004),
+        approximate: false,
+      }),
+    ).toBe(false);
+  });
+  it("expires server evidence even if fresh GPS keeps arriving", () => {
+    expect(
+      arrivalNeedsReset(stable, 21000, false, {
+        fix: fix(0, 21000),
+        approximate: false,
+      }),
+    ).toBe(false);
+    expect(
+      arrivalNeedsReset(stable, 21001, false, {
+        fix: fix(0, 21001),
+        approximate: false,
+      }),
+    ).toBe(true);
+    expect(arrivalNeedsReset(stable, 21001, false)).toBe(true);
+  });
+  it("removes automatic evidence after coarse or invalid fixes without inventing a replacement", () => {
+    for (const observation of [
+      { fix: fix(), approximate: true },
+      {
+        fix: { ...fix(), coords: { ...fix().coords, accuracy: null } },
+        approximate: false,
+      },
+      { fix: fix(NaN), approximate: false },
+      { fix: fix(0, -11000), approximate: false },
+    ])
+      expect(arrivalNeedsReset(stable, 11000, false, observation)).toBe(true);
+    expect(arrivalNeedsReset(null, 22000, false)).toBe(false);
+  });
+  it("preserves deliberately opened reading until recenter releases the lock", () => {
+    expect(
+      arrivalNeedsReset(stable, 22000, true, {
+        fix: fix(0.1, 22000),
+        approximate: true,
+      }),
+    ).toBe(false);
+    expect(
+      arrivalNeedsReset(stable, 22000, false, {
+        fix: fix(0.1, 22000),
+        approximate: true,
+      }),
+    ).toBe(true);
+  });
 });

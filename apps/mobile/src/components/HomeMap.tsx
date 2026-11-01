@@ -19,6 +19,7 @@ export default function HomeMap({
   mapContext,
   onSelect,
   cameraRevision = 0,
+  cameraIntent = "explicit",
   cameraZoom = 17,
   frameSelected = false,
   bottomInset = 210,
@@ -103,9 +104,12 @@ export default function HomeMap({
     });
   };
   useEffect(() => {
+    // Automatic arrival can bring the nearby building into view once, but must
+    // not steal the map from a driver who already panned or zoomed it.
+    if (cameraIntent === "arrival" && touched.current) return;
     touched.current = false;
     applyCamera();
-  }, [point?.lng, point?.lat, cameraRevision, cameraZoom]);
+  }, [point?.lng, point?.lat, cameraRevision, cameraZoom, cameraIntent]);
   useEffect(() => {
     if (frameSelected && buildings.length && !touched.current) applyCamera();
   }, [frameSelected, buildings, size]);

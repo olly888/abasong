@@ -8945,6 +8945,21 @@ components:
         config_version:
           type: integer
           minimum: 1
+        reason:
+          type: string
+          enum:
+          - matched
+          - ambiguous
+          - nearby
+          - no_coverage
+          - imprecise
+          - stale_location
+          - policy_disabled
+        match_basis:
+          type: string
+          enum:
+          - boundary
+          - entrance
       required:
       - status
       - matched_id

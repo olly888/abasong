@@ -204,6 +204,14 @@ for p in pages:
   p['actions'] += [dict(label='更多：保存进度',target='B05',result='本人受保护草稿，仍需主动保存；首次空内容不创建批次'),dict(label='更多：继续添加截图',target='B04',result='保留当前已识别内容，不重复处理已完成图片'),dict(label='更改保存方式',target='B05',result='显式选择共享并保存或仅自己保存；原有清确认/范围锁保持')]
   p['states']+=['更多辅助操作菜单','保存方式选择菜单']
   p['acceptance']+=' 正常页没有常驻保存草稿/继续选图大按钮；不展示批次ID、版本或技术备注；完整且无异常记录可批量选中，异常不擅自发布。'
+# ADD-10: continuous foreground location and arrival-first home states.
+for p in pages:
+ if p['id']=='H01':
+  p['information'] += ['无候选：低高度共享公寓密码入口；无重复搜索/定位','附近候选与当前公寓分开；已核对门外到达区域可匹配']
+  p['states'] += ['门外可信入口稳定命中','街道附近候选','普通住宅或商业无相关候选','覆盖未知中性状态','详情展开蓝点持续更新','已离开清除自动卡','入口重叠只给候选']
+  p['requirements'].append('ADD-10')
+  p['actions'].append(dict(label='共享公寓密码',target='B04',result='进入截图贡献，不推断当前位置为某公寓'))
+  p['acceptance'] += ' ADD-10：蓝点、相机和选卡解耦，前台持续定位，展开锁定只影响选卡；门外识别须已核对独立到达区域；无候选不当成定位失败/非公寓；正常空态没有重复搜索或重新定位。'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-31','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

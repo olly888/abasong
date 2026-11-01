@@ -13,6 +13,11 @@
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0005": {
+      "top_level_parse": "passed",
+      "statements": 12,
+      "database_execution": "see D1 home arrival verification record"
+    },
     "incremental_migration_0004": {
       "top_level_parse": "passed",
       "statements": 20,
@@ -37,7 +42,7 @@
   },
   "page_spec": {
     "nodes": 40,
-    "state_variants": 275,
+    "state_variants": 282,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

@@ -1,8 +1,14 @@
 # Abasong development status
 
-Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-import-dual-qa`.
+Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-home-arrival`.
 
-## Current snapshot — 2026-10-31
+## Current priority — 2026-10-31
+
+ADD-10 home auto-lookup is the highest priority. [Requirements](docs/product/Abasong_V12.1_首页自动查码场景补充.md) and [implementation/acceptance](docs/technical/D1_首页自动查码与门外识别验收.md) govern this slice. Continuous foreground location, independent dot/camera/read lock, neutral empty state, verified entry-area matching, additive resolve reasons and native automatic cards implemented. Local0005:51tables; check101, real libraryHTTP111 and importHTTP120 passed; Android actual Debug rebuild/install passed. Dual-native TEST arrival/no-code/ambiguous/read-lock/departure/return/qualification/error/foreground evidence observed. Final iOS/Android/web exports and static contract/page40/282/link checks passed. Both normal home→screenshot contribution entries observed through actual local API. CI is tracked in the matrix.
+
+**D0 engineering complete; D1 in progress.** Normal auto-match remains disabled pending verified entrance/field evidence. Current native TEST adapter verifies interaction independently of real SQL HTTP tests; it does not prove real authorized shared-code end-to-end coverage. Six public LA addresses/four building mappings remain; no fabricated entrances/codes, grants, cloud migration or deploy. iPhone is not yet connected; Android physical unavailable. Next is completing the home slice and scoped real-data/qualification/field gates, then remaining screenshot/shared-data work. D2 temporary support and D3 social features remain unimplemented.
+
+## Previous snapshot — screenshot batch (2026-10-31)
 
 [Current draft PR47](https://github.com/olly888/abasong/pull/47) targets `codex/d1-import-simple-ux`; manual Engineering checks runs against `codex/d1-import-dual-qa`. Keep draft; no merge/deploy. Remaining detailed gates and evidence are in the matrix below.
 
@@ -24,7 +30,7 @@ Previous location slice (historical evidence): user reprioritized the D1 core: r
 
 Previous home-remediation slice is implemented and its core slice verified: [acceptance](docs/technical/D1_首页地图与定位体验修正验收.md). Prototype/native three-mode controls, list/map switch, settings and permission/error recovery are aligned. Android uses a new foreground one-shot GPS local module after GMS/system-fused failures; real Debug build/install and synthetic GPS acquisition passed. User explicitly confirmed same-coordinate recenter on both platforms after the camera-command fix. OS GPS request stopped after the fix. Check31 passed; remaining authorized-data/field/accessibility gates belong to fullD1, not claimed complete. No cloud migrations/grants/real GPS reads.
 
-Authoritative roadmap: [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Prior business baseline: `a3b5a51`; latest D1 location/native slice is on `codex/d1-location` (evidence below).
+Historical roadmap snapshot (superseded by the current priority above): [项目开发与验收总计划](docs/Abasong_V12.1_项目开发与验收总计划.md). D0 engineering stage complete; D1 remains in progress, not accepted as a whole. Prior business baseline: `a3b5a51`; latest D1 location/native slice is on `codex/d1-location` (evidence below).
 
 - Implemented: identity/account checks; owner-isolated encrypted private library/favorites/manual contribution, qualified active-code reading and feedback; native pages wired to actual API. Screenshot on-device OCR, explicit encrypted server-draft saving/restoring and two-phase submission are now wired; cloud upload/OCR remains planned.
 - Verified latest: local0001–0004 (50 tables),87 import HTTP/DB checks,97 library/DB regression checks,43 unit tests + workspace checks, dual-platform JS export. Prior54 Auth/16 ranking and native compilation evidence retain their recorded scope.

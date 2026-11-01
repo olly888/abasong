@@ -6,3 +6,6 @@
 .home-list{position:absolute;inset:132px 0 0;padding-top:8px;height:auto;background:white}.home-list .flat-card{margin-bottom:12px}
 
 .home.detail-open .map-canvas{visibility:hidden}
+
+/* ADD-10: neutral places leave room for the map. */
+.home-sheet.arrival-quiet{height:auto;min-height:88px;max-height:120px}.arrival-quiet .sheet-handle{display:none}.arrival-quiet .sheet-inner{padding:18px 22px}.arrival-contribute{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;width:100%;border:0;background:transparent;color:var(--brand,#1467d8);font-size:16px;font-weight:600}.home.quiet-map .map-tools{bottom:104px}.home-sheet.arrival-nearby{height:auto;max-height:300px}.home.nearby-map .map-tools{bottom:310px}.self-dot.at-entrance{left:47%;top:54%}

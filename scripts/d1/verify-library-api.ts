@@ -109,6 +109,9 @@ async function main() {
         "utf8",
       ),
     );
+    await db.query(
+      readFileSync("database/migrations/0006_direct_contribution.sql", "utf8"),
+    );
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,
@@ -703,7 +706,7 @@ async function main() {
         { expected_version: 1, source_attested: true },
         sk,
       );
-    assert.equal(shared.outcome, "created_pending");
+    assert.equal(shared.outcome, "created_active");
     assert.deepEqual(
       await req(
         "POST",
@@ -743,14 +746,23 @@ async function main() {
     await db.query(
       `INSERT INTO abasong.config_versions(version,config,activated_at) VALUES(1,'{"feedback_window_days":7}',now())`,
     );
-    assert.equal(
-      (await req("GET", `/v1/apartments/${aid}/access-records`, a, 200)).items
-        .length,
-      0,
-    );
+    // Publication is the normal contribution transaction, without an approval UPDATE.
+    await req("GET", `/v1/apartments/${aid}/access-records`, b, 403);
     await db.query(
-      "UPDATE abasong.access_records SET status='active' WHERE id=$1",
-      [shared.record_id],
+      "INSERT INTO abasong.capabilities(user_id,capability,reason) VALUES($1,'access.read','synthetic test')",
+      [other],
+    );
+    const otherRead = await req(
+      "GET",
+      `/v1/apartments/${aid}/access-records`,
+      b,
+      200,
+    );
+    assert.equal(otherRead.items[0].value, body.value);
+    assert.equal(otherRead.items[0].effective_useful, false);
+    assert.equal(
+      otherRead.items[0].verification_label,
+      "community_contribution",
     );
     assert.equal(
       (await req("GET", `/v1/apartments/${aid}/access-records`, a, 200))
@@ -815,8 +827,87 @@ async function main() {
       404,
       { client_event_id: randomUUID(), value: "useful" },
     );
+    // A lost-response retry returns the original result, never republishes the record.
+    assert.deepEqual(
+      await req(
+        "POST",
+        priv + "/share",
+        a,
+        201,
+        { expected_version: 1, source_attested: true },
+        sk,
+      ),
+      shared,
+    );
+    assert.equal(
+      (await req("GET", `/v1/apartments/${aid}/access-records`, b, 200)).items
+        .length,
+      0,
+    );
+    for (const status of ["withdrawn", "invalid", "review"]) {
+      await db.query(
+        "UPDATE abasong.access_records SET status=$2 WHERE id=$1",
+        [shared.record_id, status],
+      );
+      await req(
+        "POST",
+        priv + "/share",
+        a,
+        409,
+        { expected_version: 1, source_attested: true },
+        randomUUID(),
+      );
+    }
+    // Historical unpublished content is not silently released by migration/retry.
     await db.query(
-      "UPDATE abasong.access_records SET status='active' WHERE id=$1",
+      "UPDATE abasong.access_records SET status='pending' WHERE id=$1",
+      [shared.record_id],
+    );
+    // Disposable fixture emulates an event created before 0006 (default false).
+    await db.query(
+      "UPDATE abasong.access_contributions SET published_on_creation=false WHERE record_id=$1 AND event_type='created'",
+      [shared.record_id],
+    );
+    assert.equal(
+      (
+        await req(
+          "POST",
+          priv + "/share",
+          a,
+          201,
+          { expected_version: 1, source_attested: true },
+          sk,
+        )
+      ).outcome,
+      "created_pending",
+    );
+    assert.equal(
+      (await req("GET", `/v1/apartments/${aid}/access-records`, b, 200)).items
+        .length,
+      0,
+    );
+    await req(
+      "POST",
+      priv + "/share",
+      a,
+      409,
+      { expected_version: 1, source_attested: true },
+      randomUUID(),
+    );
+    await db.query(
+      "UPDATE abasong.access_records SET status='active',expires_at=now()-interval '1 minute' WHERE id=$1",
+      [shared.record_id],
+    );
+    await req(
+      "POST",
+      priv + "/share",
+      a,
+      409,
+      { expected_version: 1, source_attested: true },
+      randomUUID(),
+    );
+    await db.query(
+      "UPDATE abasong.access_records SET status='active',expires_at=NULL WHERE id=$1",
       [shared.record_id],
     );
 
@@ -986,6 +1077,68 @@ async function main() {
       1,
     );
     checks++;
+    // Manual entry uses the same direct-publication transaction as private-share/import.
+    const directPath = `/v1/apartments/${aid}/access-records`;
+    const directBody = {
+      method: "keypad",
+      value: "TEST-DIRECT-SECOND",
+      scope: { label: body.scope_label },
+      source_attested: true,
+    };
+    await req("POST", directPath, b, 403, directBody, randomUUID());
+    await req(
+      "POST",
+      directPath,
+      a,
+      400,
+      { ...directBody, source_attested: false },
+      randomUUID(),
+    );
+    await req(
+      "POST",
+      directPath,
+      a,
+      400,
+      { ...directBody, status: "active" },
+      randomUUID(),
+    );
+    const parallel = await Promise.all([
+      req("POST", directPath, a, 201, directBody, randomUUID()),
+      req("POST", directPath, a, 201, directBody, randomUUID()),
+    ]);
+    assert.deepEqual(parallel.map((r) => r.outcome).sort(), [
+      "created_active",
+      "same_value_validation",
+    ]);
+    assert.equal(parallel[0].record_id, parallel[1].record_id);
+    assert.equal(parallel[0].contributed_at, parallel[1].contributed_at);
+    let viewed = await req("GET", directPath, b, 200);
+    assert.equal(viewed.items.length, 2);
+    assert.equal(viewed.items[0].id, parallel[0].record_id);
+    assert.equal(viewed.items[0].effective_useful, false);
+    await req(
+      "PUT",
+      `/v1/access-records/${shared.record_id}/feedback`,
+      b,
+      200,
+      { client_event_id: randomUUID(), value: "useful" },
+    );
+    viewed = await req("GET", directPath, b, 200);
+    assert.equal(viewed.items[0].id, shared.record_id);
+    await req(
+      "PUT",
+      `/v1/access-records/${shared.record_id}/feedback`,
+      b,
+      200,
+      { client_event_id: randomUUID(), value: "not_useful" },
+    );
+    viewed = await req("GET", directPath, b, 200);
+    assert.equal(viewed.items[0].id, parallel[0].record_id);
+    await db.query(
+      "UPDATE abasong.capabilities SET revoked_at=now() WHERE user_id=$1 AND capability='access.read'",
+      [other],
+    );
+    await req("GET", directPath, b, 403);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

@@ -212,6 +212,18 @@ for p in pages:
   p['requirements'].append('ADD-10')
   p['actions'].append(dict(label='共享公寓密码',target='B04',result='进入截图贡献，不推断当前位置为某公寓'))
   p['acceptance'] += ' ADD-10：蓝点、相机和选卡解耦，前台持续定位，展开锁定只影响选卡；门外识别须已核对独立到达区域；无候选不当成定位失败/非公寓；正常空态没有重复搜索或重新定位。'
+# ADD-11: user-confirmed codes publish directly; no per-record operator queue.
+for p in pages:
+ if p['id'] in ['H01','B02','B05','B06','U06','U09']:
+  p['requirements'].append('ADD-11')
+  p['acceptance']+=' ADD-11：司机确认后的正常密码直接共享，无人工审核等待；已共享不等于已验证有效。同码不刷新贡献时间，不自动增加有用票。'
+ if p['id']=='B02':
+  p['information']=[x.replace('保存；未知公寓先提议地址','确认共享；未匹配地址可先私存') for x in p['information']]
+  p['actions']=[{**a,'result':a['result'].replace('新增待审核/可用记录或同码验证','直接共享新记录或合并同码贡献')} for a in p['actions']]
+  p['states']=[x.replace('公寓提议待审核','未匹配公寓待补充').replace('待审核','历史尚未发布') for x in p['states']]
+ if p['id']=='B06':
+  p['information']=[x.replace('私存/共享/同码/待审核/待处理/失败独立计数','私存/共享/同码/待处理/失败独立计数；历史未发布不计入共享成功') for x in p['information']]
+  p['states']=[x.replace('待审核','历史尚未发布') for x in p['states']]
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-31','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

@@ -201,7 +201,9 @@ function LibraryContent() {
                         text: "确认共享",
                         onPress: () =>
                           void run(async () => {
-                            await request(
+                            const result = await request<
+                              S["ContributionResult"]
+                            >(
                               "/v1/me/private-access-records/" +
                                 r.id +
                                 "/share",
@@ -214,7 +216,11 @@ function LibraryContent() {
                                 },
                               },
                             );
-                            Alert.alert("已提交共享", "新贡献将等待审核。");
+                            Alert.alert(
+                              result.outcome === "created_pending"
+                                ? "历史贡献尚未发布"
+                                : "已共享",
+                            );
                             await load();
                           }),
                       },
@@ -473,7 +479,7 @@ function LibraryContent() {
               <Text>{s.address_label}</Text>
               <Text style={styles.muted}>
                 {s.record_status === "pending"
-                  ? "待审核"
+                  ? "尚未发布"
                   : s.record_status === "active"
                     ? "已共享"
                     : "已停止展示"}

@@ -117,22 +117,27 @@ function Content() {
         router.replace("/apartments/library");
       } else {
         if (!target || !confirmed) throw new Error("请核对公寓并确认共享来源");
-        await request("/v1/apartments/" + target.id + "/access-records", {
-          method: "POST",
-          key: intent.recordKey,
-          body: {
-            method: "keypad",
-            value,
-            scope: { label: scope },
-            source_attested: true,
+        const result = await request<S["ContributionResult"]>(
+          "/v1/apartments/" + target.id + "/access-records",
+          {
+            method: "POST",
+            key: intent.recordKey,
+            body: {
+              method: "keypad",
+              value,
+              scope: { label: scope },
+              source_attested: true,
+            },
           },
-        });
+        );
         setValue("");
         setConfirmed(false);
         attempt.current = null;
         Alert.alert(
-          "已提交贡献",
-          "新密码待审核；同码贡献保留原时间，不产生有用反馈。",
+          result.outcome === "created_pending" ? "历史贡献尚未发布" : "已共享",
+          result.outcome === "same_value_validation"
+            ? "已有相同密码，已记录你的贡献。"
+            : undefined,
         );
         router.back();
       }

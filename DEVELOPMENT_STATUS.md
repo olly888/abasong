@@ -1,6 +1,10 @@
 # Abasong development status
 
-Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-home-arrival`.
+Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-direct-sharing`.
+
+## Latest steering — direct contribution (2026-10-31)
+
+User removed per-contribution operator approval. [ADD-11](docs/product/Abasong_V12.1_贡献直接共享与反馈排序.md) supersedes earlier shared-review gates. Implemented direct activation in manual/private-share/import transactions, immutable initial outcome in local0006, updated receipt copy/prototype. Existing useful-first/time-desc ranking retained. Local0006/51tables, check101, libraryHTTP132, importHTTP120, rankingPG16, static validation and dualJS exports PASS. Browser two-image direct/same-value result observed. Native receipt/cross-account UI, correction/withdrawal/report APIs and physical/field acceptance remain open. Historical pending not bulk-published. No ops-review API, real grants, cloud changes, deploy or new remote CI. Verification and scope: [direct contribution evidence](docs/technical/D1_贡献直接共享验收.md). Home auto-lookup/field evidence remains highest priority; account capability remains separate from content publication.
 
 ## Current priority — 2026-10-31
 

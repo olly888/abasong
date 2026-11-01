@@ -622,7 +622,7 @@ export class ApartmentsService {
         ]);
         let r = (
           await c.query(
-            "SELECT id,contributed_at,status FROM abasong.access_records WHERE apartment_id=$1 AND scope_key=$2 AND hmac_key_version=$3 AND dedup_hmac=$4",
+            "SELECT id,contributed_at,status,(expires_at IS NOT NULL AND expires_at<=now()) AS expired FROM abasong.access_records WHERE apartment_id=$1 AND scope_key=$2 AND hmac_key_version=$3 AND dedup_hmac=$4",
             [aid, scopeKey, "local-v1", hash],
           )
         ).rows[0];
@@ -632,7 +632,7 @@ export class ApartmentsService {
           const recordId = randomUUID();
           r = (
             await c.query(
-              "INSERT INTO abasong.access_records(id,apartment_id,contributor_id,method,scope_key,scope_label,dedup_hmac,hmac_key_version,source_attested_at) VALUES($1,$2,$3,'keypad',$4,$5,$6,'local-v1',now()) RETURNING id,contributed_at,status",
+              "INSERT INTO abasong.access_records(id,apartment_id,contributor_id,method,scope_key,scope_label,dedup_hmac,hmac_key_version,source_attested_at,status) VALUES($1,$2,$3,'keypad',$4,$5,$6,'local-v1',now(),'active') RETURNING id,contributed_at,status",
               [recordId, aid, a.userId, scopeKey, label, hash],
             )
           ).rows[0];
@@ -652,21 +652,22 @@ export class ApartmentsService {
               "local-envelope-v1",
             ],
           );
-          outcome = "created_pending";
-        } else if (!["pending", "active", "review"].includes(r.status))
+          outcome = "created_active";
+        } else if (r.status !== "active" || r.expired)
           throw new ApiError(
             409,
             "RECORD_UNAVAILABLE",
-            "原记录已停用，请提交复核",
+            "这条资料已停止共享，请核对最新密码",
           );
         const eventId = randomUUID();
         await c.query(
-          "INSERT INTO abasong.access_contributions(id,record_id,user_id,event_type) VALUES($1,$2,$3,$4)",
+          "INSERT INTO abasong.access_contributions(id,record_id,user_id,event_type,published_on_creation) VALUES($1,$2,$3,$4,$5)",
           [
             eventId,
             r.id,
             a.userId,
-            outcome === "created_pending" ? "created" : "same_value_validation",
+            outcome === "created_active" ? "created" : "same_value_validation",
+            outcome === "created_active",
           ],
         );
         return {
@@ -681,7 +682,7 @@ export class ApartmentsService {
       async (eventId) => {
         const event = (
           await c.query(
-            "SELECT e.event_type,r.id,r.contributed_at FROM abasong.access_contributions e JOIN abasong.access_records r ON r.id=e.record_id WHERE e.id=$1 AND e.user_id=$2",
+            "SELECT e.event_type,e.published_on_creation,r.id,r.contributed_at FROM abasong.access_contributions e JOIN abasong.access_records r ON r.id=e.record_id WHERE e.id=$1 AND e.user_id=$2",
             [eventId, a.userId],
           )
         ).rows[0];
@@ -690,7 +691,9 @@ export class ApartmentsService {
           record_id: event.id,
           outcome:
             event.event_type === "created"
-              ? "created_pending"
+              ? event.published_on_creation
+                ? "created_active"
+                : "created_pending"
               : "same_value_validation",
           contributed_at: event.contributed_at.toISOString(),
         };

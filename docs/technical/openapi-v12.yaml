@@ -1353,7 +1353,7 @@ paths:
       x-sensitive-response: true
     post:
       operationId: contributeAccess
-      summary: 有权来源；同码同范围变验证事件
+      summary: 本人确认后直接共享；同码合并且不刷新贡献时间，不产生有用票
       tags:
       - apartments
       responses:
@@ -9254,6 +9254,7 @@ components:
       - record_id
       - outcome
       - contributed_at
+      description: 新贡献成功返回created_active，无人工审核；created_pending仅兼容旧请求重放，不表示当前仍在共享。same_value_validation不刷新贡献时间或增加有用票。
     FeedbackInput:
       type: object
       additionalProperties: false

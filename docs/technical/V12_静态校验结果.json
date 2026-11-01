@@ -13,6 +13,11 @@
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0006": {
+      "top_level_parse": "passed",
+      "statements": 5,
+      "database_execution": "see D1 direct contribution verification record"
+    },
     "incremental_migration_0005": {
       "top_level_parse": "passed",
       "statements": 12,

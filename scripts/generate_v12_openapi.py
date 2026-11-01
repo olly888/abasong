@@ -52,6 +52,7 @@ obj('AccessInput',{'method':enum('keypad','front_desk','digital_access','no_fixe
 out('AccessRecord',{'id':uid,'apartment_id':uid,'method':enum('keypad','front_desk','digital_access','no_fixed_code','other'),'value':string(500),'scope':ref('AccessScope'),'contributed_at':dt,'last_success_at':nullable_dt,'last_failure_at':nullable_dt,'effective_useful':boolean,'my_feedback':{'type':'string','enum':['useful','not_useful','withdrawn'],'nullable':True},'verification_label':enum('community_contribution','verified_source')})
 out('AccessList',{'items':arr(ref('AccessRecord')),'config_version':integer(1),'next_cursor':{'type':'string','nullable':True}})
 out('ContributionResult',{'record_id':uid,'outcome':enum('created_pending','created_active','same_value_validation'),'contributed_at':dt})
+S['ContributionResult']['description']='新贡献成功返回created_active，无人工审核；created_pending仅兼容旧请求重放，不表示当前仍在共享。same_value_validation不刷新贡献时间或增加有用票。'
 obj('FeedbackInput',{'client_event_id':uid,'value':enum('useful','not_useful','withdrawn'),'reason':string(200)},['client_event_id','value'])
 out('FeedbackResult',{'record_id':uid,'value':enum('useful','not_useful','withdrawn'),'updated_at':dt})
 obj('RequestDraftInput',{'kind':enum('partial_route','whole_route','extra_drivers','vehicle_help','other_help'),'organization_id':uid,'region_id':uid,'pickup_area':string(200),'carrier':string(80),'route_label':string(80),'description':string(1000),'starts_at':dt,'pickup_deadline_at':dt,'delivery_deadline_at':dt,'expires_at':dt,'timezone':string(80),'parcel_count':integer(1),'stop_count':integer(1),'drivers_needed':integer(1),'price_cents':integer(0),'price_unit':enum('per_parcel','per_route','negotiable'),'sorted_state':enum('sorted','unsorted','unknown'),'handoff_requirement':enum('carrier_account','dsp_approval','contact_confirm'),'private_payment_terms':string(300)},['kind'])
@@ -169,7 +170,7 @@ op('/v1/search/addresses/retrieve','post','retrieveAddress','临时地址选择�
 op('/v1/apartments/proposals','post','proposeApartment','自有/授权来源的新公寓提议，待核验','Submitted','ApartmentProposalInput',code=201,cap=['access.contribute'],idem=True)
 op('/v1/apartment-corrections','post','correctApartment','提交错栋/地址更正','Submitted','CorrectionInput',code=201,idem=True)
 op('/v1/apartments/{apartment_id}/access-records','get','readAccessRecords','资格和对象校验后返回密码；有用优先+贡献时间倒序','AccessList',cap=['access.read'],list_query=True,sensitive=True)
-op('/v1/apartments/{apartment_id}/access-records','post','contributeAccess','有权来源；同码同范围变验证事件','ContributionResult','AccessInput',code=201,cap=['access.contribute'],idem=True)
+op('/v1/apartments/{apartment_id}/access-records','post','contributeAccess','本人确认后直接共享；同码合并且不刷新贡献时间，不产生有用票','ContributionResult','AccessInput',code=201,cap=['access.contribute'],idem=True)
 op('/v1/access-records/{record_id}/feedback','put','feedbackAccess','覆盖本人当前反馈且追加不可变事件','FeedbackResult','FeedbackInput',cap=['access.read'])
 op('/v1/access-records/{record_id}','delete','withdrawAccess','仅本人贡献或运营；停止正文展示')
 op('/v1/me/contributions','get','listMyContributions','本人贡献元数据，不含正文；查看密码仍需有效资格','ContributionSummaryPage',list_query=True)

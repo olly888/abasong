@@ -35,7 +35,7 @@
   }
   function sharedCard(a,c){
     const stats=c.stats||{views:0,useful:0,notUseful:0,last:null};
-    const status=c.myWithdrawn?'本人已撤回':c.myCorrected?'本人已纠正 · 原记录待复核':c.status==='withdrawn'?'本人已撤回':c.status==='pending'?'待审核':c.status==='invalid'?'已失效':c.mine?'我的共享':'同码贡献';
+    const status=c.myWithdrawn?'本人已撤回':c.myCorrected?'本人已纠正':c.status==='withdrawn'?'本人已撤回':c.status==='pending'?'尚未发布':c.status==='invalid'?'已失效':c.mine?'我的共享':'同码贡献';
     return `<article class="library-shared"><span class="import-badge">${status}</span><h2>${esc(a.name)}</h2><div class="address">${esc(a.address)}</div>${state.qualified&&c.status==='active'?`<div class="import-code">${esc(c.value)}</div><div class="caption">${esc(c.scope)} · ${esc(c.when)}</div>`:`<p class="library-caption">${esc(c.when)}</p>`}<div class="library-feedback"><span><b>${stats.views}</b>被其他司机查看</span><span><b>${stats.useful}</b>有用反馈</span><span><b>${stats.notUseful}</b>不能用</span></div><p class="caption">${stats.last?'最近反馈：'+esc(stats.last):'暂无反馈'}</p><div class="library-inline">${act('public','查看公寓','text-btn',a.id)}${!c.myCorrected&&!c.myWithdrawn&&c.status==='active'&&state.qualified?act('correct','纠正密码','text-btn',c.id):''}${c.mine&&!c.myCorrected&&!c.myWithdrawn&&c.status==='active'?act('withdraw','撤回本人贡献','text-btn danger',c.id):''}</div></article>`;
   }
   function detail(){

@@ -27,6 +27,7 @@ async function main() {
     if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0003'")).rowCount) await db.query(readFileSync('database/migrations/0003_apartment_buildings.sql', 'utf8'));
     if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0004'")).rowCount) await db.query(readFileSync('database/migrations/0004_import_batches.sql', 'utf8'));
     if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0005'")).rowCount) await db.query(readFileSync('database/migrations/0005_apartment_arrival_areas.sql', 'utf8'));
+    if (!(await db.query("SELECT 1 FROM abasong.schema_version WHERE version='V12.0006'")).rowCount) await db.query(readFileSync('database/migrations/0006_direct_contribution.sql', 'utf8'));
     for (const [name, password, member] of [
       ['abasong_api_local', decodeURIComponent(runtime.password), 'abasong_api'],
       ['abasong_worker_local', workerPassword, 'abasong_worker'],
@@ -82,7 +83,7 @@ async function main() {
     try {
       const role = (await api.query('SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0];
       assert.equal(role.rolsuper, false); assert.equal(role.rolbypassrls, false);
-      assert.equal((await api.query('SELECT count(*)::int AS n FROM abasong.schema_version')).rows[0].n, 5);
+      assert.equal((await api.query('SELECT count(*)::int AS n FROM abasong.schema_version')).rows[0].n, 6);
     } finally { await api.end(); }
     console.log('PASS: 51 migrated tables, forced RLS, PostGIS query, untrusted role denied, sensitive separation, append-only permissions, constraints, rollback, non-owner login');
   } finally { await db.end(); }

@@ -271,7 +271,7 @@ export interface paths {
         /** 资格和对象校验后返回密码；有用优先+贡献时间倒序 */
         get: operations["readAccessRecords"];
         put?: never;
-        /** 有权来源；同码同范围变验证事件 */
+        /** 本人确认后直接共享；同码合并且不刷新贡献时间，不产生有用票 */
         post: operations["contributeAccess"];
         delete?: never;
         options?: never;
@@ -1668,6 +1668,7 @@ export interface components {
             config_version: number;
             next_cursor: string | null;
         };
+        /** @description 新贡献成功返回created_active，无人工审核；created_pending仅兼容旧请求重放，不表示当前仍在共享。same_value_validation不刷新贡献时间或增加有用票。 */
         ContributionResult: {
             /** Format: uuid */
             record_id: string;

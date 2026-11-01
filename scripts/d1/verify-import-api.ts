@@ -162,6 +162,7 @@ async function main() {
       "0003_apartment_buildings.sql",
       "0004_import_batches.sql",
       "0005_apartment_arrival_areas.sql",
+      "0006_direct_contribution.sql",
     ])
       await db.query(readFileSync(`database/migrations/${file}`, "utf8"));
     const password = randomBytes(24).toString("hex");
@@ -851,7 +852,7 @@ async function main() {
       randomUUID(),
     );
     assert.equal(shared.results[0].private_record_id, saved);
-    assert.equal(shared.results[0].share_status, "pending");
+    assert.equal(shared.results[0].share_status, "active");
     assert.equal(
       (
         await req(
@@ -861,13 +862,9 @@ async function main() {
           200,
         )
       ).items.length,
-      0,
+      1,
     );
-    // Simulate an approved TEST record in this disposable DB only, exercising automatic lookup -> authorized code read.
-    await db.query(
-      "UPDATE abasong.access_records SET status='active' WHERE apartment_id=$1",
-      [publicApartmentId],
-    );
+    // Confirmed import publishes directly; no simulated operator approval.
     const liveCodes = await req(
       "GET",
       `/v1/apartments/${publicApartmentId}/access-records`,
@@ -1091,7 +1088,7 @@ async function main() {
       restored.results[0].private_record_id,
       lost.results[0].private_record_id,
     );
-    assert.equal(restored.results[0].share_status, "pending");
+    assert.equal(restored.results[0].share_status, "active");
     const recovered = (await req("GET", qb + "/candidates", a, 200)).items[0];
     assert.equal(
       recovered.commit_result.client_commit_id,

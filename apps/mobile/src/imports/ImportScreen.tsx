@@ -987,7 +987,7 @@ function Session() {
                   {r.status === "active"
                     ? "已私存 · 已共享"
                     : r.status === "pending"
-                      ? "已私存 · 共享待审核"
+                      ? "已私存 · 共享尚未发布"
                       : r.status === "same_value"
                         ? "已私存 · 同码记录"
                         : "已保存到我的公寓"}

@@ -1,12 +1,13 @@
-import type { QueryConfig } from 'pg';
+import type { QueryConfig } from "pg";
 
 export interface AccessRankingInput {
   apartmentId: string;
   /** Server-resolved applicable scope keys, never an authorization decision supplied by a client. */
   scopeKeys: readonly string[];
-  asOf: Date;
+  /** Database timestamps may be passed as strings to retain sub-millisecond precision. */
+  asOf: Date | string;
   /** Required from active configuration; no invented production feedback-window default. */
-  effectiveUsefulSince: Date;
+  effectiveUsefulSince: Date | string;
   limit: number;
 }
 export interface AccessRankingRow {
@@ -16,13 +17,23 @@ export interface AccessRankingRow {
 }
 
 /** Metadata-only internal query. Object/schedule authorization must precede any secret lookup. */
-export function buildAccessRankingQuery(input: AccessRankingInput): QueryConfig {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.apartmentId)) throw new Error('Invalid apartment ID');
-  if (!input.scopeKeys.length || input.scopeKeys.some(key => !key.trim())) throw new Error('Applicable scopes required');
-  const asOf = input.asOf.getTime();
-  const since = input.effectiveUsefulSince.getTime();
-  if (!Number.isFinite(asOf) || !Number.isFinite(since) || since > asOf) throw new Error('Explicit valid feedback interval required');
-  if (!Number.isInteger(input.limit) || input.limit < 1 || input.limit > 20) throw new Error('Access ranking limit must be 1–20');
+export function buildAccessRankingQuery(
+  input: AccessRankingInput,
+): QueryConfig {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      input.apartmentId,
+    )
+  )
+    throw new Error("Invalid apartment ID");
+  if (!input.scopeKeys.length || input.scopeKeys.some((key) => !key.trim()))
+    throw new Error("Applicable scopes required");
+  const asOf = new Date(input.asOf).getTime();
+  const since = new Date(input.effectiveUsefulSince).getTime();
+  if (!Number.isFinite(asOf) || !Number.isFinite(since) || since > asOf)
+    throw new Error("Explicit valid feedback interval required");
+  if (!Number.isInteger(input.limit) || input.limit < 1 || input.limit > 20)
+    throw new Error("Access ranking limit must be 1–20");
   return {
     text: `SELECT r.id, r.contributed_at,
       EXISTS (
@@ -39,6 +50,12 @@ export function buildAccessRankingQuery(input: AccessRankingInput): QueryConfig 
         AND (r.expires_at IS NULL OR r.expires_at > $2::timestamptz)
       ORDER BY has_current_effective_useful DESC, r.contributed_at DESC, r.id DESC
       LIMIT $5`,
-    values: [input.apartmentId, input.asOf, input.effectiveUsefulSince, [...input.scopeKeys], input.limit],
+    values: [
+      input.apartmentId,
+      input.asOf,
+      input.effectiveUsefulSince,
+      [...input.scopeKeys],
+      input.limit,
+    ],
   };
 }

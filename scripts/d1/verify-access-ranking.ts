@@ -54,6 +54,14 @@ async function main() {
     }
     await feedback(olderUseful,voter1,'useful',since);
     assert.equal((await ranked())[0]?.id,olderUseful); checks++; // Interval boundary inclusive.
+    // Preserve the database's microseconds instead of rounding the cutoff down
+    // through a JS Date, which can temporarily hide a newly committed vote.
+    await db.query("UPDATE abasong.access_feedback SET updated_at='2026-10-29T20:00:00.000500Z' WHERE record_id=$1 AND user_id=$2", [olderUseful, voter1]);
+    for (const [cutoff, expected] of [['2026-10-29T20:00:00.000900Z', true], ['2026-10-29T20:00:00.000400Z', false]] as const) {
+      const rows = (await db.query<AccessRankingRow>(buildAccessRankingQuery({ apartmentId: apartment, scopeKeys: ['main'], asOf: cutoff, effectiveUsefulSince: since, limit: 20 }))).rows;
+      assert.equal(rows.find(row => row.id === olderUseful)?.has_current_effective_useful, expected); checks++;
+    }
+    await feedback(olderUseful,voter1,'useful',since);
     await db.query("UPDATE abasong.users SET status='suspended' WHERE id=$1",[voter1]);
     assert.equal((await ranked())[0]?.id,newer); checks++;
     await db.query("UPDATE abasong.users SET status='active' WHERE id=$1",[voter1]);

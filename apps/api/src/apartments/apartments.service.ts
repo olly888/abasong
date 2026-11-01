@@ -744,13 +744,21 @@ export class ApartmentsService {
             config_version: config.version,
             next_cursor: null,
           };
-        const now = new Date(),
+        // Feedback timestamps are assigned by Postgres. Use the same clock and
+        // retain microseconds: a slightly ahead database clock must not make a
+        // just-committed useful vote look like a future event to the API host.
+        const clock = (
+            await c.query(
+              "SELECT statement_timestamp()::text AS as_of, (statement_timestamp() - $1::integer * interval '1 day')::text AS useful_since",
+              [days],
+            )
+          ).rows[0],
           rank = await c.query(
             buildAccessRankingQuery({
               apartmentId: aid,
               scopeKeys: scopeRows.map((r) => r.scope_key),
-              asOf: now,
-              effectiveUsefulSince: new Date(now.getTime() - days * 86400000),
+              asOf: clock.as_of,
+              effectiveUsefulSince: clock.useful_since,
               limit: input.limit,
             }),
           );

@@ -82,3 +82,7 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 ## 2026-11-01 公开入口核对图
 
 未新增应用运行依赖。离线SVG图生成只用Python标准库；PNG预览可选使用本机既有Pillow12.1.1，缺失时不要求安装，产物与脚本不进入移动端包。停留修正使用已有前台位置观测和纯TypeScript距离计算；无新原生API、位置权限或后台采集。
+
+## 2026-11-01 独立 iPhone 入口核对版
+
+无新增依赖、锁文件或后台权限。复用已锁 Expo58.0.21 / rnmapbox10.3.16 / expo-location58.0.20，本地Release与独立registerRootComponent入口打包公开Woodside资料；普通Expo Router入口不变。独立bundle ID/scheme避免覆盖业务开发版；构建时不加载业务API/Auth模块，结束恢复普通原生配置。Expo58 prebuild必须显式`--no-clean`保留Pods；首轮误清生成目录后已按审查锁文件执行Pods部署安装恢复，没有升级。实际证据见[独立现场版方案](docs/technical/D1_独立现场版与HTTPS测试环境方案.md)。AWS北加州/KMS仍为既有部署方向，未创建资源；不以免费休眠服务或公网隧道替代现场查码就绪条件。

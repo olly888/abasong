@@ -23,6 +23,8 @@ export default function HomeMap({
   cameraZoom = 17,
   frameSelected = false,
   bottomInset = 210,
+  topInset = 164,
+  overlay,
 }: HomeMapProps = {}) {
   const camera = useRef<Camera>(null);
   const touched = useRef(false);
@@ -33,12 +35,12 @@ export default function HomeMap({
   );
   const padding = useMemo(
     () => ({
-      paddingTop: 164,
+      paddingTop: topInset,
       paddingBottom: bottomInset + 12,
       paddingLeft: 24,
       paddingRight: 24,
     }),
-    [bottomInset],
+    [bottomInset, topInset],
   );
   const buildings = useMemo(
     () =>
@@ -119,7 +121,7 @@ export default function HomeMap({
       style={StyleSheet.absoluteFill}
       styleURL="mapbox://styles/mapbox/light-v11"
       scaleBarEnabled
-      scaleBarPosition={{ top: 136, left: 16 }}
+      scaleBarPosition={{ top: Math.max(12, topInset - 28), left: 16 }}
       scaleBarUnits="imperial"
       compassEnabled={false}
       logoPosition={{ bottom: bottomInset + 8, left: 16 }}
@@ -312,6 +314,7 @@ export default function HomeMap({
             />
           </Mapbox.PointAnnotation>
         ))}
+      {overlay}
     </Mapbox.MapView>
   );
 }

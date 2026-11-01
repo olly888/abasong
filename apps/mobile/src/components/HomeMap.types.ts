@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { components } from "@abasong/contracts";
 type S = components["schemas"];
 export type HomeMapProps = {
@@ -13,4 +14,6 @@ export type HomeMapProps = {
   cameraZoom?: number;
   frameSelected?: boolean;
   bottomInset?: number;
+  topInset?: number;
+  overlay?: ReactNode;
 };

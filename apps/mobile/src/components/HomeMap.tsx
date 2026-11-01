@@ -1,8 +1,9 @@
 import Mapbox from "@rnmapbox/maps";
 import { Text, StyleSheet, View } from "react-native";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Camera } from "@rnmapbox/maps";
 import type { HomeMapProps } from "./HomeMap.types";
+import { buildingCamera } from "./building-camera";
 const INITIAL_CAMERA = {
   centerCoordinate: [-118.2437, 34.0522],
   zoomLevel: 12,
@@ -17,63 +18,164 @@ export default function HomeMap({
   mapContext,
   onSelect,
   cameraRevision = 0,
+  cameraZoom = 17,
+  frameSelected = false,
   bottomInset = 210,
 }: HomeMapProps = {}) {
   const camera = useRef<Camera>(null);
+  const touched = useRef(false);
+  const [size, setSize] = useState({ width: 0, height: 0 });
   const center = useMemo(
     () => (point ? [point.lng, point.lat] : [-118.2437, 34.0522]),
     [point?.lng, point?.lat],
   );
   const padding = useMemo(
     () => ({
-      paddingTop: 140,
+      paddingTop: 164,
       paddingBottom: bottomInset + 12,
       paddingLeft: 24,
       paddingRight: 24,
     }),
     [bottomInset],
   );
-  const command = useRef({ center, padding, zoomLevel: point ? 16 : 12 });
-  command.current = { center, padding, zoomLevel: point ? 16 : 12 };
+  const buildings = useMemo(
+    () =>
+      mapContext?.apartment_id === selectedId
+        ? (mapContext?.buildings ?? [])
+        : [],
+    [mapContext, selectedId],
+  );
+  // Suppress only a duplicate of our selected number inside its footprint.
+  // Other numbers in a multi-building complex and courtyard labels must remain.
+  const numberFilter = useMemo<
+    NonNullable<React.ComponentProps<typeof Mapbox.SymbolLayer>["filter"]>
+  >(
+    () =>
+      buildings.length
+        ? [
+            "!",
+            [
+              "all",
+              [
+                "within",
+                {
+                  type: "MultiPolygon",
+                  coordinates: buildings.flatMap((b) => b.geometry.coordinates),
+                },
+              ],
+              [
+                "in",
+                ["to-string", ["get", "house_num"]],
+                ["literal", [...new Set(buildings.map((b) => b.street_number))]],
+              ],
+            ],
+          ]
+        : ["has", "house_num"],
+    [buildings],
+  );
+  const fitted = frameSelected
+    ? buildingCamera(buildings, size.width, size.height, padding)
+    : null;
+  const command = useRef({
+    center,
+    padding,
+    zoomLevel: point ? cameraZoom : 12,
+  });
+  command.current = {
+    center: fitted?.centerCoordinate ?? center,
+    padding,
+    zoomLevel: fitted?.zoomLevel ?? (point ? cameraZoom : 12),
+  };
   const applyCamera = () => {
     const current = command.current;
     camera.current?.setCamera({
       centerCoordinate: current.center,
       zoomLevel: current.zoomLevel,
       padding: current.padding,
+      pitch: 0,
+      heading: 0,
       animationMode: "moveTo",
       animationDuration: 0,
     });
   };
   useEffect(() => {
+    touched.current = false;
     applyCamera();
-  }, [point?.lng, point?.lat, cameraRevision]);
+  }, [point?.lng, point?.lat, cameraRevision, cameraZoom]);
+  useEffect(() => {
+    if (frameSelected && buildings.length && !touched.current) applyCamera();
+  }, [frameSelected, buildings, size]);
   if (!token) return <Text style={{ color: "#53565B" }}>地图暂不可用</Text>;
   return (
     <Mapbox.MapView
       style={StyleSheet.absoluteFill}
-      styleURL={Mapbox.StyleURL.Light}
-      scaleBarEnabled={false}
+      styleURL="mapbox://styles/mapbox/light-v11"
+      scaleBarEnabled
+      scaleBarPosition={{ top: 136, left: 16 }}
+      scaleBarUnits="imperial"
       compassEnabled={false}
       logoPosition={{ bottom: bottomInset + 8, left: 16 }}
       attributionPosition={{ bottom: bottomInset + 8, left: 106 }}
-      onDidFinishLoadingMap={applyCamera}
+      onDidFinishLoadingMap={() => {
+        if (!touched.current) applyCamera();
+      }}
+      onTouchStart={() => {
+        touched.current = true;
+      }}
+      onLayout={(event) => {
+        const { width, height } = event.nativeEvent.layout;
+        setSize((previous) =>
+          previous.width === width && previous.height === height
+            ? previous
+            : { width, height },
+        );
+      }}
     >
       <Mapbox.Camera
         ref={camera}
         defaultSettings={INITIAL_CAMERA}
         padding={padding}
         animationDuration={0}
+        maxZoomLevel={20}
       />
-      {mapContext &&
-      mapContext.apartment_id === selectedId &&
-      mapContext.buildings.length ? (
+      {/* Light-v11 contains Streets v8 in composite but has no housenum layer.
+          Reuse its vector source; don't geocode every visible building. */}
+      <Mapbox.VectorSource id="composite" existing>
+        <Mapbox.SymbolLayer
+          id="abasong-house-numbers"
+          sourceLayerID="housenum_label"
+          minZoomLevel={16}
+          filter={numberFilter}
+          style={{
+            textField: ["get", "house_num"],
+            textFont: ["DIN Pro Regular", "Arial Unicode MS Regular"],
+            textSize: [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              16,
+              11,
+              17,
+              13,
+              19,
+              15,
+            ],
+            textColor: "#53565B",
+            textHaloColor: "#FFFFFF",
+            textHaloWidth: 1.5,
+            textAllowOverlap: false,
+            textIgnorePlacement: false,
+            textPadding: 3,
+          }}
+        />
+      </Mapbox.VectorSource>
+      {buildings.length ? (
         <>
           <Mapbox.ShapeSource
             id="selected-building-outline"
             shape={{
               type: "FeatureCollection",
-              features: mapContext.buildings.map((b) => ({
+              features: buildings.map((b) => ({
                 type: "Feature",
                 id: b.id,
                 geometry: b.geometry as GeoJSON.MultiPolygon,
@@ -83,10 +185,25 @@ export default function HomeMap({
           >
             <Mapbox.FillLayer
               id="selected-building-fill"
-              style={{ fillColor: "#1467D8", fillOpacity: 0.18 }}
+              belowLayerID="abasong-house-numbers"
+              style={{
+                fillColor: "#1467D8",
+                fillOpacity: [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  15,
+                  0.12,
+                  17,
+                  0.22,
+                  19,
+                  0.3,
+                ],
+              }}
             />
             <Mapbox.LineLayer
               id="selected-building-line"
+              belowLayerID="abasong-house-numbers"
               style={{ lineColor: "#1467D8", lineWidth: 2 }}
             />
           </Mapbox.ShapeSource>
@@ -94,7 +211,7 @@ export default function HomeMap({
             id="selected-building-numbers"
             shape={{
               type: "FeatureCollection",
-              features: mapContext.buildings.map((b) => ({
+              features: buildings.map((b) => ({
                 type: "Feature",
                 id: b.id,
                 geometry: {
@@ -110,11 +227,23 @@ export default function HomeMap({
               minZoomLevel={16}
               style={{
                 textField: ["get", "street_number"],
-                textSize: 17,
+                textFont: ["DIN Pro Bold", "Arial Unicode MS Regular"],
+                textSize: [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  16,
+                  16,
+                  17,
+                  18,
+                  19,
+                  22,
+                ],
                 textColor: "#104EAA",
                 textHaloColor: "#FFFFFF",
                 textHaloWidth: 2,
                 textAllowOverlap: false,
+                textPadding: 4,
               }}
             />
           </Mapbox.ShapeSource>
@@ -137,25 +266,27 @@ export default function HomeMap({
           />
         </Mapbox.PointAnnotation>
       ) : null}
-      {apartments.map((p) => (
-        <Mapbox.PointAnnotation
-          key={p.id}
-          id={p.id}
-          coordinate={[p.point.lng, p.point.lat]}
-          onSelected={() => onSelect?.(p)}
-        >
-          <View
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 11,
-              borderWidth: 3,
-              borderColor: "#FFFFFF",
-              backgroundColor: p.id === selectedId ? "#1467D8" : "#111111",
-            }}
-          />
-        </Mapbox.PointAnnotation>
-      ))}
+      {apartments
+        .filter((p) => p.id !== selectedId || !buildings.length)
+        .map((p) => (
+          <Mapbox.PointAnnotation
+            key={p.id}
+            id={p.id}
+            coordinate={[p.point.lng, p.point.lat]}
+            onSelected={() => onSelect?.(p)}
+          >
+            <View
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                borderWidth: 3,
+                borderColor: "#FFFFFF",
+                backgroundColor: p.id === selectedId ? "#1467D8" : "#111111",
+              }}
+            />
+          </Mapbox.PointAnnotation>
+        ))}
     </Mapbox.MapView>
   );
 }

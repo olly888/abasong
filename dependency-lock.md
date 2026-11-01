@@ -67,3 +67,6 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 2026-10-31双端补验：无依赖、锁文件、原生模块、API、DDL或系统权限变动。临时连接错误保留并遮挡同账号导入内存，明确账号/权限错误仍清理；结果页控件精简。故障注入仅暂停本地API或暂时损坏自建TEST缓存副本并恢复，不改系统网络和相册原图。
 
 2026-10-31 首页自动查码：无新增依赖、锁文件或系统权限。既有 Android AbasongLocation 扩展前台连续 LocationManager 事件，后台/销毁清理；实际 Debug 重编译安装通过。iOS 复用 expo-location58 watchPositionAsync；双端查找串行、两秒启动下限，8秒停留/20秒新鲜度为待现场冻结的开发保护。Mapbox 使用 moveTo 显式立即相机命令，避免布局更新中断缩放。新增0005入口到达区域与本地验证，不改云或默认自动认定开关。
+
+
+2026-10-31 建筑门牌/尺度：明确固定 Mapbox light-v11 样式URL，复用其 composite/Streets v8 housenum_label，不新增逐建筑搜索请求或自建门牌数据源。继续 rnmapbox10.3.16 的 existing VectorSource、SymbolLayer、Fill/Line 和原生英制比例尺；自选公寓按 Mercator/512逻辑像素视野适配、最大zoom18，手动最大20。无新增依赖/锁文件/原生权限，本批为JS更新与双平台导出/现有原生运行，不称重新原生编译。公开Tilequery仅作有界覆盖诊断，不持久化供应商几何或用户位置。

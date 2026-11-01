@@ -274,6 +274,15 @@ for p in pages:
   p['actions']=[a for a in p['actions'] if a['label']!='返回我的贡献']
   p['actions'].append(dict(label='完成',target='G03',result='返回发起页面；成功记录保留，无历史续填'))
   p['acceptance']='识别、提交、保存与共享结果分开；短暂切后台保留本次会话。稳定提交标识支持同次重试，不重复私存或共享已成功项，不自动重试写入。未提交内容退出仅一次确认，全部完成直接返回来源页面；下次进入空白选图。取消未提交内容不删除已成功记录。'
+for p in pages:
+ if p['id'] in ['H01','H02','H03']:
+  p['requirements'].append('ADD-13')
+  p['information'].append('左上模式栏下原生英尺/英里比例尺，随缩放更新；列表/展开详情随地图隐藏')
+  p['acceptance']+=' ADD-13：俯视北向地图；普通门牌取供应商数据不补猜，公寓模式首次定位17级、找活找人14级；主动选中建筑按可视区域适配且不超过18级；手动缩放不被连续GPS打断。'
+ if p['id']=='H01':
+  p['information'].append('普通建筑灰色门牌；选中建筑蓝色高亮与内部强调门牌，保留中庭空洞；无轮廓不画建筑')
+  for a in p['actions']:
+   if a['label']=='定位':a['result']='回到新鲜蓝点并解除选卡锁定，恢复自动匹配'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-31','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

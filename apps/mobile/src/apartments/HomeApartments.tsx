@@ -141,6 +141,8 @@ export function HomeApartmentContent({
     arrival = useRef<ArrivalState>(null);
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
+    [cameraZoom, setCameraZoom] = useState(17),
+    [frameSelected, setFrameSelected] = useState(false),
     [cameraRevision, setCameraRevision] = useState(0),
     [blocked, setBlocked] = useState(false),
     [locationNotice, setLocationNotice] = useState<string | null>(null),
@@ -357,6 +359,8 @@ export function HomeApartmentContent({
           setLocationNotice(null);
           if (first) {
             first = false;
+            setCameraZoom(17);
+            setFrameSelected(false);
             setCameraTarget(p);
             setCameraRevision((v) => v + 1);
           }
@@ -391,6 +395,8 @@ export function HomeApartmentContent({
       return;
     }
     if (point && Date.now() - lastFixAt.current <= 20_000) {
+      setCameraZoom(17);
+      setFrameSelected(false);
       setCameraTarget({ ...point });
       setCameraRevision((v) => v + 1);
     }
@@ -406,6 +412,8 @@ export function HomeApartmentContent({
     selectionRef.current = p;
     setSelected(p);
     if (origin === "manual") {
+      setCameraZoom(18);
+      setFrameSelected(true);
       setCameraTarget(p.point);
       setCameraRevision((v) => v + 1);
     }
@@ -594,6 +602,8 @@ export function HomeApartmentContent({
         <HomeMap
           point={cameraTarget}
           cameraRevision={cameraRevision}
+          cameraZoom={mode === "公寓" ? cameraZoom : 14}
+          frameSelected={mode === "公寓" && frameSelected}
           bottomInset={mode === "公寓" ? panelHeight : 148}
           location={point}
           apartments={mode === "公寓" ? candidates : []}

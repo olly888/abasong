@@ -25,6 +25,7 @@ function Search() {
   const [query, setQuery] = useState(""),
     [items, setItems] = useState<S["Apartment"][]>([]),
     [busy, setBusy] = useState(false),
+    [retry, setRetry] = useState(0),
     [searched, setSearched] = useState(false),
     [error, setError] = useState<string | null>(null);
   const choose = (id: string) =>
@@ -37,28 +38,45 @@ function Search() {
       generation.current++;
     };
   }, [params.apartment_id]);
-  async function search() {
-    if (busy || query.trim().length < 2) return;
+  useEffect(() => {
+    control.current.abort();
+    const controller = new AbortController();
+    control.current = controller;
     const version = ++generation.current;
-    setBusy(true);
+    const session = auth.session;
+    setItems([]);
+    setSearched(false);
     setError(null);
-    try {
-      const page = await dataRequest<S["ApartmentPage"]>(
-        auth.session!,
-        "/v1/apartments?query=" + encodeURIComponent(query),
-        { signal: control.current.signal },
-      );
-      if (!control.current.signal.aborted && version === generation.current) {
-        setItems(page.items);
-        setSearched(true);
-      }
-    } catch (e) {
-      if (!control.current.signal.aborted && version === generation.current)
-        setError(e instanceof Error ? e.message : "搜索失败");
-    } finally {
-      if (version === generation.current) setBusy(false);
-    }
-  }
+    setBusy(false);
+    if (!session || query.trim().length < 2) return () => controller.abort();
+    const timer = setTimeout(() => {
+      setBusy(true);
+      void dataRequest<S["ApartmentPage"]>(
+        session,
+        "/v1/apartments?query=" + encodeURIComponent(query.trim()),
+        { signal: controller.signal },
+      )
+        .then((page) => {
+          if (controller.signal.aborted || version !== generation.current)
+            return;
+          setItems(page.items);
+          setSearched(true);
+        })
+        .catch((e: unknown) => {
+          if (controller.signal.aborted || version !== generation.current)
+            return;
+          setError(e instanceof Error ? e.message : "搜索失败，请重试");
+        })
+        .finally(() => {
+          if (!controller.signal.aborted && version === generation.current)
+            setBusy(false);
+        });
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, retry, auth.session]);
   return (
     <ApartmentPage
       title="搜索"
@@ -68,6 +86,7 @@ function Search() {
         value={query}
         onChange={(v) => {
           generation.current++;
+          control.current.abort();
           setQuery(v);
           setItems([]);
           setSearched(false);
@@ -75,7 +94,7 @@ function Search() {
           setError(null);
         }}
         busy={busy}
-        onSearch={() => void search()}
+        onSearch={() => setRetry((v) => v + 1)}
       />
       {busy ? (
         <ActivityIndicator
@@ -86,9 +105,11 @@ function Search() {
       <FormError message={error} />
       {searched && !items.length && !busy ? (
         <View style={{ alignItems: "center", paddingVertical: 40, gap: 8 }}>
-          <Text style={{ fontSize: 20, fontWeight: "600" }}>没有找到结果</Text>
+          <Text style={{ fontSize: 20, fontWeight: "600" }}>
+            未找到匹配公寓
+          </Text>
           <Text style={{ fontSize: 14, color: tokens.color.textMuted }}>
-            核对公寓名称或英文地址
+            试试公寓名称或门牌号
           </Text>
         </View>
       ) : null}

@@ -28,6 +28,56 @@ export async function verifyPublicArrival(
   readerWithoutCapability: string,
 ) {
   await ingestPublicApartments(db);
+  const delMar = publicExpansion.find((s) => s.slug === "del-mar")!.id;
+  for (const query of [
+    "2445 E Del Mar Blvd, Pasadena",
+    "2445 E Del Mar Blvd，Pasadena",
+    "  2445   E Del Mar Blvd ,  Pasadena  ",
+    "2445 E Del Mar Blvd, Pasadena, CA",
+    "2445",
+    "2445 E Del",
+    "Del Mar Apart",
+    "Del Mar Apartments",
+    "Pasadena 2445",
+  ]) {
+    const result = (await req(
+      "GET",
+      "/v1/apartments?query=" + encodeURIComponent(query),
+      readerWithoutCapability,
+      200,
+    )) as S["ApartmentPage"];
+    assert(result.items.some((p) => p.id === delMar));
+    assert(!JSON.stringify(result).includes("access_records"));
+  }
+  for (const query of [
+    "2444 E Del Mar Blvd, Pasadena",
+    "%%",
+    "2445' OR true --",
+  ]) {
+    const result = (await req(
+      "GET",
+      "/v1/apartments?query=" + encodeURIComponent(query),
+      contributor,
+      200,
+    )) as S["ApartmentPage"];
+    assert.deepEqual(result.items, []);
+  }
+  // Inactive addresses must not reappear through broader token matching.
+  await db.query(
+    "UPDATE abasong.apartments SET status='withdrawn' WHERE id=$1",
+    [delMar],
+  );
+  const hidden = (await req(
+    "GET",
+    "/v1/apartments?query=2445",
+    contributor,
+    200,
+  )) as S["ApartmentPage"];
+  assert(!hidden.items.some((p) => p.id === delMar));
+  await db.query("UPDATE abasong.apartments SET status='active' WHERE id=$1", [
+    delMar,
+  ]);
+  await req("GET", "/v1/apartments?query=2445", undefined, 401);
   const configuration = {
     radius_m: 150,
     max_age_seconds: 120,

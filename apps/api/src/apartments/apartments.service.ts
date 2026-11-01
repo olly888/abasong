@@ -8,6 +8,7 @@ import { ApiError } from "../common/api-error";
 import { SensitiveDatabase } from "./sensitive-database";
 import { LocalEnvelope } from "./envelope";
 import { buildAccessRankingQuery } from "../access/access-ranking.query";
+import { apartmentSearchQuery } from "./apartment-search.query";
 type S = components["schemas"];
 const text = (max: number) =>
   z
@@ -1142,10 +1143,7 @@ export class ApartmentsService {
       q,
     );
     return this.tx(a, async (c) => {
-      const result = await c.query(
-        "SELECT id,name,address_line1,city,state,postal_code,confidence,extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat FROM abasong.apartments WHERE status='active' AND (strpos(lower(coalesce(name,'')||' '||address_line1||' '||city),lower($1))>0) ORDER BY id LIMIT $2",
-        [b.query, b.limit],
-      );
+      const result = await c.query(apartmentSearchQuery(b.query, b.limit));
       return {
         items: result.rows.map((r) => ({
           id: r.id,

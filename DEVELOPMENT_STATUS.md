@@ -2,6 +2,12 @@
 
 Updated: 2026-10-31 (America/Los_Angeles). Branch: `codex/d1-iphone-validation`.
 
+## Latest execution — full-address search correction (2026-10-31)
+
+User could not find the public test address on physical iPhone, so its map-detail acceptance remains pending. [Search correction and autocomplete plan](docs/technical/D1_地址搜索修正与联想接入方案.md): reproduced the comma/continuous-substring mismatch in the local catalog (old0/newDelMar); added parameterized word/prefix matching and native300ms input suggestions for existing apartments with cancellation/stale-result protection. iOS simulator full/partial query, changed-number clearing and selection→map observed. check111 and libraryHTTP173 passed, including14 new search requests. Existing iPhone LAN API refreshed within prior authorization; no new dependency/DDL/cloud/grants.
+
+Mapbox Search Box bounded public-address probe succeeded (suggest twice200, retrieve200). The provider is usable with the existing account, but full external autocomplete and temporary destination flow are NOT integrated yet; current UI suggestions are Abasong catalog only. Next: implement existing suggest/retrieve contracts, attribution/session/error handling and external-address matching without claiming nearest apartment or moving the GPS dot. iPhone search/highlight/scale follow-up and Android UI remain pending, along with the D1 entrance/field gates below.
+
 ## Latest execution — building numbers / map scale (2026-10-31)
 
 [ADD-13](docs/product/Abasong_V12.1_建筑门牌与地图尺度补充.md) and [acceptance record](docs/technical/D1_建筑门牌与地图尺度验收.md). Added Streets v8 house_num labels to explicit light-v11, native imperial scale, selected blue footprint/number without duplicate same-value base labels, and viewport-aware selected-building framing. Community numbers different from the selected primary address remain visible. Prototype and H01/H02/H03 specification updated. Actual iOS/Android simulators showed public Del Mar 2445, complete footprint/courtyard holes and surrounding numbers; iOS zoom/scale observed. Android mirror zoom and iPhone map-detail follow-up remain pending. Six bounded public Tilequery probes all returned nearby labels, only three included the expected primary number; this is coverage evidence, not verified building/entrance membership.

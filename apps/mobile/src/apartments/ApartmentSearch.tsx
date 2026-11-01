@@ -1,3 +1,5 @@
+import { AddressLine } from "./AddressLine";
+import { locality } from "./address-presentation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -337,7 +339,7 @@ export function ApartmentSearch({
             photoChoices.map((address) => (
               <ListRow
                 key={address.searchText}
-                title={address.street}
+                title={<AddressLine line={address.street} compact />}
                 subtitle={[address.city, address.state, address.postalCode]
                   .filter(Boolean)
                   .join(", ")}
@@ -349,15 +351,7 @@ export function ApartmentSearch({
             ))
           ) : (
             <>
-              <Text
-                style={{
-                  fontSize: 18,
-                  lineHeight: 27,
-                  color: tokens.color.ink,
-                }}
-              >
-                {query}
-              </Text>
+              <AddressLine line={query} expanded />
               <ActionButton
                 label="查找此地址"
                 disabled={query.trim().length < 2}
@@ -446,15 +440,22 @@ export function ApartmentSearch({
         r.kind === "apartment" ? (
           <ListRow
             key={r.apartment.id}
-            title={r.apartment.name ?? r.apartment.address_line1}
-            subtitle={`${r.apartment.address_line1}, ${r.apartment.city}, ${r.apartment.state}`}
+            title={<AddressLine line={r.apartment.address_line1} compact />}
+            subtitle={[locality(r.apartment), r.apartment.name]
+              .filter(Boolean)
+              .join(" · ")}
             disabled={selecting}
             onPress={() => void select(r)}
           />
         ) : (
           <ListRow
             key={r.suggestion.provider_result_id}
-            title={r.suggestion.title}
+            title={
+              <AddressLine
+                line={r.suggestion.address?.address_line1 || r.suggestion.title}
+                compact
+              />
+            }
             subtitle={r.suggestion.subtitle || r.suggestion.label}
             disabled={selecting}
             onPress={() => void select(r)}

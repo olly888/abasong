@@ -11,6 +11,7 @@ import { Icon } from "../ui/Icon";
 type S = components["schemas"];
 const scenarios = [
   "有密码",
+  "符号密码",
   "多条记录",
   "无密码",
   "无固定码",
@@ -42,13 +43,13 @@ function record(n: number, useful = false): S["AccessRecord"] {
       label: n === 1 ? "行人门" : "侧门",
       timezone: "America/Los_Angeles",
     },
-    contributed_at: n === 1 ? "2026-10-29T16:20:00Z" : "2026-10-30T17:10:00Z",
+    contributed_at: new Date(Date.now() - n * 60000).toISOString(),
     last_success_at: useful ? "2026-10-30T16:45:00Z" : null,
     last_failure_at: null,
     effective_useful: useful,
     my_feedback: null,
     verification_label: "community_contribution",
-    contributor_display_name: "合成测试司机",
+    contributor_display_name: "TEST 阿杰",
   };
 }
 export default function CardLab() {
@@ -83,6 +84,20 @@ function Lab() {
         : s === "多条记录" || s === "反馈失败"
           ? [record(1, true), record(2)]
           : [record(1, true)];
+    // Invented keypad examples only; no real building or credential data.
+    if (s === "符号密码")
+      rows = ["#0123", "*00456", "012345#", "*012345*"].map((value, i) => ({
+        ...record(i + 1),
+        value,
+      }));
+    if (s === "长地址")
+      rows = [
+        {
+          ...record(1),
+          value: "TEST-" + "X".repeat(26) + "#",
+          contributor_display_name: "TEST 这是一位用户名较长的合成贡献司机",
+        },
+      ];
     if (s === "无固定码")
       rows = [
         { ...record(1), method: "front_desk", value: "合成场景：到前台登记" },
@@ -105,6 +120,7 @@ function Lab() {
   useEffect(() => {
     const map: Record<string, Scene> = {
       active: "有密码",
+      symbols: "符号密码",
       history: "多条记录",
       empty: "无密码",
       noncode: "无固定码",

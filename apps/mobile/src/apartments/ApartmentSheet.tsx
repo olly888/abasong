@@ -15,11 +15,14 @@ import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/Primitives";
 import {
   anchorOffset,
+  contributionMeta,
   localTime,
   methodLabel,
   scopeLabel,
   type Anchor,
 } from "./presentation";
+import { AddressLine } from "./AddressLine";
+import { locality } from "./address-presentation";
 type S = components["schemas"];
 export type SheetProps = {
   apartment: S["Apartment"];
@@ -94,12 +97,20 @@ export function ApartmentSheet(p: SheetProps) {
   }
   function code(r: S["AccessRecord"], big = false) {
     return (
-      <View style={styles.codeBlock}>
+      <View
+        style={[styles.codeBlock, r.method === "keypad" && styles.keypadBlock]}
+      >
+        {r.method === "keypad" ? (
+          <Text style={styles.codeLabel}>门禁密码</Text>
+        ) : null}
         <Text
           accessibilityLabel={
             r.method === "keypad" ? `密码 ${r.value}` : methodLabel(r)
           }
-          style={big ? styles.code : styles.recordCode}
+          style={[
+            big ? styles.code : styles.recordCode,
+            r.method === "keypad" && { flex: 1, minWidth: 0 },
+          ]}
         >
           {r.method === "keypad" ? r.value : methodLabel(r)}
         </Text>
@@ -145,15 +156,22 @@ export function ApartmentSheet(p: SheetProps) {
           <Pressable
             focusable
             accessibilityRole="button"
-            accessibilityLabel={p.expanded ? "收起公寓详情" : "展开公寓详情"}
+            accessibilityLabel={`${p.expanded ? "收起" : "展开"}公寓详情，${p.apartment.address_line1}, ${locality(p.apartment)}`}
             onPress={() => p.onExpand(!p.expanded)}
             style={{ flex: 1, gap: 4, minHeight: 48 }}
           >
-            <Text style={styles.title}>{p.apartment.name ?? "公寓"}</Text>
-            <Text style={styles.body}>
-              {p.apartment.address_line1}, {p.apartment.city},{" "}
-              {p.apartment.state}
-            </Text>
+            <AddressLine
+              line={p.apartment.address_line1}
+              expanded={p.expanded}
+            />
+            {p.expanded ? (
+              <>
+                <Text style={styles.body}>{locality(p.apartment)}</Text>
+                {p.apartment.name ? (
+                  <Text style={styles.body}>{p.apartment.name}</Text>
+                ) : null}
+              </>
+            ) : null}
           </Pressable>
           {p.expanded ? (
             <>
@@ -207,9 +225,8 @@ export function ApartmentSheet(p: SheetProps) {
         {canRead && !p.expanded && records[0] ? (
           <>
             {code(records[0], true)}
-            <Text style={styles.meta}>
-              {localTime(records[0].contributed_at, records[0].scope.timezone)}{" "}
-              贡献
+            <Text style={styles.meta} numberOfLines={1} ellipsizeMode="tail">
+              {contributionMeta(records[0])}
             </Text>
             <Pressable
               focusable
@@ -247,9 +264,7 @@ export function ApartmentSheet(p: SheetProps) {
                   ) : null}
                 </View>
                 <Text style={styles.body}>{scopeLabel(r.scope)}</Text>
-                <Text style={styles.meta}>
-                  {localTime(r.contributed_at, r.scope.timezone)} 贡献
-                </Text>
+                <Text style={styles.meta}>{contributionMeta(r)}</Text>
                 {r.last_success_at ? (
                   <Text style={styles.meta}>
                     最近实测有用 ·{" "}
@@ -339,6 +354,8 @@ const styles = StyleSheet.create({
   body: { fontSize: 14, lineHeight: 21, color: tokens.color.textSecondary },
   meta: { fontSize: 14, lineHeight: 22, color: tokens.color.textMuted },
   codeBlock: { minWidth: 0, alignSelf: "stretch" },
+  keypadBlock: { flexDirection: "row", alignItems: "center", gap: 12 },
+  codeLabel: { fontSize: 12, color: tokens.color.textMuted, flexShrink: 0 },
   code: {
     fontSize: 40,
     lineHeight: 52,

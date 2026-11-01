@@ -1,3 +1,4 @@
+import { AddressLine } from "../../apartments/AddressLine";
 import { openContributionMenu } from "../../apartments/contribution-entry";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
@@ -149,11 +150,11 @@ function LibraryContent() {
   }
   if (selected)
     return (
-      <ApartmentPage
-        title={selected.entry.name}
-        subtitle={selected.entry.address}
-        onBack={() => setSelected(null)}
-      >
+      <ApartmentPage title="公寓详情" onBack={() => setSelected(null)}>
+        <AddressLine line={selected.entry.address} expanded />
+        {selected.entry.name !== selected.entry.address ? (
+          <Text style={styles.muted}>{selected.entry.name}</Text>
+        ) : null}
         <FormError message={error} />
         <Text style={styles.label}>我的记录 · 仅自己可见</Text>
         {selected.records.map((r) => (
@@ -410,8 +411,10 @@ function LibraryContent() {
               style={styles.card}
               onPress={() => choose(d)}
             >
-              <Text style={styles.label}>{d.entry.name}</Text>
-              <Text>{d.entry.address}</Text>
+              <AddressLine line={d.entry.address} compact />
+              {d.entry.name !== d.entry.address ? (
+                <Text style={styles.muted}>{d.entry.name}</Text>
+              ) : null}
               <Text style={styles.muted}>
                 {d.entry.region} · {d.records.length ? "私人记录" : "收藏公寓"}
               </Text>
@@ -465,7 +468,7 @@ function LibraryContent() {
           {shares.length === 0 ? <Text>暂无共享贡献</Text> : null}
           {shares.map((s) => (
             <View style={styles.card} key={s.id}>
-              <Text>{s.address_label}</Text>
+              <AddressLine line={s.address_label} compact />
               <Text style={styles.muted}>
                 {s.record_status === "pending"
                   ? "尚未发布"

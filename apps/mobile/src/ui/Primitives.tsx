@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Pressable, Text, View, StyleSheet, TextInput } from "react-native";
 import { tokens } from "@abasong/ui";
 import { Icon, type IconName } from "./Icon";
@@ -8,7 +9,7 @@ export function ListRow({
   icon = "pin",
   disabled = false,
 }: {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   onPress: () => void;
   icon?: IconName;
@@ -29,7 +30,11 @@ export function ListRow({
         <Icon name={icon} />
       </View>
       <View style={{ flex: 1, gap: 4 }}>
-        <Text style={styles.title}>{title}</Text>
+        {typeof title === "string" ? (
+          <Text style={styles.title}>{title}</Text>
+        ) : (
+          title
+        )}
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
       <Icon name="chevron" color={tokens.color.textMuted} size={20} />

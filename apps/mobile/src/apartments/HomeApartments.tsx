@@ -1,3 +1,5 @@
+import { AddressLine } from "./AddressLine";
+import { locality } from "./address-presentation";
 import {
   clearSearchDestination,
   getSearchDestination,
@@ -707,8 +709,8 @@ export function HomeApartmentContent({
             {temporary.apartments.map((p) => (
               <ListRow
                 key={p.id}
-                title={p.name ?? p.address_line1}
-                subtitle={p.address_line1}
+                title={<AddressLine line={p.address_line1} compact />}
+                subtitle={[locality(p), p.name].filter(Boolean).join(" · ")}
                 onPress={() => void select(p)}
               />
             ))}

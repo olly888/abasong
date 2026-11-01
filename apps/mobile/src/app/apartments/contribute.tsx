@@ -1,3 +1,5 @@
+import { AddressLine } from "../../apartments/AddressLine";
+import { locality } from "../../apartments/address-presentation";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Text, View, Pressable } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
@@ -205,11 +207,9 @@ function Content() {
       ) : null}
       {target ? (
         <View style={{ gap: 12 }}>
-          <Text style={{ fontSize: 18, fontWeight: "600" }}>
-            {target.name ?? "公寓"}
-          </Text>
+          <AddressLine line={target.address_line1} expanded />
           <Text>
-            {target.address_line1}, {target.city}, {target.state}
+            {[locality(target), target.name].filter(Boolean).join(" · ")}
           </Text>
           <ActionButton
             label="更换公寓"
@@ -232,8 +232,8 @@ function Content() {
           {matches.map((p) => (
             <ListRow
               key={p.id}
-              title={p.name ?? "公寓"}
-              subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
+              title={<AddressLine line={p.address_line1} compact />}
+              subtitle={[locality(p), p.name].filter(Boolean).join(" · ")}
               onPress={() => {
                 setTarget(p);
                 setConfirmed(false);

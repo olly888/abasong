@@ -1,3 +1,5 @@
+import { AddressLine } from "./AddressLine";
+import { locality } from "./address-presentation";
 import {
   ActivityIndicator,
   Pressable,
@@ -56,8 +58,8 @@ export function HomeArrivalPanel(p: {
         {p.candidates.map((a) => (
           <ListRow
             key={a.id}
-            title={a.name ?? a.address_line1}
-            subtitle={`${a.address_line1}, ${a.city}, ${a.state}`}
+            title={<AddressLine line={a.address_line1} compact />}
+            subtitle={[locality(a), a.name].filter(Boolean).join(" · ")}
             onPress={() => p.onSelect(a)}
           />
         ))}

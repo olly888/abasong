@@ -1,5 +1,11 @@
 # Abasong development status
 
+## Latest implementation — address-first cards and contributor identity (2026-11-01)
+
+[ADD-17](docs/product/Abasong_V12.1_地址优先与单行密码卡片补充.md) implemented in current prototype and native home/candidates/search/contribution/library/photo review presentation. Collapsed street stays on one line with full door-token emphasis; locality/property name move to expanded details. Preserve #/*/leading zero and 32-character wrapping; common4–6digits are not new validation limits. Contribution text uses existing server display name plus record-local time/date, with complete expanded metadata. Display parsing never changes matching or map building-number associations.
+
+Actual check154/26 PASS, all-platform JS export PASS; static39 nodes/292 states and existing contract/link checks PASS. Both actual development builds observed using synthetic CardLab: collapsed/expanded/symbol formats, long address/username and long code. Prototype home and saved-library visual checked. No new API/DDL/native binary/grants/cloud change or business HTTP/PG run. [Evidence and remaining scope](docs/technical/D1_地址优先卡片与贡献人展示验收.md). Physical-device and200%/full-screen-reader acceptance remain separate. Next remains public entrance/approach scope and scoped iPhone field arrival; normal auto-match remains off, D1 still in progress.
+
 ## Latest acceptance — moving / stable / departure native follow-up (2026-11-01)
 
 User unlocked Mac. Actual iPhone18Pro/iOS27.0 and AndroidAPI37 development-build TEST route verified with the production home/OS observation/arrival/card components: alternating positions about37m apart every6s kept candidates without an early code; stable fresh observations automatically showed the TEST address/code/highlight; leaving the synthetic region cleared code/selection/highlight to the contribution entry. No candidate/card/recenter taps used to trigger selection. Android fixed-coordinate stationary case passed; iOS exact repeated simctl-set coordinates stopped callbacks and correctly expired, then <1m jitter restored fresh observations and automatic selection without code/threshold changes. This limits the stationary result; not a physical-device long-stop or timing benchmark.

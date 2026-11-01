@@ -192,7 +192,8 @@ export async function verifyPublicArrival(
     })) as S["ResolveResult"];
     assert.equal(result.matched_id, null);
     assert.equal(
-      assessHomeArrival(null, undefined, result, now, now, false).apartment,
+      assessHomeArrival(null, undefined, result, now, now, false, point)
+        .apartment,
       null,
     );
   }
@@ -212,6 +213,7 @@ export async function verifyPublicArrival(
     now - 9000,
     now - 9000,
     false,
+    fix(sample).point,
   );
   assert.equal(first.apartment, null);
   const secondResult = (await req(
@@ -228,6 +230,7 @@ export async function verifyPublicArrival(
     now,
     now,
     false,
+    fix(sample).point,
   );
   assert.equal(arrived.apartment?.id, publicApartmentId);
   const updatePolicy = (auto: unknown) =>
@@ -272,6 +275,7 @@ export async function verifyPublicArrival(
         now + 1000,
         now + 1000,
         false,
+        fix(sample).point,
       ).clearAutomaticCard,
       true,
     );
@@ -283,6 +287,7 @@ export async function verifyPublicArrival(
         now + 1000,
         now + 1000,
         true,
+        fix(sample).point,
       ).clearAutomaticCard,
       false,
     );
@@ -405,6 +410,7 @@ export async function verifyPublicArrival(
       now + 2000,
       now + 2000,
       false,
+      { lng: 0, lat: 0 },
     ).clearAutomaticCard,
     true,
   );
@@ -423,6 +429,7 @@ export async function verifyPublicArrival(
       now + 2000,
       now + 2000,
       false,
+      fix(sample).point,
     ).clearAutomaticCard,
     true,
   );
@@ -435,8 +442,15 @@ export async function verifyPublicArrival(
   )) as S["ResolveResult"];
   assert.equal(stale.status, "stale_location");
   assert.equal(
-    assessHomeArrival(arrived.state, sample.id, stale, now - 180000, now, false)
-      .clearAutomaticCard,
+    assessHomeArrival(
+      arrived.state,
+      sample.id,
+      stale,
+      now - 180000,
+      now,
+      false,
+      fix(sample).point,
+    ).clearAutomaticCard,
     true,
   );
 }

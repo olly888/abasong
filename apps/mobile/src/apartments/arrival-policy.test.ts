@@ -15,8 +15,10 @@ const p: components["schemas"]["Apartment"] = {
   point: { lng: 0, lat: 0 },
   confidence: "field_verified",
 };
+const position = { lng: 0, lat: 0 };
 const matched: components["schemas"]["ResolveResult"] = {
   status: "matched",
+  match_basis: "boundary",
   matched_id: "a",
   candidates: [p],
   config_version: 1,
@@ -24,10 +26,11 @@ const matched: components["schemas"]["ResolveResult"] = {
 afterEach(() => vi.useRealTimers());
 describe("arrival safeguards", () => {
   it("requires stable repeated server matches, never mere proximity", () => {
-    const first = assessArrival(null, matched, 1000, 1000, false);
+    const first = assessArrival(null, matched, 1000, 1000, false, position);
     expect(first.apartment).toBeNull();
     expect(
-      assessArrival(first.state, matched, 10_000, 10_000, false).apartment,
+      assessArrival(first.state, matched, 10_000, 10_000, false, position)
+        .apartment,
     ).toBe(p);
     expect(
       assessArrival(
@@ -36,6 +39,7 @@ describe("arrival safeguards", () => {
         10_000,
         10_000,
         false,
+        position,
       ).apartment,
     ).toBeNull();
   });
@@ -45,24 +49,36 @@ describe("arrival safeguards", () => {
       { ...matched, candidates: [{ ...p, confidence: "unverified" as const }] },
       { ...matched, matched_id: "other" },
     ])
-      expect(assessArrival(null, result, 1000, 1000, false).state).toBeNull();
+      expect(
+        assessArrival(null, result, 1000, 1000, false, position).state,
+      ).toBeNull();
   });
   it("rejects stale, future, repeated observations and resets after gaps", () => {
-    const state = { id: "a", since: 1000, lastObserved: 1000 };
-    expect(assessArrival(state, matched, 1000, 30_000, false).state).toBeNull();
-    expect(assessArrival(state, matched, 30_000, 1000, false).state).toBeNull();
+    const state = {
+      id: "a",
+      since: 1000,
+      lastObserved: 1000,
+      anchor: position,
+      matchBasis: "boundary" as const,
+    };
     expect(
-      assessArrival(state, matched, 1000, 1000, false).apartment,
+      assessArrival(state, matched, 1000, 30_000, false, position).state,
     ).toBeNull();
     expect(
-      assessArrival(state, matched, 30_000, 30_000, false).apartment,
+      assessArrival(state, matched, 30_000, 1000, false, position).state,
     ).toBeNull();
     expect(
-      assessArrival(state, matched, 10_000, 10_000, true).state,
+      assessArrival(state, matched, 1000, 1000, false, position).apartment,
+    ).toBeNull();
+    expect(
+      assessArrival(state, matched, 30_000, 30_000, false, position).apartment,
+    ).toBeNull();
+    expect(
+      assessArrival(state, matched, 10_000, 10_000, true, position).state,
     ).toBeNull();
   });
   it("restarts dwell after a matching-policy version change", () => {
-    const first = assessArrival(null, matched, 1000, 1000, false);
+    const first = assessArrival(null, matched, 1000, 1000, false, position);
     expect(
       assessArrival(
         first.state,
@@ -70,10 +86,11 @@ describe("arrival safeguards", () => {
         10000,
         10000,
         false,
+        position,
       ).apartment,
     ).toBeNull();
     expect(
-      assessArrival(first.state, matched, 900, 1000, false).state,
+      assessArrival(first.state, matched, 900, 1000, false, position).state,
     ).toBeNull();
   });
   it("clears an automatic card when its match is stale or no longer trusted", () => {
@@ -82,6 +99,8 @@ describe("arrival safeguards", () => {
       since: 1000,
       lastObserved: 9000,
       configVersion: 1,
+      anchor: position,
+      matchBasis: "boundary" as const,
     };
     for (const result of [
       { ...matched, status: "candidates" as const },
@@ -96,16 +115,17 @@ describe("arrival safeguards", () => {
         11000,
         11000,
         false,
+        position,
       );
       expect(next.clearAutomaticCard).toBe(true);
       expect(next.apartment).toBeNull();
     }
     expect(
-      assessHomeArrival(previous, "a", matched, 11000, 40000, false)
+      assessHomeArrival(previous, "a", matched, 11000, 40000, false, position)
         .clearAutomaticCard,
     ).toBe(true);
     expect(
-      assessHomeArrival(previous, "a", matched, 11000, 11000, false)
+      assessHomeArrival(previous, "a", matched, 11000, 11000, false, position)
         .clearAutomaticCard,
     ).toBe(false);
   });
@@ -115,6 +135,8 @@ describe("arrival safeguards", () => {
       since: 1000,
       lastObserved: 9000,
       configVersion: 1,
+      anchor: position,
+      matchBasis: "boundary" as const,
     };
     const nextMatch = {
       ...matched,
@@ -128,6 +150,7 @@ describe("arrival safeguards", () => {
       11000,
       11000,
       false,
+      position,
     );
     expect(first.clearAutomaticCard).toBe(true);
     expect(first.apartment).toBeNull();
@@ -138,6 +161,7 @@ describe("arrival safeguards", () => {
       19000,
       19000,
       false,
+      position,
     );
     expect(next.apartment?.id).toBe("b");
   });
@@ -147,6 +171,8 @@ describe("arrival safeguards", () => {
       since: 1000,
       lastObserved: 9000,
       configVersion: 1,
+      anchor: position,
+      matchBasis: "boundary" as const,
     };
     const empty = {
       ...matched,
@@ -155,11 +181,11 @@ describe("arrival safeguards", () => {
       candidates: [],
     };
     expect(
-      assessHomeArrival(previous, "a", empty, 11000, 11000, true)
+      assessHomeArrival(previous, "a", empty, 11000, 11000, true, position)
         .clearAutomaticCard,
     ).toBe(false);
     expect(
-      assessHomeArrival(null, "a", empty, 11000, 11000, false)
+      assessHomeArrival(null, "a", empty, 11000, 11000, false, position)
         .clearAutomaticCard,
     ).toBe(true);
   });
@@ -199,4 +225,69 @@ describe("arrival safeguards", () => {
     stop();
     expect(refresh).not.toHaveBeenCalled();
   });
+});
+
+it("does not count moving between two entrances of one property as stationary dwell", () => {
+  // Public OSM gate points, never a driver location history.
+  const g1 = { lng: -117.9130501, lat: 34.0280136 };
+  const g2 = { lng: -117.912336, lat: 34.0267054 };
+  const result = { ...matched, match_basis: "entrance" as const };
+  const first = assessArrival(null, result, 1000, 1000, false, g1);
+  const moved = assessArrival(first.state, result, 10000, 10000, false, g2);
+  expect(moved.apartment).toBeNull();
+  expect(moved.state?.since).toBe(10000);
+});
+
+it("allows small stationary drift but resets gradual movement from the original anchor", () => {
+  const first = assessArrival(null, matched, 1000, 1000, false, position);
+  expect(
+    assessArrival(first.state, matched, 10000, 10000, false, {
+      lng: 0.00006,
+      lat: 0,
+    }).apartment,
+  ).toBe(p);
+  const middle = assessArrival(first.state, matched, 5000, 5000, false, {
+    lng: 0.0001,
+    lat: 0,
+  });
+  const moved = assessArrival(middle.state, matched, 10000, 10000, false, {
+    lng: 0.0002,
+    lat: 0,
+  });
+  expect(moved.apartment).toBeNull();
+  expect(moved.state?.since).toBe(10000);
+  expect(first.state?.anchor).toEqual(position);
+});
+it("starts a fresh dwell when the recognition basis changes at the same apartment", () => {
+  const first = assessArrival(null, matched, 1000, 1000, false, position);
+  const next = assessArrival(
+    first.state,
+    { ...matched, match_basis: "entrance" },
+    10000,
+    10000,
+    false,
+    position,
+  );
+  expect(next.apartment).toBeNull();
+  expect(next.state?.since).toBe(10000);
+});
+it("rejects invalid observations or a match with no recognition basis", () => {
+  for (const point of [
+    { lng: NaN, lat: 0 },
+    { lng: 0, lat: 91 },
+    { lng: 181, lat: 0 },
+  ])
+    expect(
+      assessArrival(null, matched, 1000, 1000, false, point).state,
+    ).toBeNull();
+  expect(
+    assessArrival(
+      null,
+      { ...matched, match_basis: undefined },
+      1000,
+      1000,
+      false,
+      position,
+    ).state,
+  ).toBeNull();
 });

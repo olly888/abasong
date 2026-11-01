@@ -5,7 +5,27 @@ export type ArrivalState = {
   since: number;
   lastObserved: number;
   configVersion?: number;
+  anchor: S["Point"];
+  matchBasis: "boundary" | "entrance";
 } | null;
+// Pilot stability window, not an entrance polygon or a speed classifier.
+// Anchoring prevents small successive moves from accumulating into a false stay.
+const maxDwellMovementM = 15;
+const validPoint = (point: S["Point"]) =>
+  point &&
+  Number.isFinite(point.lng) &&
+  Number.isFinite(point.lat) &&
+  Math.abs(point.lng) <= 180 &&
+  Math.abs(point.lat) <= 90;
+function distanceM(a: S["Point"], b: S["Point"]) {
+  const rad = Math.PI / 180;
+  const h =
+    Math.sin(((b.lat - a.lat) * rad) / 2) ** 2 +
+    Math.cos(a.lat * rad) *
+      Math.cos(b.lat * rad) *
+      Math.sin(((b.lng - a.lng) * rad) / 2) ** 2;
+  return 2 * 6371008.8 * Math.asin(Math.sqrt(Math.min(1, h)));
+}
 // Dwell is client-side stability only. It cannot promote a candidate to a match:
 // the authenticated server must first accept its versioned field-evidence gate.
 export function assessArrival(
@@ -14,9 +34,12 @@ export function assessArrival(
   observedAt: number,
   now: number,
   manualLocked: boolean,
+  point: S["Point"],
 ): { state: ArrivalState; apartment: S["Apartment"] | null } {
   if (
     manualLocked ||
+    !validPoint(point) ||
+    !["boundary", "entrance"].includes(result.match_basis ?? "") ||
     !Number.isFinite(observedAt) ||
     now - observedAt > 20_000 ||
     observedAt > now + 1000 ||
@@ -32,6 +55,9 @@ export function assessArrival(
     return { state: null, apartment: null };
   const same =
     previous?.id === result.matched_id &&
+    validPoint(previous.anchor) &&
+    previous.matchBasis === result.match_basis &&
+    distanceM(previous.anchor, point) <= maxDwellMovementM &&
     previous.configVersion === result.config_version &&
     observedAt > previous.lastObserved &&
     observedAt - previous.lastObserved <= 20_000;
@@ -42,6 +68,8 @@ export function assessArrival(
         since: observedAt,
         lastObserved: observedAt,
         configVersion: result.config_version,
+        anchor: { ...point },
+        matchBasis: result.match_basis!,
       };
   return {
     state,
@@ -59,6 +87,7 @@ export function assessHomeArrival(
   observedAt: number,
   now: number,
   manualLocked: boolean,
+  point: S["Point"],
 ) {
   const decision = assessArrival(
     previous,
@@ -66,6 +95,7 @@ export function assessHomeArrival(
     observedAt,
     now,
     manualLocked,
+    point,
   );
   return {
     ...decision,

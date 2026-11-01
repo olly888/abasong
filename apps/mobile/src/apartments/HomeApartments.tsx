@@ -251,6 +251,7 @@ export function HomeApartmentContent({
       fix.timestamp,
       Date.now(),
       manualLocked.current,
+      { lng: fix.coords.longitude, lat: fix.coords.latitude },
     );
     if (decision.clearAutomaticCard) invalidateAutomaticCard();
     arrival.current = decision.state;

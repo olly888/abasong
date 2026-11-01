@@ -215,6 +215,7 @@ for p in pages:
   p['requirements'].append('ADD-10')
   p['actions'].append(dict(label='共享公寓密码',target='B04',result='进入截图贡献，不推断当前位置为某公寓'))
   p['acceptance'] += ' ADD-10：蓝点、相机和选卡解耦，前台持续定位，展开锁定只影响选卡；门外识别须已核对独立到达区域；无候选不当成定位失败/非公寓；正常空态没有重复搜索或重新定位。'
+  p['acceptance'] += ' 停留同时核对位置稳定：同公寓换门移动、相对起始点累计超过15米或建筑/入口依据改变，重计8秒；这是待现场校准的开发窗口，不是入口区域或行驶判断，不保存GPS轨迹。'
 # ADD-11: user-confirmed codes publish directly; no per-record operator queue.
 for p in pages:
  if p['id'] in ['H01','B02','B05','B06','U06','U09']:

@@ -1,5 +1,11 @@
 # Abasong development status
 
+## Latest execution — public gates / spatially stable dwell (2026-11-01)
+
+Refreshed official OSM node/parent-way evidence for Woodside G1/G2. Candidate-only GeoJSON and offline operator SVG/PNG prepared; no actual arrival polygon imported/activated. Added isolated public-gate HTTP regression, source-expiry/ambiguity/uncertainty/card-clear checks. Found the existing dwell policy could count two distinct entrances of the same apartment as a stationary stay: regression first failed, then fixed by requiring a valid observation, the same match basis/config/apartment and a15m window anchored to the initial point before8s promotion. Gradual movement resets dwell too; no GPS logging/persistence or new UI controls. Home uses actual foreground-fix coordinates, not the apartment centroid.
+
+Actual check150/25 PASS; libraryHTTP224 + compiled address matcher/PostGIS8 PASS; iOS/Android/Web exports PASS. Static39 nodes/292 states and83 paths/108 ops/128 models PASS. First new integration failure was a fixture attempting to violate the existing source-license CHECK, corrected to assert rejection without weakening the constraint. [Evidence/field review diagram](docs/technical/D1_公开入口复核与停留稳定性修正.md). Mac locked: native interaction/visual follow-up requested and pending, not covered by these tests or earlier native builds. No new dependency/native module/API/DDL/cloud/deploy/real-account grants; normal auto-match remains off pending entrance scope/field evidence. Existing authorized iPhone preview services preserved. Next: unlock→dual-native moving/stationary card check; then public gate/approach field verification and scoped iPhone acceptance. D1 remains incomplete.
+
 ## Latest verification — Android system-camera return (2026-11-01)
 
 User completed the pending Android simulator system-camera check and replied “已经验证”: using “While using the app”, capture the simulator's text-free image, confirm, return to search with the no-recipient-address state and retake/manual-entry actions. Recorded as user-assisted PASS for this bounded path, alongside the earlier iPhone TEST capture and Android address-confirmation→map acceptance. The earlier long camera stay with “Only this time” remains a separate unresolved observation, not a failure reproduced under this permission choice or a completed process-recovery test.

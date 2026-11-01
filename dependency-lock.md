@@ -78,3 +78,7 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 复用已锁定的 Expo58.0.21、expo-image-picker58.0.10、expo-file-system58.0.13及现有 Apple Vision/ML Kit 本地模块，无新依赖或锁版本变化。image-picker cameraPermission由禁用改为明确中文用途；microphonePermission仍false，Android合并Manifest只新增所需CAMERA而无RECORD_AUDIO。需重新prebuild、锁定Pods安装及双端原生编译；不能只热刷新。原生OCR模块常量addressCameraVersion=1用于旧包保护；iOS显式照片方向、Android旋转后文字坐标归一化。签名团队只从既有本机产物读取，不写入公共配置。
 
 本批按安装版本阅读[Expo58 ImagePicker](https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/)、[FileSystem](https://docs.expo.dev/versions/v58.0.0/sdk/filesystem/)和Apple Vision方向初始化文档。系统相机/强杀恢复/照片缓存与JS合成状态的验收分开记录。
+
+## 2026-11-01 公开入口核对图
+
+未新增应用运行依赖。离线SVG图生成只用Python标准库；PNG预览可选使用本机既有Pillow12.1.1，缺失时不要求安装，产物与脚本不进入移动端包。停留修正使用已有前台位置观测和纯TypeScript距离计算；无新原生API、位置权限或后台采集。

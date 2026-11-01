@@ -11,6 +11,7 @@ import { generateKeyPair, exportJWK, SignJWT } from "jose";
 import { Client, escapeLiteral } from "pg";
 import { localTarget } from "../d0/database-target";
 import { verifyPublicArrival } from "./verify-public-arrival";
+import { verifyPublicEntrances } from "./verify-public-entrances";
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     admin = localTarget(env.DATABASE_ADMIN_URL),
@@ -1157,6 +1158,7 @@ async function main() {
       [arrivalReader],
     );
     await verifyPublicArrival(db, req, a, b, await token(arrivalReader));
+    await verifyPublicEntrances(db, req, await token(arrivalReader));
     await verifySearchMatching(db, sensitive.href, actor, issued);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
@@ -1183,7 +1185,10 @@ main().catch((error: unknown) => {
       ?.split("\n")
       .find(
         (line) =>
-          /^\s+at /.test(line) && line.includes("verify-library-api.ts"),
+          /^\s+at /.test(line) &&
+          /verify-(?:library-api|public-arrival|public-entrances)\.ts/.test(
+            line,
+          ),
       );
     if (location) console.error(location.trim());
   }

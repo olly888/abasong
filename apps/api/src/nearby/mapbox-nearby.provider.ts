@@ -91,6 +91,12 @@ export class MapboxNearbyProvider {
             f.properties.type === "apartments" &&
             f.properties.tilequery.distance <= 200,
         )
+        .sort(
+          (a, b) =>
+            a.properties.tilequery.distance - b.properties.tilequery.distance ||
+            a.geometry.coordinates[0] - b.geometry.coordinates[0] ||
+            a.geometry.coordinates[1] - b.geometry.coordinates[1],
+        )
         .filter((f) => {
           const k = String(f.id ?? f.geometry.coordinates.join(","));
           if (seen.has(k)) return false;

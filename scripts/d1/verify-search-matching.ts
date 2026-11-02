@@ -53,7 +53,7 @@ export async function verifySearchMatching(
     );
     const insert = async (id: string) =>
       db.query(
-        "INSERT INTO abasong.apartments(id,name,address_line1,city,state,source_id,point,status) VALUES($1,'TEST search','2445 E Del Mar Blvd','Pasadena','CA',$2,'SRID=4326;POINT(-118.1 34.14)'::extensions.geography,'active')",
+        "INSERT INTO abasong.apartments(id,name,address_line1,city,state,source_id,point,status) VALUES($1,'TEST search','2445 E Del Mar Blvd','Pasadena','CA',$2,'SRID=4326;POINT(-118.5 34.5)'::extensions.geography,'active')",
         [id, source],
       );
     await insert(one);
@@ -63,7 +63,7 @@ export async function verifySearchMatching(
         state: "CA",
         postal_code: null,
       },
-      point = { lng: -118.1, lat: 34.14 };
+      point = { lng: -118.5, lat: 34.5 };
     assert.deepEqual(
       (await service.matchSearchAddress(identity, address, point)).map(
         (p) => p.id,

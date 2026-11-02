@@ -1274,13 +1274,16 @@ async function main() {
   }
 }
 main().catch((error: unknown) => {
+  if (error && typeof error === "object" && "code" in error &&
+      typeof error.code === "string" && /^[0-9A-Z]{5}$/.test(error.code))
+    console.error("Database verification SQLSTATE: " + error.code);
   if (error instanceof Error) {
     const location = error.stack
       ?.split("\n")
       .find(
         (line) =>
           /^\s+at /.test(line) &&
-          /verify-(?:library-api|public-arrival|public-entrances)\.ts/.test(
+          /verify-(?:library-api|public-arrival|public-entrances|nearby-coverage|search-matching)\.ts/.test(
             line,
           ),
       );

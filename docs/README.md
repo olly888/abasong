@@ -1,5 +1,7 @@
 # Abasong V12 研发文档入口
 
+- [A3 附近公寓覆盖与匹配验收](technical/A3_附近公寓覆盖与匹配验收.md)
+
 - [A3 本地OCR质量与核对提示验收](technical/A3_本地OCR质量与核对提示验收.md)
 - [A3 公开地址与真实截图准备](technical/A3_公开地址核对与真实截图采集.md)
 

@@ -72,10 +72,9 @@ export class NearbyService {
     this.rates.set("*", now + 1000);
     try {
       const buildings = await this.maps.buildings(p.point);
-      const points = await this.apartments.uncoveredDiscoveryPoints(
-        a,
-        buildings.items,
-      );
+      // A known boundary is not proof that every enclosed roof shares its
+      // postal address/access scope. Resolve suggestions before address dedupe.
+      const points = buildings.items;
       const items: S["NearbyCandidate"][] = [];
       const seen = new Set(
         catalog.map((c) => addressIdentity(c.address)).filter(Boolean),

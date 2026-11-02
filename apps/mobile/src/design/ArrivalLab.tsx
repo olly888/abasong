@@ -257,6 +257,7 @@ export default function ArrivalLab() {
   const params = useLocalSearchParams<{ scene?: string; run?: string }>();
   const [observations, setObservations] = useState(0);
   const [accessReads, setAccessReads] = useState(0);
+  const [retest, setRetest] = useState(0);
   const [scene, setScene] = useState<Scene>(
     scenes.includes(params.scene as Scene) ? (params.scene as Scene) : "有密码",
   );
@@ -265,20 +266,48 @@ export default function ArrivalLab() {
   }, [params.scene, params.run]);
   const sceneAdapter = useMemo(
     () => adapter(scene, () => setAccessReads((n) => n + 1)),
-    [scene],
+    [scene, params.run, retest],
   );
 
   if (!focused || !active)
     return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <Text style={{ fontSize: 12, textAlign: "center", padding: 6 }}>
-        TEST · 合成资料 · 位置 {observations} · 查码 {accessReads}
-      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 8,
+        }}
+      >
+        <Text
+          style={{ flex: 1, fontSize: 12, textAlign: "center", padding: 6 }}
+        >
+          TEST · {scene} · 位置 {observations} · 查码 {accessReads}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="重新开始TEST场景"
+          style={{
+            minHeight: 44,
+            minWidth: 56,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onPress={() => {
+            setObservations(0);
+            setAccessReads(0);
+            setRetest((n) => n + 1);
+          }}
+        >
+          <Text style={{ color: "#1467d8" }}>重测</Text>
+        </Pressable>
+      </View>
       <View style={{ height: 42 }}>
         <ScrollView horizontal>
           {scenes.map((s) => (
             <Pressable
+              accessibilityRole="button"
               key={s}
               onPress={() => setScene(s)}
               style={{
@@ -292,7 +321,7 @@ export default function ArrivalLab() {
         </ScrollView>
       </View>
       <HomeApartmentContent
-        key={scene + ":" + (params.run ?? "")}
+        key={scene + ":" + (params.run ?? "") + ":" + retest}
         testData={{
           ...sceneAdapter,
           userId: "99999999-9999-4999-8999-999999999999",

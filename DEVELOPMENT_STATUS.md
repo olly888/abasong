@@ -1,5 +1,13 @@
 # Abasong development status
 
+## Latest acceptance — Android slow-switch and real native shared return (2026-11-01)
+
+[Actual evidence and cleanup](docs/technical/D1_原生慢切与共享回程补验.md). User confirmed Android100-loading→102 after9s; actual native102/TEST-02#/TEST102 and read count2 observed. Added dev-only scene label/reset and explicit button roles so retries start when the tester is ready; no product TEST controls.
+
+User explicitly authorized a fresh maximum2h local-D0 read/contribute lease for the single test account. Normal authenticated iOS2445 empty-card→form→TEST share→same2445/new code/highlight observed; Android user completed sharing and confirmed same-address return, tool observed TEST-AND#/2445/two records. Actual metadata confirmed both records directly active on the public DelMar target. This is one account across two simulators, not a new two-account or physical-device claim.
+
+Both temporary capabilities revoked early and both scoped TEST records cleaned; status0 active/0 TEST. Both apps restarted without logout, same public address now correctly denies access and shows no TEST plaintext. No cloud/Supabase/payment/geocoding/native binary change. Lint/typecheck/all-platform JS export PASS; prior184 tests/232HTTP retain their original scope, not rerun for QA-only changes. Mapbox native401/cache limits persist; D1/physical/field still open. Original services retained, no remote push.
+
 ## Latest implementation — contribution return and write recovery (2026-11-01)
 
 [Implementation and evidence](docs/technical/D1_手动贡献返回与重试验收.md). Shared manual contributions now return by the submitted apartment ID, without relying on back history/nearest-card selection. Failed target loading stays explicit; retry preserves input, selecting another target requires intent. Form/target controls lock while submitting, synchronous intent guard prevents duplicate taps, and partial private-entry save reuses the entry key when only the failed code changes. Keys remain per-form memory and retire on disposal. Current return guarantees selected address, not the entire previous carousel.

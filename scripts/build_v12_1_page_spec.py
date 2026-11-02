@@ -87,8 +87,9 @@ pages[-1]['api_contract_status']='T27/T32–T35待扩展私存/收藏/共享/纠
 # ADD-19: each owner manages a publication source, not the canonical secret.
 for p in pages:
  if p['id']=='U06':
-  p.update(information=['我保存的/我共享的','本人来源状态、首次时间、门别、版本','有权查看的有效密码直显；真实有用/不能用反馈，不虚构查看人数'],actions=[dict(label='纠正密码',target='B02',result='固定公寓，正确密码直接共享并结束本人旧来源；他人和旧反馈保留'),dict(label='撤回我的贡献',target='G03',result='版本校验后只结束本人来源；资格过期仍可撤回'),dict(label='查看公寓',target='H01',result='按公寓ID重新校验资格')],states=['加载/分页','有效共享','本人已纠正','本人已撤回','同码其他来源保留','无查看资格可管理元数据','无贡献资格不可纠正','弱网重试同键','版本冲突刷新','写入成功读取失败'],api_operations=['listMyContributions','getMyContributionSummary','getMyContribution','correctMyContribution','withdrawMyContribution'],requirements=['ADD-07','ADD-19'])
-  p['api_contract_status']='ADD-19契约；实施和真实验证见最新状态'
+  p.update(information=['我保存的/我共享的','本人来源状态、首次时间、门别、版本','有权查看的有效密码直显；真实有用/不能用反馈，不虚构查看人数'],actions=[dict(label='纠正密码',target='B02',result='固定公寓，正确密码直接共享并结束本人旧来源；他人和旧反馈保留'),dict(label='查看公寓',target='H01',result='按公寓ID重新校验资格')],states=['加载/分页','有效共享','本人已纠正','历史已停止共享','同码其他来源保留','无查看资格可管理元数据','无贡献资格不可纠正','弱网重试同键','版本冲突刷新','写入成功读取失败'],api_operations=['listMyContributions','getMyContributionSummary','getMyContribution','correctMyContribution'],requirements=['ADD-07','ADD-19'])
+  p['api_contract_status']='A1：仅纠正及元数据；普通撤回接口已移除，误共享仅内测管理员处理'
+  p['requirements'].append('ADD-20')
  if p['id']=='B02':
   p['requirements'].append('ADD-19')
   p['states']+=['纠正本人来源/固定公寓','版本冲突不覆盖','成功返回共享管理']

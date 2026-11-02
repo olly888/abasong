@@ -50,9 +50,10 @@ async function main() {
     other = randomUUID(),
     aid = randomUUID(),
     issued = Math.floor(Date.now() / 1000) - 60;
-  const token = (sub: string) =>
+  const token = (sub: string, aal = "aal1") =>
     new SignJWT({
       role: "authenticated",
+      aal,
       sub,
       iat: issued,
       exp: issued + 3600,
@@ -108,6 +109,7 @@ async function main() {
       "0001_v12_initial.sql",
       "0002_personal_apartments.sql",
       "0003_apartment_buildings.sql",
+      "0004_import_batches.sql",
     ])
       await db.query(readFileSync(`database/migrations/${file}`, "utf8"));
     await db.query(
@@ -184,6 +186,14 @@ async function main() {
       }
       await pause(100);
     }
+    // Actual HTTP readiness must not claim ready with the source migration missing.
+    const versionRow=(await db.query("DELETE FROM abasong.schema_version WHERE version='V12.0008' RETURNING version,applied_at")).rows[0];
+    assert.equal((await fetch(base+'/health/live')).status,200);
+    const notReady=await fetch(base+'/health/ready');assert.equal(notReady.status,503);
+    const readinessError=await notReady.json();assert(!JSON.stringify(readinessError).includes('schema_version'));assert(!JSON.stringify(readinessError).includes('postgres'));
+    await db.query('INSERT INTO abasong.schema_version(version,applied_at) VALUES($1,$2)',[versionRow.version,versionRow.applied_at]);
+    assert.equal((await fetch(base+'/health/ready')).status,200);
+    checks+=4;
     const a = await token(actor),
       b = await token(other),
       root = "/v1/me/apartment-library";
@@ -1240,7 +1250,7 @@ async function main() {
     await req("DELETE", `${root}/${restored.id}`, a, 200);
     manual.finish(true);
     manual.dispose();
-    await verifyContributionManagement(db, req, token, base, sensitive.href);
+    await verifyContributionManagement(db, req, token, base, sensitive.href, admin.href, issuer);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

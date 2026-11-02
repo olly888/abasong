@@ -1,3 +1,4 @@
+import { SharedContributionCard } from "../apartments/SharedContributions";
 import { useEffect, useState } from "react";
 import { AppState, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -133,6 +134,7 @@ function Lab() {
     };
     if (params.case && map[params.case]) choose(map[params.case]);
   }, [params.case]);
+  if (params.case === "contributions") return <ContributionLab />;
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
@@ -287,6 +289,75 @@ function Lab() {
           </View>
         ))}
       </View>
+    </SafeAreaView>
+  );
+}
+
+function ContributionLab() {
+  const [action, setAction] = useState("");
+  const source: S["ContributionSummary"] = {
+    id: "22222222-2222-4222-8222-222222222221",
+    record_id: "22222222-2222-4222-8222-222222222222",
+    apartment_id: apartment.id,
+    address_label: "100 TEST Management Ave",
+    event_type: "created",
+    record_status: "active",
+    occurred_at: "2026-11-01T16:20:00Z",
+    status: "active",
+    version: 1,
+    scope_label: "TEST 行人门",
+    can_correct: true,
+    other_source_count: 1,
+    useful_count: 2,
+    not_useful_count: 1,
+    last_feedback_at: "2026-11-01T17:20:00Z",
+    views_count: null,
+  };
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: tokens.color.surface }}>
+      <Text style={{ padding: 12, color: tokens.color.warning }}>
+        设计验收 · TEST合成资料 · 不连接业务接口
+      </Text>
+      <Text style={{ fontSize: 20, fontWeight: "600", paddingHorizontal: 20 }}>
+        我共享的
+      </Text>
+      <Text
+        accessibilityRole="alert"
+        style={{ minHeight: 32, paddingHorizontal: 20, paddingTop: 6 }}
+      >
+        {action || "TEST · 点纠正密码验证操作"}
+      </Text>
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+        <SharedContributionCard
+          source={source}
+          value="TEST-CARD#"
+          canRead
+          onCorrect={() => setAction("TEST · 纠正操作已触发")}
+          onMap={() => setAction("TEST · 地图操作已触发")}
+        />
+        <SharedContributionCard
+          source={{
+            ...source,
+            status: "corrected",
+            event_type: "corrected",
+            can_correct: false,
+          }}
+          canRead
+          onCorrect={() => {}}
+          onMap={() => setAction("TEST · 历史地图操作已触发")}
+        />
+        <SharedContributionCard
+          source={{
+            ...source,
+            status: "withdrawn",
+            event_type: "withdrawn",
+            can_correct: false,
+          }}
+          canRead
+          onCorrect={() => {}}
+          onMap={() => setAction("TEST · 停显历史地图操作已触发")}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 }

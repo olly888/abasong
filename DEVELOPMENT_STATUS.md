@@ -1,5 +1,23 @@
 # Abasong development status
 
+## Current delivery baseline — A1 pilot readiness (2026-11-01)
+
+Approved execution basis: [ADD-20](docs/product/Abasong_V12.1_内测冻结与执行计划.md) and [master plan](docs/Abasong_V12.1_项目开发与验收总计划.md). Integration branch: `codex/d1-pilot-readiness`, starting from `5e4e731`. Older sections below are historical evidence and do not supersede this table.
+
+| Batch | Actual state | Remaining exit |
+|---|---|---|
+| A1 | Ordinary withdrawal removed from native/prototype/controller/source contract; old requests404; correction/history/feedback retained. Shared schema manifest includes0008; real readiness missing-version503/restore200 verified. Internal operator stop requires verified aal2 + current DB ops.review + expected version + audited idempotent command, D0-only CLI. | Integration commit/PR and latest-head CI are being completed; see acceptance report. |
+| A2 | Local-only envelope still blocks production; cloud encryption/runtime not delivered. | Unified async crypto/KMS, fail-closed tests, container/environment/role/migration/rollback review. |
+| A3 | Existing6 public apartment samples; synthetic OCR fixtures are not a real authorized carrier validation set. |10–20 sourced public targets;30–50 authorized redacted screenshots and error measurements. |
+| A4 | DevWest identity exists; business schema not deployed. AWS account, Mapbox standard access, DNS/control and cost approval pending. | Explicit environment/resource approval, HTTPS API, controlled migrations/roles, two real accounts. |
+| A5 | Existing business iPhone build still needs Mac/Metro. Fieldreview tool is separate from business app. | `com.abasong.pilot` bundled-JS Release + fixed HTTPS API; cellular cold-start end-to-end acceptance. |
+
+A1 latest local checks:184 tests/34files and lint/types/build PASS;291 real library HTTP/DB checks plus8 matcher checks, Nearby/source legacy-backfill/operator scenarios PASS; isolated D0 eight migrations/52tables PASS; imports120, ranking18, auth54 PASS; all-platform JS exports PASS. Initial sandboxed HTTP listen failed EPERM, then passed with permitted loopback; no product regression hidden. Prototype correction/history flow and both native presentation/callback scenes observed with TEST-only data, not cloud or physical acceptance. Android feedback initially appeared below the scroll fold, fixed to the visible header and rechecked. No new account grants, cloud writes, native modules or financial changes. [A1 report](docs/technical/A1_研发基准统一与验收.md).
+
+Project #1 status snapshot synced:35 items,2 done/3 pending acceptance/20 in progress/10 planned. Old stacked PRs remain preserved; single main-target integration will supersede them as the ongoing review entry, without automatic merges. Next unblocked work is A2/A3; A4 actual resources wait concrete reviewed cost/environment approval. D1 is not complete.
+
+## Historical implementation records
+
 ## Latest implementation — ADD-19 own contribution management (2026-11-01)
 
 [Implementation and bounded acceptance](docs/technical/D1_本人贡献纠正撤回与共享管理验收.md). Owner-scoped source correction/withdrawal, metadata/detail APIs,0008 backfill, immutable canonical encrypted history, active-source ranking and native shared management implemented. Latest user feedback questions regular withdrawal; keep that product decision open, do not treat technical passing as final acceptance or claim the ordinary button is removed.

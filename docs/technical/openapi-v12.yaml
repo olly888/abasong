@@ -1751,76 +1751,6 @@ paths:
               $ref: '#/components/schemas/FeedbackInput'
       x-required-capabilities:
       - access.read
-  /v1/access-records/{record_id}:
-    delete:
-      operationId: withdrawAccess
-      summary: 仅本人贡献或运营；停止正文展示
-      tags:
-      - access-records
-      responses:
-        '200':
-          description: 成功；202 表示已接受任务，非最终完成
-          headers:
-            X-Request-ID:
-              schema: *id001
-              description: 追踪ID，不含个人数据
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ack'
-        '400':
-          description: 输入或跨字段约束错误
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: 认证失败
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: 权限不足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: 不存在或不可见
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: 版本/状态/幂等内容冲突
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: 业务条件不满足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: 限流
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: 依赖暂不可用
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      parameters:
-      - name: record_id
-        in: path
-        required: true
-        schema: *id001
   /v1/me/contributions:
     get:
       operationId: listMyContributions
@@ -1901,6 +1831,76 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
+  /v1/me/contributions/{contribution_id}/summary:
+    get:
+      operationId: getMyContributionSummary
+      summary: 仅本人贡献元数据，不含密码；无需查看资格
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionSummary'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: contribution_id
+        in: path
+        required: true
+        schema: *id001
   /v1/me/contributions/{contribution_id}:
     get:
       operationId: getMyContribution
@@ -2062,86 +2062,6 @@ paths:
               $ref: '#/components/schemas/ContributionCorrectionInput'
       x-required-capabilities:
       - access.contribute
-  /v1/me/contributions/{contribution_id}/withdraw:
-    post:
-      operationId: withdrawMyContribution
-      summary: 仅撤回本人发布来源；无需查看资格，不删除其他来源
-      tags:
-      - me
-      responses:
-        '200':
-          description: 成功；202 表示已接受任务，非最终完成
-          headers:
-            X-Request-ID:
-              schema: *id001
-              description: 追踪ID，不含个人数据
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContributionChangeResult'
-        '400':
-          description: 输入或跨字段约束错误
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: 认证失败
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: 权限不足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: 不存在或不可见
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: 版本/状态/幂等内容冲突
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: 业务条件不满足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: 限流
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: 依赖暂不可用
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      parameters:
-      - name: contribution_id
-        in: path
-        required: true
-        schema: *id001
-      - name: Idempotency-Key
-        in: header
-        required: true
-        schema: *id001
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VersionInput'
   /v1/me/apartment-library:
     get:
       operationId: listMyApartmentLibrary
@@ -11218,8 +11138,6 @@ components:
           - review
           - invalid
           - withdrawn
-        can_withdraw_record:
-          type: boolean
         occurred_at:
           type: string
           format: date-time
@@ -11261,7 +11179,6 @@ components:
       - address_label
       - event_type
       - record_status
-      - can_withdraw_record
       - occurred_at
       - status
       - version
@@ -11329,7 +11246,6 @@ components:
           type: string
           enum:
           - corrected
-          - withdrawn
         applied_version:
           type: integer
           minimum: 1

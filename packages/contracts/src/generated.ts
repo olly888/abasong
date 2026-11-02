@@ -347,23 +347,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/access-records/{record_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** 仅本人贡献或运营；停止正文展示 */
-        delete: operations["withdrawAccess"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/me/contributions": {
         parameters: {
             query?: never;
@@ -373,6 +356,23 @@ export interface paths {
         };
         /** 本人贡献元数据，不含正文；查看密码仍需有效资格 */
         get: operations["listMyContributions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contributions/{contribution_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅本人贡献元数据，不含密码；无需查看资格 */
+        get: operations["getMyContributionSummary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -409,23 +409,6 @@ export interface paths {
         put?: never;
         /** 版本化纠正本人来源；关联正确记录，保留他人来源和反馈 */
         post: operations["correctMyContribution"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/me/contributions/{contribution_id}/withdraw": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 仅撤回本人发布来源；无需查看资格，不删除其他来源 */
-        post: operations["withdrawMyContribution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2279,7 +2262,6 @@ export interface components {
             event_type: "created" | "same_value_validation" | "withdrawal_requested" | "withdrawn" | "corrected";
             /** @enum {string} */
             record_status: "pending" | "active" | "review" | "invalid" | "withdrawn";
-            can_withdraw_record: boolean;
             /** Format: date-time */
             occurred_at: string;
             /** @enum {string} */
@@ -2311,7 +2293,7 @@ export interface components {
         };
         ContributionChangeResult: {
             /** @enum {string} */
-            operation: "corrected" | "withdrawn";
+            operation: "corrected";
             applied_version: number;
             source: components["schemas"]["ContributionSummary"];
             replacement: components["schemas"]["ContributionSummary"] | (never | null);
@@ -4947,13 +4929,14 @@ export interface operations {
             };
         };
     };
-    withdrawAccess: {
+    listMyContributions: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                record_id: string;
+            query?: {
+                cursor?: string;
+                limit?: number;
             };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -4966,7 +4949,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Ack"];
+                    "application/json": components["schemas"]["ContributionSummaryPage"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5043,14 +5026,13 @@ export interface operations {
             };
         };
     };
-    listMyContributions: {
+    getMyContributionSummary: {
         parameters: {
-            query?: {
-                cursor?: string;
-                limit?: number;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                contribution_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5063,7 +5045,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContributionSummaryPage"];
+                    "application/json": components["schemas"]["ContributionSummary"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5252,108 +5234,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ContributionCorrectionInput"];
-            };
-        };
-        responses: {
-            /** @description 成功；202 表示已接受任务，非最终完成 */
-            200: {
-                headers: {
-                    /** @description 追踪ID，不含个人数据 */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContributionChangeResult"];
-                };
-            };
-            /** @description 输入或跨字段约束错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 认证失败 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 权限不足 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 不存在或不可见 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 版本/状态/幂等内容冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 业务条件不满足 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 限流 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 依赖暂不可用 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    withdrawMyContribution: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                contribution_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VersionInput"];
             };
         };
         responses: {

@@ -1,3 +1,4 @@
+import { REQUIRED_SCHEMA_VERSIONS } from "../../packages/contracts/src/schema-versions";
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { randomBytes, randomUUID } from "node:crypto";
@@ -263,7 +264,7 @@ async function main() {
             "SELECT count(*)::int AS n FROM abasong.schema_version",
           )
         ).rows[0].n,
-        8,
+        REQUIRED_SCHEMA_VERSIONS.length,
       );
     } finally {
       await api.end();

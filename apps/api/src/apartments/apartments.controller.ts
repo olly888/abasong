@@ -117,23 +117,7 @@ export class ApartmentsController {
     @Body() b: unknown,
     @Headers("idempotency-key") k: string | undefined,
   ) {
-    return this.service.changeContribution(this.actor(r, true), id, b, k, true);
-  }
-  @Post("me/contributions/:contribution_id/withdraw")
-  @HttpCode(200)
-  withdrawContribution(
-    @Req() r: ApiRequest,
-    @Param("contribution_id") id: string,
-    @Body() b: unknown,
-    @Headers("idempotency-key") k: string | undefined,
-  ) {
-    return this.service.changeContribution(
-      this.actor(r, true),
-      id,
-      b,
-      k,
-      false,
-    );
+    return this.service.correctContribution(this.actor(r, true), id, b, k);
   }
   @Get("apartments/:apartment_id/map-context")
   mapContext(@Req() r: ApiRequest, @Param("apartment_id") id: string) {

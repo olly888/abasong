@@ -946,7 +946,6 @@ export class ApartmentsService {
             : "same_value_validation"
           : r.status,
       record_status: r.record_status,
-      can_withdraw_record: r.status === "active",
       can_correct: r.status === "active" && r.can_publish,
       status: r.status,
       version: r.version,
@@ -1042,23 +1041,15 @@ export class ApartmentsService {
       "access.read",
     );
   }
-  async changeContribution(
+  async correctContribution(
     a: VerifiedIdentity,
     sid: string,
     body: unknown,
     key: string | undefined,
-    correct: boolean,
   ): Promise<S["ContributionChangeResult"]> {
     parse(id, sid);
-    const correction = correct
-      ? parse(contributionCorrectionInput, body)
-      : null;
-    const b =
-      correction ??
-      parse(
-        z.object({ expected_version: z.number().int().positive() }).strict(),
-        body,
-      );
+    const correction = parse(contributionCorrectionInput, body);
+    const b = correction;
     return this.tx(
       a,
       async (c) => {
@@ -1093,7 +1084,7 @@ export class ApartmentsService {
         return this.write(
           c,
           a,
-          `contribution.${correct ? "correct" : "withdraw"}:${sid}`,
+          `contribution.correct:${sid}`,
           key,
           b,
           async () => {
@@ -1157,7 +1148,7 @@ export class ApartmentsService {
                 )
               ).rows[0].id;
             }
-            const status = correct ? "corrected" : "withdrawn";
+            const status = "corrected";
             await c.query(
               "UPDATE abasong.access_contribution_sources SET status=$3,version=version+1,updated_at=now(),replacement_source_id=$4 WHERE id=$1 AND user_id=$2",
               [sid, a.userId, status, replacement],
@@ -1180,7 +1171,7 @@ export class ApartmentsService {
           receipt,
         );
       },
-      correct ? "access.contribute" : undefined,
+      "access.contribute",
     );
   }
   async mapContext(

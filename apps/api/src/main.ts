@@ -1,3 +1,4 @@
+import { assertSchemaReady } from "./database/schema-readiness";
 import "reflect-metadata";
 import { NearbyController } from "./nearby/nearby.controller";
 import { NearbyService } from "./nearby/nearby.service";
@@ -37,10 +38,9 @@ class HealthController {
   }
   @Get("ready") async ready() {
     try {
-      const result = await this.db.pool.query(
-        "SELECT version FROM abasong.schema_version WHERE version IN ('V12.0001','V12.0002','V12.0003','V12.0004','V12.0005','V12.0006','V12.0007')",
+      await assertSchemaReady((text, values) =>
+        this.db.pool.query(text, values),
       );
-      if (result.rowCount !== 7) throw new Error("schema");
       return { status: "ready" };
     } catch {
       throw new ServiceUnavailableException({ status: "unavailable" });

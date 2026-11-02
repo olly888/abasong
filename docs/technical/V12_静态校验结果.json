@@ -4,8 +4,8 @@
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
-    "paths": 89,
-    "operations": 114,
+    "paths": 88,
+    "operations": 113,
     "schemas": 136,
     "spec_validation": "passed"
   },
@@ -13,6 +13,11 @@
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0008": {
+      "top_level_parse": "passed",
+      "statements": 23,
+      "database_execution": "see D1 contribution source verification record"
+    },
     "incremental_migration_0007": {
       "top_level_parse": "passed",
       "statements": 8,

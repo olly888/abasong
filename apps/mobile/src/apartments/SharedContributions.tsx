@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
-import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { ActionButton, FormError } from "../auth/AuthControls";
@@ -23,7 +21,7 @@ type Row = {
 };
 export function contributionStatus(s: S["ContributionSummary"]) {
   return s.status === "withdrawn"
-    ? "本人已撤回"
+    ? "已停止共享"
     : s.status === "corrected"
       ? "本人已纠正"
       : s.record_status === "active"
@@ -38,9 +36,7 @@ export function SharedContributions() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   const controller = useRef(new AbortController()),
-    epoch = useRef(0),
-    writing = useRef(false),
-    keys = useRef(new Map<string, string>());
+    epoch = useRef(0);
   const canRead = auth.me?.capabilities.includes("access.read");
   const request = <T,>(
     path: string,
@@ -50,13 +46,13 @@ export function SharedContributions() {
       ...options,
       signal: controller.current.signal,
     });
-  useEffect(
-    () => { controller.current=new AbortController(); const current=controller.current; return () => {
+  useEffect(() => {
+    controller.current = new AbortController();
+    const current = controller.current;
+    return () => {
       current.abort();
-      keys.current.clear();
-    }; },
-    [],
-  );
+    };
+  }, []);
   async function load(cursor?: string) {
     const generation = ++epoch.current;
     setBusy(true);
@@ -66,7 +62,7 @@ export function SharedContributions() {
         "/v1/me/contributions?limit=20" + (cursor ? "&cursor=" + cursor : ""),
       );
       const items: Row[] = page.items.map((source) => ({ source }));
-      // Small bounded groups; metadata/withdrawal remain usable without secret qualification.
+      // Small bounded groups; metadata remains usable without secret qualification.
       if (canRead)
         for (let i = 0; i < items.length; i += 4) {
           if (generation !== epoch.current || controller.current.signal.aborted)
@@ -118,60 +114,6 @@ export function SharedContributions() {
       };
     }, [session.user.id, canRead]),
   );
-  function withdraw(s: S["ContributionSummary"]) {
-    if (writing.current) return;
-    Alert.alert(
-      "撤回我的贡献？",
-      s.other_source_count
-        ? "其他司机仍在共享此密码，撤回仅结束你的贡献。"
-        : "撤回后，这条密码将停止共享。历史记录保留。",
-      [
-        { text: "取消", style: "cancel" },
-        {
-          text: "确认撤回",
-          style: "destructive",
-          onPress: () =>
-            void (async () => {
-              if (writing.current) return;
-              writing.current = true;
-              setBusy(true);
-              setError(null);
-              const intent = s.id + ":" + s.version;
-              let key = keys.current.get(intent);
-              if (!key) {
-                key = randomUUID();
-                keys.current.set(intent, key);
-              }
-              try {
-                const result = await request<S["ContributionChangeResult"]>(
-                  "/v1/me/contributions/" + s.id + "/withdraw",
-                  {
-                    method: "POST",
-                    body: { expected_version: s.version },
-                    key,
-                  },
-                );
-                if (controller.current.signal.aborted) return;
-                // Commit is known: remove plaintext immediately, then only retry reads.
-                keys.current.delete(intent);
-                setRows((old) =>
-                  old.map((r) =>
-                    r.source.id === s.id ? { source: result.source } : r,
-                  ),
-                );
-                await load();
-              } catch (e) {
-                if (!controller.current.signal.aborted)
-                  setError(e instanceof Error ? e.message : "撤回失败，请重试");
-              } finally {
-                writing.current = false;
-                setBusy(false);
-              }
-            })(),
-        },
-      ],
-    );
-  }
   return (
     <View style={{ gap: 16 }}>
       <FormError message={error} />
@@ -185,84 +127,26 @@ export function SharedContributions() {
         <Text style={styles.muted}>还没有共享记录</Text>
       ) : null}
       {rows.map(({ source: s, value, failed }) => (
-        <View style={styles.card} key={s.id}>
-          <View style={styles.heading}>
-            <Text style={styles.status}>{contributionStatus(s)}</Text>
-            <Text style={styles.muted}>{s.scope_label}</Text>
-          </View>
-          <AddressLine line={s.address_label} compact />
-          {value ? (
-            <Text selectable style={styles.code}>
-              {value}
-            </Text>
-          ) : s.status === "active" ? (
-            <Text style={styles.muted}>
-              {!canRead
-                ? "暂无资料查看资格"
-                : failed
-                  ? "密码暂未读到，请刷新重试"
-                  : s.record_status === "active"
-                    ? "暂不可读"
-                    : "已停止展示"}
-            </Text>
-          ) : null}
-          <Text style={styles.muted}>
-            {new Date(s.occurred_at).toLocaleString()} 贡献
-          </Text>
-          <View style={styles.feedback}>
-            <Text>{s.useful_count} 有用</Text>
-            <Text>{s.not_useful_count} 不能用</Text>
-          </View>
-          {s.last_feedback_at ? (
-            <Text style={styles.muted}>
-              最近反馈 {new Date(s.last_feedback_at).toLocaleString()}
-            </Text>
-          ) : null}
-          <View style={styles.actions}>
-            {s.can_correct ? (
-              <Pressable
-                accessibilityRole="button"
-                style={styles.action}
-                disabled={busy}
-                onPress={() =>
-                  router.push({
-                    pathname: "/apartments/contribution",
-                    params: { source_id: s.id },
-                  })
-                }
-              >
-                <Text style={styles.actionLabel}>纠正密码</Text>
-              </Pressable>
-            ) : null}
-            {s.can_withdraw_record ? (
-              <Pressable
-                accessibilityRole="button"
-                style={styles.action}
-                disabled={busy}
-                onPress={() => withdraw(s)}
-              >
-                <Text
-                  style={[styles.actionLabel, { color: tokens.color.danger }]}
-                >
-                  撤回我的贡献
-                </Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              style={styles.action}
-              disabled={busy}
-              onPress={() =>
-                router.push({
-                  pathname: "/",
-                  params: { apartment_id: s.apartment_id },
-                })
-              }
-            >
-              <Text style={styles.actionLabel}>在地图查看</Text>
-            </Pressable>
-          </View>
-        </View>
+        <SharedContributionCard
+          key={s.id}
+          source={s}
+          value={value}
+          canRead={Boolean(canRead)}
+          failed={failed}
+          busy={busy}
+          onCorrect={() =>
+            router.push({
+              pathname: "/apartments/contribution",
+              params: { source_id: s.id },
+            })
+          }
+          onMap={() =>
+            router.push({
+              pathname: "/",
+              params: { apartment_id: s.apartment_id },
+            })
+          }
+        />
       ))}
       <ActionButton
         label={error ? "重新读取" : "刷新记录"}
@@ -278,6 +162,80 @@ export function SharedContributions() {
           onPress={() => void load(next)}
         />
       ) : null}
+    </View>
+  );
+}
+export function SharedContributionCard({
+  source: s,
+  value,
+  canRead,
+  failed = false,
+  busy = false,
+  onCorrect,
+  onMap,
+}: {
+  source: S["ContributionSummary"];
+  value?: string | null;
+  canRead: boolean;
+  failed?: boolean;
+  busy?: boolean;
+  onCorrect: () => void;
+  onMap: () => void;
+}) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.heading}>
+        <Text style={styles.status}>{contributionStatus(s)}</Text>
+        <Text style={styles.muted}>{s.scope_label}</Text>
+      </View>
+      <AddressLine line={s.address_label} compact />
+      {value ? (
+        <Text selectable style={styles.code}>
+          {value}
+        </Text>
+      ) : s.status === "active" ? (
+        <Text style={styles.muted}>
+          {!canRead
+            ? "暂无资料查看资格"
+            : failed
+              ? "密码暂未读到，请刷新重试"
+              : s.record_status === "active"
+                ? "暂不可读"
+                : "已停止展示"}
+        </Text>
+      ) : null}
+      <Text style={styles.muted}>
+        {new Date(s.occurred_at).toLocaleString()} 贡献
+      </Text>
+      <View style={styles.feedback}>
+        <Text>{s.useful_count} 有用</Text>
+        <Text>{s.not_useful_count} 不能用</Text>
+      </View>
+      {s.last_feedback_at ? (
+        <Text style={styles.muted}>
+          最近反馈 {new Date(s.last_feedback_at).toLocaleString()}
+        </Text>
+      ) : null}
+      <View style={styles.actions}>
+        {s.can_correct ? (
+          <Pressable
+            accessibilityRole="button"
+            style={styles.action}
+            disabled={busy}
+            onPress={onCorrect}
+          >
+            <Text style={styles.actionLabel}>纠正密码</Text>
+          </Pressable>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          style={styles.action}
+          disabled={busy}
+          onPress={onMap}
+        >
+          <Text style={styles.actionLabel}>在地图查看</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

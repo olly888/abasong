@@ -94,3 +94,48 @@ it("keeps classified apartments when neighboring buildings omit their classifica
     vi.unstubAllEnvs();
   }
 });
+
+it("uses the closest duplicate roof and nearest apartment order before the reverse lookup budget", async () => {
+  vi.stubEnv("MAPBOX_SEARCH_TOKEN", "pk.TEST");
+  try {
+    const features = [
+      { id: 1, distance: 180 },
+      { id: 2, distance: 40 },
+      { id: 1, distance: 10 },
+      { id: 3, distance: 200.1 },
+      { id: 4, distance: 199.9 },
+    ].map(({ id, distance }) => ({
+      id,
+      geometry: { coordinates: [p.lng, p.lat] },
+      properties: { type: "apartments", tilequery: { distance } },
+    }));
+    const maps = new MapboxNearbyProvider(
+      vi.fn(async () => Response.json({ features })) as typeof fetch,
+    );
+    expect((await maps.buildings(p)).items.map((b) => b.distance_m)).toEqual([
+      10, 40, 199.9,
+    ]);
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+
+it("reports a capped house-only tile result as truncated without inventing apartment classification", async () => {
+  vi.stubEnv("MAPBOX_SEARCH_TOKEN", "pk.TEST");
+  try {
+    const features = Array.from({ length: 50 }, (_, id) => ({
+      id,
+      geometry: { coordinates: [p.lng, p.lat] },
+      properties: {
+        type: id % 2 ? "house" : "detached",
+        tilequery: { distance: id },
+      },
+    }));
+    const maps = new MapboxNearbyProvider(
+      vi.fn(async () => Response.json({ features })) as typeof fetch,
+    );
+    expect(await maps.buildings(p)).toEqual({ items: [], truncated: true });
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

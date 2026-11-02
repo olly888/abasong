@@ -51,7 +51,6 @@ it("exercises real discovery HTTP guards, validation, partial provider failure a
         provide: ApartmentsService,
         useValue: {
           discoverCatalog: async () => [],
-          uncoveredDiscoveryPoints: async (_a: unknown, p: unknown) => p,
           findConfirmedAddress: async () => [],
         },
       },

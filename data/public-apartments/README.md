@@ -39,3 +39,7 @@ The separate iPhone field-review entry embeds the same licensed Woodside subset 
 ## 2026-11-02 核对清单（不自动入库）
 
 pilot-address-inventory.json包含12个公寓地址目标与1个市政负例；原6的许可/几何保持旧记录，新6仅有官方邮政事实、无坐标/边界，runtime_catalog=false。不是新的GeoJSON运行数据，更不含密码。详见docs/technical/A3_公开地址核对与真实截图采集.md。
+
+## 2026-11-02 本地覆盖回归
+
+复用现有6运行条目、其中4处建筑轮廓及Woodside54个屋顶做生产服务／PostGIS检查。外圈观测由已许可轮廓生成；长社区、相邻门牌、来源时效及无效边界使用明确TEST形状，不持久入目录。共79组场景不是79个新公寓或现场通过，新6个研究地址仍未入库。[实际范围](../../docs/technical/A3_附近公寓覆盖与匹配验收.md)。

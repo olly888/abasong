@@ -1,5 +1,15 @@
 # Abasong development status
 
+## Current local delivery — nearby coverage and matching (2026-11-02)
+
+Cloud deployment remains deferred by the user's explicit request. Branch `codex/d1-nearby-coverage`, parent `03f5b0f` (previous batch CI41540914281 PASS). [Coverage evidence](docs/technical/A3_附近公寓覆盖与匹配验收.md).
+
+Discovery and exact postal search now share valid boundary/footprint distance, retaining catalog-point fallback. Expired/future/unverified/invalid geometry cannot expand coverage. Removed pre-address community suppression so independent door numbers remain confirmation candidates; provider features sort by distance before roof dedupe and the existing4-reverse budget. No new DTO/DDL/dependency/native UI or module.
+
+Latest local check215 tests/41 files, lint/types/build PASS; library291 real HTTP/DB plus79 compiled-service/PostGIS coverage cases, address8 and synthetic-KMS/real-PG scenarios PASS. Original6 public runtime entries remain6;4 actual footprint samples have outside-roof observations, Woodside54 roof points each retain one community card. The long-community600m case is TEST geometry, not a field claim. New6 research postal addresses are not ingested. House/provider classification is synthetic; real Mapbox/field scope remains pending.
+
+No new account grant, real/shared password data, provider request, DNS or cloud write. No mobile visuals changed; existing native gesture evidence retains its scope, not repeated as new physical acceptance. Latest combined commit checks are tracked in [D1 integration PR49](https://github.com/olly888/abasong/pull/49); prior green checks do not replace this batch's CI. A3/D1 remain in progress; A4 stays deferred.
+
 ## Current local delivery — OCR quality and review hints (2026-11-02)
 
 **User decision: defer cloud deployment, continue local work.** A4 provisioning, DevWest business migrations and DNS writes are deferred at the user's request. Do not treat the earlier cost proposal as approval or repeatedly request cloud setup. A5 full cellular business acceptance remains dependent on A4; local development continues.
@@ -27,7 +37,7 @@ Approved execution basis: [ADD-20](docs/product/Abasong_V12.1_内测冻结与执
 |---|---|---|
 | A1 | Ordinary withdrawal removed from native/prototype/controller/source contract; old requests404; correction/history/feedback retained. Shared schema manifest includes0008; real readiness missing-version503/restore200 verified. Internal operator stop requires verified aal2 + current DB ops.review + expected version + audited idempotent command, D0-only CLI. | `972e2d9`, PR49 and its exact-head remote CI41408236430 PASS; old stacked PRs retained. |
 | A2 | Unified async local/KMS port,0009 format migration, strict cloud configuration and fixed production-image entrypoint implemented. API/worker built and network-isolated container checks PASS. | Real AWS KMS/task-role and DevWest role/TLS checks remain for authorized A4; A2 local verification and deployment review materials available. |
-| A3 | 12 public address targets (6runtime+6official postal research-only), plus municipal negative control; local OCR parser/review-hint fixes and replay tool,10 actual macOS synthetic images; no new geometry or authorized real OCR set. |New licensed geometry, adjacent/house/Woodside scope;30–50 authorized redacted screenshots and actual error measurements. |
+| A3 | 12 public address targets (6runtime+6official postal research-only), plus municipal negative control; local OCR fixes/replay tool and79 nearby/PostGIS cases over existing6 runtime entries; no new geometry or authorized real OCR set. |New licensed geometry, adjacent/house/Woodside scope;30–50 authorized redacted screenshots and actual error measurements. |
 | A4 | **Deferred by user on2026-11-02**; DevWest business schema not deployed, no AWS resources/DNS changes. | Explicit environment/resource approval, HTTPS API, controlled migrations/roles, two real accounts. |
 | A5 | Existing business iPhone build still needs Mac/Metro. Fieldreview tool is separate from business app. | `com.abasong.pilot` bundled-JS Release + fixed HTTPS API; cellular cold-start end-to-end acceptance. |
 

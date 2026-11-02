@@ -6,6 +6,11 @@ import type { components } from "../../packages/contracts/src/generated";
 type S = components["schemas"];
 type Actor = { userId: string; issuedAt: number };
 interface Service {
+  matchSearchAddress(
+    a: Actor,
+    address: S["SearchAddress"] | null,
+    p: S["Point"],
+  ): Promise<S["Apartment"][]>;
   contributeAddress(
     a: Actor,
     b: S["AddressContributionInput"],
@@ -24,6 +29,7 @@ interface Service {
   ): Promise<S["AccessList"]>;
 }
 import { localTarget } from "../d0/database-target";
+import { verifyNearbyCoverage } from "./verify-nearby-coverage";
 export async function verifyNearby(db: Client, url: string, issuedAt: number) {
   const target = new URL(url),
     guard = new URL(target);
@@ -176,6 +182,7 @@ export async function verifyNearby(db: Client, url: string, issuedAt: number) {
     console.log(
       "PASS: nearby compiled service/PostGIS boundary discovery, direct address sharing, concurrency, idempotency, cross-account read and revoked permission",
     );
+    await verifyNearbyCoverage(db, service, identity);
   } finally {
     await pool.end();
     for (const [key, value] of Object.entries({

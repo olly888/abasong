@@ -11,6 +11,7 @@ import { createEnvelope, ENVELOPE_CRYPTO } from "../encryption/provider";
 import type { EnvelopeCrypto } from "../encryption/envelope";
 import { buildAccessRankingQuery } from "../access/access-ranking.query";
 import { apartmentSearchQuery } from "./apartment-search.query";
+import { apartmentProximityQuery } from "./apartment-proximity.query";
 import {
   automaticMatchBasis,
   automaticMatchPolicy,
@@ -1241,15 +1242,8 @@ export class ApartmentsService {
     return this.tx(a, async (c) => {
       const rows = (
         await c.query(
-          `WITH q AS (SELECT extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography AS g)
-      SELECT a.id,a.name,a.address_line1,a.city,a.state,a.postal_code,a.confidence,
-      extensions.ST_X(a.point::extensions.geometry) AS lng,extensions.ST_Y(a.point::extensions.geometry) AS lat,
-      LEAST(extensions.ST_Distance(a.point,q.g),COALESCE(extensions.ST_Distance(a.boundary::extensions.geography,q.g),'Infinity'::double precision),COALESCE(b.distance,'Infinity'::double precision)) AS distance
-      FROM abasong.apartments a CROSS JOIN q LEFT JOIN LATERAL
-      (SELECT min(extensions.ST_Distance(footprint::extensions.geography,q.g)) AS distance FROM abasong.apartment_buildings WHERE apartment_id=a.id) b ON true
-      WHERE a.status='active' AND (extensions.ST_DWithin(a.point,q.g,200) OR extensions.ST_DWithin(a.boundary::extensions.geography,q.g,200) OR b.distance<=200)
-      ORDER BY distance,a.id LIMIT 20`,
-          [p.lng, p.lat],
+          apartmentProximityQuery,
+          [p.lng, p.lat, 200, 20],
         )
       ).rows;
       return rows.map((r) => ({
@@ -1267,24 +1261,6 @@ export class ApartmentsService {
         classification: "catalog_community",
         requires_address_confirmation: false,
       }));
-    });
-  }
-  async uncoveredDiscoveryPoints(
-    a: VerifiedIdentity,
-    points: Array<{ point: S["Point"]; distance_m: number }>,
-  ) {
-    return this.tx(a, async (c) => {
-      const keep: typeof points = [];
-      for (const b of points) {
-        const covered = await c.query(
-          `SELECT 1 FROM abasong.apartments a WHERE a.status='active' AND (
-        extensions.ST_DWithin(a.boundary::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,1)
-        OR EXISTS(SELECT 1 FROM abasong.apartment_buildings x WHERE x.apartment_id=a.id AND extensions.ST_DWithin(x.footprint::extensions.geography,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,1))) LIMIT 1`,
-          [b.point.lng, b.point.lat],
-        );
-        if (!covered.rowCount) keep.push(b);
-      }
-      return keep;
     });
   }
   private apartmentView(r: {
@@ -1618,12 +1594,8 @@ export class ApartmentsService {
       // Matching a manually selected address requires both its exact canonical
       // postal identity and nearby geometry. Proximity alone never picks a home.
       const found = await c.query(
-        `SELECT id,name,address_line1,city,state,postal_code,confidence,
-        extensions.ST_X(point::extensions.geometry) AS lng,extensions.ST_Y(point::extensions.geometry) AS lat
-        FROM abasong.apartments WHERE status='active'
-        AND extensions.ST_DWithin(point,extensions.ST_SetSRID(extensions.ST_MakePoint($1,$2),4326)::extensions.geography,250)
-        ORDER BY id LIMIT 101`,
-        [point.lng, point.lat],
+        apartmentProximityQuery,
+        [point.lng, point.lat, 250, 101],
       );
       if (found.rows.length > 100) return [];
       const matched = found.rows.filter((r) => addressIdentity(r) === key);

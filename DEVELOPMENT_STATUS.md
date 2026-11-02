@@ -1,5 +1,11 @@
 # Abasong development status
 
+## Latest implementation — radius-edge invalidation and native recovery (2026-11-01)
+
+[Follow-up evidence](docs/technical/D1_紧凑卡片补验与附近查码修正.md). Automatic nearby cards now revalidate source-specific leases and conservative boundary-distance bounds on every fresh precise fix, without waiting for a slow replacement query. Late provider responses cannot renew expired catalog data. Recenter also clears the old candidate address list; manual reading remains locked until recenter. Two added policy tests; final check181/33 PASS. No API/DDL/dependency/grant/cloud changes; previous realDB suites retain their recorded scope.
+
+Actual both-native TEST190m edge → ~22m displacement cleared code/highlight with9s discovery delay; iOS expanded reading retained then recenter cleared old candidates and returned to contribution. Android user confirmed failed-read retry recovered, total21 (exact delta not independently isolated across hot reload); native denied22 unchanged, optional provider failure retained catalog/code, unknown candidate23 unchanged. Slow-switch user follow-up remains separate. Real Mapbox and latest iPhone business/field acceptance remain open; no financial upgrade inferred from permission to continue development. D1 in progress; original previews preserved, no remote push.
+
 ## Latest implementation — compact native follow-up and nearby robustness (2026-11-01)
 
 [Actual acceptance](docs/technical/D1_紧凑卡片补验与附近查码修正.md). Fixed three reproduced regressions: exact GPS equality starved slow discovery under sub-meter drift; temporary candidates duplicated newly registered catalog addresses; absent building.type invalidated the whole Mapbox batch. Fresh precise observations within15m may share a slow nearby result, with conservative200m boundary-distance trimming; this is not arrival or dwell. Active user reading and delayed-code generation checks remain. Native remount/programmatic momentum and Android release-before-snap/wheel event ordering were then repaired. User reported the intermediate blank-neighbor failure, and subsequently confirmed final102/104 content and expand/collapse work; do not hide that regression history.

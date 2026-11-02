@@ -5,6 +5,7 @@ import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { HomeApartmentContent } from "../apartments/HomeApartments";
 import { HomeChrome } from "../components/HomeChrome";
+import { distanceM } from "../apartments/nearby-policy";
 
 type S = components["schemas"];
 // Explicitly synthetic adapter. Real OS observations still drive the very same
@@ -34,6 +35,8 @@ const scenes = [
   "查询失败",
   "无资格",
   "发现慢网",
+  "范围边缘",
+  "地图故障",
 ] as const;
 type Scene = (typeof scenes)[number];
 // Synthetic delayed completions, no real network/account fault injection.
@@ -54,6 +57,7 @@ function delay(signal?: AbortSignal, milliseconds = 9000) {
 }
 function adapter(scene: Scene, onAccessRead: () => void) {
   let reads = 0;
+  let discoveries = 0;
   return {
     canRead: scene !== "无资格",
     read: async (
@@ -61,6 +65,8 @@ function adapter(scene: Scene, onAccessRead: () => void) {
       options: { body?: unknown; signal?: AbortSignal } = {},
     ): Promise<unknown> => {
       if (path.endsWith("/discover/mapbox")) {
+        if (scene === "地图故障")
+          throw new Error("TEST optional map unavailable");
         if (scene === "地址待核对") await delay(options.signal, 4000);
         return {
           items:
@@ -87,6 +93,8 @@ function adapter(scene: Scene, onAccessRead: () => void) {
         };
       }
       if (path.endsWith("/discover")) {
+        if (scene === "范围边缘" && discoveries++ > 0)
+          await delay(options.signal);
         if (scene === "发现慢网") await delay(options.signal, 3000);
         if (scene === "查询失败") throw new Error("TEST lookup unavailable");
         const { point } = options.body as S["ResolveInput"];
@@ -96,25 +104,34 @@ function adapter(scene: Scene, onAccessRead: () => void) {
           Math.abs(point.lng + 118.2437) > 0.002 ||
           Math.abs(point.lat - 34.0522) > 0.002;
         if (scene === "离开慢网" && empty) await delay(options.signal);
-        const list = empty
-          ? []
-          : scene === "多候选" || scene === "快切慢网"
-            ? [
-                apartment,
-                {
-                  ...apartment,
-                  id: "11111111-1111-4111-8111-111111111112",
-                  address_line1: "102 TEST Arrival Ave",
-                  point: { lng: -118.2435, lat: 34.0522 },
-                },
-                {
-                  ...apartment,
-                  id: "11111111-1111-4111-8111-111111111113",
-                  address_line1: "104 TEST Arrival Ave",
-                  point: { lng: -118.2433, lat: 34.0522 },
-                },
-              ]
-            : [apartment];
+        const edgeApartment = {
+          ...apartment,
+          point: { lng: apartment.point.lng, lat: 34.05391 },
+        };
+        const list =
+          scene === "范围边缘"
+            ? distanceM(point, edgeApartment.point) <= 200
+              ? [edgeApartment]
+              : []
+            : empty
+              ? []
+              : scene === "多候选" || scene === "快切慢网"
+                ? [
+                    apartment,
+                    {
+                      ...apartment,
+                      id: "11111111-1111-4111-8111-111111111112",
+                      address_line1: "102 TEST Arrival Ave",
+                      point: { lng: -118.2435, lat: 34.0522 },
+                    },
+                    {
+                      ...apartment,
+                      id: "11111111-1111-4111-8111-111111111113",
+                      address_line1: "104 TEST Arrival Ave",
+                      point: { lng: -118.2433, lat: 34.0522 },
+                    },
+                  ]
+                : [apartment];
         return {
           items: list.map((a, i) => ({
             key: a.id,
@@ -127,7 +144,8 @@ function adapter(scene: Scene, onAccessRead: () => void) {
               postal_code: a.postal_code,
             },
             point: a.point,
-            distance_m: i * 20,
+            distance_m:
+              scene === "范围边缘" ? distanceM(point, a.point) : i * 20,
             classification: "catalog_community",
             requires_address_confirmation: false,
           })),
@@ -152,6 +170,7 @@ function adapter(scene: Scene, onAccessRead: () => void) {
             ? 102
             : 100;
         const lng = apartment.point.lng + (number - 100) * 0.0001;
+        const lat = scene === "范围边缘" ? 34.05391 : apartment.point.lat;
         return {
           apartment_id: path.split("/")[3] ?? apartment.id,
           buildings: [
@@ -162,16 +181,16 @@ function adapter(scene: Scene, onAccessRead: () => void) {
                 coordinates: [
                   [
                     [
-                      [lng - 0.00007, 34.05211],
-                      [lng + 0.00007, 34.05211],
-                      [lng + 0.00007, 34.05229],
-                      [lng - 0.00007, 34.05229],
-                      [lng - 0.00007, 34.05211],
+                      [lng - 0.00007, lat - 0.00009],
+                      [lng + 0.00007, lat - 0.00009],
+                      [lng + 0.00007, lat + 0.00009],
+                      [lng - 0.00007, lat + 0.00009],
+                      [lng - 0.00007, lat - 0.00009],
                     ],
                   ],
                 ],
               },
-              label_point: { lng, lat: apartment.point.lat },
+              label_point: { lng, lat },
               street_number: `TEST${number}`,
               verified_at: new Date().toISOString(),
             },

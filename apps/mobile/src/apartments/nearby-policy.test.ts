@@ -3,6 +3,7 @@ import {
   mergeNearby,
   distanceM,
   nearbyAtCurrentObservation,
+  nearbyFromSnapshots,
   withinNearbyRadius,
 } from "./nearby-policy";
 import {
@@ -20,6 +21,62 @@ const item = (key: string, distance_m: number): C => ({
   distance_m,
   classification: "apartments",
   requires_address_confirmation: true,
+});
+
+it("withdraws an edge recommendation on the next GPS fix while its replacement query is still pending", () => {
+  const now = Date.now();
+  const point = { lng: -118.1, lat: 34.1 };
+  const current = {
+    fix: {
+      coords: {
+        longitude: point.lng,
+        latitude: point.lat + 0.0002,
+        accuracy: 5,
+      },
+      timestamp: now,
+    },
+    approximate: false,
+  };
+  const catalog = {
+    point,
+    until: now + 20000,
+    items: [item("edge", 190), item("close", 20)],
+  };
+  expect(nearbyFromSnapshots(catalog, null, current).map((c) => c.key)).toEqual(
+    ["close"],
+  );
+  expect(catalog.items).toHaveLength(2);
+});
+
+it("expires catalog and provider snapshots independently without reviving an expired catalog from a late provider response", () => {
+  const now = Date.now(),
+    point = { lng: -118.1, lat: 34.1 };
+  const current = {
+    fix: {
+      coords: { longitude: point.lng, latitude: point.lat, accuracy: 5 },
+      timestamp: now,
+    },
+    approximate: false,
+  };
+  const catalog = {
+    point,
+    until: now - 1,
+    items: [item("expired-catalog", 0)],
+  };
+  const provider = {
+    point,
+    until: now + 60000,
+    items: [item("temporary", 25)],
+  };
+  expect(
+    nearbyFromSnapshots(catalog, provider, current).map((c) => c.key),
+  ).toEqual(["temporary"]);
+  expect(
+    nearbyFromSnapshots(catalog, { ...provider, until: now - 1 }, current),
+  ).toEqual([]);
+  expect(
+    nearbyFromSnapshots(null, provider, { ...current, approximate: true }),
+  ).toEqual([]);
 });
 it("orders by distance without password metadata and deduplicates identities", () => {
   expect(

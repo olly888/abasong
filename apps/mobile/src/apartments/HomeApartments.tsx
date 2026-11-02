@@ -1,14 +1,14 @@
 import { NearbyCarousel } from "./NearbyCarousel";
 import { compactCardHeight, cardHandleHeight } from "./card-layout";
 import {
-  mergeNearby,
   distanceM,
   sameDiscoveryObservation,
   nearbyAtCurrentObservation,
-  withinNearbyRadius,
+  nearbyFromSnapshots,
   isFreshDiscoveryObservation,
   observationPoint,
   type DiscoveryObservation,
+  type NearbySnapshot,
 } from "./nearby-policy";
 import { setNearbyContribution } from "./nearby-contribution";
 import { AddressLine } from "./AddressLine";
@@ -180,19 +180,13 @@ export function HomeApartmentContent({
     stream = useRef<AbortController | null>(null),
     disposeLookup = useRef<(() => void) | null>(null),
     selectionRef = useRef<S["Apartment"] | null>(null),
+    providerSelectionKey = useRef<string | null>(null),
     lastFixAt = useRef(0),
     latestObservation = useRef<DiscoveryObservation | null>(null),
     manualLocked = useRef(!!apartmentId || !!initialDestination.current);
-  const catalogRef = useRef<S["NearbyCandidate"][]>([]),
-    providerRef = useRef<{
-      items: S["NearbyCandidate"][];
-      until: number;
-      point: S["Point"];
-    } | null>(null);
-  const discoveryAnchor = useRef<{ point: S["Point"]; at: number } | null>(
-      null,
-    ),
-    providerLast = useRef(0),
+  const catalogRef = useRef<NearbySnapshot | null>(null),
+    providerRef = useRef<NearbySnapshot | null>(null);
+  const providerLast = useRef(0),
     providerEpoch = useRef(0);
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
@@ -272,8 +266,12 @@ export function HomeApartmentContent({
     setNearbyItems(items);
     setCandidates(items.flatMap((c) => (c.apartment ? [c.apartment] : [])));
     setLookupState(items.length ? "nearby" : "empty");
-    const current = selectionRef.current?.id;
-    if (current && items.some((c) => c.apartment?.id === current)) return;
+    const current = selectionRef.current?.id ?? providerSelectionKey.current;
+    if (
+      current &&
+      items.some((c) => c.key === current || c.apartment?.id === current)
+    )
+      return;
     if (items[0]) void chooseNearby(items[0], false);
     else invalidateAutomaticCard();
   }
@@ -282,33 +280,26 @@ export function HomeApartmentContent({
   >(() => {});
   onLookup.current = (fix, lookup) => {
     if (Date.parse(lookup.expires_at) <= Date.now()) return;
-    discoveryAnchor.current = {
+    catalogRef.current = {
+      items: lookup.items,
       point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
-      at: Date.now(),
+      until: Date.parse(lookup.expires_at),
     };
-    catalogRef.current = lookup.items;
     const cache = providerRef.current;
     if (
       cache &&
       (cache.until <= Date.now() ||
-        distanceM(cache.point, discoveryAnchor.current.point) > 50)
+        distanceM(cache.point, catalogRef.current.point) > 50)
     )
       providerRef.current = null;
-    const currentPoint = latestObservation.current
-      ? observationPoint(latestObservation.current)
-      : discoveryAnchor.current.point;
-    updateNearby(
-      mergeNearby(
-        lookup.items,
-        providerRef.current
-          ? withinNearbyRadius(
-              providerRef.current.items,
-              providerRef.current.point,
-              currentPoint,
-            )
-          : [],
-      ),
-    );
+    if (latestObservation.current)
+      updateNearby(
+        nearbyFromSnapshots(
+          catalogRef.current,
+          providerRef.current,
+          latestObservation.current,
+        ),
+      );
     // Reuse the unexpired in-memory provider response; no stationary 30s poll.
     if (providerRef.current || Date.now() - providerLast.current < 30000)
       return;
@@ -330,7 +321,6 @@ export function HomeApartmentContent({
           manualLocked.current ||
           epoch !== providerEpoch.current ||
           Date.parse(extra.expires_at) <= Date.now() ||
-          !discoveryAnchor.current ||
           !latestObservation.current ||
           !isFreshDiscoveryObservation(latestObservation.current) ||
           distanceM(observationPoint(latestObservation.current), {
@@ -345,19 +335,11 @@ export function HomeApartmentContent({
             until: Date.parse(extra.expires_at),
             point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
           };
-          const currentPoint = observationPoint(latestObservation.current!);
           updateNearby(
-            mergeNearby(
-              withinNearbyRadius(
-                catalogRef.current,
-                discoveryAnchor.current!.point,
-                currentPoint,
-              ),
-              withinNearbyRadius(
-                extra.items,
-                { lng: fix.coords.longitude, lat: fix.coords.latitude },
-                currentPoint,
-              ),
+            nearbyFromSnapshots(
+              catalogRef.current,
+              providerRef.current,
+              latestObservation.current,
             ),
           );
         }
@@ -373,6 +355,7 @@ export function HomeApartmentContent({
       return select(c.apartment, manual ? "manual" : "automatic");
     }
     generation.current++;
+    providerSelectionKey.current = c.key;
     selectionRef.current = null;
     setSelected(null);
     setRecords([]);
@@ -391,13 +374,19 @@ export function HomeApartmentContent({
   }
   const onFailure = useRef<() => void>(() => {});
   onFailure.current = () => {
+    if (manualLocked.current) return;
     providerEpoch.current++;
+    catalogRef.current = null;
+    providerRef.current = null;
+    setNearbyItems([]);
+    setCandidates([]);
     invalidateAutomaticCard();
     setLookupState("error");
   };
   function invalidateAutomaticCard() {
     if (manualLocked.current) return;
     setProviderSelected(null);
+    providerSelectionKey.current = null;
     generation.current++;
     selectionRef.current = null;
     setSelected(null);
@@ -452,6 +441,8 @@ export function HomeApartmentContent({
     disposeLookup.current = () => queue.dispose();
     const resetUnconfirmedLookup = () => {
       providerEpoch.current++;
+      catalogRef.current = null;
+      providerRef.current = null;
       queue.invalidate();
       invalidateAutomaticCard();
       setCandidates([]);
@@ -461,6 +452,10 @@ export function HomeApartmentContent({
     const fail = (reason: string) => {
       if (!valid()) return;
       providerEpoch.current++;
+      catalogRef.current = null;
+      providerRef.current = null;
+      setNearbyItems([]);
+      setCandidates([]);
       queue.invalidate();
       setLocating(false);
       setPoint(undefined);
@@ -497,11 +492,16 @@ export function HomeApartmentContent({
       } else if (
         valid() &&
         !manualLocked.current &&
-        !!discoveryAnchor.current &&
-        Date.now() - discoveryAnchor.current.at > 20000
-      ) {
-        resetUnconfirmedLookup();
-      }
+        latestObservation.current &&
+        (catalogRef.current || providerRef.current)
+      )
+        updateNearby(
+          nearbyFromSnapshots(
+            catalogRef.current,
+            providerRef.current,
+            latestObservation.current,
+          ),
+        );
     }, 2000);
     controller.signal.addEventListener(
       "abort",
@@ -551,29 +551,33 @@ export function HomeApartmentContent({
             accuracy < 0 ||
             accuracy > 100
           ) {
-            providerEpoch.current++;
-            queue.invalidate();
-            invalidateAutomaticCard();
-            setNearbyItems([]);
-            setCandidates([]);
+            resetUnconfirmedLookup();
             setLocationNotice("位置不够准确");
             return;
           }
           if (
             !manualLocked.current &&
-            discoveryAnchor.current &&
-            distanceM(discoveryAnchor.current.point, p) > 200
+            catalogRef.current &&
+            distanceM(catalogRef.current.point, p) > 200
           )
             resetUnconfirmedLookup();
           if (approximate) {
-            queue.invalidate();
-            invalidateAutomaticCard();
-            setNearbyItems([]);
-            setCandidates([]);
+            resetUnconfirmedLookup();
             setLocationNotice("请开启精确位置，或搜索地址");
             return;
           }
-          if (!manualLocked.current) queue.offer({ fix, approximate });
+          if (!manualLocked.current) {
+            if (catalogRef.current || providerRef.current)
+              updateNearby(
+                nearbyFromSnapshots(catalogRef.current, providerRef.current, {
+                  fix,
+                  approximate,
+                }),
+              );
+            if (!catalogRef.current && !providerRef.current)
+              setNotice("正在查找公寓");
+            queue.offer({ fix, approximate });
+          }
         },
         fail,
         controller.signal,
@@ -599,8 +603,11 @@ export function HomeApartmentContent({
     manualLocked.current = false;
     providerLast.current = 0;
     providerRef.current = null;
+    catalogRef.current = null;
     providerEpoch.current++;
     setNearbyItems([]);
+    setCandidates([]);
+    setLookupState("loading");
     invalidateAutomaticCard();
     if (blocked) {
       void openLocationSettings();
@@ -626,6 +633,7 @@ export function HomeApartmentContent({
       setTemporary(undefined);
     }
     setProviderSelected(null);
+    providerSelectionKey.current = null;
     const version = ++generation.current;
     setLocating(false);
     selectionRef.current = p;

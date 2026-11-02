@@ -111,3 +111,27 @@ export function nearbyAtCurrentObservation(
     ),
   };
 }
+
+export type NearbySnapshot = {
+  items: S["NearbyCandidate"][];
+  point: S["Point"];
+  until: number;
+};
+
+// Revalidate visible automatic recommendations on every fresh fix, not only
+// when another network lookup completes. Each source retains its own origin
+// and lease; a late optional provider response cannot renew catalog data.
+export function nearbyFromSnapshots(
+  catalog: NearbySnapshot | null,
+  provider: NearbySnapshot | null,
+  observation: DiscoveryObservation,
+) {
+  if (!isFreshDiscoveryObservation(observation)) return [];
+  const current = observationPoint(observation),
+    now = Date.now();
+  const visible = (snapshot: NearbySnapshot | null) =>
+    snapshot && snapshot.until > now
+      ? withinNearbyRadius(snapshot.items, snapshot.point, current)
+      : [];
+  return mergeNearby(visible(catalog), visible(provider));
+}

@@ -25,7 +25,7 @@ export function HomeArrivalPanel(p: {
     return (
       <View style={s.quiet}>
         <ActivityIndicator color={tokens.color.brandPrimary} />
-        <Text style={s.muted}>正在定位</Text>
+        <Text style={s.muted}>{p.message ?? "正在定位"}</Text>
       </View>
     );
   if (p.state === "location" || p.state === "error")

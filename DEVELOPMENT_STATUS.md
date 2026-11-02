@@ -1,13 +1,21 @@
 # Abasong development status
 
+## Current A2 implementation — cloud encryption/runtime preparation (2026-11-02)
+
+Branch `codex/d1-kms-runtime`, parent A1 `972e2d9`. [A2 report](docs/technical/A2_KMS与云运行准备验收.md), [resource/cost review](docs/technical/A2_资源费用与账号准备.md), [deployment runbook](deploy/pilot-dev/README.md). Local A2 implementation is under final integration review; latest remote CI is tracked by its own PR, not borrowed from A1.
+
+193 tests/37 files + lint/types/build PASS;291 real libraryHTTP/DB checks plus compiled KMS-adapter/real-PG private/shared/import/correction/isolation/rollback scenarios PASS (synthetic KMS gateway, no AWS calls). D0 now9 migrations/52tables PASS; import120/auth54/ranking18/smoke PASS. API and worker official digest-pinned nonroot images actually built, then exercised without network/host ports using synthetic config: missing/relabel refused, live200/ready503/auth401 PASS. Cloud manifest is offline9 checksums; read-only preflight has no apply option. No native UI/module changes in A2; A1 dual-native presentation/callback evidence retains its scope. No cloud migration, live KMS, DNS write, billing or new real-account grant.
+
+Public DNS: Spaceship nameservers, no api-dev A/CNAME; account edit control remains to verify. AWS material proposes ~$60–80/month at low load with a$100 alert budget (not a hard cap), excluding other providers. Await account/resource/environment approval before creating resources. Mapbox service restoration remains a separate user-side billing dependency. Continue A3 public evidence/authorized sample preparation while these remain pending; D1 is not complete.
+
 ## Current delivery baseline — A1 pilot readiness (2026-11-01)
 
 Approved execution basis: [ADD-20](docs/product/Abasong_V12.1_内测冻结与执行计划.md) and [master plan](docs/Abasong_V12.1_项目开发与验收总计划.md). Integration branch: `codex/d1-pilot-readiness`, starting from `5e4e731`. Older sections below are historical evidence and do not supersede this table.
 
 | Batch | Actual state | Remaining exit |
 |---|---|---|
-| A1 | Ordinary withdrawal removed from native/prototype/controller/source contract; old requests404; correction/history/feedback retained. Shared schema manifest includes0008; real readiness missing-version503/restore200 verified. Internal operator stop requires verified aal2 + current DB ops.review + expected version + audited idempotent command, D0-only CLI. | Integration commit/PR and latest-head CI are being completed; see acceptance report. |
-| A2 | Local-only envelope still blocks production; cloud encryption/runtime not delivered. | Unified async crypto/KMS, fail-closed tests, container/environment/role/migration/rollback review. |
+| A1 | Ordinary withdrawal removed from native/prototype/controller/source contract; old requests404; correction/history/feedback retained. Shared schema manifest includes0008; real readiness missing-version503/restore200 verified. Internal operator stop requires verified aal2 + current DB ops.review + expected version + audited idempotent command, D0-only CLI. | `972e2d9`, PR49 and its exact-head remote CI41408236430 PASS; old stacked PRs retained. |
+| A2 | Unified async local/KMS port,0009 format migration, strict cloud configuration and fixed production-image entrypoint implemented. API/worker built and network-isolated container checks PASS. | Real AWS KMS/task-role and DevWest role/TLS checks remain for authorized A4; A2 local verification and deployment review materials available. |
 | A3 | Existing6 public apartment samples; synthetic OCR fixtures are not a real authorized carrier validation set. |10–20 sourced public targets;30–50 authorized redacted screenshots and error measurements. |
 | A4 | DevWest identity exists; business schema not deployed. AWS account, Mapbox standard access, DNS/control and cost approval pending. | Explicit environment/resource approval, HTTPS API, controlled migrations/roles, two real accounts. |
 | A5 | Existing business iPhone build still needs Mac/Metro. Fieldreview tool is separate from business app. | `com.abasong.pilot` bundled-JS Release + fixed HTTPS API; cellular cold-start end-to-end acceptance. |

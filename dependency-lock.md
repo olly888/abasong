@@ -93,3 +93,5 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 
 
 2026-11-01 ADD-19 本人共享管理：无新依赖、锁文件、原生模块或系统权限。复用Expo58/React Native0.88、现有加密与pg事务；新增0008仅本机D0/一次性库。纠正返回用既有Expo Router dismissTo和非敏感revision刷新“我共享的”；effect重建取消令牌避免开发刷新遗留aborted状态。双端现有原生包接收JS，不声称本批重新原生编译。原生功能验证与Mapbox401、物理设备/现场分开。
+
+2026-11-02 A2云加密与容器：新增服务端 @aws-sdk/client-kms3.1161.0（官方npm，Node>=20，适配Node24），主pnpm锁同步；无移动端/原生模块变化。新增无外部依赖的@abasong/runtime共享生产环境校验。Node容器24.22.1-bookworm-slim固定官方manifest digest be8204d4bd327363357f532187b752ff62759c31bedf98e9e18fc08c9cbd605c，pnpm10.32.1/frozen-lockfile；API/worker已实际构建与非root断网运行。KMS只用SDK任务角色链，不保存AWS长期凭据；云镜像固定入口不能改环境标签退回D0。KMS适配、私存/共享/导入真实PG集成使用合成网关，不声称真实AWS已验收。

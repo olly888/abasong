@@ -6,7 +6,8 @@ import type { components } from "@abasong/contracts";
 import type { VerifiedIdentity } from "../common/request-context";
 import { ApiError } from "../common/api-error";
 import { SensitiveDatabase } from "../apartments/sensitive-database";
-import { LocalEnvelope } from "../apartments/envelope";
+import { createEnvelope, ENVELOPE_CRYPTO } from "../encryption/provider";
+import type { EnvelopeCrypto } from "../encryption/envelope";
 import { ApartmentsService } from "../apartments/apartments.service";
 import { importPolicy } from "./import-policy";
 type S = components["schemas"];
@@ -154,10 +155,11 @@ type Row = {
 };
 @Injectable()
 export class ImportsService {
-  private readonly crypto = new LocalEnvelope();
   constructor(
     @Inject(SensitiveDatabase) private readonly db: SensitiveDatabase,
     @Inject(ApartmentsService) private readonly apartments: ApartmentsService,
+    @Inject(ENVELOPE_CRYPTO)
+    private readonly crypto: EnvelopeCrypto = createEnvelope(),
   ) {}
   private hash(body: unknown) {
     return createHmac("sha256", this.crypto.hmacKey("import-request"))
@@ -224,7 +226,7 @@ export class ImportsService {
       throw new ApiError(422, "IMPORT_EXPIRED", "草稿已过期");
     return r;
   }
-  private open(r: Row) {
+  private async open(r: Row) {
     return this.crypto.open<Body>(
       r.payload,
       `import:${r.owner_id}:${r.id}:${r.version}`,
@@ -233,7 +235,7 @@ export class ImportsService {
   private async save(c: PoolClient, r: Row, b: Body) {
     r.version++;
     r.updated_at = new Date();
-    const payload = this.crypto.seal(
+    const payload = await this.crypto.seal(
       b,
       `import:${r.owner_id}:${r.id}:${r.version}`,
     );
@@ -382,7 +384,11 @@ export class ImportsService {
         )
       ).rows;
       return {
-        items: rs.slice(0, b.limit).map((r) => this.view(r, this.open(r))),
+        items: await Promise.all(
+          rs
+            .slice(0, b.limit)
+            .map(async (r) => this.view(r, await this.open(r))),
+        ),
         next_cursor: rs.length > b.limit ? rs[b.limit - 1]!.id : null,
       };
     });
@@ -429,7 +435,7 @@ export class ImportsService {
       if (old) {
         if (old.create_hmac.toString("hex") !== h) throw conflict();
         const r = await this.get(c, a, old.id);
-        return this.view(r, this.open(r));
+        return this.view(r, await this.open(r));
       }
       if (
         Number(
@@ -455,7 +461,7 @@ export class ImportsService {
             Buffer.from(h, "hex"),
             policy.version,
             b.mode,
-            this.crypto.seal(data, `import:${a.userId}:${rid}:1`),
+            await this.crypto.seal(data, `import:${a.userId}:${rid}:1`),
             policy.draft_ttl_seconds,
           ],
         )
@@ -474,7 +480,7 @@ export class ImportsService {
   async detail(a: VerifiedIdentity, rid: string) {
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid);
-      return this.view(r, this.open(r));
+      return this.view(r, await this.open(r));
     });
   }
   async sources(a: VerifiedIdentity, rid: string, q: unknown) {
@@ -492,7 +498,7 @@ export class ImportsService {
     const input = parse(page, q);
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r);
+        b = await this.open(r);
       const rows = b[kind]
         .filter((x) => !input.cursor || x.id > input.cursor)
         .sort((x, y) => x.id.localeCompare(y.id));
@@ -522,7 +528,7 @@ export class ImportsService {
     const input = parse(z.object({ expected_version: v, mode }).strict(), body);
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r);
+        b = await this.open(r);
       if (this.replay(b, "mode", key, input)) return this.view(r, b);
       this.writable(r);
       this.revision(r, input.expected_version);
@@ -547,7 +553,7 @@ export class ImportsService {
     const input = parse(source, body);
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r),
+        b = await this.open(r),
         policy = await importPolicy(c);
       const replay = this.replay(b, "source", key, input);
       if (replay) {
@@ -638,7 +644,7 @@ export class ImportsService {
     parse(id, sid);
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r);
+        b = await this.open(r);
       const replay = this.replay(b, "extract:" + sid, key, input);
       if (replay)
         return {
@@ -698,7 +704,7 @@ export class ImportsService {
     const input = parse(edit, body);
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r),
+        b = await this.open(r),
         x = this.find(b, cid);
       if (this.replay(b, "edit:" + cid, key, input)) return x;
       this.writable(r);
@@ -728,7 +734,7 @@ export class ImportsService {
     const input = parse(confirm, body);
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r);
+        b = await this.open(r);
       const replay = this.replay(b, "confirm", key, input);
       if (replay)
         return {
@@ -773,7 +779,7 @@ export class ImportsService {
     );
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r),
+        b = await this.open(r),
         x = this.find(b, cid);
       if (this.replay(b, "confirmOne:" + cid, key, input)) return x;
       this.writable(r);
@@ -790,7 +796,7 @@ export class ImportsService {
     const input = parse(version, body);
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r);
+        b = await this.open(r);
       if (this.replay(b, "cancel", key, input)) return this.view(r, b);
       this.revision(r, input.expected_version);
       this.writable(r);
@@ -851,7 +857,7 @@ export class ImportsService {
     const input = parse(commit, body);
     const prep = await this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r),
+        b = await this.open(r),
         replay = this.replay(b, "commit", key, input);
       if (replay)
         return { ids: replay, generation: r.generation, replay: true };
@@ -920,7 +926,7 @@ export class ImportsService {
           try {
             await this.tx(a, async (c) => {
               const r = await this.get(c, a, rid),
-                b = this.open(r);
+                b = await this.open(r);
               if (r.generation !== prep.generation || r.state === "cancelled")
                 return;
               const x = this.find(b, cid),
@@ -994,7 +1000,7 @@ export class ImportsService {
           } catch (e) {
             await this.tx(a, async (c) => {
               const r = await this.get(c, a, rid),
-                b = this.open(r);
+                b = await this.open(r);
               if (r.generation !== prep.generation || r.state === "cancelled")
                 return;
               const p = this.plan(b, cid);
@@ -1019,7 +1025,7 @@ export class ImportsService {
     }
     return this.tx(a, async (c) => {
       const r = await this.get(c, a, rid),
-        b = this.open(r);
+        b = await this.open(r);
       if (!prep.replay && r.state !== "cancelled") {
         r.state = b.candidates.some((x) => x.state === "failed")
           ? "partial_failed"

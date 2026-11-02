@@ -1,6 +1,7 @@
 import { prepareContributionBackfill } from "./verify-contribution-backfill";
 import { verifyContributionManagement } from "./verify-contribution-management";
 import { verifyNearby } from "./verify-nearby";
+import { verifyKmsServices } from "./verify-kms-services";
 import { createContributionAttempt } from "../../apps/mobile/src/apartments/contribution-attempt";
 import { verifySearchMatching } from "./verify-search-matching";
 import assert from "node:assert/strict";
@@ -132,6 +133,7 @@ async function main() {
       readFileSync("database/migrations/0008_contribution_sources.sql", "utf8"),
     );
     await verifyBackfill();
+    await db.query(readFileSync("database/migrations/0009_kms_envelopes.sql", "utf8"));
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,
@@ -1251,6 +1253,7 @@ async function main() {
     manual.finish(true);
     manual.dispose();
     await verifyContributionManagement(db, req, token, base, sensitive.href, admin.href, issuer);
+    await verifyKmsServices(db,sensitive.href,issued);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

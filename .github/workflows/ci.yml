@@ -53,6 +53,12 @@ jobs:
       - run: ./scripts/dev verify:import-api
       - run: ./scripts/dev verify:access-ranking
       - run: ./scripts/dev smoke:services
+      - name: Check cloud manifest and production containers
+        run: |
+          ./scripts/dev cloud:preflight --manifest
+          docker build --target api -t abasong-api:ci .
+          docker build --target worker -t abasong-worker:ci .
+          ./scripts/dev exec node scripts/cloud/verify-containers.mjs abasong-api:ci abasong-worker:ci
       - name: Bundle native JavaScript
         run: ./scripts/dev --filter @abasong/mobile exec expo export --platform ios --output-dir dist/ios
       - name: Bundle Android JavaScript

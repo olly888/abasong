@@ -1,4 +1,6 @@
 import { assertSchemaReady } from "./database/schema-readiness";
+import { createEnvelope, ENVELOPE_CRYPTO } from "./encryption/provider";
+import { assertRuntimeEnvironment } from "@abasong/runtime";
 import "reflect-metadata";
 import { NearbyController } from "./nearby/nearby.controller";
 import { NearbyService } from "./nearby/nearby.service";
@@ -57,6 +59,7 @@ class HealthController {
     NearbyController,
   ],
   providers: [
+    { provide: ENVELOPE_CRYPTO, useFactory: createEnvelope },
     Database,
     MeService,
     TokenVerifier,
@@ -78,6 +81,7 @@ class HealthController {
 })
 class AppModule {}
 async function main() {
+  assertRuntimeEnvironment("api");
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL required");
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ["error", "warn"],

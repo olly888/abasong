@@ -7,7 +7,8 @@ import { addressIdentity } from "@abasong/contracts";
 import type { VerifiedIdentity } from "../common/request-context";
 import { ApiError } from "../common/api-error";
 import { SensitiveDatabase } from "./sensitive-database";
-import { LocalEnvelope } from "./envelope";
+import { createEnvelope, ENVELOPE_CRYPTO } from "../encryption/provider";
+import type { EnvelopeCrypto } from "../encryption/envelope";
 import { buildAccessRankingQuery } from "../access/access-ranking.query";
 import { apartmentSearchQuery } from "./apartment-search.query";
 import {
@@ -107,9 +108,10 @@ function parse<T>(schema: z.ZodType<T>, body: unknown): T {
 }
 @Injectable()
 export class ApartmentsService {
-  private readonly crypto = new LocalEnvelope();
   constructor(
     @Inject(SensitiveDatabase) private readonly db: SensitiveDatabase,
+    @Inject(ENVELOPE_CRYPTO)
+    private readonly crypto: EnvelopeCrypto = createEnvelope(),
   ) {}
   private async tx<T>(
     actor: VerifiedIdentity,
@@ -164,8 +166,11 @@ export class ApartmentsService {
   ) {
     return `${kind}:${r.owner_id}:${r.id}:${r.version}`;
   }
-  private entryView(r: EntryRow): S["LibraryEntry"] {
-    const data = this.crypto.open<EntryBody>(r.payload, this.aad("entry", r));
+  private async entryView(r: EntryRow): Promise<S["LibraryEntry"]> {
+    const data = await this.crypto.open<EntryBody>(
+      r.payload,
+      this.aad("entry", r),
+    );
     return {
       id: r.id,
       apartment_id: r.apartment_id,
@@ -176,11 +181,14 @@ export class ApartmentsService {
       updated_at: r.updated_at.toISOString(),
     };
   }
-  private recordView(r: RecordRow): S["PrivateRecord"] {
+  private async recordView(r: RecordRow): Promise<S["PrivateRecord"]> {
     return {
       id: r.id,
       entry_id: r.entry_id,
-      ...this.crypto.open<RecordBody>(r.payload, this.aad("private", r)),
+      ...(await this.crypto.open<RecordBody>(
+        r.payload,
+        this.aad("private", r),
+      )),
       version: r.version,
       updated_at: r.updated_at.toISOString(),
     };
@@ -295,7 +303,9 @@ export class ApartmentsService {
         )
       ).rows;
       return {
-        items: rows.slice(0, input.limit).map((r) => this.entryView(r)),
+        items: await Promise.all(
+          rows.slice(0, input.limit).map((r) => this.entryView(r)),
+        ),
         next_cursor:
           rows.length > input.limit ? rows[input.limit - 1]!.id : null,
       };
@@ -311,8 +321,8 @@ export class ApartmentsService {
         )
       ).rows;
       return {
-        entry: this.entryView(e),
-        records: rows.map((r) => this.recordView(r)),
+        entry: await this.entryView(e),
+        records: await Promise.all(rows.map((r) => this.recordView(r))),
       };
     });
   }
@@ -367,7 +377,7 @@ export class ApartmentsService {
           if (old)
             return {
               object: old.id,
-              result: this.entryView(await this.entry(c, a, old.id)),
+              result: await this.entryView(await this.entry(c, a, old.id)),
             };
         }
         if (
@@ -382,17 +392,17 @@ export class ApartmentsService {
         )
           throw new ApiError(422, "LIBRARY_LIMIT", "保存数量已达当前上限");
         const rid = randomUUID(),
-          payload = this.crypto.seal(data, `entry:${a.userId}:${rid}:1`);
+          payload = await this.crypto.seal(data, `entry:${a.userId}:${rid}:1`);
         await c.query(
           "INSERT INTO abasong.personal_apartments(id,owner_id,apartment_id,payload) VALUES($1,$2,$3,$4)",
           [rid, a.userId, b.apartment_id ?? null, payload],
         );
         return {
           object: rid,
-          result: this.entryView(await this.entry(c, a, rid)),
+          result: await this.entryView(await this.entry(c, a, rid)),
         };
       },
-      async (rid) => this.entryView(await this.entry(c, a, rid)),
+      async (rid) => await this.entryView(await this.entry(c, a, rid)),
     );
   }
   async patch(
@@ -413,8 +423,8 @@ export class ApartmentsService {
         async () => {
           const e = await this.entry(c, a, rid, true);
           if (e.version !== b.expected_version) throw conflict();
-          const old = this.entryView(e),
-            payload = this.crypto.seal(
+          const old = await this.entryView(e),
+            payload = await this.crypto.seal(
               {
                 name: b.name ?? old.name,
                 address: old.address,
@@ -428,10 +438,10 @@ export class ApartmentsService {
           );
           return {
             object: rid,
-            result: this.entryView(await this.entry(c, a, rid)),
+            result: await this.entryView(await this.entry(c, a, rid)),
           };
         },
-        async (rid) => this.entryView(await this.entry(c, a, rid)),
+        async (rid) => await this.entryView(await this.entry(c, a, rid)),
       ),
     );
   }
@@ -479,15 +489,20 @@ export class ApartmentsService {
             [a.userId, eid],
           )
         ).rows;
-        const same = rows.find((r) => {
-          const old = this.recordView(r);
-          return old.value === b.value && old.scope_label === b.scope_label;
-        });
-        if (same) return { object: same.id, result: this.recordView(same) };
+        let same: RecordRow | undefined;
+        for (const row of rows) {
+          const old = await this.recordView(row);
+          if (old.value === b.value && old.scope_label === b.scope_label) {
+            same = row;
+            break;
+          }
+        }
+        if (same)
+          return { object: same.id, result: await this.recordView(same) };
         if (rows.length >= 100)
           throw new ApiError(422, "RECORD_LIMIT", "此公寓记录已达当前上限");
         const rid = randomUUID(),
-          payload = this.crypto.seal(
+          payload = await this.crypto.seal(
             { ...b, note: b.note ?? "" },
             `private:${a.userId}:${rid}:1`,
           );
@@ -497,10 +512,10 @@ export class ApartmentsService {
         );
         return {
           object: rid,
-          result: this.recordView(await this.record(c, a, rid)),
+          result: await this.recordView(await this.record(c, a, rid)),
         };
       },
-      async (rid) => this.recordView(await this.record(c, a, rid)),
+      async (rid) => await this.recordView(await this.record(c, a, rid)),
     );
   }
   async patchRecord(
@@ -521,7 +536,7 @@ export class ApartmentsService {
         async () => {
           const r = await this.record(c, a, rid);
           if (r.version !== b.expected_version) throw conflict();
-          const payload = this.crypto.seal(
+          const payload = await this.crypto.seal(
             { value: b.value, scope_label: b.scope_label, note: b.note ?? "" },
             `private:${a.userId}:${rid}:${r.version + 1}`,
           );
@@ -531,10 +546,10 @@ export class ApartmentsService {
           );
           return {
             object: rid,
-            result: this.recordView(await this.record(c, a, rid)),
+            result: await this.recordView(await this.record(c, a, rid)),
           };
         },
-        async (rid) => this.recordView(await this.record(c, a, rid)),
+        async (rid) => await this.recordView(await this.record(c, a, rid)),
       ),
     );
   }
@@ -557,7 +572,7 @@ export class ApartmentsService {
             "APARTMENT_REVIEW_REQUIRED",
             "请先核对并收录这栋公寓，再共享",
           );
-        const value = this.recordView(r);
+        const value = await this.recordView(r);
         return this.contributeTx(
           c,
           a,
@@ -640,7 +655,7 @@ export class ApartmentsService {
         let r = (
           await c.query(
             "SELECT id,contributed_at,status,(expires_at IS NOT NULL AND expires_at<=now()) AS expired FROM abasong.access_records WHERE apartment_id=$1 AND scope_key=$2 AND hmac_key_version=$3 AND dedup_hmac=$4",
-            [aid, scopeKey, "local-v1", hash],
+            [aid, scopeKey, this.crypto.hmacVersion, hash],
           )
         ).rows[0];
         let outcome: S["ContributionResult"]["outcome"] =
@@ -649,11 +664,19 @@ export class ApartmentsService {
           const recordId = randomUUID();
           r = (
             await c.query(
-              "INSERT INTO abasong.access_records(id,apartment_id,contributor_id,method,scope_key,scope_label,dedup_hmac,hmac_key_version,source_attested_at,status) VALUES($1,$2,$3,'keypad',$4,$5,$6,'local-v1',now(),'active') RETURNING id,contributed_at,status",
-              [recordId, aid, a.userId, scopeKey, label, hash],
+              "INSERT INTO abasong.access_records(id,apartment_id,contributor_id,method,scope_key,scope_label,dedup_hmac,hmac_key_version,source_attested_at,status) VALUES($1,$2,$3,'keypad',$4,$5,$6,$7,now(),'active') RETURNING id,contributed_at,status",
+              [
+                recordId,
+                aid,
+                a.userId,
+                scopeKey,
+                label,
+                hash,
+                this.crypto.hmacVersion,
+              ],
             )
           ).rows[0];
-          const envelope = this.crypto.seal(
+          const envelope = await this.crypto.seal(
             { value: b.value },
             `shared:${recordId}:1`,
           );
@@ -665,8 +688,8 @@ export class ApartmentsService {
               Buffer.from(envelope.body[0]!, "base64"),
               Buffer.from(envelope.body[2]!, "base64"),
               Buffer.from(JSON.stringify(envelope.wrapped)),
-              "local-development",
-              "local-envelope-v1",
+              this.crypto.keyId,
+              envelope.format,
             ],
           );
           outcome = "created_active";
@@ -800,8 +823,8 @@ export class ApartmentsService {
           ).rows[0];
           if (!r) continue;
           if (
-            r.cipher_version !== "local-envelope-v1" ||
-            r.kms_key_id !== "local-development"
+            r.cipher_version !== this.crypto.format ||
+            r.kms_key_id !== this.crypto.keyId
           )
             throw new ApiError(
               503,
@@ -810,6 +833,7 @@ export class ApartmentsService {
             );
           const envelope = {
             format: r.cipher_version,
+            keyId: r.kms_key_id,
             body: [
               r.nonce.toString("base64"),
               r.ciphertext.toString("base64"),
@@ -817,7 +841,7 @@ export class ApartmentsService {
             ],
             wrapped: JSON.parse(r.encrypted_dek.toString()),
           };
-          const body = this.crypto.open<{ value: string }>(
+          const body = await this.crypto.open<{ value: string }>(
             envelope,
             `shared:${r.id}:${r.version}`,
           );
@@ -1018,21 +1042,24 @@ export class ApartmentsService {
           ).rows[0];
           if (r) {
             if (
-              r.cipher_version !== "local-envelope-v1" ||
-              r.kms_key_id !== "local-development"
+              r.cipher_version !== this.crypto.format ||
+              r.kms_key_id !== this.crypto.keyId
             )
               throw new ApiError(503, "ENCRYPTION_UNAVAILABLE", "资料暂不可用");
-            value = this.crypto.open<{ value: string }>(
-              {
-                format: r.cipher_version,
-                body: [
-                  r.nonce.toString("base64"),
-                  r.ciphertext.toString("base64"),
-                  r.auth_tag.toString("base64"),
-                ],
-                wrapped: JSON.parse(r.encrypted_dek.toString()),
-              },
-              `shared:${r.id}:${r.version}`,
+            value = (
+              await this.crypto.open<{ value: string }>(
+                {
+                  format: r.cipher_version,
+                  keyId: r.kms_key_id,
+                  body: [
+                    r.nonce.toString("base64"),
+                    r.ciphertext.toString("base64"),
+                    r.auth_tag.toString("base64"),
+                  ],
+                  wrapped: JSON.parse(r.encrypted_dek.toString()),
+                },
+                `shared:${r.id}:${r.version}`,
+              )
             ).value;
           }
         }

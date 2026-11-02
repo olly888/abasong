@@ -13,6 +13,11 @@
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0009": {
+      "top_level_parse": "passed",
+      "statements": 7,
+      "database_execution": "see A2 isolated KMS service verification"
+    },
     "incremental_migration_0008": {
       "top_level_parse": "passed",
       "statements": 23,

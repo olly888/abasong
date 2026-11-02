@@ -1,5 +1,7 @@
 # D0 依赖与运行时基线
 
+2026-11-02本地OCR质量批次：无新增包、字体或原生模块，单一锁文件未变。回放工具复用生产TypeScript解析器、现有tsx/Vitest和Node24内置fs/crypto；合成图生成与主机识别仅用macOS AppKit/Vision/CryptoKit，不作为iOS/Android原生质量证据。云部署按用户决定暂缓，不安装云CLI或新增供应商计费服务。
+
 记录日期：2026-10-29。精确 JavaScript 解析以 `pnpm-lock.yaml` 为准，直接依赖使用精确版本。升级必须重跑工程检查、数据库验证和原生构建。
 
 | 层 | 已使用版本 | 决策 |

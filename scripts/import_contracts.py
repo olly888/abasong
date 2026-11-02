@@ -45,7 +45,7 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         'address_text': string(300), 'apartment_id': nullable_id,
         'method': deepcopy(S['AccessInput']['properties']['method']), 'value': string(32),
         'scope': ref('ImportScope'), 'issues': arr(enum('missing_address', 'missing_value',
-        'ambiguous_pair', 'uncertain_characters', 'unmatched_apartment', 'duplicate', 'unsupported_method')),
+        'ambiguous_pair', 'uncertain_characters', 'uncertain_address', 'unmatched_apartment', 'duplicate', 'unsupported_method')),
         'state': enum('needs_review', 'ready', 'removed', 'committed', 'failed'),
         'confirmation_revision': {'type':'integer','minimum':1,'nullable':True}})
     page('ImportCandidatePage', 'ImportCandidate')
@@ -71,8 +71,10 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
     out('ImportCommitResponse', {'batch': ref('ImportBatch'), 'results': arr(ref('ImportCommitResult'))})
     S['ImportCandidate']['properties']['commit_result'] = ref('ImportCommitResult')
     obj('ImportDeviceCandidateInput', {'address_text': string(300), 'value': string(32),
-        'method': deepcopy(S['AccessInput']['properties']['method']), 'scope': ref('ImportScope')},
+        'method': deepcopy(S['AccessInput']['properties']['method']), 'scope': ref('ImportScope'),
+        'review_issues': arr(enum('ambiguous_pair','uncertain_address','uncertain_characters'))},
         ['address_text', 'value', 'method'])
+    S['ImportDeviceCandidateInput']['properties']['review_issues'].update(maxItems=3,uniqueItems=True)
     obj('ImportDeviceExtraction', {'expected_source_version': integer(1),
         'recognizer_version': string(80), 'candidates': arr(ref('ImportDeviceCandidateInput'))},
         ['expected_source_version', 'recognizer_version', 'candidates'])

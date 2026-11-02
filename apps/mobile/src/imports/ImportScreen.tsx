@@ -47,6 +47,7 @@ const issueLabels: Record<string, string> = {
   missing_value: "缺少密码",
   ambiguous_pair: "地址与密码对应不明",
   uncertain_characters: "请核对字符",
+  uncertain_address: "请核对地址",
   unmatched_apartment: "公寓尚未匹配，可先私存",
   duplicate: "存在重复资料",
   unsupported_method: "暂不支持此进入方式",

@@ -173,7 +173,11 @@ describe("server import draft safety", () => {
       return { ...batch, mode: "private_only", mode_locked: false };
     });
     const client = new ServerDraft(session, new AbortController().signal),
-      row = { ...local, privateId: undefined };
+      row = {
+        ...local,
+        privateId: undefined,
+        issues: ["请核对地址", "请核对字符"],
+      };
     const sources = [
       {
         id: "source",
@@ -197,6 +201,10 @@ describe("server import draft safety", () => {
     );
     expect(calls).toHaveLength(2);
     expect(calls[0][2]).toEqual(calls[1][2]);
+    expect(calls[0][2].body.candidates[0].review_issues).toEqual([
+      "uncertain_address",
+      "uncertain_characters",
+    ]);
   });
   it("lists only unfinished metadata and does not fetch candidate plaintext in discovery", async () => {
     mock.request.mockResolvedValue({

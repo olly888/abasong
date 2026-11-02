@@ -541,11 +541,13 @@ async function main() {
           value: "TEST-GATE-1",
           method: "keypad",
           scope: { label: "TEST entrance" },
+          review_issues: ["uncertain_address", "uncertain_characters"],
         },
         {
           address_text: "Unlisted Example street",
           value: "TEST-GATE-2",
           method: "keypad",
+          review_issues: ["ambiguous_pair"],
         },
       ],
     };
@@ -574,6 +576,21 @@ async function main() {
       randomUUID(),
     );
     const extractKey = randomUUID();
+    for (const review_issues of [
+      ["ready"],
+      ["uncertain_address", "uncertain_address"],
+    ])
+      await req(
+        "POST",
+        rootBatch + "/sources/" + src.id + "/extractions",
+        a,
+        400,
+        {
+          ...extractBody,
+          candidates: [{ ...extractBody.candidates[0], review_issues }],
+        },
+        randomUUID(),
+      );
     await dropReply(
       rootBatch + "/sources/" + src.id + "/extractions",
       a,
@@ -593,6 +610,23 @@ async function main() {
       cid2 = extracted.items[1].id;
     assert.equal(extracted.items[0].state, "needs_review");
     assert.equal(extracted.items[0].confirmation_revision, null);
+    assert(extracted.items[0].issues.includes("uncertain_address"));
+    assert(extracted.items[0].issues.includes("uncertain_characters"));
+    assert(extracted.items[1].issues.includes("ambiguous_pair"));
+    await req(
+      "POST",
+      rootBatch + "/sources/" + src.id + "/extractions",
+      a,
+      409,
+      {
+        ...extractBody,
+        candidates: [
+          { ...extractBody.candidates[0], review_issues: [] },
+          extractBody.candidates[1],
+        ],
+      },
+      extractKey,
+    );
     assert.equal(
       (
         await req(
@@ -630,6 +664,16 @@ async function main() {
       randomUUID(),
     );
     assert.equal(row.revision, 2);
+    assert(
+      row.issues.includes("uncertain_address") &&
+        row.issues.includes("uncertain_characters"),
+    );
+    const recoveredHints = await req("GET", rootBatch + "/candidates", a, 200);
+    assert(
+      recoveredHints.items
+        .find((item: { id: string }) => item.id === cid)
+        .issues.includes("uncertain_address"),
+    );
     await req(
       "PATCH",
       rootBatch + "/candidates/" + cid,
@@ -676,6 +720,18 @@ async function main() {
       randomUUID(),
     );
     assert.equal(confirmed.items.length, 2);
+    assert(
+      confirmed.items.every(
+        (item: { issues: string[] }) =>
+          !item.issues.some((issue) =>
+            [
+              "uncertain_address",
+              "uncertain_characters",
+              "ambiguous_pair",
+            ].includes(issue),
+          ),
+      ),
+    );
     batch = await req("GET", rootBatch, a, 200);
     const commitBody = {
       expected_batch_version: batch.version,

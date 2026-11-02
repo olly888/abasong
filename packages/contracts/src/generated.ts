@@ -2585,7 +2585,7 @@ export interface components {
             method: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
             value: string;
             scope: components["schemas"]["ImportScope"];
-            issues: ("missing_address" | "missing_value" | "ambiguous_pair" | "uncertain_characters" | "unmatched_apartment" | "duplicate" | "unsupported_method")[];
+            issues: ("missing_address" | "missing_value" | "ambiguous_pair" | "uncertain_characters" | "uncertain_address" | "unmatched_apartment" | "duplicate" | "unsupported_method")[];
             /** @enum {string} */
             state: "needs_review" | "ready" | "removed" | "committed" | "failed";
             confirmation_revision: number | null;
@@ -2653,6 +2653,7 @@ export interface components {
             /** @enum {string} */
             method: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
             scope?: components["schemas"]["ImportScope"];
+            review_issues?: ("ambiguous_pair" | "uncertain_address" | "uncertain_characters")[];
         };
         ImportDeviceExtraction: {
             expected_source_version: number;

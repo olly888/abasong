@@ -24,6 +24,14 @@ const clean = (n: number) =>
     );
 const mode = z.enum(["private_only", "private_and_share"]);
 const scope = z.object({ label: clean(100).optional() }).strict();
+const reviewIssue = z.enum([
+  "ambiguous_pair",
+  "uncertain_address",
+  "uncertain_characters",
+]);
+function withoutOcrHints(issues: S["ImportCandidate"]["issues"]) {
+  return issues.filter((issue) => !reviewIssue.safeParse(issue).success);
+}
 const candidate = z
   .object({
     address_text: clean(300),
@@ -36,6 +44,11 @@ const candidate = z
       "other",
     ]),
     scope: scope.optional(),
+    review_issues: z
+      .array(reviewIssue)
+      .max(3)
+      .refine((values) => new Set(values).size === values.length)
+      .optional(),
   })
   .strict();
 const version = z.object({ expected_version: v }).strict();
@@ -676,6 +689,7 @@ export class ImportsService {
         value: x.value,
         scope: x.scope ?? {},
         issues: [
+          ...(x.review_issues ?? []),
           ...(!x.address_text ? ["missing_address" as const] : []),
           ...(!x.value ? ["missing_value" as const] : []),
           "unmatched_apartment",
@@ -722,6 +736,7 @@ export class ImportsService {
       x.confirmation_revision = null;
       x.state = input.removed ? "removed" : "needs_review";
       x.issues = [
+        ...x.issues.filter((issue) => reviewIssue.safeParse(issue).success),
         ...(!x.address_text ? ["missing_address" as const] : []),
         ...(!x.value ? ["missing_value" as const] : []),
         ...(!x.apartment_id ? ["unmatched_apartment" as const] : []),
@@ -758,6 +773,7 @@ export class ImportsService {
       for (const x of rows) {
         x.confirmation_revision = x.revision;
         x.state = "ready";
+        x.issues = withoutOcrHints(x.issues);
       }
       b.replays["confirm:" + key]!.ids = rows.map((x) => x.id);
       await this.save(c, r, b);
@@ -787,6 +803,7 @@ export class ImportsService {
         throw conflict();
       await this.confirmable(c, x);
       x.state = "ready";
+      x.issues = withoutOcrHints(x.issues);
       x.confirmation_revision = x.revision;
       await this.save(c, r, b);
       return x;

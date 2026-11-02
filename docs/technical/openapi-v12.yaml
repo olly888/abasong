@@ -12210,6 +12210,7 @@ components:
             - missing_value
             - ambiguous_pair
             - uncertain_characters
+            - uncertain_address
             - unmatched_apartment
             - duplicate
             - unsupported_method
@@ -12430,6 +12431,16 @@ components:
           - other
         scope:
           $ref: '#/components/schemas/ImportScope'
+        review_issues:
+          type: array
+          items:
+            type: string
+            enum:
+            - ambiguous_pair
+            - uncertain_address
+            - uncertain_characters
+          maxItems: 3
+          uniqueItems: true
       required:
       - address_text
       - value

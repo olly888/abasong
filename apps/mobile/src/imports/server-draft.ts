@@ -4,6 +4,7 @@ import type { components } from "@abasong/contracts";
 import { AccountError } from "../auth/api-client";
 import { dataRequest } from "../apartments/client";
 import type { Candidate, Source } from "./ImportScreen";
+import { ocrReviewIssues } from "./review-issues";
 type S = components["schemas"];
 type PendingGroup = {
   localIds: string[];
@@ -227,12 +228,15 @@ export class ServerDraft {
         registrationKey: randomUUID(),
         extraction: {
           expected_source_version: 1,
-          recognizer_version: "device-ocr-driver-review-v1",
+          recognizer_version: "device-ocr-driver-review-v2",
           candidates: items.map((r) => ({
             address_text: r.address.trim(),
             value: r.value.trim(),
             method: "keypad",
             scope: { label: r.scope.trim() },
+            ...(ocrReviewIssues(r.issues).length
+              ? { review_issues: ocrReviewIssues(r.issues) }
+              : {}),
           })),
         },
         extractionKey: randomUUID(),

@@ -4,9 +4,9 @@
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
-    "paths": 86,
-    "operations": 111,
-    "schemas": 133,
+    "paths": 89,
+    "operations": 114,
+    "schemas": 136,
     "spec_validation": "passed"
   },
   "sql": {
@@ -52,7 +52,7 @@
   },
   "page_spec": {
     "nodes": 39,
-    "state_variants": 301,
+    "state_variants": 302,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },

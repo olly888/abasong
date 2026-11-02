@@ -1,3 +1,5 @@
+import { prepareContributionBackfill } from "./verify-contribution-backfill";
+import { verifyContributionManagement } from "./verify-contribution-management";
 import { verifyNearby } from "./verify-nearby";
 import { createContributionAttempt } from "../../apps/mobile/src/apartments/contribution-attempt";
 import { verifySearchMatching } from "./verify-search-matching";
@@ -123,6 +125,11 @@ async function main() {
         "utf8",
       ),
     );
+    const verifyBackfill=await prepareContributionBackfill(db);
+    await db.query(
+      readFileSync("database/migrations/0008_contribution_sources.sql", "utf8"),
+    );
+    await verifyBackfill();
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,
@@ -1233,6 +1240,7 @@ async function main() {
     await req("DELETE", `${root}/${restored.id}`, a, 200);
     manual.finish(true);
     manual.dispose();
+    await verifyContributionManagement(db, req, token, base, sensitive.href);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

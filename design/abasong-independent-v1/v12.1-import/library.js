@@ -4,7 +4,7 @@
   let tab='saved', region='all', saved=[], editTarget=null;
   const regionOf=id=>id==='a3'?'Mid-City':['a1','a2'].includes(id)?'Koreatown':'未分类';
   const apt=id=>model.apartments.find(a=>a.id===id);
-  const entries=()=>model.apartments.flatMap(a=>a.codes.filter(c=>c.mine||c.validatedByMe).map(c=>({a,c})));
+  const entries=()=>model.apartments.flatMap(a=>a.codes.filter(c=>c.mine||c.validatedByMe).map(c=>({a,c}))).sort((x,y)=>(y.c.time||0)-(x.c.time||0));
   const frame=(title,body,footer='')=>`<div class="root-content import-page library-page"><div class="page-scroll">${header(title)}${body}</div>${footer?`<div class="import-actions">${footer}</div>`:''}</div>`;
   const act=(a,label,cls='button',id='')=>btn('lib-'+a,label,cls,id?`data-id="${esc(id)}"`:'');
   const getEntry=id=>saved.find(e=>e.id===id);
@@ -16,7 +16,7 @@
   function seed(){
     saved=[];tab='saved';region='all';
     const a=keep('a1');a.records.push({id:'private-demo',value:'0017#',scope:'行人门',note:'常跑线路的自用记录',when:'10月29日保存'});keep('a2');
-    if(!apt('a1').codes.some(c=>c.id==='library-example'))apt('a1').codes.push({id:'library-example',value:'0632#',scope:'侧门',time:3,when:'10月28日贡献',author:model.profile.name,helpful:true,mine:true,vote:null,status:'active',stats:{views:12,useful:2,notUseful:1,last:'10月29日'},otherContributors:true});
+    if(!apt('a1').codes.some(c=>c.id==='library-example'))apt('a1').codes.push({id:'library-example',value:'0632#',scope:'侧门',time:3,when:'10月28日贡献',author:model.profile.name,helpful:true,mine:true,vote:null,status:'active',stats:{useful:2,notUseful:1,last:'10月29日'},otherContributors:true});
   }
   seed();
   function loggedOut(){return frame('我的公寓',empty('登录后管理我的公寓',''),act('login','登录'));}
@@ -30,12 +30,12 @@
     if(!state.logged)return loggedOut();
     const selected=saved.filter(e=>region==='all'||e.region===region);
     const shares=entries();
-    return frame('我的公寓',`<div class="library-tabs" role="tablist" aria-label="我的公寓分类">${btn('lib-tab','我保存的','library-tab '+(tab==='saved'?'active':''),'data-id="saved" role="tab" aria-selected="'+(tab==='saved')+'"')}${btn('lib-tab','我共享的','library-tab '+(tab==='shared'?'active':''),'data-id="shared" role="tab" aria-selected="'+(tab==='shared')+'"')}</div>${tab==='saved'?`<label class="library-region">区域<select aria-label="筛选保存的公寓区域" data-library-region><option value="all">全部区域</option>${[...new Set(saved.map(e=>e.region))].map(r=>`<option ${r===region?'selected':''}>${esc(r)}</option>`).join('')}</select></label>${selected.length?selected.map(savedCard).join(''):empty('这个区域还没有公寓','可以收藏地图中的公寓，或添加自己的资料。')}`:`<p class="library-caption">反馈按记录展示；被查看不等于成功进入。</p>${shares.length?shares.map(({a,c})=>sharedCard(a,c)).join(''):empty('还没有共享记录','私存资料可在确认后主动共享。')}`}`,act('contribute','贡献公寓密码')+`<div class="library-inline">${act('import','导入私存','text-btn')}${act('new','添加私人记录','text-btn')}</div>`);
+    return frame('我的公寓',`<div class="library-tabs" role="tablist" aria-label="我的公寓分类">${btn('lib-tab','我保存的','library-tab '+(tab==='saved'?'active':''),'data-id="saved" role="tab" aria-selected="'+(tab==='saved')+'"')}${btn('lib-tab','我共享的','library-tab '+(tab==='shared'?'active':''),'data-id="shared" role="tab" aria-selected="'+(tab==='shared')+'"')}</div>${tab==='saved'?`<label class="library-region">区域<select aria-label="筛选保存的公寓区域" data-library-region><option value="all">全部区域</option>${[...new Set(saved.map(e=>e.region))].map(r=>`<option ${r===region?'selected':''}>${esc(r)}</option>`).join('')}</select></label>${selected.length?selected.map(savedCard).join(''):empty('这个区域还没有公寓','可以收藏地图中的公寓，或添加自己的资料。')}`:`${shares.length?shares.map(({a,c})=>sharedCard(a,c)).join(''):empty('还没有共享记录','私存资料可在确认后主动共享。')}`}`,act('contribute','贡献公寓密码')+`<div class="library-inline">${act('import','导入私存','text-btn')}${act('new','添加私人记录','text-btn')}</div>`);
   }
   function sharedCard(a,c){
-    const stats=c.stats||{views:0,useful:0,notUseful:0,last:null};
-    const status=c.myWithdrawn?'本人已撤回':c.myCorrected?'本人已纠正':c.status==='withdrawn'?'本人已撤回':c.status==='pending'?'尚未发布':c.status==='invalid'?'已失效':c.mine?'我的共享':'同码贡献';
-    return `<article class="library-shared"><span class="import-badge">${status}</span>${addressHTML(a.address)}<div class="caption">${esc(a.name)}</div>${state.qualified&&c.status==='active'?`<div class="import-code">${esc(c.value)}</div><div class="caption">${esc(c.scope)} · ${esc(contributionLabel(c))}</div>`:`<p class="library-caption">${esc(contributionLabel(c))}</p>`}<div class="library-feedback"><span><b>${stats.views}</b>被其他司机查看</span><span><b>${stats.useful}</b>有用反馈</span><span><b>${stats.notUseful}</b>不能用</span></div><p class="caption">${stats.last?'最近反馈：'+esc(stats.last):'暂无反馈'}</p><div class="library-inline">${act('public','查看公寓','text-btn',a.id)}${!c.myCorrected&&!c.myWithdrawn&&c.status==='active'&&state.qualified?act('correct','纠正密码','text-btn',c.id):''}${c.mine&&!c.myCorrected&&!c.myWithdrawn&&c.status==='active'?act('withdraw','撤回本人贡献','text-btn danger',c.id):''}</div></article>`;
+    const stats=c.stats||{useful:0,notUseful:0,last:null};
+    const status=c.myWithdrawn?'本人已撤回':c.myCorrected?'本人已纠正':c.status==='withdrawn'?'本人已撤回':c.status==='pending'?'尚未发布':c.status==='invalid'?'已失效':c.mine?'已共享':'同码贡献';
+    return `<article class="library-shared"><span class="import-badge">${status}</span>${addressHTML(a.address)}<div class="caption">${esc(a.name)}</div>${state.qualified&&c.status==='active'&&!c.myWithdrawn&&!c.myCorrected?`<div class="import-code">${esc(c.value)}</div><div class="caption">${esc(c.scope)} · ${esc(contributionLabel(c))}</div>`:`<p class="library-caption">${esc(contributionLabel(c))}</p>`}<div class="library-feedback"><span><b>${stats.useful}</b>有用反馈</span><span><b>${stats.notUseful}</b>不能用</span></div><p class="caption">${stats.last?'最近反馈：'+esc(stats.last):'暂无反馈'}</p><div class="library-inline">${act('public','查看公寓','text-btn',a.id)}${!c.myCorrected&&!c.myWithdrawn&&c.status==='active'&&state.qualified?act('correct','纠正密码','text-btn',c.id):''}${(c.mine||c.validatedByMe)&&!c.myCorrected&&!c.myWithdrawn&&c.status==='active'?act('withdraw','撤回我的贡献','text-btn danger',c.id):''}</div></article>`;
   }
   function detail(){
     if(!state.logged)return loggedOut();const e=getEntry(state.route.args.id);if(!e)return frame('我的公寓',empty('这条记录已移除',''),act('list','返回我的公寓'));
@@ -55,7 +55,7 @@
     }
     if(m?.type==='library-correct'){
       const pair=entries().find(x=>x.c.id===m.id);if(!pair){state.modal=null;baseModal();return;}
-      $('#overlay').innerHTML=`<section class="dialog library-dialog" role="dialog" aria-modal="true" aria-label="纠正密码"><div class="close-row"><h2>纠正密码</h2>${ib('close-modal','close','关闭')}</div><p class="address">${esc(pair.a.address)} · ${esc(pair.c.scope)}</p><p class="library-caption">提交正确密码，保留原贡献与反馈历史。</p><form data-submit="library-correct"><label class="field"><span class="field-label">正确密码</span><input name="code" maxlength="32" autocomplete="off" required></label><label class="check-row"><input type="checkbox" name="source" required><span>我已核对，并有权共享这条资料</span></label><button class="button" type="submit">确认纠正并共享</button></form></section>`;return;
+      $('#overlay').innerHTML=`<section class="dialog library-dialog" role="dialog" aria-modal="true" aria-label="纠正密码"><div class="close-row"><h2>纠正密码</h2>${ib('close-modal','close','关闭')}</div><p class="address">${esc(pair.a.address)} · ${esc(pair.c.scope)}</p><p class="library-caption">纠正仅结束你的旧贡献，其他司机的贡献和反馈保留。</p><form data-submit="library-correct"><label class="field"><span class="field-label">正确密码</span><input name="code" maxlength="32" autocomplete="off" required></label><label class="field"><span class="field-label">门别</span><input name="scope" value="${esc(pair.c.scope)}" maxlength="100" required></label><label class="check-row"><input type="checkbox" name="source" required><span>我已核对，并有权共享这条资料</span></label><button class="button" type="submit">确认纠正并共享</button></form></section>`;return;
     }
     baseModal();
   };
@@ -94,7 +94,7 @@
       case'remove-apartment':confirmAction('移除我的公寓？','移除本人的收藏与私人记录，共享资料保留。',()=>{saved=saved.filter(e=>e.id!==id);closeModal();nav('contributions',{},true);},true);break;
       case'favorite':{const e=saved.find(e=>e.apt===id);if(e){e.favorite=!e.favorite;if(!e.favorite&&!e.records.length)saved=saved.filter(x=>x!==e);toast(e.favorite?'已收藏公寓':'已取消收藏，私人记录保留');}else{keep(id);toast('已收藏公寓');}render();break;}
       case'public':state.apt=id;state.homeView='apartments';state.expanded=true;nav('home');break;
-      case'share':{const p=findPrivate(id);if(!p||!state.qualified){toast('共享资格待核验');return;}confirmAction('共享这条资料？','共享给有资格的司机；私人备注不会共享。',()=>{if(!state.qualified||!state.logged)return;const a=apt(p.e.apt);if(!a){toast('公寓尚未收录，需先核对地址');closeModal();return;}let c=a.codes.find(c=>c.status==='active'&&c.value===p.r.value&&c.scope===p.r.scope);if(c)c.validatedByMe=true;else{c={id:uid(),value:p.r.value,scope:p.r.scope,time:2000,when:'刚刚贡献 · 实测日期未知',author:model.profile.name,mine:true,helpful:false,vote:null,status:'active'};a.codes.push(c);}closeModal();tab='shared';nav('contributions');toast('已提交共享');});break;}
+      case'share':{const p=findPrivate(id);if(!p||!state.qualified){toast('共享资格待核验');return;}confirmAction('共享这条资料？','共享给有资格的司机；私人备注不会共享。',()=>{if(!state.qualified||!state.logged)return;const a=apt(p.e.apt);if(!a){toast('公寓尚未收录，需先核对地址');closeModal();return;}let c=a.codes.find(c=>c.status==='active'&&c.value===p.r.value&&c.scope===p.r.scope);if(c){c.validatedByMe=true;c.myWithdrawn=false;c.myCorrected=false;}else{c={id:uid(),value:p.r.value,scope:p.r.scope,time:2000,when:'刚刚贡献 · 实测日期未知',author:model.profile.name,mine:true,helpful:false,vote:null,status:'active'};a.codes.push(c);}closeModal();tab='shared';nav('contributions');toast('已提交共享');});break;}
       case'correct':if(state.qualified&&entries().some(x=>x.c.id===id))modal('library-correct',{id});break;
       case'withdraw':confirmAction('撤回本人贡献？','保留历史，不删除其他司机的贡献或反馈。',()=>{const p=entries().find(x=>x.c.id===id);if(p){p.c.myWithdrawn=true;if(!p.c.otherContributors)p.c.status='withdrawn';}closeModal();render();},true);break;
     }
@@ -107,11 +107,12 @@
       closeModal();nav('notebook',{id:entry.id},true);toast('已仅自己保存');return;
     }
     if(!state.qualified||!fd.get('source'))return;const p=entries().find(x=>x.c.id===state.modal?.id);if(!p)return;
-    if(value===p.c.value){toast('新密码与原记录相同');return;}
-    p.c.myCorrected=true;if(!p.c.otherContributors)p.c.status='withdrawn';else p.c.reportedIncorrect=true;
-    let next=p.a.codes.find(c=>c.status==='active'&&c.value===value&&c.scope===p.c.scope);
-    if(next)next.validatedByMe=true;else p.a.codes.push({id:uid(),value,scope:p.c.scope,time:3000,when:'刚刚纠正 · 实测日期未知',author:model.profile.name,mine:true,helpful:false,vote:null,status:'active'});
-    closeModal();render();toast('已提交纠正，原历史保留');
+    const scope=String(fd.get('scope')||'').trim()||p.c.scope;
+    if(value===p.c.value&&scope===p.c.scope){toast('新密码与原记录相同');return;}
+    p.c.myCorrected=true;if(!p.c.otherContributors)p.c.status='withdrawn';
+    let next=p.a.codes.find(c=>c.status==='active'&&c.value===value&&c.scope===scope);
+    if(next){next.validatedByMe=true;next.myWithdrawn=false;next.myCorrected=false;}else p.a.codes.push({id:uid(),value,scope,time:3000,when:'刚刚纠正 · 实测日期未知',author:model.profile.name,mine:true,helpful:false,vote:null,status:'active'});
+    closeModal();render();toast('已纠正并共享');
   });
   const baseReset=resetPrototype;resetPrototype=function(){baseReset();seed();render();};
   window.apartmentLibrary={saveImport};

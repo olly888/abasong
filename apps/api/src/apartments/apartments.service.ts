@@ -57,6 +57,14 @@ const privateShare = z
     source_attested: z.literal(true),
   })
   .strict();
+const contributionCorrectionInput = z
+  .object({
+    expected_version: z.number().int().positive(),
+    value: text(32).min(1),
+    scope: z.object({ label: text(100).min(1) }).strict(),
+    source_attested: z.literal(true),
+  })
+  .strict();
 const accessInput = z
   .object({
     method: z.literal("keypad"),
@@ -624,6 +632,9 @@ export class ApartmentsService {
       intent,
       async () => {
         await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+          `access-source-owner:${a.userId}`,
+        ]);
+        await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
           `${aid}:${scopeKey}:${hash.toString("hex")}`,
         ]);
         let r = (
@@ -666,14 +677,25 @@ export class ApartmentsService {
             "这条资料已停止共享，请核对最新密码",
           );
         const eventId = randomUUID();
+        const source = (
+          await c.query(
+            `INSERT INTO abasong.access_contribution_sources(record_id,user_id) VALUES($1,$2)
+           ON CONFLICT(record_id,user_id) DO UPDATE SET status='active',replacement_source_id=NULL,
+           version=abasong.access_contribution_sources.version+CASE WHEN abasong.access_contribution_sources.status='active' THEN 0 ELSE 1 END,
+           updated_at=CASE WHEN abasong.access_contribution_sources.status='active' THEN abasong.access_contribution_sources.updated_at ELSE now() END RETURNING id,version`,
+            [r.id, a.userId],
+          )
+        ).rows[0];
         await c.query(
-          "INSERT INTO abasong.access_contributions(id,record_id,user_id,event_type,published_on_creation) VALUES($1,$2,$3,$4,$5)",
+          "INSERT INTO abasong.access_contributions(id,record_id,user_id,event_type,published_on_creation,source_id,source_version) VALUES($1,$2,$3,$4,$5,$6,$7)",
           [
             eventId,
             r.id,
             a.userId,
             outcome === "created_active" ? "created" : "same_value_validation",
             outcome === "created_active",
+            source.id,
+            source.version,
           ],
         );
         return {
@@ -772,7 +794,7 @@ export class ApartmentsService {
         for (const row of rank.rows) {
           const r = (
             await c.query(
-              "SELECT r.id,r.apartment_id,r.scope_label,r.contributed_at,r.last_success_at,r.last_failure_at,r.version,s.*,p.display_name,(SELECT value FROM abasong.access_feedback f WHERE f.record_id=r.id AND f.user_id=$2 AND f.excluded_at IS NULL) AS my_feedback FROM abasong.access_records r JOIN abasong.access_secrets s ON s.record_id=r.id LEFT JOIN abasong.profiles p ON p.user_id=r.contributor_id WHERE r.id=$1 AND r.status='active' AND r.applicable_schedule IS NULL",
+              "SELECT r.id,r.apartment_id,r.scope_label,live.first_contributed_at AS contributed_at,r.last_success_at,r.last_failure_at,r.version,s.*,p.display_name,(SELECT value FROM abasong.access_feedback f WHERE f.record_id=r.id AND f.user_id=$2 AND f.excluded_at IS NULL) AS my_feedback FROM abasong.access_records r JOIN abasong.access_secrets s ON s.record_id=r.id JOIN LATERAL (SELECT user_id,first_contributed_at FROM abasong.access_contribution_sources x WHERE x.record_id=r.id AND x.status='active' ORDER BY first_contributed_at,x.id LIMIT 1) live ON true LEFT JOIN abasong.profiles p ON p.user_id=live.user_id WHERE r.id=$1 AND r.status='active' AND r.applicable_schedule IS NULL",
               [row.id, a.userId],
             )
           ).rows[0];
@@ -843,7 +865,7 @@ export class ApartmentsService {
         ]);
         const target = (
           await c.query(
-            "SELECT r.id FROM abasong.access_records r JOIN abasong.apartments p ON p.id=r.apartment_id AND p.status='active' WHERE r.id=$1 AND r.status='active' AND (r.expires_at IS NULL OR r.expires_at>now()) AND r.applicable_schedule IS NULL",
+            "SELECT r.id FROM abasong.access_records r JOIN abasong.apartments p ON p.id=r.apartment_id AND p.status='active' WHERE r.id=$1 AND r.status='active' AND (r.expires_at IS NULL OR r.expires_at>now()) AND r.applicable_schedule IS NULL AND EXISTS(SELECT 1 FROM abasong.access_contribution_sources x WHERE x.record_id=r.id AND x.status='active')",
             [rid],
           )
         ).rows[0];
@@ -890,6 +912,53 @@ export class ApartmentsService {
       "access.read",
     );
   }
+  private async sourceMetadata(
+    c: PoolClient,
+    a: VerifiedIdentity,
+    sid?: string,
+    cursor?: string,
+    limit = 1,
+  ): Promise<S["ContributionSummary"][]> {
+    const rows = (
+      await c.query(
+        `SELECT s.*,r.apartment_id,r.status AS record_status,r.contributor_id,r.scope_label,
+      p.address_line1,p.city,p.state,
+      EXISTS(SELECT 1 FROM abasong.capabilities x WHERE x.user_id=s.user_id AND x.capability='access.contribute' AND x.revoked_at IS NULL AND x.valid_from<=now() AND (x.valid_until IS NULL OR x.valid_until>now())) AND p.status='active' AS can_publish,
+      (SELECT count(*)::int FROM abasong.access_contribution_sources x WHERE x.record_id=r.id AND x.status='active' AND x.user_id<>s.user_id) AS others,
+      (SELECT count(*)::int FROM abasong.access_feedback f JOIN abasong.users u ON u.id=f.user_id AND u.status='active' WHERE f.record_id=r.id AND f.user_id<>s.user_id AND f.applicable AND f.excluded_at IS NULL AND f.value='useful') AS useful,
+      (SELECT count(*)::int FROM abasong.access_feedback f JOIN abasong.users u ON u.id=f.user_id AND u.status='active' WHERE f.record_id=r.id AND f.user_id<>s.user_id AND f.applicable AND f.excluded_at IS NULL AND f.value='not_useful') AS not_useful,
+      (SELECT max(f.updated_at) FROM abasong.access_feedback f JOIN abasong.users u ON u.id=f.user_id AND u.status='active' WHERE f.record_id=r.id AND f.user_id<>s.user_id AND f.applicable AND f.excluded_at IS NULL AND f.value IN ('useful','not_useful')) AS last_feedback
+      FROM abasong.access_contribution_sources s JOIN abasong.access_records r ON r.id=s.record_id JOIN abasong.apartments p ON p.id=r.apartment_id
+      WHERE s.user_id=$1 AND ($2::uuid IS NULL OR s.id=$2) AND ($3::uuid IS NULL OR (s.first_contributed_at,s.id)<(SELECT x.first_contributed_at,x.id FROM abasong.access_contribution_sources x WHERE x.id=$3 AND x.user_id=$1))
+      ORDER BY s.first_contributed_at DESC,s.id DESC LIMIT $4`,
+        [a.userId, sid ?? null, cursor ?? null, limit],
+      )
+    ).rows;
+    return rows.map((r) => ({
+      id: r.id,
+      record_id: r.record_id,
+      apartment_id: r.apartment_id,
+      address_label: `${r.address_line1}, ${r.city}, ${r.state}`,
+      event_type:
+        r.status === "active"
+          ? r.contributor_id === a.userId
+            ? "created"
+            : "same_value_validation"
+          : r.status,
+      record_status: r.record_status,
+      can_withdraw_record: r.status === "active",
+      can_correct: r.status === "active" && r.can_publish,
+      status: r.status,
+      version: r.version,
+      scope_label: r.scope_label ?? "大门",
+      other_source_count: r.others,
+      useful_count: r.useful,
+      not_useful_count: r.not_useful,
+      last_feedback_at: r.last_feedback?.toISOString() ?? null,
+      views_count: null,
+      occurred_at: r.first_contributed_at.toISOString(),
+    }));
+  }
   async contributions(
     a: VerifiedIdentity,
     q: Record<string, unknown>,
@@ -904,26 +973,215 @@ export class ApartmentsService {
       q,
     );
     return this.tx(a, async (c) => {
-      const rows = (
-        await c.query(
-          "SELECT e.id,e.record_id,r.apartment_id,e.event_type,e.occurred_at,r.status AS record_status,p.address_line1,p.city,p.state FROM abasong.access_contributions e JOIN abasong.access_records r ON r.id=e.record_id JOIN abasong.apartments p ON p.id=r.apartment_id WHERE e.user_id=$1 AND ($2::uuid IS NULL OR e.id>$2) ORDER BY e.id LIMIT $3",
-          [a.userId, b.cursor ?? null, b.limit + 1],
-        )
-      ).rows;
+      if (b.cursor && !(await this.sourceMetadata(c, a, b.cursor)).length)
+        throw missing();
+      const rows = await this.sourceMetadata(
+        c,
+        a,
+        undefined,
+        b.cursor,
+        b.limit + 1,
+      );
       return {
-        items: rows.slice(0, b.limit).map((r) => ({
-          id: r.id,
-          record_id: r.record_id,
-          apartment_id: r.apartment_id,
-          address_label: `${r.address_line1}, ${r.city}, ${r.state}`,
-          event_type: r.event_type,
-          record_status: r.record_status,
-          can_withdraw_record: false,
-          occurred_at: r.occurred_at.toISOString(),
-        })),
-        next_cursor: rows.length > b.limit ? rows[b.limit - 1].id : null,
+        items: rows.slice(0, b.limit),
+        next_cursor: rows.length > b.limit ? rows[b.limit - 1]!.id : null,
       };
     });
+  }
+  async contributionSummary(
+    a: VerifiedIdentity,
+    sid: string,
+  ): Promise<S["ContributionSummary"]> {
+    parse(id, sid);
+    return this.tx(a, async (c) => {
+      const source = (await this.sourceMetadata(c, a, sid))[0];
+      if (!source) throw missing();
+      return source;
+    });
+  }
+  async contributionDetail(
+    a: VerifiedIdentity,
+    sid: string,
+  ): Promise<S["ContributionDetail"]> {
+    parse(id, sid);
+    return this.tx(
+      a,
+      async (c) => {
+        const source = (await this.sourceMetadata(c, a, sid))[0];
+        if (!source) throw missing();
+        let value: string | null = null;
+        if (source.status === "active" && source.record_status === "active") {
+          const r = (
+            await c.query(
+              "SELECT r.id,r.version,s.* FROM abasong.access_records r JOIN abasong.apartments p ON p.id=r.apartment_id AND p.status='active' JOIN abasong.access_secrets s ON s.record_id=r.id WHERE r.id=$1 AND r.status='active' AND r.applicable_schedule IS NULL AND (r.expires_at IS NULL OR r.expires_at>now())",
+              [source.record_id],
+            )
+          ).rows[0];
+          if (r) {
+            if (
+              r.cipher_version !== "local-envelope-v1" ||
+              r.kms_key_id !== "local-development"
+            )
+              throw new ApiError(503, "ENCRYPTION_UNAVAILABLE", "资料暂不可用");
+            value = this.crypto.open<{ value: string }>(
+              {
+                format: r.cipher_version,
+                body: [
+                  r.nonce.toString("base64"),
+                  r.ciphertext.toString("base64"),
+                  r.auth_tag.toString("base64"),
+                ],
+                wrapped: JSON.parse(r.encrypted_dek.toString()),
+              },
+              `shared:${r.id}:${r.version}`,
+            ).value;
+          }
+        }
+        return { source, value };
+      },
+      "access.read",
+    );
+  }
+  async changeContribution(
+    a: VerifiedIdentity,
+    sid: string,
+    body: unknown,
+    key: string | undefined,
+    correct: boolean,
+  ): Promise<S["ContributionChangeResult"]> {
+    parse(id, sid);
+    const correction = correct
+      ? parse(contributionCorrectionInput, body)
+      : null;
+    const b =
+      correction ??
+      parse(
+        z.object({ expected_version: z.number().int().positive() }).strict(),
+        body,
+      );
+    return this.tx(
+      a,
+      async (c) => {
+        // Same owner lock order as ordinary/manual/import sharing. Never lock a
+        // target source first: opposite-direction corrections must not deadlock.
+        await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+          `access-source-owner:${a.userId}`,
+        ]);
+        const receipt = async (
+          eid: string,
+        ): Promise<S["ContributionChangeResult"]> => {
+          const e = (
+            await c.query(
+              "SELECT source_id,source_version,replacement_source_id,event_type FROM abasong.access_contributions WHERE id=$1 AND user_id=$2",
+              [eid, a.userId],
+            )
+          ).rows[0];
+          if (!e || e.source_id !== sid) throw missing();
+          const source = (await this.sourceMetadata(c, a, sid))[0];
+          if (!source) throw missing();
+          return {
+            source,
+            replacement: e.replacement_source_id
+              ? ((
+                  await this.sourceMetadata(c, a, e.replacement_source_id)
+                )[0] ?? null)
+              : null,
+            operation: e.event_type,
+            applied_version: e.source_version,
+          };
+        };
+        return this.write(
+          c,
+          a,
+          `contribution.${correct ? "correct" : "withdraw"}:${sid}`,
+          key,
+          b,
+          async () => {
+            const s = (
+              await c.query(
+                "SELECT * FROM abasong.access_contribution_sources WHERE id=$1 AND user_id=$2 FOR UPDATE",
+                [sid, a.userId],
+              )
+            ).rows[0];
+            if (!s) throw missing();
+            if (s.version !== b.expected_version) throw conflict();
+            if (s.status !== "active")
+              throw new ApiError(
+                409,
+                "SOURCE_UNAVAILABLE",
+                "这条贡献已结束，请刷新",
+              );
+            let replacement: string | null = null;
+            if (correction) {
+              const input = correction;
+              const r = (
+                await c.query(
+                  "SELECT apartment_id,scope_label,dedup_hmac FROM abasong.access_records WHERE id=$1",
+                  [s.record_id],
+                )
+              ).rows[0];
+              const hash = createHmac(
+                "sha256",
+                this.crypto.hmacKey("shared-dedup"),
+              )
+                .update(input.value)
+                .digest();
+              if (
+                (r.scope_label ?? "大门").normalize("NFC").toLowerCase() ===
+                  input.scope.label.normalize("NFC").toLowerCase() &&
+                hash.equals(r.dedup_hmac)
+              )
+                throw new ApiError(
+                  409,
+                  "UNCHANGED_CONTRIBUTION",
+                  "密码和门别未改变",
+                );
+              const result = await this.contributeTx(
+                c,
+                a,
+                r.apartment_id,
+                {
+                  method: "keypad",
+                  value: input.value,
+                  scope: input.scope,
+                  source_attested: true,
+                },
+                key,
+                `contribution.correct.target:${sid}`,
+                b,
+              );
+              replacement = (
+                await c.query(
+                  "SELECT id FROM abasong.access_contribution_sources WHERE record_id=$1 AND user_id=$2",
+                  [result.record_id, a.userId],
+                )
+              ).rows[0].id;
+            }
+            const status = correct ? "corrected" : "withdrawn";
+            await c.query(
+              "UPDATE abasong.access_contribution_sources SET status=$3,version=version+1,updated_at=now(),replacement_source_id=$4 WHERE id=$1 AND user_id=$2",
+              [sid, a.userId, status, replacement],
+            );
+            const eid = randomUUID();
+            await c.query(
+              "INSERT INTO abasong.access_contributions(id,record_id,user_id,event_type,source_id,source_version,replacement_source_id) VALUES($1,$2,$3,$4,$5,$6,$7)",
+              [
+                eid,
+                s.record_id,
+                a.userId,
+                status,
+                sid,
+                s.version + 1,
+                replacement,
+              ],
+            );
+            return { object: eid, result: await receipt(eid) };
+          },
+          receipt,
+        );
+      },
+      correct ? "access.contribute" : undefined,
+    );
   }
   async mapContext(
     a: VerifiedIdentity,

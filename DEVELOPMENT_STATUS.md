@@ -1,5 +1,13 @@
 # Abasong development status
 
+## Latest implementation — ADD-19 own contribution management (2026-11-01)
+
+[Implementation and bounded acceptance](docs/technical/D1_本人贡献纠正撤回与共享管理验收.md). Owner-scoped source correction/withdrawal, metadata/detail APIs,0008 backfill, immutable canonical encrypted history, active-source ranking and native shared management implemented. Latest user feedback questions regular withdrawal; keep that product decision open, do not treat technical passing as final acceptance or claim the ordinary button is removed.
+
+Final check184/34 PASS, local D0 eight migrations/52tables/RLS PASS; disposable libraryHTTP284 plus legacy backfill/address8/Nearby PASS, import120 and rollback ranking18 PASS, final three-platform JS exports PASS. iOS corrected-return stale list reproduced then fixed with explicit shared-tab revision; actual subsequent return, cancel/withdraw and ended-code hiding passed. Android old-version submit after same-account iOS withdrawal blocked with input preserved; user confirmed normal correction/withdraw combo, but actual post-test home and DB retained one active source, so Android final withdrawal is not independently certified. No new binary/native dependency/cloud/payment changes.
+
+Fresh authorized2h local lease ended early; both capabilities revoked and all5 scoped TEST records/sources cleaned, counts0/0. Both normal simulator clients cold-reopened same2445 target and showed no qualification/no TEST plaintext. Existing API3001/Metro8081/8082 healthy200; LAN previews preserved. Mapbox401/cache and physical/field/HTTPS acceptance remain open; no remote push, D1 in progress.
+
 ## Latest acceptance — Android slow-switch and real native shared return (2026-11-01)
 
 [Actual evidence and cleanup](docs/technical/D1_原生慢切与共享回程补验.md). User confirmed Android100-loading→102 after9s; actual native102/TEST-02#/TEST102 and read count2 observed. Added dev-only scene label/reset and explicit button roles so retries start when the tester is ready; no product TEST controls.

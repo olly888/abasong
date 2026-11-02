@@ -117,3 +117,10 @@ OTP 发起、验证、刷新、退出使用 Supabase Auth SDK，不在自有 API
 ## D1真实定位与建筑补充（2026-10-30）
 
 新增源契约 `getApartmentMapContext`，已登录且当前账号active才可读active公寓的已核对建筑元数据；不需要也不授予密码查看资格。密码继续独立走access.read及对象校验。来源需持久许可、已核对且未过期；无有效建筑返回空列表，不猜测地址/轮廓。不支持客户端写入已核实映射。0003新增 `apartment_buildings`，RLS强制、API和敏感服务只读、几何有效/地理范围及标注点在建筑内约束；仅本地D0已执行，云端未应用。resolve按版本化现场证据开关、完整精度圈/唯一可信边界/来源/精准权限限制自动认定，缺省关闭，不存轨迹。详见[实施与验收](D1_真实定位与公寓自动识别实施验收.md)。
+
+
+## ADD-19 本人共享来源管理（2026-11-01）
+
+新增`GET /v1/me/contributions/{id}/summary`只返回本人元数据，无需查码资格；`GET /v1/me/contributions/{id}`的正文仍须access.read。`POST .../corrections`须access.contribute、expected_version、来源确认及幂等键；`POST .../withdraw`只要求有效账号与本人来源归属，资格到期仍可撤回。猜他人ID返回404。列表按来源首次时间及ID稳定分页，不按事件重复列行。
+
+纠正/撤回返回不可变的operation/applied_version和当前来源元数据；旧幂等键重放只读收据，不重复改变后续恢复的来源。旧码反馈不迁移。统计为当前有效反馈数，views_count暂为null并在页面隐藏。正常贡献无需人工审核。全局失效/过期及公寓权限继续生效。

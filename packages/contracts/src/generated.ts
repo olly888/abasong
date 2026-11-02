@@ -381,6 +381,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/contributions/{contribution_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅本人来源；正文仍要求查看资格，已终止来源不返回密码 */
+        get: operations["getMyContribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contributions/{contribution_id}/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 版本化纠正本人来源；关联正确记录，保留他人来源和反馈 */
+        post: operations["correctMyContribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contributions/{contribution_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 仅撤回本人发布来源；无需查看资格，不删除其他来源 */
+        post: operations["withdrawMyContribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/apartment-library": {
         parameters: {
             query?: never;
@@ -2225,16 +2276,45 @@ export interface components {
             apartment_id: string;
             address_label: string;
             /** @enum {string} */
-            event_type: "created" | "same_value_validation" | "withdrawal_requested";
+            event_type: "created" | "same_value_validation" | "withdrawal_requested" | "withdrawn" | "corrected";
             /** @enum {string} */
             record_status: "pending" | "active" | "review" | "invalid" | "withdrawn";
             can_withdraw_record: boolean;
             /** Format: date-time */
             occurred_at: string;
+            /** @enum {string} */
+            status: "active" | "withdrawn" | "corrected";
+            version: number;
+            scope_label: string;
+            can_correct: boolean;
+            other_source_count: number;
+            useful_count: number;
+            not_useful_count: number;
+            /** Format: date-time */
+            last_feedback_at: string | null;
+            views_count: number | null;
         };
         ContributionSummaryPage: {
             items: components["schemas"]["ContributionSummary"][];
             next_cursor: string | null;
+        };
+        ContributionDetail: {
+            source: components["schemas"]["ContributionSummary"];
+            value: string | null;
+        };
+        ContributionCorrectionInput: {
+            expected_version: number;
+            value: string;
+            scope: components["schemas"]["ConfirmedAddressAccessScope"];
+            /** @enum {boolean} */
+            source_attested: true;
+        };
+        ContributionChangeResult: {
+            /** @enum {string} */
+            operation: "corrected" | "withdrawn";
+            applied_version: number;
+            source: components["schemas"]["ContributionSummary"];
+            replacement: components["schemas"]["ContributionSummary"] | (never | null);
         };
         InboxSummary: {
             unread_conversations: number;
@@ -4984,6 +5064,308 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContributionSummaryPage"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getMyContribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionDetail"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    correctMyContribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionCorrectionInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionChangeResult"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    withdrawMyContribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionChangeResult"];
                 };
             };
             /** @description 输入或跨字段约束错误 */

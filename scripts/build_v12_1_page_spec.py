@@ -84,6 +84,16 @@ for p in pages:
 page('U09','公寓详情与我的记录','二级页；私存与共享两个分区','U06保存公寓、H01收藏','地址与自定区域|我的记录：仅自己可见|共享资料：按当前资格读最新|添加/修改/删除私存|主动共享与地图入口','修改私存::U09::只改本人记录，不覆盖共享库|共享这条::U06::确认范围后复用正式贡献链路，私人备注不共享|设置区域::U09::维护本人区域标签|移除本人公寓::G03::确认私人范围，不删除公共记录|在地图查看::H01::选择该公寓后读当前资料','收藏无私存|有私人记录|共享资料可读|共享资格待审核|未收录公寓私存|编辑与删除|主动共享确认|私存/共享分别失败','', 'ADD-07','收藏关联公寓ID；本人私存和共享资格分离；不展示他人私存，修改私存不隐式修改共享。')
 pages[-1]['api_contract_status']='T27/T32–T35待扩展私存/收藏/共享/纠正/统计接口'
 
+# ADD-19: each owner manages a publication source, not the canonical secret.
+for p in pages:
+ if p['id']=='U06':
+  p.update(information=['我保存的/我共享的','本人来源状态、首次时间、门别、版本','有权查看的有效密码直显；真实有用/不能用反馈，不虚构查看人数'],actions=[dict(label='纠正密码',target='B02',result='固定公寓，正确密码直接共享并结束本人旧来源；他人和旧反馈保留'),dict(label='撤回我的贡献',target='G03',result='版本校验后只结束本人来源；资格过期仍可撤回'),dict(label='查看公寓',target='H01',result='按公寓ID重新校验资格')],states=['加载/分页','有效共享','本人已纠正','本人已撤回','同码其他来源保留','无查看资格可管理元数据','无贡献资格不可纠正','弱网重试同键','版本冲突刷新','写入成功读取失败'],api_operations=['listMyContributions','getMyContributionSummary','getMyContribution','correctMyContribution','withdrawMyContribution'],requirements=['ADD-07','ADD-19'])
+  p['api_contract_status']='ADD-19契约；实施和真实验证见最新状态'
+ if p['id']=='B02':
+  p['requirements'].append('ADD-19')
+  p['states']+=['纠正本人来源/固定公寓','版本冲突不覆盖','成功返回共享管理']
+  p['api_operations']+=['getMyContribution','correctMyContribution']
+
 # Latest contribution-first entry hierarchy; no extra route required.
 for p in pages:
  if p['id'] in ('H01','U01','U06','B02','B04','B05'):

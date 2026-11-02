@@ -1,8 +1,9 @@
+import { SharedContributions } from "../../apartments/SharedContributions";
 import { AddressLine } from "../../apartments/AddressLine";
 import { openContributionMenu } from "../../apartments/contribution-entry";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import { useFocusEffect, router } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, router } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { IconButton } from "../../ui/Primitives";
@@ -27,6 +28,8 @@ export default function Library() {
   );
 }
 function LibraryContent() {
+  const params = useLocalSearchParams<{ tab?: string; revision?: string }>();
+  const [sharedRevision, setSharedRevision] = useState(0);
   const auth = useAuth(),
     session = auth.session!,
     controller = useRef(new AbortController());
@@ -36,8 +39,9 @@ function LibraryContent() {
         sharedError?: string;
       })[]
     >([]),
-    [shares, setShares] = useState<S["ContributionSummary"][]>([]),
-    [tab, setTab] = useState<"saved" | "shared">("saved"),
+    [tab, setTab] = useState<"saved" | "shared">(
+      params.tab === "shared" ? "shared" : "saved",
+    ),
     [selected, setSelected] = useState<S["LibraryDetail"] | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
@@ -48,6 +52,9 @@ function LibraryContent() {
     [edit, setEdit] = useState<S["PrivateRecord"] | null>(null),
     [next, setNext] = useState<string | null>(null);
   const generation = useRef(0);
+  useEffect(() => {
+    if (params.tab === "shared") setTab("shared");
+  }, [params.tab, params.revision]);
   const request = <T,>(
     path: string,
     opts: Parameters<typeof dataRequest>[2] = {},
@@ -95,11 +102,6 @@ function LibraryContent() {
         return;
       setItems((old) => (cursor ? [...old, ...details] : details));
       setNext(page.next_cursor);
-      const contributions = await request<S["ContributionSummaryPage"]>(
-        "/v1/me/contributions?limit=100",
-      );
-      if (version === generation.current && !controller.current.signal.aborted)
-        setShares(contributions.items);
     } catch (e) {
       if (version === generation.current && !controller.current.signal.aborted)
         setError(e instanceof Error ? e.message : "加载失败");
@@ -340,7 +342,10 @@ function LibraryContent() {
           name="refresh"
           label="刷新"
           disabled={busy}
-          onPress={() => void load()}
+          onPress={() => {
+            if (tab === "shared") setSharedRevision((v) => v + 1);
+            else void load();
+          }}
         />
       }
       footer={
@@ -395,7 +400,7 @@ function LibraryContent() {
           </Pressable>
         ))}
       </View>
-      <FormError message={error} />
+      <FormError message={tab === "saved" ? error : null} />
       {tab === "saved" ? (
         <>
           {items.length === 0 && !busy ? (
@@ -464,32 +469,9 @@ function LibraryContent() {
           ) : null}
         </>
       ) : (
-        <>
-          {shares.length === 0 ? <Text>暂无共享贡献</Text> : null}
-          {shares.map((s) => (
-            <View style={styles.card} key={s.id}>
-              <AddressLine line={s.address_label} compact />
-              <Text style={styles.muted}>
-                {s.record_status === "pending"
-                  ? "尚未发布"
-                  : s.record_status === "active"
-                    ? "已共享"
-                    : "已停止展示"}
-              </Text>
-              <Text>{new Date(s.occurred_at).toLocaleString()}</Text>
-              <ActionButton
-                label="查看当前共享资料"
-                secondary
-                onPress={() =>
-                  router.push({
-                    pathname: "/apartments",
-                    params: { apartment_id: s.apartment_id },
-                  })
-                }
-              />
-            </View>
-          ))}
-        </>
+        <SharedContributions
+          key={String(params.revision) + ":" + sharedRevision}
+        />
       )}
     </ApartmentPage>
   );

@@ -1,5 +1,9 @@
 # Abasong development status
 
+## A3 independent sample preparation (2026-11-02)
+
+Branch codex/d1-public-samples, based on A1 972e2d9; business A2 work remains independently preserved in PR50. [A3 inventory/collection](docs/technical/A3_公开地址核对与真实截图采集.md) adds12 public apartment-address targets (6existing+6new official postal facts) plus an official municipal negative control. New6 have no licensed geometry yet and are NOT inserted into runtime catalog. One address lacksE/W and stays ambiguous. OSM primary502/alternate timeout recorded, no fabricated coverage. Ordinary-house/adjacent-provider checks, Woodside gate scope and authorized30–50 real redacted screenshots remain pending; no product/code/role/cloud changes. A3 is not complete.
+
 ## Current delivery baseline — A1 pilot readiness (2026-11-01)
 
 Approved execution basis: [ADD-20](docs/product/Abasong_V12.1_内测冻结与执行计划.md) and [master plan](docs/Abasong_V12.1_项目开发与验收总计划.md). Integration branch: `codex/d1-pilot-readiness`, starting from `5e4e731`. Older sections below are historical evidence and do not supersede this table.

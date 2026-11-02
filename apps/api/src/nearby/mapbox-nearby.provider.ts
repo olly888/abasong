@@ -71,7 +71,7 @@ export class MapboxNearbyProvider {
               geometry: z.object({ coordinates: point }),
               properties: z
                 .object({
-                  type: z.string(),
+                  type: z.string().nullish(),
                   tilequery: z.object({ distance: z.number().finite().min(0) }),
                 })
                 .passthrough(),

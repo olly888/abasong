@@ -1,6 +1,15 @@
 import { NearbyCarousel } from "./NearbyCarousel";
 import { compactCardHeight, cardHandleHeight } from "./card-layout";
-import { mergeNearby, distanceM } from "./nearby-policy";
+import {
+  mergeNearby,
+  distanceM,
+  sameDiscoveryObservation,
+  nearbyAtCurrentObservation,
+  withinNearbyRadius,
+  isFreshDiscoveryObservation,
+  observationPoint,
+  type DiscoveryObservation,
+} from "./nearby-policy";
 import { setNearbyContribution } from "./nearby-contribution";
 import { AddressLine } from "./AddressLine";
 import { locality } from "./address-presentation";
@@ -172,6 +181,7 @@ export function HomeApartmentContent({
     disposeLookup = useRef<(() => void) | null>(null),
     selectionRef = useRef<S["Apartment"] | null>(null),
     lastFixAt = useRef(0),
+    latestObservation = useRef<DiscoveryObservation | null>(null),
     manualLocked = useRef(!!apartmentId || !!initialDestination.current);
   const catalogRef = useRef<S["NearbyCandidate"][]>([]),
     providerRef = useRef<{
@@ -284,8 +294,24 @@ export function HomeApartmentContent({
         distanceM(cache.point, discoveryAnchor.current.point) > 50)
     )
       providerRef.current = null;
-    updateNearby(mergeNearby(lookup.items, providerRef.current?.items ?? []));
-    if (Date.now() - providerLast.current < 30000) return;
+    const currentPoint = latestObservation.current
+      ? observationPoint(latestObservation.current)
+      : discoveryAnchor.current.point;
+    updateNearby(
+      mergeNearby(
+        lookup.items,
+        providerRef.current
+          ? withinNearbyRadius(
+              providerRef.current.items,
+              providerRef.current.point,
+              currentPoint,
+            )
+          : [],
+      ),
+    );
+    // Reuse the unexpired in-memory provider response; no stationary 30s poll.
+    if (providerRef.current || Date.now() - providerLast.current < 30000)
+      return;
     providerLast.current = Date.now();
     const epoch = ++providerEpoch.current;
     void request<S["NearbyDiscovery"]>("/v1/apartments/discover/mapbox", {
@@ -305,7 +331,9 @@ export function HomeApartmentContent({
           epoch !== providerEpoch.current ||
           Date.parse(extra.expires_at) <= Date.now() ||
           !discoveryAnchor.current ||
-          distanceM(discoveryAnchor.current.point, {
+          !latestObservation.current ||
+          !isFreshDiscoveryObservation(latestObservation.current) ||
+          distanceM(observationPoint(latestObservation.current), {
             lng: fix.coords.longitude,
             lat: fix.coords.latitude,
           }) > 50
@@ -317,7 +345,21 @@ export function HomeApartmentContent({
             until: Date.parse(extra.expires_at),
             point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
           };
-          updateNearby(mergeNearby(catalogRef.current, extra.items));
+          const currentPoint = observationPoint(latestObservation.current!);
+          updateNearby(
+            mergeNearby(
+              withinNearbyRadius(
+                catalogRef.current,
+                discoveryAnchor.current!.point,
+                currentPoint,
+              ),
+              withinNearbyRadius(
+                extra.items,
+                { lng: fix.coords.longitude, lat: fix.coords.latitude },
+                currentPoint,
+              ),
+            ),
+          );
         }
       })
       .catch(() => {
@@ -370,6 +412,7 @@ export function HomeApartmentContent({
     disposeLookup.current?.();
     const controller = new AbortController();
     stream.current = controller;
+    latestObservation.current = null;
     const valid = () => alive() && !controller.signal.aborted;
     let first = follow;
     setLocating(true);
@@ -390,17 +433,20 @@ export function HomeApartmentContent({
             accuracy_permission: approximate ? "approximate" : "precise",
           },
         }),
-      ({ fix }, lookup) => {
-        if (valid() && !manualLocked.current) onLookup.current(fix, lookup);
+      (origin, lookup) => {
+        if (!valid() || manualLocked.current || !latestObservation.current)
+          return;
+        const accepted = nearbyAtCurrentObservation(
+          lookup,
+          origin,
+          latestObservation.current,
+        );
+        if (accepted) onLookup.current(origin.fix, accepted);
       },
       () => {
         if (valid()) onFailure.current();
       },
-      (a, b) =>
-        a.fix.coords.longitude === b.fix.coords.longitude &&
-        a.fix.coords.latitude === b.fix.coords.latitude &&
-        a.approximate === b.approximate &&
-        a.fix.coords.accuracy === b.fix.coords.accuracy,
+      sameDiscoveryObservation,
       2000,
     );
     disposeLookup.current = () => queue.dispose();
@@ -484,6 +530,7 @@ export function HomeApartmentContent({
           staleReported = false;
           terminalError = false;
           lastFixAt.current = fix.timestamp;
+          latestObservation.current = { fix, approximate };
           if (__DEV__) testData?.onObservation?.();
           const p = { lng: longitude, lat: latitude };
           setPoint(p);
@@ -498,9 +545,17 @@ export function HomeApartmentContent({
             setCameraTarget(p);
             setCameraRevision((v) => v + 1);
           }
-          if (accuracy === null || !Number.isFinite(accuracy) || accuracy < 0) {
+          if (
+            accuracy === null ||
+            !Number.isFinite(accuracy) ||
+            accuracy < 0 ||
+            accuracy > 100
+          ) {
+            providerEpoch.current++;
             queue.invalidate();
             invalidateAutomaticCard();
+            setNearbyItems([]);
+            setCandidates([]);
             setLocationNotice("位置不够准确");
             return;
           }
@@ -930,11 +985,7 @@ export function HomeApartmentContent({
                   onPress={() => {
                     if (!providerSelected) return;
                     const key = randomUUID();
-                    setNearbyContribution(
-                      key,
-                      session.user.id,
-                      providerSelected,
-                    );
+                    setNearbyContribution(key, ownerId, providerSelected);
                     router.push({
                       pathname: "/apartments/contribute",
                       params: { nearby_key: key },

@@ -33,6 +33,7 @@ const scenes = [
   "重试恢复",
   "查询失败",
   "无资格",
+  "发现慢网",
 ] as const;
 type Scene = (typeof scenes)[number];
 // Synthetic delayed completions, no real network/account fault injection.
@@ -51,7 +52,7 @@ function delay(signal?: AbortSignal, milliseconds = 9000) {
     else signal?.addEventListener("abort", cancel, { once: true });
   });
 }
-function adapter(scene: Scene) {
+function adapter(scene: Scene, onAccessRead: () => void) {
   let reads = 0;
   return {
     canRead: scene !== "无资格",
@@ -86,6 +87,7 @@ function adapter(scene: Scene) {
         };
       }
       if (path.endsWith("/discover")) {
+        if (scene === "发现慢网") await delay(options.signal, 3000);
         if (scene === "查询失败") throw new Error("TEST lookup unavailable");
         const { point } = options.body as S["ResolveInput"];
         const empty =
@@ -144,35 +146,40 @@ function adapter(scene: Scene) {
           !path.includes("111111111112")
         )
           await delay(options.signal, 9000);
+        const number = path.includes("111111111113")
+          ? 104
+          : path.includes("111111111112")
+            ? 102
+            : 100;
+        const lng = apartment.point.lng + (number - 100) * 0.0001;
         return {
           apartment_id: path.split("/")[3] ?? apartment.id,
           buildings: [
             {
-              id: "33333333-3333-4333-8333-333333333333",
+              id: `33333333-3333-4333-8333-33333333333${(number - 100) / 2 + 1}`,
               geometry: {
                 type: "MultiPolygon",
                 coordinates: [
                   [
                     [
-                      [-118.244, 34.0519],
-                      [-118.2434, 34.0519],
-                      [-118.2434, 34.0525],
-                      [-118.244, 34.0525],
-                      [-118.244, 34.0519],
+                      [lng - 0.00007, 34.05211],
+                      [lng + 0.00007, 34.05211],
+                      [lng + 0.00007, 34.05229],
+                      [lng - 0.00007, 34.05229],
+                      [lng - 0.00007, 34.05211],
                     ],
                   ],
                 ],
               },
-              label_point: apartment.point,
-              street_number: path.includes("111111111112")
-                ? "TEST102"
-                : "TEST100",
+              label_point: { lng, lat: apartment.point.lat },
+              street_number: `TEST${number}`,
               verified_at: new Date().toISOString(),
             },
           ],
         };
       }
       if (path.endsWith("/access-records")) {
+        onAccessRead();
         if (
           (scene === "资料慢网" || scene === "快切慢网") &&
           !path.includes("111111111112")
@@ -230,20 +237,24 @@ export default function ArrivalLab() {
   }, []);
   const params = useLocalSearchParams<{ scene?: string; run?: string }>();
   const [observations, setObservations] = useState(0);
+  const [accessReads, setAccessReads] = useState(0);
   const [scene, setScene] = useState<Scene>(
     scenes.includes(params.scene as Scene) ? (params.scene as Scene) : "有密码",
   );
   useEffect(() => {
     if (scenes.includes(params.scene as Scene)) setScene(params.scene as Scene);
   }, [params.scene, params.run]);
-  const sceneAdapter = useMemo(() => adapter(scene), [scene]);
+  const sceneAdapter = useMemo(
+    () => adapter(scene, () => setAccessReads((n) => n + 1)),
+    [scene],
+  );
 
   if (!focused || !active)
     return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <Text style={{ fontSize: 12, textAlign: "center", padding: 6 }}>
-        TEST · 合成公寓/资料 · 位置更新 {observations} 次
+        TEST · 合成资料 · 位置 {observations} · 查码 {accessReads}
       </Text>
       <View style={{ height: 42 }}>
         <ScrollView horizontal>

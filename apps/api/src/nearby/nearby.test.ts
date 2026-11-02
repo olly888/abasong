@@ -72,3 +72,25 @@ it("rejects caller coordinates, false confirmation, stale and approximate fixes"
     }),
   ).toThrow();
 });
+
+it("keeps classified apartments when neighboring buildings omit their classification", async () => {
+  vi.stubEnv("MAPBOX_SEARCH_TOKEN", "pk.TEST");
+  try {
+    const features = ["apartments", undefined, null, "house"].map(
+      (type, id) => ({
+        id,
+        geometry: { coordinates: [p.lng, p.lat] },
+        properties: {
+          ...(type === undefined ? {} : { type }),
+          tilequery: { distance: 20 },
+        },
+      }),
+    );
+    const maps = new MapboxNearbyProvider(
+      vi.fn(async () => Response.json({ features })) as typeof fetch,
+    );
+    expect((await maps.buildings(p)).items).toHaveLength(1);
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

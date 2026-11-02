@@ -20,6 +20,10 @@ import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { AddressLine } from "./AddressLine";
 import { compactCardHeight, cardHandleHeight } from "./card-layout";
+import {
+  createCarouselGesture,
+  createCarouselAlignment,
+} from "./carousel-gesture";
 type C = components["schemas"]["NearbyCandidate"];
 export function NearbyCarousel(p: {
   items: C[];
@@ -30,10 +34,23 @@ export function NearbyCarousel(p: {
   onExpand?: () => void;
   children: () => ReactNode;
 }) {
+  const current = useRef(p);
+  current.current = p;
+  const frame = useRef({ step: 1 });
+  const alignment = useRef(createCarouselAlignment());
   const [width, setWidth] = useState(0),
     scroll = useRef<ComponentRef<typeof ScrollView>>(null),
-    dragging = useRef(false),
-    timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    gesture = useRef(
+      createCarouselGesture((n) => {
+        const candidate = current.current.items[n];
+        if (candidate) {
+          const x = n * frame.current.step;
+          alignment.current.alignTo(x);
+          scroll.current?.scrollTo({ x, animated: false });
+          current.current.onSelect(candidate);
+        }
+      }),
+    );
   const height = compactCardHeight(useWindowDimensions().fontScale);
   const expand = useRef(p.onExpand);
   expand.current = p.onExpand;
@@ -53,16 +70,17 @@ export function NearbyCarousel(p: {
   const multi = p.items.length > 1,
     w = Math.max(0, width - (multi ? 64 : 32)),
     step = w + 12;
+  frame.current.step = step;
   useEffect(() => {
-    scroll.current?.scrollTo({ x: index * step, animated: false });
-  }, [index, step]);
-  useEffect(() => () => clearTimeout(timer.current), []);
+    gesture.current.cancel();
+    if (width > 0) {
+      alignment.current.alignTo(index * step);
+      scroll.current?.scrollTo({ x: index * step, animated: false });
+    }
+  }, [index, step, width]);
+  useEffect(() => () => gesture.current.cancel(), []);
   const settle = (x: number) => {
-    clearTimeout(timer.current);
-    const n = Math.max(0, Math.min(p.items.length - 1, Math.round(x / step)));
-    if (!dragging.current && n === index) return;
-    dragging.current = false;
-    if (p.items[n]) p.onSelect(p.items[n]!);
+    gesture.current.finish(x, step, p.items.length, index);
   };
   const end = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
     settle(e.nativeEvent.contentOffset.x);
@@ -90,15 +108,28 @@ export function NearbyCarousel(p: {
           gap: 12,
         }}
         onScrollBeginDrag={() => {
-          dragging.current = true;
+          gesture.current.begin();
           p.onSwipeStart();
         }}
-        onMomentumScrollBegin={() => clearTimeout(timer.current)}
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          const x = e.nativeEvent.contentOffset.x;
+          if (alignment.current.observe(x) && !gesture.current.isActive()) {
+            gesture.current.begin();
+            p.onSwipeStart();
+            gesture.current.release(x, step, p.items.length, index);
+          }
+          gesture.current.scroll(x, step, p.items.length, index);
+        }}
+        onMomentumScrollBegin={() => gesture.current.momentum()}
         onMomentumScrollEnd={end}
         onScrollEndDrag={(e) => {
-          const x = e.nativeEvent.contentOffset.x;
-          clearTimeout(timer.current);
-          timer.current = setTimeout(() => settle(x), 200);
+          gesture.current.release(
+            e.nativeEvent.contentOffset.x,
+            step,
+            p.items.length,
+            index,
+          );
         }}
       >
         {p.items.map((c) => (
@@ -132,6 +163,10 @@ export function NearbyCarousel(p: {
                   : undefined
               }
               onAccessibilityAction={(e) => {
+                if (
+                  !["increment", "decrement"].includes(e.nativeEvent.actionName)
+                )
+                  return;
                 const n =
                   index + (e.nativeEvent.actionName === "increment" ? 1 : -1);
                 if (p.items[n]) p.onSelect(p.items[n]!);

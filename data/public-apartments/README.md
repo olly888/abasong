@@ -35,3 +35,7 @@ They are point **candidates**, not arrival polygons, driver position or permissi
 Render an offline operator review figure with `python3 scripts/d1/render-entrance-review.py docs/technical/figures`. SVG rendering uses the Python standard library; PNG is optional via an existing local Pillow12.1.1 installation. This rendering-only tool does not add an application runtime dependency. Building/property shapes retain the2026-10-30 snapshot; rechecking node versions does not reverify every building or the property boundary.
 
 The separate iPhone field-review entry embeds the same licensed Woodside subset in `apps/mobile/src/field/woodside.public.json`. Regenerate with `./scripts/dev exec node scripts/field/build-review-data.mjs` or verify with `--check`. The dataset license also applies to this derived subset. It carries two unverified candidates and public footprints only; it never creates an arrival polygon or copies the primary2547 label to individual buildings. No personal location/access information or runtime OSM fetch is added. See [field plan](../../docs/technical/D1_独立现场版与HTTPS测试环境方案.md) for its limited acceptance scope.
+
+## 2026-11-02 核对清单（不自动入库）
+
+pilot-address-inventory.json包含12个公寓地址目标与1个市政负例；原6的许可/几何保持旧记录，新6仅有官方邮政事实、无坐标/边界，runtime_catalog=false。不是新的GeoJSON运行数据，更不含密码。详见docs/technical/A3_公开地址核对与真实截图采集.md。

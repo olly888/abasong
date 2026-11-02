@@ -1,4 +1,5 @@
 import { verifyNearby } from "./verify-nearby";
+import { createContributionAttempt } from "../../apps/mobile/src/apartments/contribution-attempt";
 import { verifySearchMatching } from "./verify-search-matching";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
@@ -1168,6 +1169,70 @@ async function main() {
     await verifyPublicEntrances(db, req, await token(arrivalReader));
     await verifySearchMatching(db, sensitive.href, actor, issued);
     await verifyNearby(db, sensitive.href, issued);
+    // Exercise the exact mobile intent policy against real HTTP/PG. Entry
+    // creation succeeded but record validation failed; edit only the record,
+    // then retry a completed response without creating a second entry/record.
+    const manual = createContributionAttempt(randomUUID);
+    const firstIntent = manual.begin(
+      "TEST partial private address",
+      "TEST original",
+    )!;
+    const manualAddress = { address: "TEST partial private address" };
+    const partial = await req(
+      "POST",
+      root,
+      a,
+      201,
+      manualAddress,
+      firstIntent.entryKey,
+    );
+    await req(
+      "POST",
+      `${root}/${partial.id}/records`,
+      a,
+      400,
+      { value: "", scope_label: "TEST gate" },
+      firstIntent.recordKey,
+    );
+    manual.finish();
+    const correctedIntent = manual.begin(
+      "TEST partial private address",
+      "TEST corrected",
+    )!;
+    const restored = await req(
+      "POST",
+      root,
+      a,
+      201,
+      manualAddress,
+      correctedIntent.entryKey,
+    );
+    assert.equal(restored.id, partial.id);
+    const correctedBody = { value: "TEST-RETRY#", scope_label: "TEST gate" };
+    const corrected = await req(
+      "POST",
+      `${root}/${restored.id}/records`,
+      a,
+      201,
+      correctedBody,
+      correctedIntent.recordKey,
+    );
+    const replay = await req(
+      "POST",
+      `${root}/${restored.id}/records`,
+      a,
+      201,
+      correctedBody,
+      correctedIntent.recordKey,
+    );
+    assert.equal(replay.id, corrected.id);
+    const recovered = await req("GET", `${root}/${restored.id}`, a, 200);
+    assert.equal(recovered.records.length, 1);
+    assert.equal(recovered.records[0].value, correctedBody.value);
+    await req("GET", `${root}/${restored.id}`, b, 404);
+    await req("DELETE", `${root}/${restored.id}`, a, 200);
+    manual.finish(true);
+    manual.dispose();
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );

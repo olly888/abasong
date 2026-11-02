@@ -1,5 +1,11 @@
 # Abasong development status
 
+## Latest implementation — contribution return and write recovery (2026-11-01)
+
+[Implementation and evidence](docs/technical/D1_手动贡献返回与重试验收.md). Shared manual contributions now return by the submitted apartment ID, without relying on back history/nearest-card selection. Failed target loading stays explicit; retry preserves input, selecting another target requires intent. Form/target controls lock while submitting, synchronous intent guard prevents duplicate taps, and partial private-entry save reuses the entry key when only the failed code changes. Keys remain per-form memory and retire on disposal. Current return guarantees selected address, not the entire previous carousel.
+
+Final check184/34 PASS; libraryHTTP232 + address/PostGIS8 + Nearby transaction/authorization PASS; three-platform JS exports PASS. No API/DDL/dependency/cloud/grant change. Actual dual-native missing-target screen observed; iOS retry/input retention and normal private TEST create/read/remove passed, only this batch's entry cleaned. Browser synthetic error/retry/same-address return passed. Qualified shared native writes and Android slow-switch remain unclaimed. Mapbox style recheck401; permanent encoding stays off. D1 in progress; previews retained, no remote push.
+
 ## Latest implementation — radius-edge invalidation and native recovery (2026-11-01)
 
 [Follow-up evidence](docs/technical/D1_紧凑卡片补验与附近查码修正.md). Automatic nearby cards now revalidate source-specific leases and conservative boundary-distance bounds on every fresh precise fix, without waiting for a slow replacement query. Late provider responses cannot renew expired catalog data. Recenter also clears the old candidate address list; manual reading remains locked until recenter. Two added policy tests; final check181/33 PASS. No API/DDL/dependency/grant/cloud changes; previous realDB suites retain their recorded scope.

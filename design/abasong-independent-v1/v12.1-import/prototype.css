@@ -38,3 +38,5 @@
 .nearby-page{height:192px;min-height:192px;padding-bottom:8px;overflow-y:auto;scrollbar-width:none}.nearby-page::-webkit-scrollbar{display:none}.nearby-page .sheet-handle,.nearby-page .card-handle{height:20px;min-height:20px}.nearby-page .apartment-heading{min-height:40px}.nearby-page .code-value{padding:0;line-height:52px}.nearby-page .caption{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:22px}.nearby-page .expand-row{margin-top:0;padding:0;min-height:44px}.nearby-page .section-title{font-size:22px}.keypad-label{display:none}
 
 .home-sheet.nearby-carousel{bottom:0;padding-bottom:0}
+
+.contribution-target-actions{display:grid;gap:12px;margin:12px 0}

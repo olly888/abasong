@@ -1,4 +1,5 @@
 import { getNearbyContribution } from "../../apartments/nearby-contribution";
+import { createContributionAttempt } from "../../apartments/contribution-attempt";
 import { AddressLine } from "../../apartments/AddressLine";
 import { locality } from "../../apartments/address-presentation";
 import { useEffect, useRef, useState } from "react";
@@ -60,14 +61,13 @@ function Content() {
     [value, setValue] = useState(""),
     [scope, setScope] = useState("大门"),
     [confirmed, setConfirmed] = useState(false),
+    [requestedTarget, setRequestedTarget] = useState(params.apartment_id),
+    [targetLoading, setTargetLoading] = useState(!!params.apartment_id),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
-  // A stable write key is retained across uncertain transport retries; content changes get a new intent.
-  const attempt = useRef<{
-    fingerprint: string;
-    entryKey: string;
-    recordKey: string;
-  } | null>(null);
+  const attempt = useRef(createContributionAttempt(randomUUID));
+  const targetEpoch = useRef(0);
+  const locked = busy || targetLoading;
   const request = <T,>(
     path: string,
     opts: Parameters<typeof dataRequest>[2] = {},
@@ -78,40 +78,87 @@ function Content() {
     });
   useEffect(() => {
     controller.current = new AbortController();
-    return () => controller.current.abort();
+    attempt.current = createContributionAttempt(randomUUID);
+    return () => {
+      controller.current.abort();
+      attempt.current.dispose();
+      targetEpoch.current++;
+    };
   }, []);
+  function chooseTarget(item: S["Apartment"] | null) {
+    targetEpoch.current++;
+    setRequestedTarget(undefined);
+    setTargetLoading(false);
+    setTarget(item);
+    setConfirmed(false);
+    setError(null);
+  }
+  async function loadTarget(id: string) {
+    const version = ++targetEpoch.current;
+    setRequestedTarget(id);
+    setTarget(null);
+    setTargetLoading(true);
+    setConfirmed(false);
+    setError(null);
+    try {
+      const item = await request<S["Apartment"]>(
+        "/v1/apartments/" + encodeURIComponent(id),
+      );
+      if (controller.current.signal.aborted || version !== targetEpoch.current)
+        return;
+      if (item.id !== id)
+        throw new Error("公寓资料与所选地址不一致，请重新读取");
+      setTarget(item);
+    } catch (e) {
+      if (!controller.current.signal.aborted && version === targetEpoch.current)
+        setError(e instanceof Error ? e.message : "无法确认公寓");
+    } finally {
+      if (!controller.current.signal.aborted && version === targetEpoch.current)
+        setTargetLoading(false);
+    }
+  }
   useEffect(() => {
     if (!params.apartment_id) return;
-    void request<S["Apartment"]>("/v1/apartments/" + params.apartment_id)
-      .then((item) => {
-        if (!controller.current.signal.aborted) setTarget(item);
-      })
-      .catch((e) => {
-        if (!controller.current.signal.aborted)
-          setError(e instanceof Error ? e.message : "无法确认公寓");
-      });
+    void loadTarget(params.apartment_id);
+    return () => {
+      targetEpoch.current++;
+    };
   }, [params.apartment_id]);
 
   async function search() {
-    if (busy || query.trim().length < 2) return;
+    if (locked || query.trim().length < 2) return;
     setBusy(true);
     setError(null);
     try {
       const page = await request<S["ApartmentPage"]>(
         "/v1/apartments?query=" + encodeURIComponent(query),
       );
+      if (controller.current.signal.aborted) return;
       setMatches(page.items);
       if (!page.items.length) setError("未找到已收录公寓；可先保存私人记录。");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "搜索失败");
+      if (!controller.current.signal.aborted)
+        setError(e instanceof Error ? e.message : "搜索失败");
     } finally {
-      setBusy(false);
+      if (!controller.current.signal.aborted) setBusy(false);
     }
   }
   async function submit() {
-    if (!value.trim() || !scope.trim()) return;
-    setBusy(true);
-    setError(null);
+    if (
+      locked ||
+      (requestedTarget && !target) ||
+      !value.trim() ||
+      !scope.trim()
+    )
+      return;
+    if (
+      !isPrivate &&
+      (!confirmed ||
+        !a.me?.capabilities.includes("access.contribute") ||
+        (!target && !validNew))
+    )
+      return;
+    if (isPrivate && !target && !address.trim()) return;
     const body = isPrivate
       ? { target: target?.id ?? null, address, value, scope }
       : {
@@ -121,14 +168,18 @@ function Content() {
           confirmed,
           ...(target ? {} : { address: newAddress }),
         };
-    const fingerprint = JSON.stringify(body);
-    if (attempt.current?.fingerprint !== fingerprint)
-      attempt.current = {
-        fingerprint,
-        entryKey: randomUUID(),
-        recordKey: randomUUID(),
-      };
-    const intent = attempt.current;
+    const intent = attempt.current.begin(
+      JSON.stringify({
+        isPrivate,
+        target: target?.id ?? null,
+        address: target ? null : isPrivate ? address : newAddress,
+      }),
+      JSON.stringify(body),
+    );
+    if (!intent) return;
+    setBusy(true);
+    setError(null);
+    let committed = false;
     try {
       if (isPrivate) {
         const entry = await request<S["LibraryEntry"]>(
@@ -144,6 +195,8 @@ function Content() {
           key: intent.recordKey,
           body: { value, scope_label: scope },
         });
+        if (controller.current.signal.aborted) return;
+        committed = true;
         router.replace("/apartments/library");
       } else {
         if (!confirmed || (!target && !validNew))
@@ -180,27 +233,27 @@ function Content() {
               },
             },
           ));
+        if (controller.current.signal.aborted) return;
+        committed = true;
         setValue("");
         setConfirmed(false);
-        attempt.current = null;
         Alert.alert(
           result.outcome === "created_pending" ? "历史贡献尚未发布" : "已共享",
           result.outcome === "same_value_validation"
             ? "已有相同密码，已记录你的贡献。"
             : undefined,
         );
-        if (registered)
-          router.replace({
-            pathname: "/",
-            params: { apartment_id: registered.apartment.id },
-          });
-        else router.back();
+        router.replace({
+          pathname: "/",
+          params: { apartment_id: registered?.apartment.id ?? target!.id },
+        });
       }
     } catch (e) {
       if (!controller.current.signal.aborted)
         setError(e instanceof Error ? e.message : "提交失败");
     } finally {
-      setBusy(false);
+      attempt.current.finish(committed);
+      if (!controller.current.signal.aborted) setBusy(false);
     }
   }
   return (
@@ -214,6 +267,8 @@ function Content() {
             disabled={
               !value.trim() ||
               !scope.trim() ||
+              targetLoading ||
+              !!(requestedTarget && !target) ||
               (!target && (isPrivate ? !address.trim() : !validNew)) ||
               (!isPrivate &&
                 (!confirmed ||
@@ -224,8 +279,8 @@ function Content() {
           {!isPrivate ? (
             <Pressable
               accessibilityRole="button"
-              disabled={busy}
-              accessibilityState={{ disabled: busy }}
+              disabled={locked}
+              accessibilityState={{ disabled: locked }}
               onPress={() =>
                 router.replace("/apartments/contribute?mode=private")
               }
@@ -246,7 +301,7 @@ function Content() {
       <ActionButton
         label="从截图添加"
         secondary
-        disabled={busy}
+        disabled={locked}
         onPress={() =>
           router.push({
             pathname: "/apartments/import",
@@ -256,7 +311,7 @@ function Content() {
       />
       <FormError message={error} />
       {!isPrivate && !a.me?.capabilities.includes("access.contribute") ? (
-        <Text>共享贡献资格待审核</Text>
+        <Text>暂未获得共享资格</Text>
       ) : null}
       {target ? (
         <View style={{ gap: 12 }}>
@@ -267,11 +322,26 @@ function Content() {
           <ActionButton
             label="更换公寓"
             secondary
-            disabled={busy}
-            onPress={() => {
-              setTarget(null);
-              setConfirmed(false);
-            }}
+            disabled={locked}
+            onPress={() => chooseTarget(null)}
+          />
+        </View>
+      ) : requestedTarget ? (
+        <View style={{ gap: 12 }}>
+          {targetLoading ? (
+            <Text>正在读取公寓</Text>
+          ) : (
+            <ActionButton
+              label="重新读取公寓"
+              secondary
+              onPress={() => void loadTarget(requestedTarget)}
+            />
+          )}
+          <ActionButton
+            label="选择其他公寓"
+            secondary
+            disabled={locked}
+            onPress={() => chooseTarget(null)}
           />
         </View>
       ) : (
@@ -280,22 +350,21 @@ function Content() {
             value={query}
             onChange={setQuery}
             onSearch={() => void search()}
-            busy={busy}
+            busy={locked}
+            editable={!locked}
           />
           {matches.map((p) => (
             <ListRow
               key={p.id}
               title={<AddressLine line={p.address_line1} compact />}
               subtitle={[locality(p), p.name].filter(Boolean).join(" · ")}
-              onPress={() => {
-                setTarget(p);
-                setConfirmed(false);
-              }}
+              disabled={locked}
+              onPress={() => chooseTarget(p)}
             />
           ))}
         </>
       )}
-      {!isPrivate && !target ? (
+      {!isPrivate && !target && !requestedTarget ? (
         <View style={{ gap: 12 }}>
           <Text style={{ fontSize: 16, fontWeight: "600" }}>核对公寓地址</Text>
           <Field
@@ -306,6 +375,7 @@ function Content() {
               setConfirmed(false);
             }}
             maxLength={200}
+            editable={!locked}
           />
           <Field
             label="城市"
@@ -315,6 +385,7 @@ function Content() {
               setConfirmed(false);
             }}
             maxLength={100}
+            editable={!locked}
           />
           <Field
             label="州"
@@ -324,6 +395,7 @@ function Content() {
               setConfirmed(false);
             }}
             maxLength={2}
+            editable={!locked}
           />
           <Field
             label="邮编（选填）"
@@ -333,15 +405,17 @@ function Content() {
               setConfirmed(false);
             }}
             maxLength={10}
+            editable={!locked}
           />
         </View>
       ) : null}
-      {isPrivate && !target ? (
+      {isPrivate && !target && !requestedTarget ? (
         <Field
           label="未收录公寓的英文地址"
           value={address}
           onChangeText={setAddress}
           maxLength={300}
+          editable={!locked}
         />
       ) : null}
       <Field
@@ -353,6 +427,7 @@ function Content() {
           setConfirmed(false);
         }}
         maxLength={32}
+        editable={!locked}
         autoCapitalize="none"
         autoCorrect={false}
       />
@@ -364,12 +439,13 @@ function Content() {
           setConfirmed(false);
         }}
         maxLength={100}
+        editable={!locked}
       />
       {!isPrivate ? (
         <Pressable
           accessibilityRole="checkbox"
-          accessibilityState={{ checked: confirmed, disabled: busy }}
-          disabled={busy}
+          accessibilityState={{ checked: confirmed, disabled: locked }}
+          disabled={locked}
           onPress={() => setConfirmed((v) => !v)}
           style={{
             flexDirection: "row",

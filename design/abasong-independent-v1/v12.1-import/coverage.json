@@ -1,10 +1,10 @@
 {
   "version": "V12.1-inline-password-extension",
-  "date": "2026-10-31",
+  "date": "2026-11-01",
   "prototype": "index.html",
   "design_nodes": 39,
   "route_or_page_views": 35,
-  "spec_state_variants": 284,
+  "spec_state_variants": 301,
   "all_state_variants_verified": false,
   "real_services_connected": false,
   "nodes": [
@@ -69,7 +69,7 @@
       "name": "贡献密码/进入方式",
       "implementation": "local_interactive_prototype",
       "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
-      "state_coverage": "partial; see acceptance record"
+      "state_coverage": "partial; target-load error/retry, failed-save input retention and same-apartment return observed with synthetic browser data; see acceptance record"
     },
     {
       "id": "P01",

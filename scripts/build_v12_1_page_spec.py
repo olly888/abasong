@@ -337,6 +337,10 @@ for p in pages:
   p['acceptance']+=' ADD-18范围刷新：每次新鲜精确定位先按各来源原始查询点、边界距离与期限保守撤下不能保证仍在200米内的自动候选，不等待慢查询；地图迟到结果不续期目录。手动阅读保持，点击定位清除旧密码、高亮及候选地址列表，再重新查找。可选地图故障仍可读目录，未知地址不读取邻近其他公寓密码。'
  if p['id']=='B02':
   p['api_operations']+=['contributeAtConfirmedAddress']
+  p['requirements']+=['ADD-18']
+  p['states']+=['目标公寓读取失败与重试','提交中锁定与重复点按']
+  p['actions']+=[dict(label='重新读取公寓',target='B02',result='保留本次填写，重新核对原目标；明确选择其他公寓后才改目标')]
+  p['acceptance']+=' ADD-18贡献回程：共享成功按实际提交公寓ID返回首页同一地址，不以最近公寓或上一页推断；无返回栈不发送GO_BACK。目标读取失败不自动切为新建地址，重试保留密码，明确更换后才填写其他地址。提交期间锁定输入与目标，连续点按不重复发起；同次不确定结果重试复用键。私人条目创建与密码写入分开保留意图，第二步失败只改密码时复用条目创建键，避免重复地址；退出不跨会话续填。'
 (outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-11-01','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']

@@ -112,12 +112,14 @@ export function SearchBox({
   onSearch,
   busy = false,
   onCamera,
+  editable = true,
 }: {
   value: string;
   onChange: (v: string) => void;
   onSearch: () => void;
   busy?: boolean;
   onCamera?: () => void;
+  editable?: boolean;
 }) {
   return (
     <View
@@ -134,7 +136,7 @@ export function SearchBox({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="搜索"
-        disabled={busy || value.trim().length < 2}
+        disabled={!editable || busy || value.trim().length < 2}
         onPress={onSearch}
         style={{
           width: 48,
@@ -150,6 +152,7 @@ export function SearchBox({
         placeholder="搜索公寓或地址"
         placeholderTextColor={tokens.color.textMuted}
         value={value}
+        editable={editable}
         onChangeText={onChange}
         onSubmitEditing={onSearch}
         returnKeyType="search"
@@ -167,6 +170,7 @@ export function SearchBox({
         <IconButton
           name="close"
           label="清空搜索"
+          disabled={!editable}
           onPress={() => onChange("")}
         />
       ) : !onCamera ? (
@@ -177,7 +181,7 @@ export function SearchBox({
           name="camera"
           label="拍面单查地址"
           onPress={onCamera}
-          disabled={busy}
+          disabled={!editable || busy}
         />
       ) : null}
     </View>

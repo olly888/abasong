@@ -845,7 +845,17 @@ export function HomeApartmentContent({
               : undefined
           }
           apartments={mode === "公寓" ? candidates : []}
-          selectedId={selected?.id}
+          selectedId={
+            mode === "公寓" ? selected?.id ?? providerSelected?.key : undefined
+          }
+          selectedPoint={
+            mode === "公寓" ? selected?.point ?? providerSelected?.point : undefined
+          }
+          providerFeatureId={
+            mode === "公寓" ? providerSelected?.provider_feature_id : undefined
+          }
+          nearbyCandidates={mode === "公寓" ? nearbyItems : []}
+          onNearbySelect={mode === "公寓" ? (c) => void chooseNearby(c) : undefined}
           mapContext={mode === "公寓" ? mapContext : null}
           onSelect={(p) => void select(p)}
         />

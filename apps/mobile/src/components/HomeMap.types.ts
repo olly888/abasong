@@ -9,6 +9,10 @@ export type HomeMapProps = {
   selectedId?: string;
   mapContext?: S["ApartmentMapContext"] | null;
   onSelect?: (p: S["Apartment"]) => void;
+  selectedPoint?: S["Point"];
+  providerFeatureId?: string;
+  nearbyCandidates?: S["NearbyCandidate"][];
+  onNearbySelect?: (candidate: S["NearbyCandidate"]) => void;
   cameraRevision?: number;
   cameraIntent?: "explicit" | "arrival";
   cameraZoom?: number;
@@ -16,4 +20,7 @@ export type HomeMapProps = {
   bottomInset?: number;
   topInset?: number;
   overlay?: ReactNode;
+  /** Development-only synthetic native SDK acceptance, never a product input. */
+  testMapStyle?: string;
+  onTestBuildingResult?: (key: string, count: number) => void;
 };

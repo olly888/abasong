@@ -1716,6 +1716,8 @@ export interface components {
             /** @enum {string} */
             classification: "catalog_community" | "apartments";
             requires_address_confirmation: boolean;
+            /** @description 会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可 */
+            provider_feature_id?: string;
         };
         NearbyDiscovery: {
             items: components["schemas"]["NearbyCandidate"][];

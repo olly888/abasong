@@ -101,6 +101,7 @@ export class NearbyService {
           apartment: null,
           address,
           point: b.point,
+          ...(b.feature_id ? { provider_feature_id: b.feature_id } : {}),
           distance_m: b.distance_m,
           classification: "apartments",
           requires_address_confirmation: true,

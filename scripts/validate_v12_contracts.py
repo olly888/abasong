@@ -105,7 +105,13 @@ assert set(review_issues['items']['enum']).issubset(contract['components']['sche
 
 assert "'V12.0007'" in nearby_sql and 'sensitive_confirmed_apartment_insert' in nearby_sql
 assert {'discoverNearbyApartments','discoverMapboxApartments','contributeAtConfirmedAddress'}.issubset(set(ids))
-assert 'value' not in contract['components']['schemas']['NearbyCandidate']['properties']
+nearby_schema=contract['components']['schemas']['NearbyCandidate']
+assert 'value' not in nearby_schema['properties']
+assert nearby_schema['properties']['provider_feature_id']['type']=='string'
+assert nearby_schema['properties']['provider_feature_id']['maxLength']==200
+assert 'provider_feature_id' not in nearby_schema['required']
+for name in ('AddressContributionInput','ResolveInput'):
+    assert 'provider_feature_id' not in contract['components']['schemas'][name]['properties']
 assert 'published_on_creation' in direct_sql and 'UPDATE abasong.access_records' not in direct_sql
 assert 'FORCE ROW LEVEL SECURITY' in arrival_sql and 'apartment_arrival_areas' in arrival_sql
 batch_parsed=parse_sql(batch_sql)

@@ -1,5 +1,7 @@
 # Abasong V12 研发文档入口
 
+- [A3 Mapbox原生查询与地址质量验收](technical/A3_Mapbox原生查询与地址质量验收.md)
+
 - [A3 附近公寓覆盖与匹配验收](technical/A3_附近公寓覆盖与匹配验收.md)
 
 - [A3 本地OCR质量与核对提示验收](technical/A3_本地OCR质量与核对提示验收.md)

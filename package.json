@@ -37,7 +37,8 @@
     "verify:import-api": "tsx scripts/d1/verify-import-api.ts",
     "data:configure-imports": "tsx scripts/d1/configure-local-imports.ts",
     "cloud:preflight": "tsx scripts/cloud/preflight.ts",
-    "ocr:evaluate": "node --import tsx scripts/ocr/evaluate-quality.ts"
+    "ocr:evaluate": "node --import tsx scripts/ocr/evaluate-quality.ts",
+    "pilot:prepare": "tsx scripts/d1/prepare-pilot.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

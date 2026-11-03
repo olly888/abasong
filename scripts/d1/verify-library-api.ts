@@ -1,5 +1,6 @@
 import { prepareContributionBackfill } from "./verify-contribution-backfill";
 import { verifyContributionManagement } from "./verify-contribution-management";
+import { verifyPilotAccess } from "./verify-pilot-access";
 import { verifyNearby } from "./verify-nearby";
 import { verifyKmsServices } from "./verify-kms-services";
 import { createContributionAttempt } from "../../apps/mobile/src/apartments/contribution-attempt";
@@ -1253,6 +1254,7 @@ async function main() {
     manual.finish(true);
     manual.dispose();
     await verifyContributionManagement(db, req, token, base, sensitive.href, admin.href, issuer);
+    await verifyPilotAccess(db, admin.href, issuer, token, req, aid);
     await verifyKmsServices(db,sensitive.href,issued);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,

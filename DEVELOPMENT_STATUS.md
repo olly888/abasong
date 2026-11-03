@@ -1,5 +1,17 @@
 # Abasong development status
 
+## Current execution — offline pilot configuration and expiring qualifications (2026-11-03)
+
+Branch codex/d1-offline-pilot-preparation, parent33e7cd0 (exact CI41696995399 success). [Implementation and actual checks](docs/technical/A4_A5_独立内测配置与限期资格验收.md). Added pilot-dev mobile profile/com.abasong.pilot and fixed HTTPS/DevWest/public-value checks; normal and field-review identities retained. pilot:prepare clears development overrides and exports public configuration plus production iOS/Android/Web JS to ignored local artifacts, verifies business/auth entry graph, and invalidates stale reports on failure. No native project mutation/compile, signing, install or cloud connectivity acceptance.
+
+Internal PilotAccessCommand grants only paired read/contribute with explicit absolute expiry <=7 days. Verified active MFA ops.user_manage operator, active target/profile, UUID normalization, no self-grant, dry-run, transaction/idempotency locks, immutable audit receipt and scoped revocation; ordinary HTTP controllers/driver UI/runtime roles unchanged. Existing active/scheduled grants are not overwritten; old receipt replay never extends expiry. CLI supports local D0 only and owner-only bounded non-symlink token file. Cloud least-privilege execution remains pending, not bypassed with D0 admin credentials.
+
+Actual check264/45, lint/types/build PASS; libraryHTTP295 with22 new operator/expiry/isolation checks, address8/spatial97/Mapbox chain8/new-address11/source/KMS synthetic-gateway+realPG PASS. Temporary database and role cleaned. No real-account qualification or TEST writes. Public config/three-platform production JS export passed; no changed native UI, so no repeat gesture request. Exact current remote CI tracked on PR49. No new dependency/DDL/OpenAPI/lockfile change.
+
+User asked for AWS signup and plugin guidance: [official advanced signup and short-term-access preparation](docs/technical/A4_AWS注册与短期访问准备.md). Account/payment/identity/terms/MFA remain with owner; installed project AWS CLI is sufficient, no plugin added or credentials created. Mapbox restored; stale runbook startup text corrected. Next: account/short-term target verification → A4 real KMS/DevWest business/HTTPS/two real accounts → A5 signed independent iPhone business build/cellular field. Authorized real OCR set remains0; D1/A4/A5 not complete.
+
+## Earlier execution and evidence
+
 ## Current execution — native unknown-address acceptance (2026-11-03)
 
 Branch codex/d1-native-new-address-acceptance, parent1124be6 (CI41598662610 success). [Dual-native evidence](docs/technical/D1_未收录公寓原生补验.md). Real public145 Chestnut search exposed Mapbox IDs exceeding the former500-char bound and rejecting the entire five-result response. Supplier/parser, DTO and source OpenAPI now share4096, retaining actor/session membership, URL encoding, fixed host and body/response limits. Four regressions added; mixed supplier test failed before fix.

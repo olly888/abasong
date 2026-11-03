@@ -1,12 +1,14 @@
 # DevWest 内测部署材料 · A2
 
-更新：2026-11-02。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。这些材料可审查，尚未在云端执行。A4 需要账号、具体资源费用和环境确认。
+更新：2026-11-03。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。这些材料可审查，尚未在云端执行。A4 需要账号、具体资源费用和环境确认。
 
-## 当前启动工具（2026-11-02）
+## 当前启动工具（2026-11-03）
 
-用户已恢复按序推进；Mapbox账号用户名ollyyin，账单待本人完成；AWS待注册。已在项目忽略目录安装并验证官方签名/公证AWS CLI2.39.3，`./scripts/aws --version`可用。包装脚本使用`.tooling/aws/config`、`.tooling/aws/credentials`、profile `abasong-pilot`及us-west-1；不使用全局默认配置，不代替IAM/目标核对。当前没有登录或创建凭据。账号就绪后采用短期SSO身份，不让用户发送root密码、长期key或验证码。
+用户已恢复按序推进；Mapbox账号用户名ollyyin，用户已添加付款方式，临时接口及本机永久编码已实测恢复；AWS仍待本人[注册与MFA](../../docs/technical/A4_AWS注册与短期访问准备.md)。已在项目忽略目录安装并验证官方签名/公证AWS CLI2.39.3，`./scripts/aws --version`可用。包装脚本使用`.tooling/aws/config`、`.tooling/aws/credentials`、profile `abasong-pilot`及us-west-1；不使用全局默认配置，不代替IAM/目标核对。当前没有登录或创建凭据。账号就绪后采用短期SSO身份，不让用户发送root密码、长期key或验证码。
 
-`./scripts/dev mapbox:verify-live`或追加`--server-token`分别核验本机移动端/API公开token，最多6次临时公开样本请求、无重试/永久编码/正文落库；当前实际只发1次样式请求即401停止。`./scripts/dev cloud:preflight --manifest`已生成9次离线迁移清单。真实云操作仍按下文预检和受控执行，不改D0防护。详见[启动记录](../../docs/technical/A4_Mapbox恢复与云内测启动记录.md)。
+`./scripts/dev mapbox:verify-live`或追加`--server-token`分别核验本机移动端/API公开token，最多6次临时公开样本请求、无重试/永久编码/正文落库；早前401时只发1次即停止；用户添加卡后六项临时探测均200，永久编码也经另批有界验证，本机已开启，云环境仍需单独配置。`./scripts/dev cloud:preflight --manifest`已生成9次离线迁移清单。真实云操作仍按下文预检和受控执行，不改D0防护。详见[启动记录](../../docs/technical/A4_Mapbox恢复与云内测启动记录.md)。
+
+本地已交付[独立业务构建配置及限期资格工具](../../docs/technical/A4_A5_独立内测配置与限期资格验收.md)：生产JS导出通过，但不是已签名安装包；资格执行器当前仅D0，云管理员角色/执行器待本环境明确审查，不能复用D0 postgres连接。普通API/worker权限不因本工具扩大。
 
 ## 加密与运行边界
 

@@ -1,14 +1,14 @@
 # Abasong development status
 
-## Current local delivery — native Mapbox queries and address quality (2026-11-02)
+## Current local delivery — unregistered Mapbox discovery and mismatch regression (2026-11-02)
 
-Cloud deployment remains deferred. Branch `codex/d1-mapbox-native-quality`, parent integrated `9ddfbb7` (CI41545227028 PASS). [Current evidence](docs/technical/A3_Mapbox原生查询与地址质量验收.md), [previous coverage](docs/technical/A3_附近公寓覆盖与匹配验收.md).
+Cloud deployment remains deferred. Parent integrated `d2b72cd`, CI41558801166 PASS; batch `codex/d1-public-match-expansion`. [Current evidence](docs/technical/A3_Mapbox未收录发现与误匹配回归.md), [native-query implementation](docs/technical/A3_Mapbox原生查询与地址质量验收.md).
 
-Native loaded-source building queries now assist highlight and unique building-tap selection; verified catalog geometry takes priority. Session-only optional provider_feature_id is response metadata, not a business identity or persistence grant. Bounded geometry parsing, selection generation checks, serial queries and identical-result suppression avoid stale highlights and idle loops. Default200m and compact cards unchanged.
+Public samples are an acceptance dataset, not a citywide manually curated address catalog or region allowlist. Existing Mapbox discovery already returns temporary apartment/address-confirmation cards when Abasong has no catalog entries. Business IDs/address anchors support actual contributions, saved places and permission-bound codes; ephemeral supplier candidates do not automatically become permanent records. Architecture and product/data docs now make this separation explicit.
 
-Capped Tilequery now makes at most four parallel supplements (5 total) and retains partial coverage; only original-point conservative distances are used. Existing4 reverse/address budgets remain. New permanent address bindings require documented q, precise accuracy, high/exact confidence and matched number/street/region, plus canonical address/ZIP agreement; uncertain cases retain the existing confirmation form. No human moderation added.
+New tests verify zero-catalog discovery, neighboring unregistered addresses, same-address roof dedupe and absence of secret reads/registration during discovery. Existing6 public fixtures now exercise6 full-name aliases,6 wrong doors,5 conflicting directions and municipal mismatch. Spatial/PostGIS coverage97, libraryHTTP291/address8/KMS synthetic gateway+realPG PASS; root239 tests/43 files and lint/types/build PASS. No product/runtime API, mobile UI, dependency, contract or DDL change; no new native/device acceptance claimed.
 
-Latest local check236 tests/43 files, lint/types/build PASS; actual library291 HTTP/DB plus address8/coverage79 and synthetic-KMS/real-PG checks, import124 PASS. Contract/static/link and iOS/Android/Web JS export checks are recorded in report. Actual dual-native local GeoJSON SDK queries, select/tap/clear observed; this is not real-provider or physical acceptance. SDK map-load error remains, trial service restoration not certified. Original6 runtime public apartments unchanged; no cloud migration, account grant, real password or GPS submission. Integration/CI status tracked by [D1 PR49](https://github.com/olly888/abasong/pull/49); older green checks do not cover the new commit. A3/D1 remain in progress; A4 deferred.
+Runtime public apartment count remains6. Additional public map checks yielded no sufficiently clear new target association, so nothing was imported or inferred. Geometry collection stopped; future sample work prioritizes the Mapbox-to-address-to-code chain. Real Mapbox and field acceptance remain pending; no new capability, real code/GPS, cloud/DNS/billing action. Latest integration CI tracked by [D1 PR49](https://github.com/olly888/abasong/pull/49); A3/D1 remain in progress and A4 deferred.
 
 ## Current local delivery — OCR quality and review hints (2026-11-02)
 

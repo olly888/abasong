@@ -33,6 +33,8 @@ const catalog: S["NearbyCandidate"] = {
 function setup() {
   const apartments = {
     discoverCatalog: vi.fn(async () => [catalog]),
+    readShared: vi.fn(),
+    contributeAddress: vi.fn(),
     // Old blanket spatial suppression incorrectly hides independent addresses.
     uncoveredDiscoveryPoints: vi.fn(async () => []),
   };
@@ -59,6 +61,65 @@ function setup() {
   };
   return { service, apartments, maps, actor, fix };
 }
+it("discovers a Mapbox apartment without any pre-registered catalog entry or permanent geocoding", async () => {
+  const f = setup();
+  f.apartments.discoverCatalog.mockResolvedValue([]);
+  const result = await f.service.discover(f.actor, f.fix, true);
+  expect(result.items).toHaveLength(1);
+  expect(result.items[0]).toMatchObject({
+    source: "mapbox",
+    apartment: null,
+    address,
+    classification: "apartments",
+    requires_address_confirmation: true,
+  });
+  expect(result.use_mode).toBe("temporary");
+  expect(f.apartments.readShared).not.toHaveBeenCalled();
+  expect(f.apartments.contributeAddress).not.toHaveBeenCalled();
+});
+it("keeps two neighboring Mapbox postal addresses distinct without substituting a catalog password target", async () => {
+  const f = setup();
+  f.apartments.discoverCatalog.mockResolvedValue([]);
+  const second = { lng: point.lng + 0.0001, lat: point.lat };
+  f.maps.buildings.mockResolvedValue({
+    items: [
+      { point, distance_m: 10 },
+      { point: second, distance_m: 20 },
+    ],
+    truncated: false,
+  });
+  f.maps.reverse.mockImplementation(async (p) => ({
+    ...address,
+    address_line1: p.lng === point.lng ? "100 TEST Ave" : "102 TEST Ave",
+  }));
+  const result = await f.service.discover(f.actor, f.fix, true);
+  expect(result.items.map((c) => c.address?.address_line1)).toEqual([
+    "100 TEST Ave",
+    "102 TEST Ave",
+  ]);
+  expect(
+    result.items.every(
+      (c) => c.apartment === null && c.requires_address_confirmation,
+    ),
+  ).toBe(true);
+  expect(f.apartments.readShared).not.toHaveBeenCalled();
+  expect(f.apartments.contributeAddress).not.toHaveBeenCalled();
+});
+it("retains only one temporary card for repeated roofs sharing a postal address, without registering it", async () => {
+  const f = setup();
+  f.apartments.discoverCatalog.mockResolvedValue([]);
+  f.maps.buildings.mockResolvedValue({
+    items: [
+      { point, distance_m: 10 },
+      { point: { ...point, lng: point.lng + 0.0001 }, distance_m: 20 },
+    ],
+    truncated: false,
+  });
+  const result = await f.service.discover(f.actor, f.fix, true);
+  expect(result.items).toHaveLength(1);
+  expect(result.items[0]?.apartment).toBeNull();
+  expect(f.apartments.contributeAddress).not.toHaveBeenCalled();
+});
 it("retains known catalog apartments without asking for a provider classification", async () => {
   const f = setup();
   expect((await f.service.discover(f.actor, f.fix)).items).toEqual([catalog]);

@@ -1,5 +1,7 @@
 # Abasong V12 研发文档入口
 
+- [A3 Mapbox未收录发现与误匹配回归](technical/A3_Mapbox未收录发现与误匹配回归.md)
+
 - [A3 Mapbox原生查询与地址质量验收](technical/A3_Mapbox原生查询与地址质量验收.md)
 
 - [A3 附近公寓覆盖与匹配验收](technical/A3_附近公寓覆盖与匹配验收.md)

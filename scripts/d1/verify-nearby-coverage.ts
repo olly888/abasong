@@ -62,6 +62,86 @@ export async function verifyNearbyCoverage(
       );
       assert(found.every((c) => c.distance_m >= 0 && c.distance_m <= 200));
     });
+  // Real public postal fixtures, with synthetic search input variations.
+  // They verify matching, not real Mapbox coverage or a driver's GPS.
+  const expanded: Record<string, string> = {
+    "300 S Santa Fe Ave": "300 South Santa Fe Avenue",
+    "2445 E Del Mar Blvd": "2445 East Del Mar Boulevard",
+    "2547 Temple Ave": "2547 Temple Avenue",
+    "301 S Glendora Ave": "301 South Glendora Avenue",
+    "6200 W 3rd St": "6200 West 3rd Street",
+    "435 S Curson Ave": "435 South Curson Avenue",
+  };
+  for (const [i, sample] of samples.entries()) {
+    const address: S["SearchAddress"] = {
+      address_line1: sample.address_line1,
+      city: sample.city,
+      state: sample.state,
+      postal_code: sample.postal_code,
+    };
+    await check(`PUBLIC-${i + 1}-SEARCH-ALIAS`, async () => {
+      assert(expanded[sample.address_line1]);
+      assert.deepEqual(
+        (
+          await service.matchSearchAddress(
+            actor,
+            { ...address, address_line1: expanded[sample.address_line1]! },
+            sample,
+          )
+        ).map((a) => a.id),
+        [sample.id],
+      );
+    });
+    await check(`PUBLIC-${i + 1}-WRONG-DOOR`, async () => {
+      const wrongDoor = sample.address_line1.replace(/^\d+/, (n) =>
+        String(Number(n) + 1),
+      );
+      assert.deepEqual(
+        await service.matchSearchAddress(
+          actor,
+          { ...address, address_line1: wrongDoor },
+          sample,
+        ),
+        [],
+      );
+    });
+    if (/\s[NSEW]\s/.test(sample.address_line1))
+      await check(`PUBLIC-${i + 1}-WRONG-DIRECTION`, async () => {
+        const opposite: Record<string, string> = {
+          N: "S",
+          S: "N",
+          E: "W",
+          W: "E",
+        };
+        const line = sample.address_line1.replace(
+          /\s([NSEW])\s/,
+          (_, d: string) => " " + opposite[d] + " ",
+        );
+        assert.deepEqual(
+          await service.matchSearchAddress(
+            actor,
+            { ...address, address_line1: line },
+            sample,
+          ),
+          [],
+        );
+      });
+  }
+  await check("MUNICIPAL-ADDRESS-NOT-NEAREST-APARTMENT", async () => {
+    assert.deepEqual(
+      await service.matchSearchAddress(
+        actor,
+        {
+          address_line1: "100 North Garfield Avenue",
+          city: "Pasadena",
+          state: "CA",
+          postal_code: null,
+        },
+        samples.find((s) => s.city === "Pasadena")!,
+      ),
+      [],
+    );
+  });
   // Ring points outside real roofs are nearby recommendations, not gates.
   const outside = (
     await db.query<{ id: string; lng: number; lat: number; distance: number }>(
@@ -243,8 +323,9 @@ export async function verifyNearbyCoverage(
   await check("INDEPENDENT-CHILD-ADDRESS", async () => {
     const found = await service.discoverCatalog(actor, origin);
     assert.equal(
-      found.filter((c) => c.apartment?.id === boundaryId || c.apartment?.id === childId)
-        .length,
+      found.filter(
+        (c) => c.apartment?.id === boundaryId || c.apartment?.id === childId,
+      ).length,
       2,
     );
     assert.deepEqual(

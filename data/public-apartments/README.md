@@ -1,5 +1,9 @@
 # Public pilot geometry
 
+## Role of these fixtures
+
+These bounded public samples are a regression/acceptance dataset, not a complete apartment address catalog or a runtime region allowlist. Mapbox discovery does not require an existing Abasong apartment or password. Unregistered classified candidates can display temporary address/confirmation cards; business IDs and licensed address anchors are created or associated only when a business flow needs them. Basemap, search and geocoding remain Mapbox capabilities. This folder is not a second citywide map-provider integration.
+
 `one-santa-fe.geojson` contains independent OpenStreetMap way427628872 geometry, downloaded from the official OSM map API on2026-10-30. © OpenStreetMap contributors. Data available under [ODbL1.0](https://opendatacommons.org/licenses/odbl/1-0/); see [copyright and attribution](https://www.openstreetmap.org/copyright). This file and any adaptations of this geometry retain that license. The project's code license does not override this dataset license.
 
 Canonical property name/address is cross-checked against the [property operator](https://osfla.com/). The OSM street spelling and postal code differ; that discrepancy is recorded, not silently treated as field verification. Public address association is not proof of entrance, gated-community extent, required access method or working access code.
@@ -43,3 +47,7 @@ pilot-address-inventory.json包含12个公寓地址目标与1个市政负例；�
 ## 2026-11-02 本地覆盖回归
 
 复用现有6运行条目、其中4处建筑轮廓及Woodside54个屋顶做生产服务／PostGIS检查。外圈观测由已许可轮廓生成；长社区、相邻门牌、来源时效及无效边界使用明确TEST形状，不持久入目录。共79组场景不是79个新公寓或现场通过，新6个研究地址仍未入库。[实际范围](../../docs/technical/A3_附近公寓覆盖与匹配验收.md)。
+
+## 2026-11-02 未收录发现与错误关联回归
+
+复用6处运行夹具增加真实公开地址的全写/缩写、错门牌、反方向及市政地址误匹配测试，空间套件由79增至97组。新增服务测试证明：目录为空时Mapbox仍可出临时公寓卡、相邻地址不合并、同址多屋顶合并且不触发密码读取或注册。没有新增运行数据、区域白名单或现场准确率结论。详见[验收与职责说明](../../docs/technical/A3_Mapbox未收录发现与误匹配回归.md)。

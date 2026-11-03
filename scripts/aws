@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cli="$repo_root/.tooling/aws-tools/aws-cli/aws"
+if [ ! -x "$cli" ]; then
+  printf '%s\n' 'Project AWS CLI is not installed; see deploy/pilot-dev/README.md.' >&2
+  exit 1
+fi
+# Keep Abasong configuration separate from any unrelated AWS profiles. This is
+# convenience, not a replacement for IAM or the reviewed deployment target.
+mkdir -p "$repo_root/.tooling/aws"
+export AWS_CONFIG_FILE="$repo_root/.tooling/aws/config"
+export AWS_SHARED_CREDENTIALS_FILE="$repo_root/.tooling/aws/credentials"
+export AWS_PROFILE=abasong-pilot
+export AWS_REGION=us-west-1
+export AWS_DEFAULT_REGION=us-west-1
+export AWS_EC2_METADATA_DISABLED=true
+export AWS_CLI_AUTO_PROMPT=off
+export AWS_PAGER=
+exec "$cli" "$@"

@@ -2,6 +2,12 @@
 
 更新：2026-11-02。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。这些材料可审查，尚未在云端执行。A4 需要账号、具体资源费用和环境确认。
 
+## 当前启动工具（2026-11-02）
+
+用户已恢复按序推进；Mapbox账号用户名ollyyin，账单待本人完成；AWS待注册。已在项目忽略目录安装并验证官方签名/公证AWS CLI2.39.3，`./scripts/aws --version`可用。包装脚本使用`.tooling/aws/config`、`.tooling/aws/credentials`、profile `abasong-pilot`及us-west-1；不使用全局默认配置，不代替IAM/目标核对。当前没有登录或创建凭据。账号就绪后采用短期SSO身份，不让用户发送root密码、长期key或验证码。
+
+`./scripts/dev mapbox:verify-live`或追加`--server-token`分别核验本机移动端/API公开token，最多6次临时公开样本请求、无重试/永久编码/正文落库；当前实际只发1次样式请求即401停止。`./scripts/dev cloud:preflight --manifest`已生成9次离线迁移清单。真实云操作仍按下文预检和受控执行，不改D0防护。详见[启动记录](../../docs/technical/A4_Mapbox恢复与云内测启动记录.md)。
+
 ## 加密与运行边界
 
 共享密码、私存条目/密码、截图候选均使用同一 `EnvelopeCrypto`，服务端所有调用均 await。D0 保留 local-envelope-v1；云端 aws-kms-envelope-v1 使用 KMS GenerateDataKey(AES_256)→本机 AES-256-GCM，保存密文数据密钥；Decrypt 绑定相同 Key ARN 与 encryption context。DEK 每次使用后覆盖，不设跨请求明文密钥缓存。上下文只包含app/env和AAD摘要，原地址、密码、司机位置不进入CloudTrail上下文。[AWS流程](https://docs.aws.amazon.com/kms/latest/APIReference/API_GenerateDataKey.html)、[Decrypt](https://docs.aws.amazon.com/kms/latest/APIReference/API_Decrypt.html)。

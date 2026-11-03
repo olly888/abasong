@@ -232,6 +232,14 @@ export class MapboxNearbyProvider {
       limit: "1",
       autocomplete: "false",
       permanent: "true",
+    }).catch(() => {
+      // A failed save must remain distinguishable from empty nearby coverage.
+      // Never retry it as temporary geocoding or expose provider error details.
+      throw new ApiError(
+        503,
+        "ADDRESS_STORAGE_UNAVAILABLE",
+        "新地址暂时无法保存，请稍后重试",
+      );
     });
     const found = this.parseGeocode(raw);
     if (

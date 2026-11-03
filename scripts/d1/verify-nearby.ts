@@ -38,6 +38,7 @@ import { localTarget } from "../d0/database-target";
 import { verifyNearbyCoverage } from "./verify-nearby-coverage";
 import { verifyMapboxPasswordChain } from "./verify-mapbox-password-chain";
 import { verifyLiveNearby } from "./verify-live-nearby";
+import { verifyNewAddressChain } from "./verify-new-address-chain";
 export async function verifyNearby(db: Client, url: string, issuedAt: number) {
   const target = new URL(url),
     guard = new URL(target);
@@ -186,6 +187,7 @@ export async function verifyNearby(db: Client, url: string, issuedAt: number) {
     });
     if (process.env.ABASONG_VERIFY_LIVE_MAPBOX === "1")
       await verifyLiveNearby(db, service, identity);
+    await verifyNewAddressChain(db, service, identity);
     await db.query(
       "UPDATE abasong.capabilities SET revoked_at=now() WHERE user_id=$1 AND capability='access.contribute'",
       [actor],

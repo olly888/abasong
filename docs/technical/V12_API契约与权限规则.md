@@ -8,6 +8,8 @@
 
 当前增量：[V12.1页面与契约对齐](V12.1_页面梳理与契约对齐.md)优先；只做临时配送支援与灵活运力协作，不做长期招聘。公开需求分享是独立只读摘要接口，不扩大正常业务权限。
 
+2026-11-03搜索兼容：`AddressSuggestion.provider_result_id`与`AddressRetrieveInput.provider_result_id`上限统一4096字符，处理供应商正常长ID；这是项目工程边界而非官方长度保证。禁止截断，仍须匹配本账号当前建议会话，固定供应商主机、编码路径、16KiB DTO和512KiB上游限制不变。源生成器与生成契约同步；[实际复现与原生验收](D1_未收录公寓原生补验.md)。
+
 ## 1. 协议与身份
 
 HTTPS JSON，路径 `/v1`，UTF-8。响应为直接 DTO，列表为 `{items,next_cursor}`；不是另套未声明的 data 包装。服务响应 `X-Request-ID`，错误 `{code,message,request_id}`，不回栈、SQL、密文、手机号或供应商密钥。契约使用 `.invalid` 占位域名，不是真实已部署 API。

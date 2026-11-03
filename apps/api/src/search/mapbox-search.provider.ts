@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { components } from "@abasong/contracts";
+import { SEARCH_RESULT_ID_MAX_LENGTH } from "@abasong/contracts";
 import { ApiError } from "../common/api-error";
 type S = components["schemas"];
 const string = z.string().min(1).max(2000);
@@ -19,7 +20,7 @@ const context = z
   .passthrough();
 const item = z
   .object({
-    mapbox_id: z.string().min(1).max(500),
+    mapbox_id: z.string().min(1).max(SEARCH_RESULT_ID_MAX_LENGTH),
     name: string,
     address: string.optional(),
     full_address: string.optional(),

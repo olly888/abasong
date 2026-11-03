@@ -41,9 +41,9 @@ S['ResolveResult']['properties']['reason']=enum('matched','ambiguous','nearby','
 S['ResolveResult']['properties']['match_basis']=enum('boundary','entrance')
 obj('AddressSuggestInput',{'query':string(200,minLength=2),'session_token':uid},['query','session_token'])
 out('SearchAddress',{'address_line1':string(200),'city':string(100),'state':string(2),'postal_code':string(12,nullable=True)})
-out('AddressSuggestion',{'provider_result_id':string(500),'label':string(300),'title':string(200),'subtitle':string(300),'address':{'allOf':[ref('SearchAddress')],'nullable':True}})
+out('AddressSuggestion',{'provider_result_id':string(4096),'label':string(300),'title':string(200),'subtitle':string(300),'address':{'allOf':[ref('SearchAddress')],'nullable':True}})
 out('AddressSuggestions',{'items':arr(ref('AddressSuggestion')),'session_token':uid,'use_mode':enum('temporary'),'attribution':string(2000)})
-obj('AddressRetrieveInput',{'provider_result_id':string(500),'session_token':uid},['provider_result_id','session_token'])
+obj('AddressRetrieveInput',{'provider_result_id':string(4096),'session_token':uid},['provider_result_id','session_token'])
 out('TemporaryAddress',{'label':string(300),'title':string(200),'point':ref('Point'),'use_mode':enum('temporary'),'attribution':string(2000),'match_status':enum('matched','ambiguous','unmatched'),'apartments':arr(ref('Apartment'))})
 # ADD-18: discovery is not a claim of arrival and never contains secret values.
 out('NearbyCandidate',{'key':string(100),'source':enum('catalog','mapbox'),'apartment':{'allOf':[ref('Apartment')],'nullable':True},'address':{'allOf':[ref('SearchAddress')],'nullable':True},'point':ref('Point'),'distance_m':{'type':'number','minimum':0},'classification':enum('catalog_community','apartments'),'requires_address_confirmation':boolean})

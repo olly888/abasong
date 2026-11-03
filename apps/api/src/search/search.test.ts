@@ -50,6 +50,46 @@ function fixture() {
   return { service, provider, accounts, apartments, session_token };
 }
 describe("search sessions", () => {
+  it("accepts long provider IDs only within the actor's suggested session", async () => {
+    const f = fixture(),
+      id = "TEST:" + "x".repeat(700);
+    f.provider.suggest.mockResolvedValueOnce({
+      items: [{ ...suggestion, provider_result_id: id }],
+      attribution: "TEST",
+    });
+    f.provider.retrieve.mockResolvedValueOnce({
+      ...detail,
+      provider_result_id: id,
+    });
+    await f.service.suggest(actor, {
+      query: "TEST",
+      session_token: f.session_token,
+    });
+    expect(
+      await f.service.retrieve(actor, {
+        provider_result_id: id,
+        session_token: f.session_token,
+      }),
+    ).toMatchObject({ address: suggestion.address, match_status: "unmatched" });
+    expect(f.provider.retrieve.mock.calls[0]?.[0]).toBe(id);
+    await expect(
+      f.service.retrieve(
+        { ...actor, userId: randomUUID() },
+        { provider_result_id: id, session_token: f.session_token },
+      ),
+    ).rejects.toMatchObject({ status: 409 });
+    expect(f.provider.retrieve).toHaveBeenCalledTimes(1);
+  });
+  it("rejects IDs over the bounded DTO limit before contacting the supplier", async () => {
+    const f = fixture();
+    await expect(
+      f.service.retrieve(actor, {
+        provider_result_id: "x".repeat(4097),
+        session_token: f.session_token,
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(f.provider.retrieve).not.toHaveBeenCalled();
+  });
   it("binds provider IDs to an authenticated actor and session", async () => {
     const f = fixture();
     await f.service.suggest(actor, {
@@ -192,6 +232,45 @@ const raw = {
   internal: "MUST NOT LEAK",
 };
 describe("provider boundary", () => {
+  it("retains a finite supplier ID bound", async () => {
+    vi.stubEnv("MAPBOX_SEARCH_TOKEN", "pk.test-fixture");
+    const p = new MapboxSearchProvider((async () =>
+      Response.json({
+        suggestions: [{ ...raw, mapbox_id: "x".repeat(4097) }],
+        attribution: "TEST",
+      })) as typeof fetch);
+    await expect(p.suggest("TEST", randomUUID())).rejects.toMatchObject({
+      status: 503,
+    });
+  });
+  it("keeps mixed suggestions and retrieves an opaque ID longer than 500 characters", async () => {
+    vi.stubEnv("MAPBOX_SEARCH_TOKEN", "pk.test-fixture");
+    const id = "TEST:" + "x".repeat(700);
+    const p = new MapboxSearchProvider((async (input: unknown) => {
+      const u = new URL(String(input));
+      if (u.pathname.endsWith("/suggest"))
+        return Response.json({
+          suggestions: [raw, { ...raw, mapbox_id: id }],
+          attribution: "TEST",
+        });
+      expect(decodeURIComponent(u.pathname.split("/").at(-1)!)).toBe(id);
+      return Response.json({
+        attribution: "TEST",
+        features: [
+          {
+            properties: { ...raw, mapbox_id: id },
+            geometry: { type: "Point", coordinates: [-118, 34] },
+          },
+        ],
+      });
+    }) as typeof fetch);
+    const found = await p.suggest("TEST", randomUUID());
+    expect(found.items.map((i) => i.provider_result_id)).toEqual([
+      raw.mapbox_id,
+      id,
+    ]);
+    expect((await p.retrieve(id, randomUUID())).provider_result_id).toBe(id);
+  });
   it("normalizes address features and strips unknown fields", async () => {
     vi.stubEnv("MAPBOX_SEARCH_TOKEN", "pk.test-fixture");
     let url = "";

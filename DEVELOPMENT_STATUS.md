@@ -1,5 +1,15 @@
 # Abasong development status
 
+## Current execution — native unknown-address acceptance (2026-11-03)
+
+Branch codex/d1-native-new-address-acceptance, parent1124be6 (CI41598662610 success). [Dual-native evidence](docs/technical/D1_未收录公寓原生补验.md). Real public145 Chestnut search exposed Mapbox IDs exceeding the former500-char bound and rejecting the entire five-result response. Supplier/parser, DTO and source OpenAPI now share4096, retaining actor/session membership, URL encoding, fixed host and body/response limits. Four regressions added; mixed supplier test failed before fix.
+
+Moved existing manual-contribution errors into the fixed submit footer after native reproduction showed them offscreen; prototype follows the same action-area structure. Normal authenticated iOS simulator passed145 handoff/edit, recoverable save-disabled failure/input retention, same-form retry/double-click guard and correct password/time/username return. Android user completed385 handoff/failure/retained input/retry/return; native screenshots and DB confirm matching385 and one active TEST record. Android rapid double-click was not independently repeated. No synthetic UI adapter replaced the normal services.
+
+Android SMS failure was an emulator DNS problem: public IP reachable but Supabase domain lookup timed out; mobile bundle project/key and enabled Phone provider were correct. Data-preserving cold boot with explicit official DNS option restored resolution and user-confirmed real login. preview:android now offers validated optional ABASONG_ANDROID_DNS for new startup only; default/system settings/TLS/provider config unchanged. Mirror input remains unreliable, user performed Android actions; this is simulator, not physical acceptance.
+
+Both phases used the ORIGINAL user-authorized2h window, with early revocation between phases and no extension. Final exact-cap revocation and scoped cleanup removed each of2 TEST records/new apartments/provider sources; remaining TEST0/active temporary capabilities0. Original catalog and permanent-config true preserved, dual clients reopened. No cloud/financial changes. Final check260/44, lint/types/build, libraryHTTP291/address8/spatial97/Mapbox chain8/new-address11/source/KMS realPG and three-platform JS export passed; static/links/prototype action-area check passed. No new native binary build. Latest exact-head CI tracked on PR49; A3/D1 and AWS/field exits remain open.
+
 ## Current execution — confirmed new-address sharing (2026-11-02)
 
 Parent2215515, branch codex/d1-new-address-contribution. [Permanent-storage and contribution evidence](docs/technical/A3_新地址永久保存与贡献闭环验收.md). User-added valid card plus the current official Geocoding requirements and bounded live permanent requests now establish the local account prerequisite; not merely temporary HTTP200. Del Mar returned200/rooftop/exact with matched key components. A second live request for Acappella145 Chestnut St exercised compiled provider/Nearby/Me/Apartments services and disposable PostGIS: new permitted address, direct TEST sharing, idempotent retry, second synthetic reader, nearby reuse and revoked403 passed.

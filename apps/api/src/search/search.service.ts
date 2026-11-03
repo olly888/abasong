@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { components } from "@abasong/contracts";
+import { SEARCH_RESULT_ID_MAX_LENGTH } from "@abasong/contracts";
 import type { VerifiedIdentity } from "../common/request-context";
 import { ApiError } from "../common/api-error";
 import { MeService } from "../me/me.service";
@@ -34,7 +35,10 @@ const suggestInput = z
   })
   .strict();
 const retrieveInput = z
-  .object({ provider_result_id: text(500), session_token: z.string().uuid() })
+  .object({
+    provider_result_id: text(SEARCH_RESULT_ID_MAX_LENGTH),
+    session_token: z.string().uuid(),
+  })
   .strict();
 const expired = () =>
   new ApiError(409, "SEARCH_SESSION_EXPIRED", "搜索已更新，请重新选择地址");

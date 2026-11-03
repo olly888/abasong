@@ -1,14 +1,14 @@
 # Abasong development status
 
-## Current local delivery — nearby coverage and matching (2026-11-02)
+## Current local delivery — native Mapbox queries and address quality (2026-11-02)
 
-Cloud deployment remains deferred by the user's explicit request. Branch `codex/d1-nearby-coverage`, parent `03f5b0f` (previous batch CI41540914281 PASS). [Coverage evidence](docs/technical/A3_附近公寓覆盖与匹配验收.md).
+Cloud deployment remains deferred. Branch `codex/d1-mapbox-native-quality`, parent integrated `9ddfbb7` (CI41545227028 PASS). [Current evidence](docs/technical/A3_Mapbox原生查询与地址质量验收.md), [previous coverage](docs/technical/A3_附近公寓覆盖与匹配验收.md).
 
-Discovery and exact postal search now share valid boundary/footprint distance, retaining catalog-point fallback. Expired/future/unverified/invalid geometry cannot expand coverage. Removed pre-address community suppression so independent door numbers remain confirmation candidates; provider features sort by distance before roof dedupe and the existing4-reverse budget. No new DTO/DDL/dependency/native UI or module.
+Native loaded-source building queries now assist highlight and unique building-tap selection; verified catalog geometry takes priority. Session-only optional provider_feature_id is response metadata, not a business identity or persistence grant. Bounded geometry parsing, selection generation checks, serial queries and identical-result suppression avoid stale highlights and idle loops. Default200m and compact cards unchanged.
 
-Latest local check215 tests/41 files, lint/types/build PASS; library291 real HTTP/DB plus79 compiled-service/PostGIS coverage cases, address8 and synthetic-KMS/real-PG scenarios PASS. Original6 public runtime entries remain6;4 actual footprint samples have outside-roof observations, Woodside54 roof points each retain one community card. The long-community600m case is TEST geometry, not a field claim. New6 research postal addresses are not ingested. House/provider classification is synthetic; real Mapbox/field scope remains pending.
+Capped Tilequery now makes at most four parallel supplements (5 total) and retains partial coverage; only original-point conservative distances are used. Existing4 reverse/address budgets remain. New permanent address bindings require documented q, precise accuracy, high/exact confidence and matched number/street/region, plus canonical address/ZIP agreement; uncertain cases retain the existing confirmation form. No human moderation added.
 
-No new account grant, real/shared password data, provider request, DNS or cloud write. No mobile visuals changed; existing native gesture evidence retains its scope, not repeated as new physical acceptance. Latest combined commit checks are tracked in [D1 integration PR49](https://github.com/olly888/abasong/pull/49); prior green checks do not replace this batch's CI. A3/D1 remain in progress; A4 stays deferred.
+Latest local check236 tests/43 files, lint/types/build PASS; actual library291 HTTP/DB plus address8/coverage79 and synthetic-KMS/real-PG checks, import124 PASS. Contract/static/link and iOS/Android/Web JS export checks are recorded in report. Actual dual-native local GeoJSON SDK queries, select/tap/clear observed; this is not real-provider or physical acceptance. SDK map-load error remains, trial service restoration not certified. Original6 runtime public apartments unchanged; no cloud migration, account grant, real password or GPS submission. Integration/CI status tracked by [D1 PR49](https://github.com/olly888/abasong/pull/49); older green checks do not cover the new commit. A3/D1 remain in progress; A4 deferred.
 
 ## Current local delivery — OCR quality and review hints (2026-11-02)
 

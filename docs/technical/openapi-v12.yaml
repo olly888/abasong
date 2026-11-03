@@ -9554,6 +9554,11 @@ components:
           - apartments
         requires_address_confirmation:
           type: boolean
+        provider_feature_id:
+          type: string
+          maxLength: 200
+          minLength: 1
+          description: 会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可
       required:
       - key
       - source

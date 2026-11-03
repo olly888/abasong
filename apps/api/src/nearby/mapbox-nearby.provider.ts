@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { components } from "@abasong/contracts";
 import { addressIdentity } from "@abasong/contracts";
 import { ApiError } from "../common/api-error";
+import { distanceM, offsetPoint, mapFeatureId } from "./nearby-spatial";
 type S = components["schemas"];
 const point = z.tuple([
   z.number().finite().min(-180).max(180),
@@ -51,12 +52,12 @@ export class MapboxNearbyProvider {
       throw new ApiError(503, "MAP_UNAVAILABLE", "附近地图资料暂不可用");
     }
   }
-  async buildings(p: S["Point"]) {
+  private async buildingBatch(p: S["Point"], radius: number) {
     const raw = await this.get(
       `/v4/mapbox.mapbox-streets-v8/tilequery/${p.lng},${p.lat}.json`,
       {
         layers: "building",
-        radius: "200",
+        radius: String(radius),
         limit: "50",
         dedupe: "true",
         geometry: "polygon",
@@ -67,7 +68,7 @@ export class MapboxNearbyProvider {
         features: z
           .array(
             z.object({
-              id: z.union([z.string(), z.number()]).optional(),
+              id: z.unknown().optional(),
               geometry: z.object({ coordinates: point }),
               properties: z
                 .object({
@@ -82,37 +83,63 @@ export class MapboxNearbyProvider {
       .safeParse(raw);
     if (!parsed.success)
       throw new ApiError(503, "MAP_UNAVAILABLE", "附近地图资料暂不可用");
-    const seen = new Set<string>();
+    return parsed.data.features;
+  }
+  async buildings(p: S["Point"]) {
+    const first = await this.buildingBatch(p, 200);
+    const batches = [{ features: first, primary: true }];
+    // One initial query + at most four parallel supplements. A capped result
+    // remains explicitly partial; no attempt to crawl/complete a city dataset.
+    if (first.length === 50 && Math.abs(p.lat) < 85) {
+      const extra = await Promise.allSettled(
+        [0, 90, 180, 270].map((bearing) =>
+          this.buildingBatch(offsetPoint(p, 100, bearing), 150),
+        ),
+      );
+      for (const result of extra)
+        if (result.status === "fulfilled")
+          batches.push({ features: result.value, primary: false });
+    }
+    const closest = new Map<
+      string,
+      { point: S["Point"]; distance_m: number; feature_id?: string }
+    >();
+    for (const batch of batches)
+      for (const f of batch.features) {
+        if (f.properties.type !== "apartments") continue;
+        const point = {
+          lng: f.geometry.coordinates[0],
+          lat: f.geometry.coordinates[1],
+        };
+        // Supplement results are closest to the offset query, not the driver.
+        // Distance to that returned point is a conservative upper bound; never
+        // copy an offset-query distance as distance from the original location.
+        const distance = batch.primary
+          ? f.properties.tilequery.distance
+          : distanceM(p, point);
+        if (distance > 200) continue;
+        const id = mapFeatureId(f.id),
+          key = id ?? point.lng + "," + point.lat;
+        const previous = closest.get(key);
+        if (!previous || distance < previous.distance_m)
+          closest.set(key, {
+            point,
+            distance_m: distance,
+            ...(id ? { feature_id: id } : {}),
+          });
+      }
     return {
-      truncated: parsed.data.features.length === 50,
-      items: parsed.data.features
-        .filter(
-          (f) =>
-            f.properties.type === "apartments" &&
-            f.properties.tilequery.distance <= 200,
-        )
+      truncated: first.length === 50 || closest.size > 50,
+      items: [...closest.values()]
         .sort(
           (a, b) =>
-            a.properties.tilequery.distance - b.properties.tilequery.distance ||
-            a.geometry.coordinates[0] - b.geometry.coordinates[0] ||
-            a.geometry.coordinates[1] - b.geometry.coordinates[1],
+            a.distance_m - b.distance_m ||
+            (a.feature_id ?? "").localeCompare(b.feature_id ?? ""),
         )
-        .filter((f) => {
-          const k = String(f.id ?? f.geometry.coordinates.join(","));
-          if (seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        })
-        .map((f) => ({
-          point: {
-            lng: f.geometry.coordinates[0],
-            lat: f.geometry.coordinates[1],
-          },
-          distance_m: f.properties.tilequery.distance,
-        })),
+        .slice(0, 50),
     };
   }
-  private parseGeocode(raw: unknown): PermanentAddress | null {
+  private parseGeocode(raw: unknown) {
     const schema = z.object({
       features: z
         .array(
@@ -120,6 +147,17 @@ export class MapboxNearbyProvider {
             geometry: z.object({ coordinates: point }),
             properties: z.object({
               feature_type: z.string(),
+              coordinates: z
+                .object({ accuracy: z.string().optional() })
+                .optional(),
+              match_code: z
+                .object({
+                  confidence: z.string(),
+                  address_number: z.string().optional(),
+                  street: z.string().optional(),
+                  region: z.string().optional(),
+                })
+                .optional(),
               context: z.object({
                 address: z.object({
                   address_number: z.string(),
@@ -153,6 +191,8 @@ export class MapboxNearbyProvider {
         state: c.region.region_code.split("-").at(-1)!,
         postal_code: c.postcode?.name ?? null,
       },
+      accuracy: f.properties.coordinates?.accuracy,
+      match: f.properties.match_code,
     };
   }
   async reverse(p: S["Point"]): Promise<S["SearchAddress"] | null> {
@@ -179,10 +219,14 @@ export class MapboxNearbyProvider {
         "新地址保存暂不可用，填写内容已保留",
       );
     const raw = await this.get("/search/geocode/v6/forward", {
-      address_line1: address.address_line1,
-      place: address.city,
-      region: address.state,
-      ...(address.postal_code ? { postcode: address.postal_code } : {}),
+      q: [
+        address.address_line1,
+        address.city,
+        address.state,
+        address.postal_code,
+      ]
+        .filter(Boolean)
+        .join(", "),
       country: "US",
       types: "address",
       limit: "1",
@@ -192,6 +236,11 @@ export class MapboxNearbyProvider {
     const found = this.parseGeocode(raw);
     if (
       !found ||
+      !["rooftop", "parcel", "point"].includes(found.accuracy ?? "") ||
+      !["exact", "high"].includes(found.match?.confidence ?? "") ||
+      found.match?.address_number !== "matched" ||
+      found.match?.street !== "matched" ||
+      found.match?.region !== "matched" ||
       !confirmedAddress.safeParse(found.address).success ||
       addressIdentity(found.address) !== addressIdentity(address) ||
       (address.postal_code && address.postal_code !== found.address.postal_code)
@@ -201,6 +250,6 @@ export class MapboxNearbyProvider {
         "ADDRESS_CONFIRMATION_REQUIRED",
         "未能确认这个地址，请核对门牌和街道",
       );
-    return found;
+    return { point: found.point, address: found.address };
   }
 }

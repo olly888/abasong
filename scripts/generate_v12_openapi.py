@@ -48,6 +48,7 @@ out('TemporaryAddress',{'label':string(300),'title':string(200),'point':ref('Poi
 # ADD-18: discovery is not a claim of arrival and never contains secret values.
 out('NearbyCandidate',{'key':string(100),'source':enum('catalog','mapbox'),'apartment':{'allOf':[ref('Apartment')],'nullable':True},'address':{'allOf':[ref('SearchAddress')],'nullable':True},'point':ref('Point'),'distance_m':{'type':'number','minimum':0},'classification':enum('catalog_community','apartments'),'requires_address_confirmation':boolean})
 out('NearbyDiscovery',{'items':{**arr(ref('NearbyCandidate')),'maxItems':20},'radius_m':integer(200),'expires_at':dt,'truncated':boolean,'provider_status':enum('not_requested','ok','unavailable'),'attribution':string(2000),'use_mode':enum('temporary')})
+S['NearbyCandidate']['properties']['provider_feature_id']=string(200,minLength=1,description='会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可')
 obj('ConfirmedAddressAccessScope',{'label':string(100,minLength=1)},['label'])
 obj('AddressContributionInput',{'address':ref('SearchAddress'),'method':enum('keypad'),'value':string(32,minLength=1),'scope':ref('ConfirmedAddressAccessScope'),'source_attested':{'type':'boolean','enum':[True]},'address_confirmed':{'type':'boolean','enum':[True]}},['address','method','value','source_attested','address_confirmed'])
 out('AddressContributionResult',{'apartment':ref('Apartment'),'contribution':ref('ContributionResult')})

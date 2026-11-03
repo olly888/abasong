@@ -7,6 +7,7 @@ import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { ApartmentSheet } from "../apartments/ApartmentSheet";
 import HomeMap from "../components/HomeMap";
+import MapBuildingLab from "./MapBuildingLab";
 import { HomeChrome } from "../components/HomeChrome";
 import { Icon } from "../ui/Icon";
 type S = components["schemas"];
@@ -135,6 +136,7 @@ function Lab() {
     if (params.case && map[params.case]) choose(map[params.case]);
   }, [params.case]);
   if (params.case === "contributions") return <ContributionLab />;
+  if (params.case === "map-query") return <MapBuildingLab />;
   return (
     <SafeAreaView
       edges={["top", "bottom"]}

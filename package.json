@@ -24,6 +24,7 @@
     "tokens:generate": "node scripts/d0/generate-tokens.mjs",
     "smoke:services": "tsx scripts/d0/smoke-services.ts",
     "mapbox:check": "node scripts/d0/check-mapbox.mjs",
+    "mapbox:verify-live": "node --import tsx scripts/d1/verify-live-mapbox.ts",
     "verify:access-ranking": "tsx scripts/d1/verify-access-ranking.ts",
     "preview": "pnpm --filter @abasong/mobile web",
     "preview:native": "pnpm --filter @abasong/mobile exec expo start --dev-client --localhost --port 8081",

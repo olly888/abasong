@@ -33,6 +33,13 @@ const catalog: S["NearbyCandidate"] = {
 function setup() {
   const apartments = {
     discoverCatalog: vi.fn(async () => [catalog]),
+    matchSearchAddress: vi.fn<
+      (
+        a: unknown,
+        address: S["SearchAddress"],
+        p: S["Point"],
+      ) => Promise<S["Apartment"][]>
+    >(async () => []),
     readShared: vi.fn(),
     contributeAddress: vi.fn(),
     // Old blanket spatial suppression incorrectly hides independent addresses.
@@ -61,6 +68,51 @@ function setup() {
   };
   return { service, apartments, maps, actor, fix };
 }
+it("links a uniquely matched existing apartment absent from the initial catalog, without reading its code", async () => {
+  const f = setup();
+  f.apartments.discoverCatalog.mockResolvedValue([]);
+  f.apartments.matchSearchAddress.mockResolvedValue([catalog.apartment!]);
+  const result = await f.service.discover(f.actor, f.fix, true);
+  expect(f.apartments.matchSearchAddress).toHaveBeenCalledWith(
+    f.actor,
+    address,
+    point,
+  );
+  expect(result.items[0]).toMatchObject({
+    key: catalog.apartment!.id,
+    source: "mapbox",
+    apartment: catalog.apartment,
+    address,
+    requires_address_confirmation: false,
+  });
+  expect(f.apartments.readShared).not.toHaveBeenCalled();
+  expect(f.apartments.contributeAddress).not.toHaveBeenCalled();
+});
+it("keeps ambiguous existing addresses unbound instead of guessing the first password target", async () => {
+  const f = setup();
+  f.apartments.discoverCatalog.mockResolvedValue([]);
+  f.apartments.matchSearchAddress.mockResolvedValue([
+    catalog.apartment!,
+    { ...catalog.apartment!, id: randomUUID() },
+  ]);
+  const result = await f.service.discover(f.actor, f.fix, true);
+  expect(f.apartments.matchSearchAddress).toHaveBeenCalledTimes(1);
+  expect(result.items[0]).toMatchObject({
+    apartment: null,
+    requires_address_confirmation: true,
+  });
+  expect(f.apartments.readShared).not.toHaveBeenCalled();
+});
+it("does not turn a failed address association into a claim that no shared data exists", async () => {
+  const f = setup();
+  f.apartments.discoverCatalog.mockResolvedValue([]);
+  f.apartments.matchSearchAddress.mockRejectedValue(
+    Error("TEST lookup unavailable"),
+  );
+  const result = await f.service.discover(f.actor, f.fix, true);
+  expect(result.provider_status).toBe("unavailable");
+  expect(result.items).toEqual([]);
+});
 it("discovers a Mapbox apartment without any pre-registered catalog entry or permanent geocoding", async () => {
   const f = setup();
   f.apartments.discoverCatalog.mockResolvedValue([]);

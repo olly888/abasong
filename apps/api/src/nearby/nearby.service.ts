@@ -95,16 +95,31 @@ export class NearbyService {
         const key = addressIdentity(address);
         if (key && seen.has(key)) continue;
         if (key) seen.add(key);
+        // A catalog point can be outside the driver's 200m query while a
+        // Mapbox roof of the same property is nearby. Reuse the existing exact
+        // postal + 250m spatial matcher; proximity alone never binds a code.
+        const matches =
+          key && address
+            ? await this.apartments.matchSearchAddress(a, address, b.point)
+            : [];
+        const linked = matches.length === 1 ? matches[0]! : null;
         items.push({
-          key: randomUUID(),
+          key: linked?.id ?? randomUUID(),
           source: "mapbox",
-          apartment: null,
-          address,
+          apartment: linked,
+          address: linked
+            ? {
+                address_line1: linked.address_line1,
+                city: linked.city,
+                state: linked.state,
+                postal_code: linked.postal_code,
+              }
+            : address,
           point: b.point,
           ...(b.feature_id ? { provider_feature_id: b.feature_id } : {}),
           distance_m: b.distance_m,
           classification: "apartments",
-          requires_address_confirmation: true,
+          requires_address_confirmation: !linked,
         });
       }
       freshObservation(body);

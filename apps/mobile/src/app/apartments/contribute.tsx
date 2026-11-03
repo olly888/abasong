@@ -261,6 +261,7 @@ function Content() {
       title={isPrivate ? "添加私人记录" : "添加密码"}
       footer={
         <>
+          <FormError message={error} />
           <ActionButton
             label={isPrivate ? "仅自己保存" : "确认共享"}
             busy={busy}
@@ -309,7 +310,6 @@ function Content() {
           })
         }
       />
-      <FormError message={error} />
       {!isPrivate && !a.me?.capabilities.includes("access.contribute") ? (
         <Text>暂未获得共享资格</Text>
       ) : null}

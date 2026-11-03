@@ -105,3 +105,7 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 2026-11-02 A2云加密与容器：新增服务端 @aws-sdk/client-kms3.1161.0（官方npm，Node>=20，适配Node24），主pnpm锁同步；无移动端/原生模块变化。新增无外部依赖的@abasong/runtime共享生产环境校验。Node容器24.22.1-bookworm-slim固定官方manifest digest be8204d4bd327363357f532187b752ff62759c31bedf98e9e18fc08c9cbd605c，pnpm10.32.1/frozen-lockfile；API/worker已实际构建与非root断网运行。KMS只用SDK任务角色链，不保存AWS长期凭据；云镜像固定入口不能改环境标签退回D0。KMS适配、私存/共享/导入真实PG集成使用合成网关，不声称真实AWS已验收。
 
 2026-11-02 永久地理编码：无新增依赖/SDK/DDL。按官方有效卡条件及两次有界公开地址实测，仅忽略本机.env启用MAPBOX_PERMANENT_GEOCODING_ENABLED；默认/云模板仍false，按部署环境单独配置。默认回归无外部调用，ABASONG_VERIFY_LIVE_PERMANENT=1仅允许一次真实永久请求并限一次性测试库；供应商错误不回退临时保存。
+
+2026-11-03 Mapbox候选长ID兼容：真实五候选中四项超过旧500上限；统一供应商/DTO/源OpenAPI为4096字符，禁止截断，保持会话归属与16KiB/512KiB限制。无新依赖/SDK/DDL；原生仅把既有错误移至固定提交区，无新二进制编译。
+
+2026-11-03 Android验收网络：模拟器公网IP可达而Supabase DNS超时；同一AVD保留数据冷启并临时指定DNS后恢复，用户确认真实短信登录。preview:android新增ABASONG_ANDROID_DNS可选IP列表，默认不改，最多4个，仅新启动生效；无全局网络、TLS、供应商配置改动，无新SDK/依赖。

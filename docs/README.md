@@ -1,5 +1,7 @@
 # Abasong V12 研发文档入口
 
+- [D1 未收录公寓原生补验](technical/D1_未收录公寓原生补验.md)
+
 - [A3 新地址永久保存与贡献闭环验收](technical/A3_新地址永久保存与贡献闭环验收.md)
 
 - [A3 真实Mapbox链路与附近排序稳定性验收](technical/A3_真实Mapbox链路与附近排序稳定性验收.md)

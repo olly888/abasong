@@ -9409,7 +9409,7 @@ components:
       properties:
         provider_result_id:
           type: string
-          maxLength: 500
+          maxLength: 4096
         label:
           type: string
           maxLength: 300
@@ -9462,7 +9462,7 @@ components:
       properties:
         provider_result_id:
           type: string
-          maxLength: 500
+          maxLength: 4096
         session_token:
           type: string
           format: uuid

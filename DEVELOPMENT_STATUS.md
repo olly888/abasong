@@ -1,5 +1,19 @@
 # Abasong development status
 
+## Current execution — real Mapbox discovery and stable nearest cards (2026-11-02)
+
+Mapbox access is restored. Branch codex/d1-live-mapbox-field-chain, parent2f8d8fd. [Current live-service and native evidence](docs/technical/A3_真实Mapbox链路与附近排序稳定性验收.md). AWS registration remains with the user; no cloud resource, migration, new real-account capability or payment change.
+
+Real data exposed sub-metre boundary ordering that alternated a known2445 card with an unconfirmed reverse suggestion. Client now orders by integer-metre band, then explicit business association, canonical address/feature identity; no password preference. Original-distance200m filtering and reading locks unchanged. Four regressions added, three failed before fix. No new UI/contract/DDL/dependency.
+
+Actual check251 tests/44 files, lint/types/build PASS; all-platform JS export PASS. Optional ABASONG_VERIFY_LIVE_MAPBOX=1 library run used compiled production discovery/provider/account/apartment services, client merge and a disposable PostGIS database: Del Mar/Woodside/Colony passed22 live temporary requests (cap27), TEST cross-account read, wrong-door denial, no provider registration/persistence and revoked-read403. Standard libraryHTTP291/spatial97/address8/synthetic-mapbox-chain8/source/KMS+realPG regressions also passed. First live test correctly hit an existing far-address ambiguity fixture; corrected test to selected-ID contribution, no business guard weakened.
+
+Both native simulators loaded normal authenticated home on live basemap and public injected locations, not ArrivalLab. Del Mar2445 and Woodside2547 cards/highlights observed, existing account capability warning retained. iOS live next/previous, reading lock and recenter observed; Android live swipe/recenter confirmed by user. Woodside does not duplicate every roof into2547 cards or overwrite other building numbers. Android transient debug map errors were observed; later new-area load succeeded, not a network-quality guarantee. No new binary build, actual device/field or real-password acceptance claimed.
+
+Public coverage diagnostics remain limited-radius observations; zero apartment features at an address point does not negate a whole complex. Runtime public fixtures stay6. Next: permanent new-address entitlement, authorized contribution/real screenshot quality, AWS/HTTPS/KMS once account ready. Latest exact-head CI tracked on PR49; A3/D1/A4/A5 remain incomplete.
+
+## Earlier execution and evidence
+
 ## Current execution — live Mapbox and cloud pilot preparation resumed (2026-11-02)
 
 The user approved the recommended sequence and resumed A4 preparation: restore Mapbox standard access, verify real public-address APIs, then deploy the reviewed minimal pilot-dev environment and deliver the standalone iPhone business build. This supersedes the earlier defer decision; earlier sections below retain their historical scope. [Execution record](docs/technical/A4_Mapbox恢复与云内测启动记录.md).

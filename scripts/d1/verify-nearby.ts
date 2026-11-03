@@ -6,6 +6,12 @@ import type { components } from "../../packages/contracts/src/generated";
 type S = components["schemas"];
 type Actor = { userId: string; issuedAt: number };
 export interface Service {
+  contribute(
+    a: Actor,
+    id: string,
+    body: unknown,
+    key: string,
+  ): Promise<S["ContributionResult"]>;
   matchSearchAddress(
     a: Actor,
     address: S["SearchAddress"] | null,
@@ -31,6 +37,7 @@ export interface Service {
 import { localTarget } from "../d0/database-target";
 import { verifyNearbyCoverage } from "./verify-nearby-coverage";
 import { verifyMapboxPasswordChain } from "./verify-mapbox-password-chain";
+import { verifyLiveNearby } from "./verify-live-nearby";
 export async function verifyNearby(db: Client, url: string, issuedAt: number) {
   const target = new URL(url),
     guard = new URL(target);
@@ -177,6 +184,8 @@ export async function verifyNearby(db: Client, url: string, issuedAt: number) {
       userId: reader,
       issuedAt,
     });
+    if (process.env.ABASONG_VERIFY_LIVE_MAPBOX === "1")
+      await verifyLiveNearby(db, service, identity);
     await db.query(
       "UPDATE abasong.capabilities SET revoked_at=now() WHERE user_id=$1 AND capability='access.contribute'",
       [actor],

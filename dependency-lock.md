@@ -1,5 +1,7 @@
 # D0 依赖与运行时基线
 
+2026-11-02真实Mapbox联测：无新依赖、原生模块或DDL。复用Node24/pg/tsx、已编译生产服务及客户端纯合并函数；显式ABASONG_VERIFY_LIVE_MAPBOX=1才在受保护一次性库调用真实供应商，最多27临时请求，默认/CI不调用。仅整数米档稳定排序变更；三端JS导出与实际模拟器观察不作为新二进制或现场验收。
+
 2026-11-02最新启动：用户已恢复Mapbox→最小云内测顺序。AWS官方macOS CLI2.39.3经Apple AMZN Mobile LLC签名与公证校验后，以官方Payload安装到忽略的`.tooling/aws-tools/aws-cli`；包SHA256为f9014f2edc9d4f40cb1f6662f1ec6d0f2d89d60d9d452f830008d9d92ca49f22。scripts/aws隔离项目配置，不改全局PATH/运行时，尚无凭据/云调用。新增实时Mapbox诊断复用Node24/tsx，最多6临时请求，无新npm依赖/锁文件/原生模块。此前“不安装云CLI/暂缓”说明保留其历史范围。
 
 2026-11-02附近覆盖批次：复用既有PostGIS、pg、Zod、Vitest和ODbL公开几何，无新增库／SDK／迁移／原生模块。附近发现与搜索统一使用有效来源的边界／轮廓；Mapbox临时反向查询上限4及25秒速率限制保持，不增加供应商账号或实际付费调用。真实供应商和现场仍待，云部署继续暂缓。

@@ -130,6 +130,32 @@ it("stores only precise, component-matched geocoding and uses documented forward
   expect(requested?.searchParams.get("permanent")).toBe("true");
   expect(requested?.searchParams.has("address_line1")).toBe(false);
 });
+it("does not request permanent storage when the entitlement switch is off", async () => {
+  vi.stubEnv("MAPBOX_PERMANENT_GEOCODING_ENABLED", "false");
+  const transport = vi.fn();
+  await expect(
+    new MapboxNearbyProvider(transport).permanent(address),
+  ).rejects.toMatchObject({ code: "ADDRESS_STORAGE_UNAVAILABLE" });
+  expect(transport).not.toHaveBeenCalled();
+});
+it.each([401, 403, 429, 503])(
+  "reports permanent storage failure without falling back to temporary geocoding (%s)",
+  async (status) => {
+    vi.stubEnv("MAPBOX_SEARCH_TOKEN", "pk.TEST");
+    vi.stubEnv("MAPBOX_PERMANENT_GEOCODING_ENABLED", "true");
+    const transport = vi.fn(async (input: unknown) => {
+      expect(new URL(String(input)).searchParams.get("permanent")).toBe("true");
+      return new Response("TEST", { status });
+    });
+    await expect(
+      new MapboxNearbyProvider(transport as typeof fetch).permanent(address),
+    ).rejects.toMatchObject({
+      code: "ADDRESS_STORAGE_UNAVAILABLE",
+      message: "新地址暂时无法保存，请稍后重试",
+    });
+    expect(transport).toHaveBeenCalledTimes(1);
+  },
+);
 it.each(["interpolated", "approximate", undefined])(
   "refuses uncertain permanent coordinates %s",
   async (accuracy) => {

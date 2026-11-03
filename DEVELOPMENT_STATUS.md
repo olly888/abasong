@@ -1,5 +1,15 @@
 # Abasong development status
 
+## Current execution — confirmed new-address sharing (2026-11-02)
+
+Parent2215515, branch codex/d1-new-address-contribution. [Permanent-storage and contribution evidence](docs/technical/A3_新地址永久保存与贡献闭环验收.md). User-added valid card plus the current official Geocoding requirements and bounded live permanent requests now establish the local account prerequisite; not merely temporary HTTP200. Del Mar returned200/rooftop/exact with matched key components. A second live request for Acappella145 Chestnut St exercised compiled provider/Nearby/Me/Apartments services and disposable PostGIS: new permitted address, direct TEST sharing, idempotent retry, second synthetic reader, nearby reuse and revoked403 passed.
+
+Fixed permanent-save failures previously mislabeled as unavailable nearby data. Disabled switch performs no request;401/403/429/503 map to address-storage failure, no temporary fallback. Added5 unit regressions (4 reproduced the old error) and11 compiled-service/PostGIS checks. The default suite uses synthetic transport; ABASONG_VERIFY_LIVE_PERMANENT=1 permits at most one live permanent request. No raw provider responses, IDs, codes or driver coordinates are logged. Disposable DB/role cleanup completed; no real-account grants or D0 contribution writes.
+
+Actual check256/44, lint/types/build PASS; libraryHTTP291, address8, spatial97, synthetic Mapbox chain8 and source/KMS+realPG PASS; new-address11 passed in both default and live modes. Enabled MAPBOX_PERMANENT_GEOCODING_ENABLED only in ignored local .env after verification; watcher reload and API readiness200. Default/deployment templates remain false pending per-environment configuration. Native UI is unchanged; this batch's iOS/Android unknown-address page check is pending Mac unlock, not a native/physical acceptance. Latest exact-head CI is tracked on PR49. AWS registration remains with the user; no cloud migration/resource/DNS changes. Next: dual-native unknown-address confirmation/retry, authorized screenshot quality and A4 when the account is ready.
+
+## Earlier execution and evidence
+
 ## Current execution — real Mapbox discovery and stable nearest cards (2026-11-02)
 
 Mapbox access is restored. Branch codex/d1-live-mapbox-field-chain, parent2f8d8fd. [Current live-service and native evidence](docs/technical/A3_真实Mapbox链路与附近排序稳定性验收.md). AWS registration remains with the user; no cloud resource, migration, new real-account capability or payment change.

@@ -22,6 +22,72 @@ const item = (key: string, distance_m: number): C => ({
   classification: "apartments",
   requires_address_confirmation: true,
 });
+const resolved = (distance_m: number): C => {
+  const address = {
+    address_line1: "2445 TEST St",
+    city: "TEST City",
+    state: "CA",
+    postal_code: null,
+  };
+  return {
+    ...item("z-known", distance_m),
+    address,
+    source: "catalog",
+    requires_address_confirmation: false,
+    apartment: {
+      ...address,
+      id: "z-known",
+      name: null,
+      point: item("p", 0).point,
+      confidence: "authorized_source",
+    },
+  };
+};
+it("keeps an explicitly linked address ahead of unconfirmed roofs in the same metre band during boundary jitter", () => {
+  for (const d of [0, 0.22, 0.01, 0.22, 0])
+    expect(mergeNearby([resolved(d)], [item("a-temporary", 0)])[0]?.key).toBe(
+      "z-known",
+    );
+});
+it("uses postal identity rather than fresh random keys for equal-distance temporary cards", () => {
+  const address = {
+    address_line1: "100 TEST St",
+    city: "TEST City",
+    state: "CA",
+    postal_code: null,
+  };
+  const a = { ...item("z-random", 20.2), address };
+  const b = {
+    ...item("a-random", 20.1),
+    address: { ...address, address_line1: "102 TEST St" },
+  };
+  expect(mergeNearby([], [b, a]).map((c) => c.address?.address_line1)).toEqual([
+    "100 TEST St",
+    "102 TEST St",
+  ]);
+  expect(
+    mergeNearby(
+      [],
+      [
+        { ...a, key: "a-next" },
+        { ...b, key: "z-next" },
+      ],
+    ).map((c) => c.address?.address_line1),
+  ).toEqual(["100 TEST St", "102 TEST St"]);
+});
+it("still recommends a clearly closer temporary address before a resolved address", () => {
+  expect(mergeNearby([resolved(21)], [item("temporary", 19.9)])[0]?.key).toBe(
+    "temporary",
+  );
+});
+it("uses the provider feature identity to stabilize equally distant unresolved cards", () => {
+  const a = { ...item("z-random", 10), provider_feature_id: "1" };
+  const b = { ...item("a-random", 10), provider_feature_id: "2" };
+  expect(mergeNearby([], [b, a]).map((c) => c.provider_feature_id)).toEqual([
+    "1",
+    "2",
+  ]);
+});
 
 it("withdraws an edge recommendation on the next GPS fix while its replacement query is still pending", () => {
   const now = Date.now();

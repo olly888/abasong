@@ -1,6 +1,21 @@
 import { addressIdentity } from "@abasong/contracts";
 import type { components } from "@abasong/contracts";
 type S = components["schemas"];
+function nearbyOrder(a: S["NearbyCandidate"], b: S["NearbyCandidate"]) {
+  // A sub-metre difference at a roof/boundary edge is not a useful reason to
+  // replace a known address with an unconfirmed reverse-geocode suggestion.
+  const band = Math.floor(a.distance_m) - Math.floor(b.distance_m);
+  if (band) return band;
+  const resolved = (c: S["NearbyCandidate"]) =>
+    Number(!!c.apartment && !c.requires_address_confirmation);
+  const identity = (c: S["NearbyCandidate"]) =>
+    addressIdentity(c.address) ?? c.provider_feature_id ?? c.key;
+  return (
+    resolved(b) - resolved(a) ||
+    identity(a).localeCompare(identity(b)) ||
+    a.key.localeCompare(b.key)
+  );
+}
 export function distanceM(a: S["Point"], b: S["Point"]) {
   const r = Math.PI / 180,
     h =
@@ -32,7 +47,7 @@ export function mergeNearby(
       identities.add(id);
       return true;
     })
-    .sort((a, b) => a.distance_m - b.distance_m || a.key.localeCompare(b.key))
+    .sort(nearbyOrder)
     .slice(0, 20);
 }
 

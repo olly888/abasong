@@ -1,5 +1,7 @@
 # Abasong V12 研发文档入口
 
+- [A3 Mapbox候选关联与自动密码卡片验收](technical/A3_Mapbox候选关联与自动密码卡片验收.md)
+
 - [A3 Mapbox未收录发现与误匹配回归](technical/A3_Mapbox未收录发现与误匹配回归.md)
 
 - [A3 Mapbox原生查询与地址质量验收](technical/A3_Mapbox原生查询与地址质量验收.md)

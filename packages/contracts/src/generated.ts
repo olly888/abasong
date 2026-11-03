@@ -253,7 +253,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 会话临时apartments分类候选，地址需确认；无临时结果落库 */
+        /** Mapbox公寓候选；唯一地址及空间匹配可关联已有公寓，未关联需核对；无临时结果落库 */
         post: operations["discoverMapboxApartments"];
         delete?: never;
         options?: never;
@@ -1709,12 +1709,14 @@ export interface components {
             key: string;
             /** @enum {string} */
             source: "catalog" | "mapbox";
+            /** @description 已有业务公寓的唯一完整地址与空间匹配；Mapbox来源也可关联。发现响应不含密码正文 */
             apartment: components["schemas"]["Apartment"] | (never | null);
             address: components["schemas"]["SearchAddress"] | (never | null);
             point: components["schemas"]["Point"];
             distance_m: number;
             /** @enum {string} */
             classification: "catalog_community" | "apartments";
+            /** @description 未关联或存在歧义时需核对地址；不是贡献人工审核 */
             requires_address_confirmation: boolean;
             /** @description 会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可 */
             provider_feature_id?: string;

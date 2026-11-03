@@ -37,6 +37,9 @@ const scenes = [
   "发现慢网",
   "范围边缘",
   "地图故障",
+  "地图查码",
+  "近邻补全",
+  "地图查码失败",
 ] as const;
 type Scene = (typeof scenes)[number];
 // Synthetic delayed completions, no real network/account fault injection.
@@ -68,9 +71,35 @@ function adapter(scene: Scene, onAccessRead: () => void) {
         if (scene === "地图故障")
           throw new Error("TEST optional map unavailable");
         if (scene === "地址待核对") await delay(options.signal, 4000);
+        const linked = scene === "地图查码" || scene === "近邻补全";
+        if (linked)
+          await delay(options.signal, scene === "近邻补全" ? 12000 : 4000);
+        const p = {
+          ...apartment,
+          id: "11111111-1111-4111-8111-111111111112",
+          address_line1: "102 TEST Arrival Ave",
+          point: { lng: -118.2435, lat: 34.0522 },
+        };
         return {
-          items:
-            scene === "地址待核对"
+          items: linked
+            ? [
+                {
+                  key: p.id,
+                  source: "mapbox",
+                  apartment: p,
+                  address: {
+                    address_line1: p.address_line1,
+                    city: p.city,
+                    state: p.state,
+                    postal_code: p.postal_code,
+                  },
+                  point: p.point,
+                  distance_m: 20,
+                  classification: "apartments",
+                  requires_address_confirmation: false,
+                },
+              ]
+            : scene === "地址待核对"
               ? [
                   {
                     key: "TEST-temporary",
@@ -87,7 +116,7 @@ function adapter(scene: Scene, onAccessRead: () => void) {
           radius_m: 200,
           expires_at: new Date(Date.now() + 60000).toISOString(),
           truncated: false,
-          provider_status: "ok",
+          provider_status: scene === "地图查码失败" ? "unavailable" : "ok",
           attribution: "TEST",
           use_mode: "temporary",
         };
@@ -101,6 +130,8 @@ function adapter(scene: Scene, onAccessRead: () => void) {
         const empty =
           scene === "无候选" ||
           scene === "地址待核对" ||
+          scene === "地图查码" ||
+          scene === "地图查码失败" ||
           Math.abs(point.lng + 118.2437) > 0.002 ||
           Math.abs(point.lat - 34.0522) > 0.002;
         if (scene === "离开慢网" && empty) await delay(options.signal);
@@ -145,7 +176,11 @@ function adapter(scene: Scene, onAccessRead: () => void) {
             },
             point: a.point,
             distance_m:
-              scene === "范围边缘" ? distanceM(point, a.point) : i * 20,
+              scene === "范围边缘"
+                ? distanceM(point, a.point)
+                : scene === "近邻补全"
+                  ? 100
+                  : i * 20,
             classification: "catalog_community",
             requires_address_confirmation: false,
           })),

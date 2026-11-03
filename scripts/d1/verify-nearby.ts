@@ -5,7 +5,7 @@ import { Client, Pool } from "pg";
 import type { components } from "../../packages/contracts/src/generated";
 type S = components["schemas"];
 type Actor = { userId: string; issuedAt: number };
-interface Service {
+export interface Service {
   matchSearchAddress(
     a: Actor,
     address: S["SearchAddress"] | null,
@@ -30,6 +30,7 @@ interface Service {
 }
 import { localTarget } from "../d0/database-target";
 import { verifyNearbyCoverage } from "./verify-nearby-coverage";
+import { verifyMapboxPasswordChain } from "./verify-mapbox-password-chain";
 export async function verifyNearby(db: Client, url: string, issuedAt: number) {
   const target = new URL(url),
     guard = new URL(target);
@@ -172,6 +173,10 @@ export async function verifyNearby(db: Client, url: string, issuedAt: number) {
       {},
     );
     assert(records.items.some((r) => r.value === "TEST-NEARBY#"));
+    await verifyMapboxPasswordChain(db, service, identity, {
+      userId: reader,
+      issuedAt,
+    });
     await db.query(
       "UPDATE abasong.capabilities SET revoked_at=now() WHERE user_id=$1 AND capability='access.contribute'",
       [actor],

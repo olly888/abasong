@@ -187,7 +187,8 @@ export function HomeApartmentContent({
   const catalogRef = useRef<NearbySnapshot | null>(null),
     providerRef = useRef<NearbySnapshot | null>(null);
   const providerLast = useRef(0),
-    providerEpoch = useRef(0);
+    providerEpoch = useRef(0),
+    providerStatus = useRef<"idle" | "loading" | "ok" | "unavailable">("idle");
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
     [cameraZoom, setCameraZoom] = useState(17),
@@ -263,13 +264,23 @@ export function HomeApartmentContent({
     };
   }, []);
   function updateNearby(items: S["NearbyCandidate"][]) {
+    if (manualLocked.current) return;
     setNearbyItems(items);
     setCandidates(items.flatMap((c) => (c.apartment ? [c.apartment] : [])));
-    setLookupState(items.length ? "nearby" : "empty");
+    setLookupState(
+      items.length
+        ? "nearby"
+        : providerStatus.current === "loading"
+          ? "loading"
+          : providerStatus.current === "unavailable"
+            ? "error"
+            : "empty",
+    );
     const current = selectionRef.current?.id ?? providerSelectionKey.current;
     if (
       current &&
-      items.some((c) => c.key === current || c.apartment?.id === current)
+      items[0] &&
+      (items[0].key === current || items[0].apartment?.id === current)
     )
       return;
     if (items[0]) void chooseNearby(items[0], false);
@@ -304,7 +315,34 @@ export function HomeApartmentContent({
     if (providerRef.current || Date.now() - providerLast.current < 30000)
       return;
     providerLast.current = Date.now();
+    providerStatus.current = "loading";
+    if (latestObservation.current) {
+      const visible = nearbyFromSnapshots(
+        catalogRef.current,
+        providerRef.current,
+        latestObservation.current,
+      );
+      if (!visible.length) setNotice("正在查找公寓");
+      updateNearby(visible);
+    }
     const epoch = ++providerEpoch.current;
+    const unavailable = () => {
+      if (
+        !alive() ||
+        manualLocked.current ||
+        epoch !== providerEpoch.current ||
+        !latestObservation.current
+      )
+        return;
+      providerStatus.current = "unavailable";
+      updateNearby(
+        nearbyFromSnapshots(
+          catalogRef.current,
+          providerRef.current,
+          latestObservation.current,
+        ),
+      );
+    };
     void request<S["NearbyDiscovery"]>("/v1/apartments/discover/mapbox", {
       method: "POST",
       signal: stream.current?.signal,
@@ -327,9 +365,12 @@ export function HomeApartmentContent({
             lng: fix.coords.longitude,
             lat: fix.coords.latitude,
           }) > 50
-        )
+        ) {
+          unavailable();
           return;
+        }
         if (extra.provider_status === "ok") {
+          providerStatus.current = "ok";
           providerRef.current = {
             items: extra.items,
             until: Date.parse(extra.expires_at),
@@ -342,10 +383,12 @@ export function HomeApartmentContent({
               latestObservation.current,
             ),
           );
-        }
+        } else unavailable();
       })
       .catch(() => {
-        /* Catalog remains usable when optional map enrichment fails. */
+        // Existing cards remain usable; an empty failed discovery is not a
+        // successful claim that no apartment/shared data exists.
+        unavailable();
       });
   };
   function chooseNearby(c: S["NearbyCandidate"], manual = true) {
@@ -378,6 +421,7 @@ export function HomeApartmentContent({
     providerEpoch.current++;
     catalogRef.current = null;
     providerRef.current = null;
+    providerStatus.current = "idle";
     setNearbyItems([]);
     setCandidates([]);
     invalidateAutomaticCard();
@@ -399,6 +443,8 @@ export function HomeApartmentContent({
   async function locate(ask: boolean, follow = true) {
     stream.current?.abort();
     disposeLookup.current?.();
+    providerEpoch.current++;
+    if (providerStatus.current === "loading") providerStatus.current = "idle";
     const controller = new AbortController();
     stream.current = controller;
     latestObservation.current = null;
@@ -443,6 +489,7 @@ export function HomeApartmentContent({
       providerEpoch.current++;
       catalogRef.current = null;
       providerRef.current = null;
+      providerStatus.current = "idle";
       queue.invalidate();
       invalidateAutomaticCard();
       setCandidates([]);
@@ -454,6 +501,7 @@ export function HomeApartmentContent({
       providerEpoch.current++;
       catalogRef.current = null;
       providerRef.current = null;
+      providerStatus.current = "idle";
       setNearbyItems([]);
       setCandidates([]);
       queue.invalidate();
@@ -603,6 +651,7 @@ export function HomeApartmentContent({
     manualLocked.current = false;
     providerLast.current = 0;
     providerRef.current = null;
+    providerStatus.current = "idle";
     catalogRef.current = null;
     providerEpoch.current++;
     setNearbyItems([]);
@@ -825,6 +874,11 @@ export function HomeApartmentContent({
     else router.push("/apartments");
   };
   const hideMap = (list && mode !== "公寓") || (expanded && mode === "公寓");
+  const selectedNearby = nearbyItems.find((c) =>
+    selected
+      ? c.apartment?.id === selected.id
+      : c.key === providerSelected?.key,
+  );
   return (
     <View style={styles.root}>
       <View
@@ -846,16 +900,27 @@ export function HomeApartmentContent({
           }
           apartments={mode === "公寓" ? candidates : []}
           selectedId={
-            mode === "公寓" ? selected?.id ?? providerSelected?.key : undefined
+            mode === "公寓"
+              ? (selected?.id ?? providerSelected?.key)
+              : undefined
           }
           selectedPoint={
-            mode === "公寓" ? selected?.point ?? providerSelected?.point : undefined
+            mode === "公寓"
+              ? (selectedNearby?.point ??
+                selected?.point ??
+                providerSelected?.point)
+              : undefined
           }
           providerFeatureId={
-            mode === "公寓" ? providerSelected?.provider_feature_id : undefined
+            mode === "公寓"
+              ? (selectedNearby?.provider_feature_id ??
+                providerSelected?.provider_feature_id)
+              : undefined
           }
           nearbyCandidates={mode === "公寓" ? nearbyItems : []}
-          onNearbySelect={mode === "公寓" ? (c) => void chooseNearby(c) : undefined}
+          onNearbySelect={
+            mode === "公寓" ? (c) => void chooseNearby(c) : undefined
+          }
           mapContext={mode === "公寓" ? mapContext : null}
           onSelect={(p) => void select(p)}
         />
@@ -1072,7 +1137,11 @@ export function HomeApartmentContent({
                   ? blocked
                     ? void openLocationSettings()
                     : void locate(true)
-                  : void locate(false, false)
+                  : (() => {
+                      providerLast.current = 0;
+                      providerStatus.current = "idle";
+                      void locate(false, false);
+                    })()
               }
               blocked={blocked}
             />

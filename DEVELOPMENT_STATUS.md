@@ -1,14 +1,16 @@
 # Abasong development status
 
-## Current local delivery — unregistered Mapbox discovery and mismatch regression (2026-11-02)
+## Current local delivery — Mapbox candidate to authorized code card (2026-11-02)
 
-Cloud deployment remains deferred. Parent integrated `d2b72cd`, CI41558801166 PASS; batch `codex/d1-public-match-expansion`. [Current evidence](docs/technical/A3_Mapbox未收录发现与误匹配回归.md), [native-query implementation](docs/technical/A3_Mapbox原生查询与地址质量验收.md).
+Cloud deployment remains deferred. Parent integrated `6137687`, CI41563611522 PASS; batch `codex/d1-mapbox-password-chain`. [Current implementation and evidence](docs/technical/A3_Mapbox候选关联与自动密码卡片验收.md). Latest combined-head CI is tracked by [D1 PR49](https://github.com/olly888/abasong/pull/49); previous-head green CI does not certify this batch.
 
-Public samples are an acceptance dataset, not a citywide manually curated address catalog or region allowlist. Existing Mapbox discovery already returns temporary apartment/address-confirmation cards when Abasong has no catalog entries. Business IDs/address anchors support actual contributions, saved places and permission-bound codes; ephemeral supplier candidates do not automatically become permanent records. Architecture and product/data docs now make this separation explicit.
+Mapbox reverse-address candidates can now uniquely associate an existing business apartment using the existing full-address +250m spatial matcher, even when its stored representative point was outside the original200m catalog query. Discovery returns metadata only; wrong/ambiguous/far addresses stay unbound and codes use the independent authorized read. Temporary provider point/feature ID remain session-only map context. No new catalog entries, schema, dependency, grants or provider-data persistence.
 
-New tests verify zero-catalog discovery, neighboring unregistered addresses, same-address roof dedupe and absence of secret reads/registration during discovery. Existing6 public fixtures now exercise6 full-name aliases,6 wrong doors,5 conflicting directions and municipal mismatch. Spatial/PostGIS coverage97, libraryHTTP291/address8/KMS synthetic gateway+realPG PASS; root239 tests/43 files and lint/types/build PASS. No product/runtime API, mobile UI, dependency, contract or DDL change; no new native/device acceptance claimed.
+Mobile automatic recommendation now switches to the nearest late-arriving candidate while preserving manual reading locks. An empty pending query shows loading; a failed Mapbox query shows retry instead of false empty data. Existing valid catalog cards remain usable. Compact independent-card UI and query budgets remain unchanged.
 
-Runtime public apartment count remains6. Additional public map checks yielded no sufficiently clear new target association, so nothing was imported or inferred. Geometry collection stopped; future sample work prioritizes the Mapbox-to-address-to-code chain. Real Mapbox and field acceptance remain pending; no new capability, real code/GPS, cloud/DNS/billing action. Latest integration CI tracked by [D1 PR49](https://github.com/olly888/abasong/pull/49); A3/D1 remain in progress and A4 deferred.
+Actual checks:242 tests/43 files plus lint/types/build PASS; libraryHTTP291, spatial97, address8, new compiled-service/real-PostGIS Mapbox password chain8, source/KMS synthetic-gateway+realPG PASS. Three-platform JS exports PASS. Dual-native TEST adapter scenes show linked102/TEST-02#/matching highlight and nearest late result. iOS expanded100 stayed selected, and failed discovery retry stayed failed with no password; Android error rendering observed but retry click remains unverified. No new native binary build or physical/field acceptance claimed.
+
+Mapbox style API reprobed:HTTP401. Cached basemap is not live-service evidence. Public fixtures remain6; test samples are a QA dataset, not a citywide manual catalog or region allowlist. No real code/GPS, account qualification, cloud/DNS/billing changes. A3/D1 remain in progress; A4 deferred. Next: real provider replay after restoration, actual address/code scope and authorized screenshot quality, then standalone field business environment when resumed.
 
 ## Current local delivery — OCR quality and review hints (2026-11-02)
 

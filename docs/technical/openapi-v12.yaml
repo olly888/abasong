@@ -1185,7 +1185,7 @@ paths:
   /v1/apartments/discover/mapbox:
     post:
       operationId: discoverMapboxApartments
-      summary: 会话临时apartments分类候选，地址需确认；无临时结果落库
+      summary: Mapbox公寓候选；唯一地址及空间匹配可关联已有公寓，未关联需核对；无临时结果落库
       tags:
       - apartments
       responses:
@@ -9527,6 +9527,7 @@ components:
           - catalog
           - mapbox
         apartment:
+          description: 已有业务公寓的唯一完整地址与空间匹配；Mapbox来源也可关联。发现响应不含密码正文
           anyOf:
           - allOf:
             - $ref: '#/components/schemas/Apartment'
@@ -9554,6 +9555,7 @@ components:
           - apartments
         requires_address_confirmation:
           type: boolean
+          description: 未关联或存在歧义时需核对地址；不是贡献人工审核
         provider_feature_id:
           type: string
           maxLength: 200

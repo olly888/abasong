@@ -460,6 +460,7 @@ export function buildRuntimeTemplates() {
             DATABASE_URL: "ApiDatabaseArn",
             DATABASE_SENSITIVE_URL: "SensitiveDatabaseArn",
             DATA_HMAC_KEY: "DataHmacArn",
+            IDEMPOTENCY_HMAC_KEY: "DataHmacArn",
             MAPBOX_SEARCH_TOKEN: "MapboxSearchArn",
           }
         : { WORKER_DATABASE_URL: "WorkerDatabaseArn" };

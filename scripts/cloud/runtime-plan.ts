@@ -146,7 +146,7 @@ export function assertRuntimePlan(plan: unknown) {
     const environments = at(container, "Environment") as Obj[];
     if (
       environments.some((v) =>
-        /DATABASE.*URL|DATA_HMAC_KEY$|TOKEN|SECRET|LOCAL_DATA_KEK/.test(
+        /DATABASE.*URL|(?:DATA|IDEMPOTENCY)_HMAC_KEY$|TOKEN|SECRET|LOCAL_DATA_KEK/.test(
           String(v.Name),
         ),
       )

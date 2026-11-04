@@ -16,6 +16,7 @@ import { SensitiveDatabase } from "./apartments/sensitive-database";
 import { RequestsController } from "./requests/requests.controller";
 import { RequestsService } from "./requests/requests.service";
 import { CollaborationController } from "./requests/collaboration.controller";
+import { MessagingService } from "./requests/messaging.service";
 import { CollaborationService } from "./requests/collaboration.service";
 import {
   Controller,
@@ -78,6 +79,7 @@ class HealthController {
     NearbyService,
     RequestsService,
     CollaborationService,
+    MessagingService,
     {
       provide: MapboxNearbyProvider,
       useFactory: () => new MapboxNearbyProvider(),

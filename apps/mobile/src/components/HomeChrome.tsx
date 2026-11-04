@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { tokens } from "@abasong/ui";
+import { useInboxCount } from "../messages/useInboxCount";
 import { Icon } from "../ui/Icon";
 export type HomeMode = "公寓" | "找活" | "找人";
 export function HomeChrome({
@@ -20,6 +21,7 @@ export function HomeChrome({
   list?: boolean;
   onToggleList?: () => void;
 }) {
+  const unread = useInboxCount();
   return (
     <View style={styles.toolbar} pointerEvents="box-none">
       <View style={styles.searchRow}>
@@ -40,12 +42,37 @@ export function HomeChrome({
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="消息"
-          accessibilityState={{ disabled: true }}
-          disabled
-          style={[styles.message, styles.unavailable]}
+          accessibilityLabel={`消息${unread ? `，${unread}条未读` : ""}`}
+          onPress={() => router.push("/inbox")}
+          style={styles.message}
         >
           <Icon name="message" />
+          {unread !== null && unread > 0 ? (
+            <View
+              style={{
+                position: "absolute",
+                right: 2,
+                top: 2,
+                minWidth: 19,
+                height: 19,
+                paddingHorizontal: 4,
+                borderRadius: 10,
+                backgroundColor: tokens.color.brandPrimary,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "600",
+                  color: tokens.color.onBrand,
+                }}
+              >
+                {unread > 99 ? "99+" : unread}
+              </Text>
+            </View>
+          ) : null}
         </Pressable>
       </View>
       <View style={styles.modeRow}>

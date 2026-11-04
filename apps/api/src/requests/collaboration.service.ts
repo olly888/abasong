@@ -1,3 +1,4 @@
+import { conversationView as projectConversation } from "./conversation-view";
 import { Inject, Injectable } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { PoolClient } from "pg";
@@ -12,7 +13,6 @@ import { checked, requestId, requestPageInput } from "./request-input";
 import {
   applyInput,
   conversationInput,
-  messageQuery,
   readInput,
   validateApplication,
 } from "./collaboration-input";
@@ -21,7 +21,6 @@ import {
   publicProfile,
   ensureConversation,
   attachRequestSource,
-  safeRequestSnapshot,
   enqueueCollaboration,
 } from "./request-events";
 type S = components["schemas"];
@@ -326,6 +325,10 @@ export class CollaborationService {
           a.userId,
           { request_id: row.request_id },
         );
+        await c.query(
+          "INSERT INTO abasong.notifications(user_id,event_key,kind,object_type,object_id) SELECT publisher_id,$1,'application_withdrawn','request',id FROM abasong.requests WHERE id=$2 AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$3 AND b.blocked_id=publisher_id) OR (b.blocker_id=publisher_id AND b.blocked_id=$3)) ON CONFLICT DO NOTHING",
+          [`application:${event.rows[0].id}`, row.request_id, a.userId],
+        );
         await this.audit(c, a, "application.withdrawn", aid);
       }
       return { ok: true as const };
@@ -356,6 +359,10 @@ export class CollaborationService {
           a.userId,
           { request_id: row.request_id },
         );
+        await c.query(
+          "INSERT INTO abasong.notifications(user_id,event_key,kind,object_type,object_id) VALUES($1,$2,'application_contacted','request',$3) ON CONFLICT DO NOTHING",
+          [row.applicant_id, `application:${event.rows[0].id}`, row.request_id],
+        );
         await this.audit(c, a, "application.contacted", aid);
       }
       return { ok: true as const };
@@ -371,26 +378,8 @@ export class CollaborationService {
     if (!r) throw missing();
     return r;
   }
-  private async conversationView(
-    c: PoolClient,
-    a: VerifiedIdentity,
-    id: string,
-  ): Promise<S["Conversation"]> {
-    const r = await this.conversation(c, a, id),
-      peer = r.pair_low === a.userId ? r.pair_high : r.pair_low;
-    const stats = (
-      await c.query(
-        "SELECT count(*) FILTER(WHERE m.sender_id<>$2 AND m.sequence>COALESCE(cr.last_read_sequence,0)) AS unread_count,COALESCE(max(m.sequence),0) AS last_sequence,max(m.created_at) AS updated_at FROM abasong.messages m LEFT JOIN abasong.conversation_reads cr ON cr.conversation_id=m.conversation_id AND cr.user_id=$2 WHERE m.conversation_id=$1 AND m.removed_at IS NULL",
-        [id, a.userId],
-      )
-    ).rows[0];
-    return {
-      id,
-      other_profile: await publicProfile(c, peer),
-      unread_count: Number(stats.unread_count),
-      last_sequence: Number(stats.last_sequence),
-      updated_at: (stats.updated_at ?? r.created_at).toISOString(),
-    };
+  private conversationView(c: PoolClient, a: VerifiedIdentity, id: string) {
+    return projectConversation(c, a, id);
   }
   async createConversation(a: VerifiedIdentity, body: unknown, key: unknown) {
     const p = checked(conversationInput, body);
@@ -467,58 +456,6 @@ export class CollaborationService {
         },
       ),
     );
-  }
-  async messages(
-    a: VerifiedIdentity,
-    id: unknown,
-    query: unknown,
-  ): Promise<S["MessagePage"]> {
-    const cid = requestId(id),
-      q = checked(messageQuery, query),
-      after = q.cursor ?? q.after_sequence;
-    return this.requests.tx(a, async (c) => {
-      await this.conversation(c, a, cid);
-      const rows = (
-        await c.query(
-          "SELECT m.*,v.snapshot FROM abasong.messages m LEFT JOIN abasong.request_versions v ON v.request_id=m.source_request_id AND v.version=m.source_request_version WHERE m.conversation_id=$1 AND m.sequence>$2 AND m.removed_at IS NULL ORDER BY m.sequence LIMIT $3",
-          [cid, after, q.limit + 1],
-        )
-      ).rows;
-      const items: S["Message"][] = [];
-      for (const row of rows.slice(0, q.limit)) {
-        let snapshot: S["RequestVersion"] | null = null;
-        if (row.kind === "request_card") {
-          try {
-            await this.requests.row(c, a, row.source_request_id);
-            snapshot = safeRequestSnapshot(row.snapshot);
-          } catch (e) {
-            if (!(e instanceof ApiError) || e.status !== 404) throw e;
-          }
-        }
-        // Text is implemented in B3; never expose ciphertext or fake a plaintext result.
-        if (row.kind !== "request_card")
-          throw new ApiError(
-            503,
-            "MESSAGE_TYPE_UNAVAILABLE",
-            "此类消息暂不可读取",
-          );
-        items.push({
-          id: row.id,
-          conversation_id: cid,
-          sender_id: row.sender_id,
-          sequence: Number(row.sequence),
-          kind: "request_card",
-          text: null,
-          request_snapshot: snapshot,
-          created_at: row.created_at.toISOString(),
-        });
-      }
-      return {
-        items,
-        next_cursor:
-          rows.length > q.limit ? String(rows[q.limit - 1].sequence) : null,
-      };
-    });
   }
   async read(a: VerifiedIdentity, id: unknown, body: unknown) {
     const cid = requestId(id),

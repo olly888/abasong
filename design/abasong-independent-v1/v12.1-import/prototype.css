@@ -43,3 +43,11 @@
 
 /* UI alignment: one branded sheet surface, system input controls. */
 .support-overlay{position:absolute;inset:0;z-index:60;background:#0005;display:flex;align-items:flex-end}.support-panel{background:#fff;border-radius:24px 24px 0 0;padding:20px 20px max(20px,env(safe-area-inset-bottom));width:100%;max-height:95%;overflow-y:auto;box-sizing:border-box}.support-panel h2{font-size:22px;margin:0 0 20px}.support-panel .section-title{font-size:18px;margin:20px 0 8px}.support-panel .option-card{min-height:56px;border:0;border-radius:0;border-bottom:1px solid var(--border,#e5e7eb);padding:10px 0;box-shadow:none}.support-panel .option-card .option-icon{background:none}.support-panel .select-list{gap:0}.application-summary{background:#f6f6f6;padding:16px;border-radius:16px;margin-bottom:20px}.application-summary h3{margin:0 0 8px;font-size:17px}.support-panel .form-footer{position:static;padding:16px 0 0}.support-panel .wide-link{min-height:48px}
+
+/* M01/M02: retain V3 hierarchy and distinguish acceptance from peer read. */
+.message-unread{background:var(--ab-color-primary,#1467d8);color:white;min-width:22px;height:22px;border-radius:11px;padding:0 6px;text-align:center;font-size:12px;line-height:22px;font-weight:600}
+.composer button[type=submit]{width:72px;min-width:72px;min-height:52px;border-radius:10px;background:#1467d8;color:#fff;font-size:16px;font-weight:600}.composer button:disabled{background:#eff0f2;color:#969ba3}
+
+.message-list{padding:20px;gap:16px}.message-source{padding:16px;border-radius:16px;background:#fff;border-color:#d4d8df;display:flex;flex-direction:column;gap:8px}.message-source .quote{font-size:24px;line-height:32px;margin:0}.message-source>b{font-size:17px}.message-source small{color:#5d646d;font-size:12px}.message-list .chat-row>div{max-width:86%}.message-list .bubble{border-radius:16px;padding:12px 16px;font-size:16px;line-height:24px}.message-list .chat-meta{font-size:12px;line-height:18px;margin-top:6px}.composer{padding-left:20px;padding-right:20px;gap:12px}.composer textarea{min-height:52px;border:1px solid #858b94;border-radius:10px;padding:12px 14px;background:#eff0f2}
+
+.message-list .chat-row.self .bubble{background:#1467d8;color:#fff}.message-list .chat-row:not(.self) .chat-meta{text-align:left}.message-list .chat-row.self .chat-meta{text-align:right}

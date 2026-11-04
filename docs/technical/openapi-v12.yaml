@@ -4515,6 +4515,76 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ConversationInput'
+  /v1/conversations/{conversation_id}:
+    get:
+      operationId: getConversation
+      summary: 仅参与者；读取元数据与双方已读水位
+      tags:
+      - conversations
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: conversation_id
+        in: path
+        required: true
+        schema: *id001
   /v1/conversations/{conversation_id}/messages:
     get:
       operationId: listMessages
@@ -4611,6 +4681,12 @@ paths:
         schema:
           type: integer
           minimum: 0
+      - name: before_sequence
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
       x-sensitive-response: true
     post:
       operationId: sendMessage
@@ -10622,6 +10698,26 @@ components:
         last_sequence:
           type: integer
           minimum: 0
+        my_last_read_sequence:
+          type: integer
+          minimum: 0
+        other_last_read_sequence:
+          type: integer
+          minimum: 0
+        can_send:
+          type: boolean
+        last_request_region_label:
+          type: string
+          maxLength: 120
+          nullable: true
+        last_request_snapshot:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/RequestVersion'
+          - type: object
+            nullable: true
+            enum:
+            - null
         updated_at:
           type: string
           format: date-time
@@ -10630,8 +10726,13 @@ components:
       - other_profile
       - unread_count
       - last_sequence
+      - my_last_read_sequence
+      - other_last_read_sequence
+      - can_send
+      - last_request_region_label
+      - last_request_snapshot
       - updated_at
-    MessageInput:
+    TextMessageInput:
       type: object
       additionalProperties: false
       properties:
@@ -10642,11 +10743,25 @@ components:
           type: string
           enum:
           - text
-          - request_card
         text:
           type: string
           maxLength: 2000
           minLength: 1
+      required:
+      - client_message_id
+      - kind
+      - text
+    RequestCardMessageInput:
+      type: object
+      additionalProperties: false
+      properties:
+        client_message_id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - request_card
         source_request_id:
           type: string
           format: uuid
@@ -10656,10 +10771,28 @@ components:
       required:
       - client_message_id
       - kind
+      - source_request_id
+      - source_request_version
+    MessageInput:
+      oneOf:
+      - $ref: '#/components/schemas/TextMessageInput'
+      - $ref: '#/components/schemas/RequestCardMessageInput'
+      discriminator:
+        propertyName: kind
+        mapping:
+          text: '#/components/schemas/TextMessageInput'
+          request_card: '#/components/schemas/RequestCardMessageInput'
     Message:
       type: object
       additionalProperties: false
       properties:
+        request_region_label:
+          type: string
+          maxLength: 120
+          nullable: true
+        client_message_id:
+          type: string
+          format: uuid
         id:
           type: string
           format: uuid
@@ -10693,6 +10826,8 @@ components:
           type: string
           format: date-time
       required:
+      - request_region_label
+      - client_message_id
       - id
       - sequence
       - conversation_id

@@ -11,4 +11,6 @@ export const REQUIRED_SCHEMA_VERSIONS = Object.freeze([
   "V12.0008",
   "V12.0009",
   "V12.0010",
+  "V12.0011",
+  "V12.0012",
 ] as const);

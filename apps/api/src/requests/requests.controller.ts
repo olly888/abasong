@@ -79,4 +79,25 @@ export class RequestsController {
   ) {
     return this.service.close(this.actor(r, true), id, b, k);
   }
+  @Post("requests/:id/reopen") @HttpCode(200) reopen(
+    @Req() r: ApiRequest,
+    @Param("id") id: string,
+    @Body() b: unknown,
+    @Headers("idempotency-key") k: unknown,
+  ) {
+    return this.service.reopen(this.actor(r, true), id, b, k);
+  }
+  @Patch("requests/:id/gap") gap(
+    @Req() r: ApiRequest,
+    @Param("id") id: string,
+    @Body() b: unknown,
+  ) {
+    return this.service.gap(this.actor(r, true), id, b);
+  }
+  @Get("requests/:id/versions") versions(
+    @Req() r: ApiRequest,
+    @Param("id") id: string,
+  ) {
+    return this.service.versions(this.actor(r, false, true), id, r.query);
+  }
 }

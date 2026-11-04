@@ -4061,6 +4061,10 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
+      - name: request_id
+        in: query
+        required: false
+        schema: *id001
   /v1/me/availability:
     get:
       operationId: getMyAvailability
@@ -10472,6 +10476,14 @@ components:
             nullable: true
             enum:
             - null
+        applicant_profile:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/Profile'
+          - type: object
+            nullable: true
+            enum:
+            - null
       required:
       - id
       - request_id
@@ -10483,6 +10495,7 @@ components:
       - contacted_at
       - conversation_id
       - request_summary
+      - applicant_profile
     AvailabilityInput:
       type: object
       additionalProperties: false

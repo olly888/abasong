@@ -15,6 +15,8 @@ import { ApartmentsService } from "./apartments/apartments.service";
 import { SensitiveDatabase } from "./apartments/sensitive-database";
 import { RequestsController } from "./requests/requests.controller";
 import { RequestsService } from "./requests/requests.service";
+import { CollaborationController } from "./requests/collaboration.controller";
+import { CollaborationService } from "./requests/collaboration.service";
 import {
   Controller,
   Get,
@@ -61,6 +63,7 @@ class HealthController {
     SearchController,
     NearbyController,
     RequestsController,
+    CollaborationController,
   ],
   providers: [
     { provide: ENVELOPE_CRYPTO, useFactory: createEnvelope },
@@ -74,6 +77,7 @@ class HealthController {
     SearchService,
     NearbyService,
     RequestsService,
+    CollaborationService,
     {
       provide: MapboxNearbyProvider,
       useFactory: () => new MapboxNearbyProvider(),

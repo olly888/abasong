@@ -77,6 +77,16 @@ export const versionInput = z
 export const closeInput = versionInput
   .extend({ status: z.enum(["found", "closed"]) })
   .strict();
+export const gapInput = versionInput
+  .extend({
+    remaining_parcels: z.number().int().min(0).max(2147483647).optional(),
+    remaining_drivers: z.number().int().min(0).max(2147483647).optional(),
+  })
+  .strict()
+  .refine(
+    (v) =>
+      v.remaining_parcels !== undefined || v.remaining_drivers !== undefined,
+  );
 export const requestPageInput = z
   .object({
     cursor: uuid.optional(),

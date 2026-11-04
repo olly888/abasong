@@ -15,10 +15,14 @@ export const statusLabels = {
   expired: "已到期",
 } as const;
 export function requestPrice(
-  r: Pick<DeliveryRequest, "price_cents" | "price_unit">,
+  r: Pick<DeliveryRequest, "price_cents"> & { price_unit: string | null },
 ) {
   if (r.price_unit === "negotiable") return "联系议价";
-  if (r.price_cents === null || !r.price_unit) return "报价未填写";
+  if (
+    r.price_cents === null ||
+    !["per_parcel", "per_route"].includes(r.price_unit ?? "")
+  )
+    return "报价未填写";
   return (
     new Intl.NumberFormat("en-US", {
       style: "currency",

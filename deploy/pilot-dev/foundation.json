@@ -41,6 +41,8 @@
     },
     "DataKeyAlias": {
       "Type": "AWS::KMS::Alias",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
       "Properties": {
         "AliasName": "alias/abasong-pilot-dev-data",
         "TargetKeyId": { "Ref": "DataKey" }

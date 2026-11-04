@@ -18,6 +18,21 @@
       "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
     },
     {
+      "Sid": "ProjectFoundationChangeSets",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateChangeSet",
+        "cloudformation:DescribeChangeSet",
+        "cloudformation:ExecuteChangeSet",
+        "cloudformation:DeleteChangeSet"
+      ],
+      "Resource": [
+        "arn:aws:cloudformation:us-west-1:ACCOUNT_ID:stack/abasong-pilot-dev-foundation/*",
+        "arn:aws:cloudformation:us-west-1:ACCOUNT_ID:changeSet/abasong-pilot-dev-foundation-*/*"
+      ],
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
+    },
+    {
       "Sid": "ReadRegionalMetadata",
       "Effect": "Allow",
       "Action": [
@@ -68,6 +83,26 @@
           "aws:RequestedRegion": "us-west-1",
           "aws:RequestTag/Project": "Abasong",
           "aws:RequestTag/Environment": "pilot-dev"
+        }
+      }
+    },
+    {
+      "Sid": "TagInitialProjectKey",
+      "Effect": "Allow",
+      "Action": "kms:TagResource",
+      "Resource": "arn:aws:kms:us-west-1:ACCOUNT_ID:key/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-west-1",
+          "aws:RequestTag/Project": "Abasong",
+          "aws:RequestTag/Environment": "pilot-dev"
+        },
+        "StringEqualsIfExists": {
+          "aws:ResourceTag/Project": "Abasong",
+          "aws:ResourceTag/Environment": "pilot-dev"
+        },
+        "ForAllValues:StringLike": {
+          "aws:TagKeys": ["Project", "Environment", "aws:cloudformation:*"]
         }
       }
     },

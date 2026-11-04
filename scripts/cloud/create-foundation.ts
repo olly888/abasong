@@ -67,8 +67,7 @@ function main() {
     "--tags",
     "Key=Project,Value=Abasong",
     "Key=Environment,Value=pilot-dev",
-    "--on-failure",
-    "DO_NOTHING",
+    "--disable-rollback",
     "--client-request-token",
     `abasong-foundation-${crypto.randomUUID()}`,
   ]);

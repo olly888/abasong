@@ -1,0 +1,121 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Abasong pilot-dev foundation in us-west-1: retained encryption key, immutable image repositories and bounded log retention. No compute, public endpoint, secrets or IAM grants.",
+  "Metadata": {
+    "Environment": "pilot-dev",
+    "DeploymentRegion": "us-west-1",
+    "Requires": "Verified account, owner MFA, reviewed scoped deployment identity"
+  },
+  "Resources": {
+    "DataKey": {
+      "Type": "AWS::KMS::Key",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Description": "Abasong pilot-dev business envelope data encryption",
+        "EnableKeyRotation": true,
+        "KeySpec": "SYMMETRIC_DEFAULT",
+        "KeyUsage": "ENCRYPT_DECRYPT",
+        "PendingWindowInDays": 30,
+        "KeyPolicy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AccountRecoveryAndIAMDelegation",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+                }
+              },
+              "Action": "kms:*",
+              "Resource": "*"
+            }
+          ]
+        },
+        "Tags": [
+          { "TagKey": "Project", "TagValue": "Abasong" },
+          { "TagKey": "Environment", "TagValue": "pilot-dev" }
+        ]
+      }
+    },
+    "DataKeyAlias": {
+      "Type": "AWS::KMS::Alias",
+      "Properties": {
+        "AliasName": "alias/abasong-pilot-dev-data",
+        "TargetKeyId": { "Ref": "DataKey" }
+      }
+    },
+    "ApiRepository": {
+      "Type": "AWS::ECR::Repository",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RepositoryName": "abasong-pilot-dev-api",
+        "ImageTagMutability": "IMMUTABLE",
+        "EncryptionConfiguration": { "EncryptionType": "AES256" },
+        "ImageScanningConfiguration": { "ScanOnPush": true },
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Retain the newest twenty immutable build images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":20},\"action\":{\"type\":\"expire\"}}]}"
+        },
+        "Tags": [
+          { "Key": "Project", "Value": "Abasong" },
+          { "Key": "Environment", "Value": "pilot-dev" }
+        ]
+      }
+    },
+    "WorkerRepository": {
+      "Type": "AWS::ECR::Repository",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RepositoryName": "abasong-pilot-dev-worker",
+        "ImageTagMutability": "IMMUTABLE",
+        "EncryptionConfiguration": { "EncryptionType": "AES256" },
+        "ImageScanningConfiguration": { "ScanOnPush": true },
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Retain the newest twenty immutable build images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":20},\"action\":{\"type\":\"expire\"}}]}"
+        },
+        "Tags": [
+          { "Key": "Project", "Value": "Abasong" },
+          { "Key": "Environment", "Value": "pilot-dev" }
+        ]
+      }
+    },
+    "ApiLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/abasong/pilot-dev/api",
+        "RetentionInDays": 14,
+        "Tags": [
+          { "Key": "Project", "Value": "Abasong" },
+          { "Key": "Environment", "Value": "pilot-dev" }
+        ]
+      }
+    },
+    "WorkerLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": "/abasong/pilot-dev/worker",
+        "RetentionInDays": 14,
+        "Tags": [
+          { "Key": "Project", "Value": "Abasong" },
+          { "Key": "Environment", "Value": "pilot-dev" }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "DataKeyArn": { "Value": { "Fn::GetAtt": ["DataKey", "Arn"] } },
+    "ApiRepositoryUri": {
+      "Value": { "Fn::GetAtt": ["ApiRepository", "RepositoryUri"] }
+    },
+    "WorkerRepositoryUri": {
+      "Value": { "Fn::GetAtt": ["WorkerRepository", "RepositoryUri"] }
+    }
+  }
+}

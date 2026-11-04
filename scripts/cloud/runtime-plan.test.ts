@@ -12,6 +12,20 @@ import {
 } from "./runtime-plan";
 
 const plan = () => JSON.parse(JSON.stringify(buildRuntimeTemplates()));
+it("injects account bootstrap idempotency from the existing private secret, never a plaintext environment", () => {
+  const c = plan().runtime.Resources.ApiTask.Properties.ContainerDefinitions[0];
+  expect(
+    c.Secrets.find((s: { Name: string }) => s.Name === "IDEMPOTENCY_HMAC_KEY"),
+  ).toEqual({
+    Name: "IDEMPOTENCY_HMAC_KEY",
+    ValueFrom: { Ref: "DataHmacArn" },
+  });
+  expect(
+    c.Environment.some(
+      (s: { Name: string }) => s.Name === "IDEMPOTENCY_HMAC_KEY",
+    ),
+  ).toBe(false);
+});
 it("refuses to combine failed runtime recovery with image drift, parameters or unknown resources", () => {
   const template = plan().runtime,
     values = { TEST_BINDING: "same" },
@@ -108,6 +122,7 @@ it.each([
   "worker-secret",
   "public-api",
   "plain-secret",
+  "plain-account-secret",
   "root",
   "capacity",
   "mutable-image",
@@ -127,6 +142,8 @@ it.each([
     r.ApiIngress.Properties.SourceSecurityGroupId = "sg-public";
   if (mutation === "plain-secret")
     container.Environment.push({ Name: "DATA_HMAC_KEY", Value: "TEST" });
+  if (mutation === "plain-account-secret")
+    container.Environment.push({ Name: "IDEMPOTENCY_HMAC_KEY", Value: "TEST" });
   if (mutation === "root") container.User = "0";
   if (mutation === "capacity") r.ApiService.Properties.DesiredCount = 2;
   if (mutation === "mutable-image")

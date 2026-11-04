@@ -1,5 +1,15 @@
 # Abasong development status
 
+## Current execution — cloud business configuration and real-account acceptance (2026-11-03)
+
+[Current evidence and exact boundaries](docs/technical/A4_云业务配置与双账号验收.md). Branch codex/d1-cloud-business-acceptance, parent3380588/full CI41785650344 SUCCESS. Fixed a real cloud first-profile blocker: missing account-idempotency secret binding, reusing the existing DataHmac secret. Actual bounded change set changed only ApiTask/ApiService; final runtime UPDATE_COMPLETE, two healthy tasks/six alarms/five HTTPS/network/privacy checks passed again. Same971fd6f images, no new resources/roles/secrets. Ten original resource IDs preserved; ApiTask intentionally updated. Old task definition retained after scoped-role deregistration denial, no old running task or new compute; no IAM expansion/root cleanup.
+
+DevWest now has one reviewed pilot config and one independently licensed public Del Mar apartment/building association with new cloud IDs; no D0 passwords/data/keys or temporary Mapbox result copy. Actual readback:1config/1apartment/1building/0shared secrets/0active qualifications/0business profiles at this checkpoint. Nearby200m rules remain unchanged, automatic-arrival gating not enabled.
+
+Prepared loopback-only owner SMS login aid, exact two-person/two-hour initial driver admission and real fixed-HTTPS KMS/private/import/share/feedback/correction verification. No forged JWT/MFA or app-admin grant; regular ops command remains unchanged/D0-only. Owner has a second SMS-capable number; login page initially had a syntax defect, corrected with actual-HTML regression. Real account login still pending, so no cloud qualification or actual business KMS pass claimed. Complete local check316/57 PASS, isolated real PG bootstrap/replay/expiry/rollback checks PASS. Independent iPhone Release builder prepared with A4 actual-evidence gate, not executed. A4overall/A5/D1 remain incomplete; no repeated old native gesture request.
+
+## Previous runtime deployment evidence
+
 ## Current execution — pilot API, worker and HTTPS are live (2026-11-03)
 
 [Actual implementation and acceptance](docs/technical/A4_运行身份与服务凭据实施验收.md). Approved pilot-dev/us-west-1 runtime stack UPDATE_COMPLETE. https://api-dev.abasong.com has verified certificate/hostname TLS: live200, real DB ready200, unauthenticated401, HTTP301 to HTTPS, wrong Host404. Only two CNAME records added in owner-confirmed Spaceship DNS (validation + api-dev/TTL300); original NS/root/www/mail preserved.

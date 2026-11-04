@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  /><title>Abasong 双账号内测登录</title>
+  <style nonce="{{NONCE}}">
+    body {
+      font:
+        16px -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      background: #f4f5f7;
+      color: #172332;
+      max-width: 680px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    section {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    input,
+    button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 14px;
+      font: inherit;
+      margin: 8px 0;
+      border: 1px solid #ccd2d9;
+      border-radius: 10px;
+    }
+    button {
+      background: #172332;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.5;
+    }
+    p {
+      line-height: 1.7;
+    }
+    small {
+      color: #566477;
+    }
+    .status {
+      min-height: 24px;
+    }
+  </style>
+  <h1>双账号内测登录</h1>
+  <p>
+    请分别用两个可收短信的号码登录。验证码只在本页填写。此页仅连接 DevWest
+    身份服务和已部署的开发 API，不授予管理员权限。
+  </p>
+  <section data-account="A">
+    <h2>账号 A · 贡献人</h2>
+    <input
+      name="phone"
+      type="tel"
+      autocomplete="off"
+      placeholder="美国手机号"
+    /><button class="send">获取验证码</button
+    ><input
+      name="code"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      placeholder="短信验证码"
+    /><button class="verify">完成账号 A 登录</button>
+    <p class="status" aria-live="polite"></p>
+  </section>
+  <section data-account="B">
+    <h2>账号 B · 查码与反馈</h2>
+    <input
+      name="phone"
+      type="tel"
+      autocomplete="off"
+      placeholder="另一个美国手机号"
+    /><button class="send">获取验证码</button
+    ><input
+      name="code"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      placeholder="短信验证码"
+    /><button class="verify">完成账号 B 登录</button>
+    <p class="status" aria-live="polite"></p>
+  </section>
+  <small
+    >两个账号均完成后，在聊天中告诉我“两个账号已登录”。不要发送号码或验证码。页面一小时后失效。</small
+  >
+  <script nonce="{{NONCE}}">
+    const csrf = "{{CSRF}}";
+    function complete(s) {
+      s.querySelectorAll("input,button").forEach((x) => {
+        x.disabled = true;
+        if (x.tagName === "INPUT") x.value = "";
+      });
+      s.querySelector(".status").textContent = "已登录，等待内测资格配置。";
+    }
+    for (const s of document.querySelectorAll("section"))
+      for (const action of ["send", "verify"])
+        s.querySelector("." + action).onclick = async () => {
+          const status = s.querySelector(".status");
+          s.querySelectorAll("button").forEach((b) => (b.disabled = true));
+          try {
+            const payload = {
+              account: s.dataset.account,
+              ...(action === "send"
+                ? { phone: s.querySelector("[name=phone]").value }
+                : { code: s.querySelector("[name=code]").value }),
+            };
+            const r = await fetch("/" + action, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Abasong-Csrf": csrf,
+              },
+              body: JSON.stringify(payload),
+            });
+            const j = await r.json();
+            if (!r.ok) throw Error(j.error);
+            status.textContent =
+              action === "send"
+                ? "已请求发送，请查看手机短信。"
+                : "已登录，等待内测资格配置。";
+            if (action === "verify") {
+              complete(s);
+              return;
+            }
+          } catch (e) {
+            status.textContent = e.message;
+          } finally {
+            if (!status.textContent.startsWith("已登录"))
+              s.querySelectorAll("button").forEach((b) => (b.disabled = false));
+          }
+        };
+    fetch("/state")
+      .then((r) => r.json())
+      .then((j) =>
+        document.querySelectorAll("section").forEach((s) => {
+          if (j[s.dataset.account]) complete(s);
+        }),
+      );
+  </script>
+</html>

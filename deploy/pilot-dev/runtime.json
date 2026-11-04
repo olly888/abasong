@@ -686,6 +686,12 @@
                 }
               },
               {
+                "Name": "IDEMPOTENCY_HMAC_KEY",
+                "ValueFrom": {
+                  "Ref": "DataHmacArn"
+                }
+              },
+              {
                 "Name": "MAPBOX_SEARCH_TOKEN",
                 "ValueFrom": {
                   "Ref": "MapboxSearchArn"

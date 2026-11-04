@@ -8,6 +8,8 @@ import {
   runtimeTarget,
   safeFailure,
 } from "./runtime-aws";
+import { isDeepStrictEqual } from "node:util";
+import { buildRuntimeTemplates } from "./runtime-templates";
 
 type Permission = {
   IpProtocol: string;
@@ -121,10 +123,45 @@ async function main() {
     const completed = before.filter(
       (r) => r.ResourceStatus === "CREATE_COMPLETE" && r.PhysicalResourceId,
     );
-    requireValue(
-      completed.every((r) => ids[r.LogicalResourceId] === r.PhysicalResourceId),
+    const changed = completed.filter(
+      (r) => ids[r.LogicalResourceId] !== r.PhysicalResourceId,
     );
-    preserved = completed.length;
+    if (changed.length) {
+      // The reviewed first-login fix replaces only the API task definition.
+      // The failed-initial-create snapshot must not forbid this intended update.
+      requireValue(
+        changed.length === 1 && changed[0]!.LogicalResourceId === "ApiTask",
+      );
+      const receipt = JSON.parse(
+        readFileSync(`${folder}/bootstrap-changeset.json`, "utf8"),
+      );
+      requireValue(
+        receipt.account === account &&
+          receipt.stack === "abasong-pilot-dev-runtime",
+      );
+      const change = aws([
+        "cloudformation",
+        "describe-change-set",
+        "--stack-name",
+        receipt.stack,
+        "--change-set-name",
+        receipt.id,
+      ]);
+      requireValue(change.ExecutionStatus === "EXECUTE_COMPLETE");
+      const raw = aws([
+        "cloudformation",
+        "get-template",
+        "--stack-name",
+        receipt.stack,
+      ]).TemplateBody;
+      requireValue(
+        isDeepStrictEqual(
+          typeof raw === "string" ? JSON.parse(raw) : raw,
+          buildRuntimeTemplates().runtime,
+        ),
+      );
+    }
+    preserved = completed.length - changed.length;
   }
   const taskArns = aws([
     "ecs",

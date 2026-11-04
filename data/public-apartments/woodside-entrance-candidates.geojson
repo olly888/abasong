@@ -1,0 +1,122 @@
+{
+  "type": "FeatureCollection",
+  "license": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "attribution": "© OpenStreetMap contributors",
+  "purpose": "public_gate_candidates_not_arrival_areas",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -117.9130501,
+          34.0280136
+        ]
+      },
+      "properties": {
+        "sample_id": "woodside-G1",
+        "property_slug": "woodside-village",
+        "property_name": "Woodside Village",
+        "address_line1": "2547 Temple Ave",
+        "city": "West Covina",
+        "state": "CA",
+        "postal_code": "91792",
+        "property_source": "https://www.woodsidevillageapartmenthomes.com/contactus",
+        "status": "candidate",
+        "field_verified": false,
+        "checked_on": "2026-11-01",
+        "osm_node": {
+          "id": 6117285531,
+          "version": 2,
+          "timestamp": "2020-02-16T06:16:22Z",
+          "reference": "https://www.openstreetmap.org/node/6117285531",
+          "tags": {
+            "barrier": "gate"
+          }
+        },
+        "connected_ways": [
+          {
+            "id": 652536538,
+            "version": 3,
+            "reference": "https://www.openstreetmap.org/way/652536538",
+            "tags": {
+              "highway": "service"
+            }
+          },
+          {
+            "id": 652536539,
+            "version": 3,
+            "reference": "https://www.openstreetmap.org/way/652536539",
+            "tags": {
+              "access": "private",
+              "highway": "service"
+            }
+          }
+        ],
+        "unresolved": [
+          "pedestrian_delivery_access",
+          "apartment_specific_access_scope",
+          "outside_arrival_polygon",
+          "field_location_accuracy"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -117.912336,
+          34.0267054
+        ]
+      },
+      "properties": {
+        "sample_id": "woodside-G2",
+        "property_slug": "woodside-village",
+        "property_name": "Woodside Village",
+        "address_line1": "2547 Temple Ave",
+        "city": "West Covina",
+        "state": "CA",
+        "postal_code": "91792",
+        "property_source": "https://www.woodsidevillageapartmenthomes.com/contactus",
+        "status": "candidate",
+        "field_verified": false,
+        "checked_on": "2026-11-01",
+        "osm_node": {
+          "id": 6117285532,
+          "version": 2,
+          "timestamp": "2021-10-11T06:43:02Z",
+          "reference": "https://www.openstreetmap.org/node/6117285532",
+          "tags": {
+            "barrier": "gate"
+          }
+        },
+        "connected_ways": [
+          {
+            "id": 652536537,
+            "version": 3,
+            "reference": "https://www.openstreetmap.org/way/652536537",
+            "tags": {
+              "highway": "service"
+            }
+          },
+          {
+            "id": 652536539,
+            "version": 3,
+            "reference": "https://www.openstreetmap.org/way/652536539",
+            "tags": {
+              "access": "private",
+              "highway": "service"
+            }
+          }
+        ],
+        "unresolved": [
+          "pedestrian_delivery_access",
+          "apartment_specific_access_scope",
+          "outside_arrival_polygon",
+          "field_location_accuracy"
+        ]
+      }
+    }
+  ]
+}

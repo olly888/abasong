@@ -24,7 +24,15 @@
           "isAndroidBackgroundLocationEnabled": false
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "选择你希望整理的公寓截图。",
+          "cameraPermission": "拍摄面单，在手机上识别收件地址以查找公寓。",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

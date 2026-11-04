@@ -1,0 +1,170 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ProjectStackManagement",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:UpdateStack",
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:DescribeStackResources",
+        "cloudformation:ListStackResources",
+        "cloudformation:GetTemplate",
+        "cloudformation:DeleteStack"
+      ],
+      "Resource": "arn:aws:cloudformation:us-west-1:ACCOUNT_ID:stack/abasong-pilot-dev-*/*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
+    },
+    {
+      "Sid": "ProjectFoundationChangeSets",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateChangeSet",
+        "cloudformation:DescribeChangeSet",
+        "cloudformation:ExecuteChangeSet",
+        "cloudformation:DeleteChangeSet"
+      ],
+      "Resource": [
+        "arn:aws:cloudformation:us-west-1:ACCOUNT_ID:stack/abasong-pilot-dev-foundation/*",
+        "arn:aws:cloudformation:us-west-1:ACCOUNT_ID:changeSet/abasong-pilot-dev-foundation-*/*"
+      ],
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
+    },
+    {
+      "Sid": "ReadRegionalMetadata",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:ValidateTemplate",
+        "cloudformation:ListStacks",
+        "cloudformation:GetTemplateSummary",
+        "kms:ListAliases",
+        "kms:ListKeys",
+        "logs:DescribeLogGroups",
+        "ec2:DescribeAvailabilityZones",
+        "ecr:GetAuthorizationToken"
+      ],
+      "Resource": "*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
+    },
+    {
+      "Sid": "ProjectRepositoriesOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:CreateRepository",
+        "ecr:DescribeRepositories",
+        "ecr:ListTagsForResource",
+        "ecr:TagResource",
+        "ecr:UntagResource",
+        "ecr:PutLifecyclePolicy",
+        "ecr:GetLifecyclePolicy",
+        "ecr:GetRepositoryPolicy",
+        "ecr:PutImageScanningConfiguration",
+        "ecr:PutImageTagMutability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage"
+      ],
+      "Resource": "arn:aws:ecr:us-west-1:ACCOUNT_ID:repository/abasong-pilot-dev-*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
+    },
+    {
+      "Sid": "CreateTaggedDataKey",
+      "Effect": "Allow",
+      "Action": "kms:CreateKey",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-west-1",
+          "aws:RequestTag/Project": "Abasong",
+          "aws:RequestTag/Environment": "pilot-dev"
+        }
+      }
+    },
+    {
+      "Sid": "TagInitialProjectKey",
+      "Effect": "Allow",
+      "Action": "kms:TagResource",
+      "Resource": "arn:aws:kms:us-west-1:ACCOUNT_ID:key/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-west-1",
+          "aws:RequestTag/Project": "Abasong",
+          "aws:RequestTag/Environment": "pilot-dev"
+        },
+        "StringEqualsIfExists": {
+          "aws:ResourceTag/Project": "Abasong",
+          "aws:ResourceTag/Environment": "pilot-dev"
+        },
+        "ForAllValues:StringLike": {
+          "aws:TagKeys": ["Project", "Environment", "aws:cloudformation:*"]
+        }
+      }
+    },
+    {
+      "Sid": "ManageTaggedProjectKeys",
+      "Effect": "Allow",
+      "Action": [
+        "kms:DescribeKey",
+        "kms:GetKeyPolicy",
+        "kms:PutKeyPolicy",
+        "kms:EnableKeyRotation",
+        "kms:GetKeyRotationStatus",
+        "kms:ListResourceTags",
+        "kms:TagResource",
+        "kms:CreateAlias"
+      ],
+      "Resource": "arn:aws:kms:us-west-1:ACCOUNT_ID:key/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-west-1",
+          "aws:ResourceTag/Project": "Abasong",
+          "aws:ResourceTag/Environment": "pilot-dev"
+        }
+      }
+    },
+    {
+      "Sid": "ProjectAliasOnly",
+      "Effect": "Allow",
+      "Action": ["kms:CreateAlias", "kms:DeleteAlias"],
+      "Resource": "arn:aws:kms:us-west-1:ACCOUNT_ID:alias/abasong-pilot-dev-data",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
+    },
+    {
+      "Sid": "ProjectLogsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:PutRetentionPolicy",
+        "logs:DescribeLogStreams",
+        "logs:ListTagsForResource",
+        "logs:TagResource",
+        "logs:UntagResource"
+      ],
+      "Resource": "arn:aws:logs:us-west-1:ACCOUNT_ID:log-group:/abasong/pilot-dev/*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-west-1" } }
+    },
+    {
+      "Sid": "NoIdentityExpansionBillingChangesOrKeyDestruction",
+      "Effect": "Deny",
+      "Action": [
+        "iam:*",
+        "organizations:*",
+        "account:*",
+        "freetier:UpgradeAccountPlan",
+        "kms:ScheduleKeyDeletion",
+        "kms:DisableKey",
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

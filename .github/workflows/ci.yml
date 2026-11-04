@@ -44,14 +44,23 @@ jobs:
         run: |
           ./scripts/dev contracts:generate
           ./scripts/dev tokens:generate
-          git diff --exit-code -- packages/contracts/src/generated.ts packages/ui/src/index.ts
+          ./scripts/dev cloud:templates
+          git diff --exit-code -- packages/contracts/src/generated.ts packages/ui/src/index.ts deploy/pilot-dev
       - run: ./scripts/dev env:init
       - run: ./scripts/dev db:up
       - run: ./scripts/dev db:verify
       - run: ./scripts/dev verify:auth-api
       - run: ./scripts/dev verify:library-api
+      - run: ./scripts/dev verify:import-api
       - run: ./scripts/dev verify:access-ranking
       - run: ./scripts/dev smoke:services
+      - name: Check cloud manifest and production containers
+        run: |
+          ./scripts/dev cloud:preflight --manifest
+          ./scripts/dev cloud:runtime-plan
+          docker build --target api -t abasong-api:ci .
+          docker build --target worker -t abasong-worker:ci .
+          ./scripts/dev exec node scripts/cloud/verify-containers.mjs abasong-api:ci abasong-worker:ci
       - name: Bundle native JavaScript
         run: ./scripts/dev --filter @abasong/mobile exec expo export --platform ios --output-dir dist/ios
       - name: Bundle Android JavaScript

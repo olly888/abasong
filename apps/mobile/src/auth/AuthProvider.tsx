@@ -26,6 +26,7 @@ type State = {
   session: Session | null;
   me: Me | null;
   error: string | null;
+  accountErrorStatus?: number;
 };
 type AuthValue = State & {
   pendingPhone: string | null;
@@ -138,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phase: 'ready',
             me,
             error: null,
+            accountErrorStatus: undefined,
           }));
       })
       .catch((error) => {
@@ -148,6 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...current,
           phase: needsProfile ? 'needs-profile' : 'error',
           me: null,
+          accountErrorStatus:
+            error instanceof AccountError ? error.status : 503,
           error: needsProfile
             ? null
             : error instanceof AccountError

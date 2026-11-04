@@ -70,16 +70,55 @@ for name in ('LibraryCreate','LibraryPatch','PrivateRecordCreate','PrivateRecord
  assert not {'owner_id','status','capabilities','payload'}.intersection(contract['components']['schemas'][name]['properties'])
 catalog=json.loads((ROOT/'docs/product/V12.1_页面与状态目录.json').read_text())
 page_ids={p['id'] for p in catalog['pages']}
-assert len(page_ids)==len(catalog['pages'])==40
+assert len(page_ids)==len(catalog['pages'])==39
+assert 'B01' not in page_ids  # ADD-15: password text is read inline.
 assert {'B04','B05','B06','U09'}.issubset(page_ids)
 for page in catalog['pages']:
     if page['id'] in {'B04','B05','B06'}:
-        assert not page['api_operations'] and page.get('api_contract_status'),page['id']
+        assert page['api_operations'] and page.get('api_contract_status'),page['id']
 for page in catalog['pages']:
     assert page['information'] and page['states'] and page['acceptance']
     assert all(a['target'] in page_ids for a in page['actions']),page['id']
     assert set(page['api_operations']).issubset(set(ids)),(page['id'],page['api_operations'])
     assert not any(word in ' '.join(page['information']+page['states']) for word in ['长期','试线','带教','入职']),page['id']
+batch_sql=(ROOT/'database/migrations/0004_import_batches.sql').read_text()
+arrival_sql=(ROOT/'database/migrations/0005_apartment_arrival_areas.sql').read_text()
+arrival_parsed=parse_sql(arrival_sql)
+direct_sql=(ROOT/'database/migrations/0006_direct_contribution.sql').read_text()
+direct_parsed=parse_sql(direct_sql)
+nearby_sql=(ROOT/'database/migrations/0007_nearby_address_contributions.sql').read_text()
+nearby_parsed=parse_sql(nearby_sql)
+source_sql=(ROOT/'database/migrations/0008_contribution_sources.sql').read_text()
+source_parsed=parse_sql(source_sql)
+kms_sql=(ROOT/'database/migrations/0009_kms_envelopes.sql').read_text()
+kms_parsed=parse_sql(kms_sql)
+assert "'V12.0009'" in kms_sql and 'aws-kms-envelope-v1' in kms_sql
+assert "'V12.0008'" in source_sql and 'FORCE ROW LEVEL SECURITY' in source_sql
+assert {'access_contribution_sources'}=={stmt.stmt.relation.relname for stmt in source_parsed if isinstance(stmt.stmt,ast.CreateStmt)}
+assert not {'withdrawMyContribution','withdrawAccess'}.intersection(ids)
+assert 'can_withdraw_record' not in contract['components']['schemas']['ContributionSummary']['properties']
+review_issues=contract['components']['schemas']['ImportDeviceCandidateInput']['properties']['review_issues']
+assert review_issues['maxItems']==3 and review_issues['uniqueItems'] is True
+assert set(review_issues['items']['enum'])=={'ambiguous_pair','uncertain_address','uncertain_characters'}
+assert 'review_issues' not in contract['components']['schemas']['ImportDeviceCandidateInput']['required']
+assert set(review_issues['items']['enum']).issubset(contract['components']['schemas']['ImportCandidate']['properties']['issues']['items']['enum'])
+
+assert "'V12.0007'" in nearby_sql and 'sensitive_confirmed_apartment_insert' in nearby_sql
+assert {'discoverNearbyApartments','discoverMapboxApartments','contributeAtConfirmedAddress'}.issubset(set(ids))
+nearby_schema=contract['components']['schemas']['NearbyCandidate']
+assert 'value' not in nearby_schema['properties']
+assert nearby_schema['properties']['provider_feature_id']['type']=='string'
+assert nearby_schema['properties']['provider_feature_id']['maxLength']==200
+assert 'provider_feature_id' not in nearby_schema['required']
+for name in ('AddressContributionInput','ResolveInput'):
+    assert 'provider_feature_id' not in contract['components']['schemas'][name]['properties']
+assert 'published_on_creation' in direct_sql and 'UPDATE abasong.access_records' not in direct_sql
+assert 'FORCE ROW LEVEL SECURITY' in arrival_sql and 'apartment_arrival_areas' in arrival_sql
+batch_parsed=parse_sql(batch_sql)
+assert 'FORCE ROW LEVEL SECURITY' in batch_sql and 'SECURITY DEFINER SET search_path=pg_catalog' in batch_sql
+spatial_sql=(ROOT/'database/migrations/0003_apartment_buildings.sql').read_text()
+spatial_parsed=parse_sql(spatial_sql)
+assert 'apartment_buildings' in spatial_sql
 # Validate new local Markdown references. Actual browser/UI validation is separate.
 mds=list((ROOT/'docs').rglob('*.md'))+[ROOT/'产品基线.md']
 missing=[]
@@ -88,6 +127,7 @@ for path in mds:
         link=link.split('#')[0]
         if link and not link.startswith(('http://','https://','mailto:')) and not (path.parent/link).exists():missing.append([str(path.relative_to(ROOT)),link])
 assert not missing,missing
-result={'date':'2026-10-30','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
+result={'date':'2026-11-02','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0009':{'top_level_parse':'passed','statements':len(kms_parsed),'database_execution':'see A2 isolated KMS service verification'},
+        'incremental_migration_0008':{'top_level_parse':'passed','statements':len(source_parsed),'database_execution':'see D1 contribution source verification record'},'incremental_migration_0007':{'top_level_parse':'passed','statements':len(nearby_parsed),'database_execution':'see D1 nearby cards verification record'},'incremental_migration_0006':{'top_level_parse':'passed','statements':len(direct_parsed),'database_execution':'see D1 direct contribution verification record'},'incremental_migration_0005':{'top_level_parse':'passed','statements':len(arrival_parsed),'database_execution':'see D1 home arrival verification record'},'incremental_migration_0004':{'top_level_parse':'passed','statements':len(batch_parsed),'database_execution':'see D1 import batch verification record'},'incremental_migration_0003':{'top_level_parse':'passed','statements':len(spatial_parsed),'database_execution':'see D1 arrival verification record'},'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
 (ROOT/'docs/technical/V12_静态校验结果.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(result,ensure_ascii=False,indent=2))

@@ -7,6 +7,43 @@ const base =
   (Platform.OS === "android"
     ? "http://10.0.2.2:3001"
     : "http://127.0.0.1:3001");
+async function boundedRefresh<T>(
+  run: () => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (signal?.aborted)
+    throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let cancel = () => {};
+  try {
+    return await Promise.race([
+      Promise.resolve()
+        .then(run)
+        .catch(() => {
+          throw new AccountError(
+            503,
+            "NETWORK_UNAVAILABLE",
+            "暂时无法连接，请重试",
+          );
+        }),
+      new Promise<never>((_resolve, reject) => {
+        cancel = () =>
+          reject(new AccountError(499, "REQUEST_CANCELLED", "操作已取消"));
+        signal?.addEventListener("abort", cancel, { once: true });
+        timer = setTimeout(
+          () =>
+            reject(
+              new AccountError(503, "NETWORK_TIMEOUT", "连接超时，请重试"),
+            ),
+          10000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
+  }
+}
 export async function dataRequest<T>(
   session: Session,
   path: string,
@@ -20,11 +57,17 @@ export async function dataRequest<T>(
   if (!__DEV__ && !base.startsWith("https://"))
     throw new AccountError(503, "API_NOT_CONFIGURED", "资料服务暂不可用");
   async function perform(token: string): Promise<T> {
+    if (options.signal?.aborted)
+      throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+    let timedOut = false;
     const controller = new AbortController(),
       abort = () => controller.abort();
     options.signal?.addEventListener("abort", abort, { once: true });
     if (options.signal?.aborted) abort();
-    const timer = setTimeout(abort, 10000);
+    const timer = setTimeout(() => {
+      timedOut = true;
+      abort();
+    }, 10000);
     try {
       const response = await fetch(base + path, {
         method: options.method ?? "GET",
@@ -49,6 +92,10 @@ export async function dataRequest<T>(
       return value as T;
     } catch (e) {
       if (e instanceof AccountError) throw e;
+      if (options.signal?.aborted)
+        throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+      if (timedOut)
+        throw new AccountError(503, "NETWORK_TIMEOUT", "连接超时，请重试");
       throw new AccountError(
         503,
         "NETWORK_UNAVAILABLE",
@@ -62,8 +109,17 @@ export async function dataRequest<T>(
   try {
     return await perform(session.access_token);
   } catch (e) {
-    if (!(e instanceof AccountError) || e.status !== 401 || !supabase) throw e;
-    const result = await supabase.auth.refreshSession();
+    if (
+      !(e instanceof AccountError) ||
+      e.status !== 401 ||
+      !supabase ||
+      options.signal?.aborted
+    )
+      throw e;
+    const result = await boundedRefresh(
+      () => supabase!.auth.refreshSession(),
+      options.signal,
+    );
     const next = result.data.session;
     if (
       result.error ||

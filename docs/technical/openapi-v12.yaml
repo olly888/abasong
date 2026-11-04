@@ -633,10 +633,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /v1/apartments/{apartment_id}/map-context:
+    get:
+      operationId: getApartmentMapContext
+      summary: 已核对且有持久使用许可的建筑与门牌号；不含进入资料
+      tags:
+      - apartments
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApartmentMapContext'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: apartment_id
+        in: path
+        required: true
+        schema: *id001
+      x-sensitive-response: true
   /v1/apartments/resolve:
     post:
       operationId: resolveApartment
-      summary: 仅本次位置匹配，不留个人轨迹
+      summary: 前台位置候选；只有版本化现场证据、可信范围与精度全部满足才自动匹配，不保存轨迹
       tags:
       - apartments
       responses:
@@ -1027,6 +1104,247 @@ paths:
             schema:
               $ref: '#/components/schemas/AddressRetrieveInput'
       x-sensitive-response: true
+  /v1/apartments/discover:
+    post:
+      operationId: discoverNearbyApartments
+      summary: 附近200米目录公寓；边界距离优先；不代表到达，不返回密码
+      tags:
+      - apartments
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearbyDiscovery'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveInput'
+      x-sensitive-response: true
+  /v1/apartments/discover/mapbox:
+    post:
+      operationId: discoverMapboxApartments
+      summary: Mapbox公寓候选；唯一地址及空间匹配可关联已有公寓，未关联需核对；无临时结果落库
+      tags:
+      - apartments
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearbyDiscovery'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveInput'
+      x-sensitive-response: true
+  /v1/apartments/address-contributions:
+    post:
+      operationId: contributeAtConfirmedAddress
+      summary: 核对地址后直接共享；新位置只接受服务端永久许可地理编码；同事务幂等
+      tags:
+      - apartments
+      responses:
+        '201':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressContributionResult'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressContributionInput'
+      x-required-capabilities:
+      - access.contribute
+      x-sensitive-response: true
   /v1/apartments/proposals:
     post:
       operationId: proposeApartment
@@ -1276,7 +1594,7 @@ paths:
       x-sensitive-response: true
     post:
       operationId: contributeAccess
-      summary: 有权来源；同码同范围变验证事件
+      summary: 本人确认后直接共享；同码合并且不刷新贡献时间，不产生有用票
       tags:
       - apartments
       responses:
@@ -1433,76 +1751,6 @@ paths:
               $ref: '#/components/schemas/FeedbackInput'
       x-required-capabilities:
       - access.read
-  /v1/access-records/{record_id}:
-    delete:
-      operationId: withdrawAccess
-      summary: 仅本人贡献或运营；停止正文展示
-      tags:
-      - access-records
-      responses:
-        '200':
-          description: 成功；202 表示已接受任务，非最终完成
-          headers:
-            X-Request-ID:
-              schema: *id001
-              description: 追踪ID，不含个人数据
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ack'
-        '400':
-          description: 输入或跨字段约束错误
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: 认证失败
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: 权限不足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: 不存在或不可见
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: 版本/状态/幂等内容冲突
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: 业务条件不满足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: 限流
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: 依赖暂不可用
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      parameters:
-      - name: record_id
-        in: path
-        required: true
-        schema: *id001
   /v1/me/contributions:
     get:
       operationId: listMyContributions
@@ -1583,6 +1831,237 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
+  /v1/me/contributions/{contribution_id}/summary:
+    get:
+      operationId: getMyContributionSummary
+      summary: 仅本人贡献元数据，不含密码；无需查看资格
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionSummary'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: contribution_id
+        in: path
+        required: true
+        schema: *id001
+  /v1/me/contributions/{contribution_id}:
+    get:
+      operationId: getMyContribution
+      summary: 仅本人来源；正文仍要求查看资格，已终止来源不返回密码
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionDetail'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: contribution_id
+        in: path
+        required: true
+        schema: *id001
+      x-required-capabilities:
+      - access.read
+      x-sensitive-response: true
+  /v1/me/contributions/{contribution_id}/corrections:
+    post:
+      operationId: correctMyContribution
+      summary: 版本化纠正本人来源；关联正确记录，保留他人来源和反馈
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionChangeResult'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: contribution_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContributionCorrectionInput'
+      x-required-capabilities:
+      - access.contribute
   /v1/me/apartment-library:
     get:
       operationId: listMyApartmentLibrary
@@ -1669,6 +2148,10 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
+      - name: apartment_id
+        in: query
+        required: false
+        schema: *id001
       x-sensitive-response: true
     post:
       operationId: createMyApartmentEntry
@@ -6848,6 +7331,1617 @@ paths:
       x-internal: true
       x-requires-staff-mfa: true
       x-sensitive-response: true
+  /v1/me/import-batches/{batch_id}/sources/local:
+    post:
+      operationId: registerImportLocalSource
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '201':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportSource'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportSourceCreate'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/sources/{source_id}/extractions:
+    post:
+      operationId: submitImportDeviceExtraction
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '201':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportCandidatePage'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: source_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportDeviceExtraction'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/sources:
+    get:
+      operationId: listImportSources
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportSourcePage'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 1000
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+    post:
+      operationId: createImportSourceUpload
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '201':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportUploadGrant'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportSourceCreate'
+      x-sensitive-response: true
+      x-implementation-status: planned
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/candidates/confirm:
+    post:
+      operationId: confirmImportSelection
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportCandidatePage'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportConfirmSelection'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-policy:
+    get:
+      operationId: getImportPolicy
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportPolicy'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches:
+    get:
+      operationId: listImportBatches
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatchPage'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 1000
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+    post:
+      operationId: createImportBatch
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '201':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatch'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCreate'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}:
+    patch:
+      operationId: editImportBatchMode
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatch'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportBatchPatch'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+    get:
+      operationId: getImportBatch
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatch'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+    delete:
+      operationId: deleteImportDraft
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ack'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportVersionInput'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/sources/{source_id}/complete:
+    post:
+      operationId: completeImportSource
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportSource'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: source_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportVersionInput'
+      x-sensitive-response: true
+      x-implementation-status: planned
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/process:
+    post:
+      operationId: processImportBatch
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '202':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatch'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportStartInput'
+      x-sensitive-response: true
+      x-implementation-status: planned
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/candidates:
+    get:
+      operationId: listImportCandidates
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportCandidatePage'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 1000
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/candidates/{candidate_id}:
+    patch:
+      operationId: editImportCandidate
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportCandidate'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: candidate_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCandidateEdit'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/candidates/{candidate_id}/confirm:
+    post:
+      operationId: confirmImportCandidate
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportCandidate'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: candidate_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCandidateConfirm'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/commit:
+    post:
+      operationId: commitImportCandidates
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportCommitResponse'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCommitInput'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
+  /v1/me/import-batches/{batch_id}/cancel:
+    post:
+      operationId: cancelImportBatch
+      summary: 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatch'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema: *id001
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportVersionInput'
+      x-sensitive-response: true
+      x-implementation-status: implemented_local
+      x-object-authorization: owner_id = authenticated user; parent/child ownership;
+        404 on mismatch
 components:
   securitySchemes:
     BearerAuth:
@@ -7147,6 +9241,67 @@ components:
       - postal_code
       - point
       - confidence
+    BuildingGeometry:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+          - MultiPolygon
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+                minItems: 2
+                maxItems: 2
+      required:
+      - type
+      - coordinates
+    ApartmentBuilding:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        geometry:
+          $ref: '#/components/schemas/BuildingGeometry'
+        label_point:
+          $ref: '#/components/schemas/Point'
+        street_number:
+          type: string
+          maxLength: 40
+        verified_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - geometry
+      - label_point
+      - street_number
+      - verified_at
+    ApartmentMapContext:
+      type: object
+      additionalProperties: false
+      properties:
+        apartment_id:
+          type: string
+          format: uuid
+        buildings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApartmentBuilding'
+          maxItems: 100
+      required:
+      - apartment_id
+      - buildings
     ResolveInput:
       type: object
       additionalProperties: false
@@ -7159,6 +9314,7 @@ components:
         accuracy_m:
           type: number
           minimum: 0
+          maximum: 100000
         accuracy_permission:
           type: string
           enum:
@@ -7191,6 +9347,21 @@ components:
         config_version:
           type: integer
           minimum: 1
+        reason:
+          type: string
+          enum:
+          - matched
+          - ambiguous
+          - nearby
+          - no_coverage
+          - imprecise
+          - stale_location
+          - policy_disabled
+        match_basis:
+          type: string
+          enum:
+          - boundary
+          - entrance
       required:
       - status
       - matched_id
@@ -7210,19 +9381,58 @@ components:
       required:
       - query
       - session_token
+    SearchAddress:
+      type: object
+      additionalProperties: false
+      properties:
+        address_line1:
+          type: string
+          maxLength: 200
+        city:
+          type: string
+          maxLength: 100
+        state:
+          type: string
+          maxLength: 2
+        postal_code:
+          type: string
+          maxLength: 12
+          nullable: true
+      required:
+      - address_line1
+      - city
+      - state
+      - postal_code
     AddressSuggestion:
       type: object
       additionalProperties: false
       properties:
         provider_result_id:
           type: string
-          maxLength: 500
+          maxLength: 4096
         label:
           type: string
           maxLength: 300
+        title:
+          type: string
+          maxLength: 200
+        subtitle:
+          type: string
+          maxLength: 300
+        address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
       required:
       - provider_result_id
       - label
+      - title
+      - subtitle
+      - address
     AddressSuggestions:
       type: object
       additionalProperties: false
@@ -7238,17 +9448,21 @@ components:
           type: string
           enum:
           - temporary
+        attribution:
+          type: string
+          maxLength: 2000
       required:
       - items
       - session_token
       - use_mode
+      - attribution
     AddressRetrieveInput:
       type: object
       additionalProperties: false
       properties:
         provider_result_id:
           type: string
-          maxLength: 500
+          maxLength: 4096
         session_token:
           type: string
           format: uuid
@@ -7262,16 +9476,189 @@ components:
         label:
           type: string
           maxLength: 300
+        title:
+          type: string
+          maxLength: 200
         point:
           $ref: '#/components/schemas/Point'
         use_mode:
           type: string
           enum:
           - temporary
+        attribution:
+          type: string
+          maxLength: 2000
+        match_status:
+          type: string
+          enum:
+          - matched
+          - ambiguous
+          - unmatched
+        apartments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Apartment'
+        address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
       required:
       - label
+      - title
       - point
       - use_mode
+      - attribution
+      - match_status
+      - apartments
+    NearbyCandidate:
+      type: object
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          maxLength: 100
+        source:
+          type: string
+          enum:
+          - catalog
+          - mapbox
+        apartment:
+          description: 已有业务公寓的唯一完整地址与空间匹配；Mapbox来源也可关联。发现响应不含密码正文
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/Apartment'
+          - type: object
+            nullable: true
+            enum:
+            - null
+        address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
+        point:
+          $ref: '#/components/schemas/Point'
+        distance_m:
+          type: number
+          minimum: 0
+        classification:
+          type: string
+          enum:
+          - catalog_community
+          - apartments
+        requires_address_confirmation:
+          type: boolean
+          description: 未关联或存在歧义时需核对地址；不是贡献人工审核
+        provider_feature_id:
+          type: string
+          maxLength: 200
+          minLength: 1
+          description: 会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可
+      required:
+      - key
+      - source
+      - apartment
+      - address
+      - point
+      - distance_m
+      - classification
+      - requires_address_confirmation
+    NearbyDiscovery:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NearbyCandidate'
+          maxItems: 20
+        radius_m:
+          type: integer
+          minimum: 200
+        expires_at:
+          type: string
+          format: date-time
+        truncated:
+          type: boolean
+        provider_status:
+          type: string
+          enum:
+          - not_requested
+          - ok
+          - unavailable
+        attribution:
+          type: string
+          maxLength: 2000
+        use_mode:
+          type: string
+          enum:
+          - temporary
+      required:
+      - items
+      - radius_m
+      - expires_at
+      - truncated
+      - provider_status
+      - attribution
+      - use_mode
+    ConfirmedAddressAccessScope:
+      type: object
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          maxLength: 100
+          minLength: 1
+      required:
+      - label
+    AddressContributionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        address:
+          $ref: '#/components/schemas/SearchAddress'
+        method:
+          type: string
+          enum:
+          - keypad
+        value:
+          type: string
+          maxLength: 32
+          minLength: 1
+        scope:
+          $ref: '#/components/schemas/ConfirmedAddressAccessScope'
+        source_attested:
+          type: boolean
+          enum:
+          - true
+        address_confirmed:
+          type: boolean
+          enum:
+          - true
+      required:
+      - address
+      - method
+      - value
+      - source_attested
+      - address_confirmed
+    AddressContributionResult:
+      type: object
+      additionalProperties: false
+      properties:
+        apartment:
+          $ref: '#/components/schemas/Apartment'
+        contribution:
+          $ref: '#/components/schemas/ContributionResult'
+      required:
+      - apartment
+      - contribution
     ApartmentProposalInput:
       type: object
       additionalProperties: false
@@ -7485,6 +9872,7 @@ components:
       - record_id
       - outcome
       - contributed_at
+      description: 新贡献成功返回created_active，无人工审核；created_pending仅兼容旧请求重放，不表示当前仍在共享。same_value_validation不刷新贡献时间或增加有用票。
     FeedbackInput:
       type: object
       additionalProperties: false
@@ -8747,6 +11135,8 @@ components:
           - created
           - same_value_validation
           - withdrawal_requested
+          - withdrawn
+          - corrected
         record_status:
           type: string
           enum:
@@ -8755,11 +11145,40 @@ components:
           - review
           - invalid
           - withdrawn
-        can_withdraw_record:
-          type: boolean
         occurred_at:
           type: string
           format: date-time
+        status:
+          type: string
+          enum:
+          - active
+          - withdrawn
+          - corrected
+        version:
+          type: integer
+          minimum: 1
+        scope_label:
+          type: string
+          maxLength: 100
+        can_correct:
+          type: boolean
+        other_source_count:
+          type: integer
+          minimum: 0
+        useful_count:
+          type: integer
+          minimum: 0
+        not_useful_count:
+          type: integer
+          minimum: 0
+        last_feedback_at:
+          type: string
+          format: date-time
+          nullable: true
+        views_count:
+          type: integer
+          nullable: true
+          minimum: 0
       required:
       - id
       - record_id
@@ -8767,8 +11186,16 @@ components:
       - address_label
       - event_type
       - record_status
-      - can_withdraw_record
       - occurred_at
+      - status
+      - version
+      - scope_label
+      - can_correct
+      - other_source_count
+      - useful_count
+      - not_useful_count
+      - last_feedback_at
+      - views_count
     ContributionSummaryPage:
       type: object
       additionalProperties: false
@@ -8783,6 +11210,67 @@ components:
       required:
       - items
       - next_cursor
+    ContributionDetail:
+      type: object
+      additionalProperties: false
+      properties:
+        source:
+          $ref: '#/components/schemas/ContributionSummary'
+        value:
+          type: string
+          maxLength: 32
+          nullable: true
+      required:
+      - source
+      - value
+    ContributionCorrectionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        value:
+          type: string
+          maxLength: 32
+          minLength: 1
+        scope:
+          $ref: '#/components/schemas/ConfirmedAddressAccessScope'
+        source_attested:
+          type: boolean
+          enum:
+          - true
+      required:
+      - expected_version
+      - value
+      - scope
+      - source_attested
+    ContributionChangeResult:
+      type: object
+      additionalProperties: false
+      properties:
+        operation:
+          type: string
+          enum:
+          - corrected
+        applied_version:
+          type: integer
+          minimum: 1
+        source:
+          $ref: '#/components/schemas/ContributionSummary'
+        replacement:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/ContributionSummary'
+          - type: object
+            nullable: true
+            enum:
+            - null
+      required:
+      - operation
+      - applied_version
+      - source
+      - replacement
     InboxSummary:
       type: object
       additionalProperties: false
@@ -9320,3 +11808,666 @@ components:
       required:
       - expected_version
       - source_attested
+    ImportScope:
+      type: object
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          maxLength: 100
+    ImportPolicy:
+      type: object
+      additionalProperties: false
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        max_images:
+          type: integer
+          minimum: 1
+          maximum: 50
+        max_image_bytes:
+          type: integer
+          minimum: 1
+        max_total_bytes:
+          type: integer
+          minimum: 1
+        max_pixels:
+          type: integer
+          minimum: 1
+        draft_ttl_seconds:
+          type: integer
+          minimum: 1
+        source_ttl_seconds:
+          type: integer
+          minimum: 1
+        upload_ttl_seconds:
+          type: integer
+          minimum: 1
+        processing_timeout_seconds:
+          type: integer
+          minimum: 1
+        daily_image_limit:
+          type: integer
+          minimum: 1
+        max_candidates:
+          type: integer
+          minimum: 1
+        recognition_mode:
+          type: string
+          enum:
+          - on_device
+          - server
+        supported_mime_types:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+      required:
+      - version
+      - max_images
+      - max_image_bytes
+      - max_total_bytes
+      - max_pixels
+      - draft_ttl_seconds
+      - source_ttl_seconds
+      - upload_ttl_seconds
+      - processing_timeout_seconds
+      - daily_image_limit
+      - max_candidates
+      - recognition_mode
+      - supported_mime_types
+    ImportCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        client_batch_id:
+          type: string
+          format: uuid
+        policy_version:
+          type: integer
+          minimum: 1
+        mode:
+          type: string
+          enum:
+          - private_only
+          - private_and_share
+        origin:
+          type: string
+          enum:
+          - contribute
+          - library
+          - apartment
+        origin_apartment_id:
+          type: string
+          format: uuid
+      required:
+      - client_batch_id
+      - policy_version
+      - mode
+      - origin
+    ImportBatch:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+          enum:
+          - created
+          - uploading
+          - queued
+          - processing
+          - needs_review
+          - submitting
+          - completed
+          - partial_failed
+          - failed
+          - cancelled
+          - expired
+        version:
+          type: integer
+          minimum: 1
+        generation:
+          type: integer
+          minimum: 1
+        mode:
+          type: string
+          enum:
+          - private_only
+          - private_and_share
+        mode_locked:
+          type: boolean
+        policy_version:
+          type: integer
+          minimum: 1
+        expires_at:
+          type: string
+          format: date-time
+        sources_count:
+          type: integer
+          minimum: 0
+        candidate_count:
+          type: integer
+          minimum: 0
+          description: Number of non-removed candidates; removed rows remain only
+            in owner draft history until expiry.
+        private_saved_count:
+          type: integer
+          minimum: 0
+        shared_count:
+          type: integer
+          minimum: 0
+        pending_count:
+          type: integer
+          minimum: 0
+        failed_count:
+          type: integer
+          minimum: 0
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - state
+      - version
+      - generation
+      - mode
+      - mode_locked
+      - policy_version
+      - expires_at
+      - sources_count
+      - candidate_count
+      - private_saved_count
+      - shared_count
+      - pending_count
+      - failed_count
+      - updated_at
+    ImportBatchPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportBatch'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - items
+      - next_cursor
+    ImportBatchPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        mode:
+          type: string
+          enum:
+          - private_only
+          - private_and_share
+      required:
+      - expected_version
+      - mode
+    ImportSourceCreate:
+      type: object
+      additionalProperties: false
+      properties:
+        client_source_id:
+          type: string
+          format: uuid
+        expected_batch_version:
+          type: integer
+          minimum: 1
+        mime_type:
+          type: string
+          enum:
+          - image/jpeg
+          - image/png
+          - image/heic
+        byte_size:
+          type: integer
+          minimum: 1
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+      required:
+      - client_source_id
+      - expected_batch_version
+      - mime_type
+      - byte_size
+      - width
+      - height
+    ImportSource:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+          enum:
+          - registered
+          - awaiting_upload
+          - uploaded
+          - processing
+          - recognized
+          - failed
+          - deleted
+        version:
+          type: integer
+          minimum: 1
+        expires_at:
+          type: string
+          format: date-time
+        error_code:
+          type: string
+          maxLength: 80
+          nullable: true
+      required:
+      - id
+      - state
+      - version
+      - expires_at
+      - error_code
+    ImportSourcePage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportSource'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - items
+      - next_cursor
+    ImportUploadGrant:
+      type: object
+      additionalProperties: false
+      properties:
+        source:
+          $ref: '#/components/schemas/ImportSource'
+        upload_url:
+          type: string
+          maxLength: 2000
+        expires_at:
+          type: string
+          format: date-time
+        required_headers:
+          type: object
+          additionalProperties:
+            type: string
+            maxLength: 500
+      required:
+      - source
+      - upload_url
+      - expires_at
+      - required_headers
+    ImportVersionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+      required:
+      - expected_version
+    ImportStartInput:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        source_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 50
+          uniqueItems: true
+      required:
+      - expected_version
+      - source_ids
+    ImportCandidateEdit:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_revision:
+          type: integer
+          minimum: 1
+        address_text:
+          type: string
+          maxLength: 300
+        apartment_id:
+          type: string
+          format: uuid
+          nullable: true
+        method:
+          type: string
+          enum:
+          - keypad
+          - front_desk
+          - digital_access
+          - no_fixed_code
+          - other
+        value:
+          type: string
+          maxLength: 32
+        scope:
+          $ref: '#/components/schemas/ImportScope'
+        removed:
+          type: boolean
+      required:
+      - expected_revision
+    ImportCandidate:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        revision:
+          type: integer
+          minimum: 1
+        source_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        address_text:
+          type: string
+          maxLength: 300
+        apartment_id:
+          type: string
+          format: uuid
+          nullable: true
+        method:
+          type: string
+          enum:
+          - keypad
+          - front_desk
+          - digital_access
+          - no_fixed_code
+          - other
+        value:
+          type: string
+          maxLength: 32
+        scope:
+          $ref: '#/components/schemas/ImportScope'
+        issues:
+          type: array
+          items:
+            type: string
+            enum:
+            - missing_address
+            - missing_value
+            - ambiguous_pair
+            - uncertain_characters
+            - uncertain_address
+            - unmatched_apartment
+            - duplicate
+            - unsupported_method
+        state:
+          type: string
+          enum:
+          - needs_review
+          - ready
+          - removed
+          - committed
+          - failed
+        confirmation_revision:
+          type: integer
+          minimum: 1
+          nullable: true
+        commit_result:
+          $ref: '#/components/schemas/ImportCommitResult'
+      required:
+      - id
+      - revision
+      - source_ids
+      - address_text
+      - apartment_id
+      - method
+      - value
+      - scope
+      - issues
+      - state
+      - confirmation_revision
+    ImportCandidatePage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportCandidate'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - items
+      - next_cursor
+    ImportCandidateConfirm:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_revision:
+          type: integer
+          minimum: 1
+        fields_confirmed:
+          type: boolean
+          enum:
+          - true
+      required:
+      - expected_revision
+      - fields_confirmed
+    ImportConfirmSelectionItem:
+      type: object
+      additionalProperties: false
+      properties:
+        candidate_id:
+          type: string
+          format: uuid
+        expected_revision:
+          type: integer
+          minimum: 1
+      required:
+      - candidate_id
+      - expected_revision
+    ImportConfirmSelection:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_batch_version:
+          type: integer
+          minimum: 1
+        fields_confirmed:
+          type: boolean
+          enum:
+          - true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportConfirmSelectionItem'
+          minItems: 1
+          maxItems: 100
+      required:
+      - expected_batch_version
+      - fields_confirmed
+      - items
+    ImportCommitItem:
+      type: object
+      additionalProperties: false
+      properties:
+        candidate_id:
+          type: string
+          format: uuid
+        confirmed_revision:
+          type: integer
+          minimum: 1
+        client_commit_id:
+          type: string
+          format: uuid
+      required:
+      - candidate_id
+      - confirmed_revision
+      - client_commit_id
+    ImportCommitInput:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_batch_version:
+          type: integer
+          minimum: 1
+        mode:
+          type: string
+          enum:
+          - private_only
+          - private_and_share
+        source_attested:
+          type: boolean
+          enum:
+          - true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportCommitItem'
+          minItems: 1
+          maxItems: 100
+      required:
+      - expected_batch_version
+      - mode
+      - source_attested
+      - items
+    ImportCommitResult:
+      type: object
+      additionalProperties: false
+      properties:
+        candidate_id:
+          type: string
+          format: uuid
+        confirmed_revision:
+          type: integer
+          minimum: 1
+        client_commit_id:
+          type: string
+          format: uuid
+        private_status:
+          type: string
+          enum:
+          - not_started
+          - saved
+          - failed
+        private_record_id:
+          type: string
+          format: uuid
+          nullable: true
+        share_status:
+          type: string
+          enum:
+          - not_requested
+          - not_started
+          - active
+          - pending
+          - same_value
+          - failed
+        contribution_id:
+          type: string
+          format: uuid
+          nullable: true
+        error_code:
+          type: string
+          maxLength: 80
+          nullable: true
+        retryable:
+          type: boolean
+      required:
+      - candidate_id
+      - confirmed_revision
+      - client_commit_id
+      - private_status
+      - private_record_id
+      - share_status
+      - contribution_id
+      - error_code
+      - retryable
+    ImportCommitResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        batch:
+          $ref: '#/components/schemas/ImportBatch'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportCommitResult'
+      required:
+      - batch
+      - results
+    ImportDeviceCandidateInput:
+      type: object
+      additionalProperties: false
+      properties:
+        address_text:
+          type: string
+          maxLength: 300
+        value:
+          type: string
+          maxLength: 32
+        method:
+          type: string
+          enum:
+          - keypad
+          - front_desk
+          - digital_access
+          - no_fixed_code
+          - other
+        scope:
+          $ref: '#/components/schemas/ImportScope'
+        review_issues:
+          type: array
+          items:
+            type: string
+            enum:
+            - ambiguous_pair
+            - uncertain_address
+            - uncertain_characters
+          maxItems: 3
+          uniqueItems: true
+      required:
+      - address_text
+      - value
+      - method
+    ImportDeviceExtraction:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_source_version:
+          type: integer
+          minimum: 1
+        recognizer_version:
+          type: string
+          maxLength: 80
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportDeviceCandidateInput'
+          maxItems: 100
+      required:
+      - expected_source_version
+      - recognizer_version
+      - candidates

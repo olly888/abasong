@@ -5,11 +5,17 @@ import {
   randomBytes,
 } from "node:crypto";
 import { ApiError } from "../common/api-error";
+import type { EnvelopeCrypto } from "../encryption/envelope";
 // Deliberately local only. A production KMS adapter must be implemented before enabling this in production.
-export class LocalEnvelope {
+export class LocalEnvelope implements EnvelopeCrypto {
+  readonly format = "local-envelope-v1";
+  readonly keyId = "local-development";
+  readonly hmacVersion = "local-v1";
   private key() {
     if (
       process.env.NODE_ENV === "production" ||
+      (process.env.ABASONG_ENV !== undefined &&
+        !["d0", "test", "development"].includes(process.env.ABASONG_ENV)) ||
       process.env.DATA_ENCRYPTION_PROVIDER !== "local-development" ||
       !/^[a-f0-9]{64}$/i.test(process.env.LOCAL_DATA_KEK ?? "")
     )
@@ -25,7 +31,8 @@ export class LocalEnvelope {
     const dek = randomBytes(32),
       body = this.encrypt(Buffer.from(JSON.stringify(value)), dek, aad);
     return {
-      format: "local-envelope-v1",
+      format: this.format,
+      keyId: this.keyId,
       body,
       wrapped: this.encrypt(dek, this.key(), `${aad}:dek`),
     };

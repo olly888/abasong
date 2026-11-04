@@ -1,0 +1,152 @@
+import { addressIdentity } from "@abasong/contracts";
+import type { components } from "@abasong/contracts";
+type S = components["schemas"];
+function nearbyOrder(a: S["NearbyCandidate"], b: S["NearbyCandidate"]) {
+  // A sub-metre difference at a roof/boundary edge is not a useful reason to
+  // replace a known address with an unconfirmed reverse-geocode suggestion.
+  const band = Math.floor(a.distance_m) - Math.floor(b.distance_m);
+  if (band) return band;
+  const resolved = (c: S["NearbyCandidate"]) =>
+    Number(!!c.apartment && !c.requires_address_confirmation);
+  const identity = (c: S["NearbyCandidate"]) =>
+    addressIdentity(c.address) ?? c.provider_feature_id ?? c.key;
+  return (
+    resolved(b) - resolved(a) ||
+    identity(a).localeCompare(identity(b)) ||
+    a.key.localeCompare(b.key)
+  );
+}
+export function distanceM(a: S["Point"], b: S["Point"]) {
+  const r = Math.PI / 180,
+    h =
+      Math.sin(((a.lat - b.lat) * r) / 2) ** 2 +
+      Math.cos(a.lat * r) *
+        Math.cos(b.lat * r) *
+        Math.sin(((a.lng - b.lng) * r) / 2) ** 2;
+  return 12742017.6 * Math.asin(Math.sqrt(Math.min(1, h)));
+}
+export function mergeNearby(
+  catalog: S["NearbyCandidate"][],
+  provider: S["NearbyCandidate"][],
+) {
+  const catalogAddresses = new Set(
+    catalog.map((c) => addressIdentity(c.address)).filter(Boolean),
+  );
+  const identities = new Set<string>(),
+    providerAddresses = new Set<string>();
+  return [...catalog, ...provider]
+    .filter((c) => {
+      const id = c.apartment?.id ?? c.key;
+      if (identities.has(id)) return false;
+      const address = addressIdentity(c.address);
+      if (!c.apartment && address) {
+        if (catalogAddresses.has(address) || providerAddresses.has(address))
+          return false;
+        providerAddresses.add(address);
+      }
+      identities.add(id);
+      return true;
+    })
+    .sort(nearbyOrder)
+    .slice(0, 20);
+}
+
+export type DiscoveryObservation = {
+  fix: import("./foreground-location").ForegroundFix;
+  approximate: boolean;
+};
+export function isFreshDiscoveryObservation(
+  a: DiscoveryObservation,
+  now = Date.now(),
+) {
+  const c = a.fix.coords;
+  return (
+    !a.approximate &&
+    c.accuracy !== null &&
+    Number.isFinite(c.accuracy) &&
+    c.accuracy >= 0 &&
+    c.accuracy <= 100 &&
+    Number.isFinite(c.latitude) &&
+    Math.abs(c.latitude) <= 90 &&
+    Number.isFinite(c.longitude) &&
+    Math.abs(c.longitude) <= 180 &&
+    Number.isFinite(a.fix.timestamp) &&
+    now - a.fix.timestamp <= 20000 &&
+    now - a.fix.timestamp >= -1000
+  );
+}
+export function observationPoint(a: DiscoveryObservation): S["Point"] {
+  return { lng: a.fix.coords.longitude, lat: a.fix.coords.latitude };
+}
+// Nearby recommendations tolerate small GPS drift; this never confirms arrival.
+export function sameDiscoveryObservation(
+  a: DiscoveryObservation,
+  b: DiscoveryObservation,
+) {
+  return (
+    isFreshDiscoveryObservation(a) &&
+    isFreshDiscoveryObservation(b) &&
+    distanceM(observationPoint(a), observationPoint(b)) <= 15
+  );
+}
+// Boundary distances obey the same triangle inequality as point distances.
+// Keep only candidates provably within the radius after the query point moves;
+// never replace a community boundary distance with its distant centroid.
+export function withinNearbyRadius(
+  items: S["NearbyCandidate"][],
+  origin: S["Point"],
+  current: S["Point"],
+  radius = 200,
+) {
+  const shift = distanceM(origin, current);
+  return items.filter(
+    (c) =>
+      Number.isFinite(c.distance_m) &&
+      c.distance_m >= 0 &&
+      c.distance_m + shift <= Math.min(200, radius),
+  );
+}
+export function nearbyAtCurrentObservation(
+  lookup: S["NearbyDiscovery"],
+  origin: DiscoveryObservation,
+  current: DiscoveryObservation,
+) {
+  if (
+    !sameDiscoveryObservation(origin, current) ||
+    !(Date.parse(lookup.expires_at) > Date.now())
+  )
+    return null;
+  return {
+    ...lookup,
+    items: withinNearbyRadius(
+      lookup.items,
+      observationPoint(origin),
+      observationPoint(current),
+      lookup.radius_m,
+    ),
+  };
+}
+
+export type NearbySnapshot = {
+  items: S["NearbyCandidate"][];
+  point: S["Point"];
+  until: number;
+};
+
+// Revalidate visible automatic recommendations on every fresh fix, not only
+// when another network lookup completes. Each source retains its own origin
+// and lease; a late optional provider response cannot renew catalog data.
+export function nearbyFromSnapshots(
+  catalog: NearbySnapshot | null,
+  provider: NearbySnapshot | null,
+  observation: DiscoveryObservation,
+) {
+  if (!isFreshDiscoveryObservation(observation)) return [];
+  const current = observationPoint(observation),
+    now = Date.now();
+  const visible = (snapshot: NearbySnapshot | null) =>
+    snapshot && snapshot.until > now
+      ? withinNearbyRadius(snapshot.items, snapshot.point, current)
+      : [];
+  return mergeNearby(visible(catalog), visible(provider));
+}

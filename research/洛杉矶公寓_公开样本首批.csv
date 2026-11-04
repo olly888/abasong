@@ -1,0 +1,6 @@
+sample_id,public_property_name,public_address_input,public_source,nearby_building_count_60m,nearby_apartments_type_count,nearby_housenum_count_60m,expected_number_present,field_verified,building_address_binding_verified,provider_raw_results_stored
+LA-PUBLIC-01,Park La Brea,"6200 W 3rd St, Los Angeles, CA 90036",https://www.parklabrea.com/,5,0,11,False,False,False,False
+LA-PUBLIC-02,Del Mar Apartments,"2445 E Del Mar Blvd, Pasadena, CA 91107",https://www.delmarpasadena.com/,9,3,4,True,False,False,False
+LA-PUBLIC-03,Colony at The Lakes,"301 S Glendora Ave, West Covina, CA 91790",https://www.colonyatthelakes.com/,1,0,3,True,False,False,False
+LA-PUBLIC-04,Woodside Village,"2547 Temple Ave, West Covina, CA 91792",https://www.woodsidevillageapartmenthomes.com/contactus,20,20,3,True,False,False,False
+LA-PUBLIC-05,One Santa Fe,"300 S Santa Fe Ave, Los Angeles, CA 90012",https://osfla.com/,1,1,3,True,False,False,False

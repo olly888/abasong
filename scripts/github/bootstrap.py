@@ -1,5 +1,5 @@
 """Idempotent project bootstrap. Explicit manual command; never a CI auto-publish step.
-Requires an audited/pushed private olly888/abasong and authenticated gh with project scope.
+Requires an audited/pushed olly888/abasong (public needs explicit --allow-public) and authenticated gh with project scope.
 No credentials or project business data are read.
 """
 from pathlib import Path
@@ -23,7 +23,10 @@ def rows():
    tasks.append(dict(id=rid,title=title,dependencies=depends,acceptance=accept))
  assert len(tasks)==35 and len({t['id'] for t in tasks})==35
  return tasks
-STATES={'T01':'已完成','T03':'已完成','T02':'开发中','T04':'待验收','T06':'开发中','T07':'开发中','T08':'开发中','T09':'开发中','T10':'开发中','T11':'开发中','T19':'开发中','T21':'开发中','T26':'待验收','T27':'开发中','T32':'待验收','T33':'开发中','T35':'开发中'}
+SNAPSHOT=json.loads((ROOT/'scripts/github/task-status.json').read_text())
+STATES=SNAPSHOT['states']
+assert set(STATES)=={f'T{i:02d}' for i in range(1,36)}
+assert set(STATES.values())<=set(['待开发','开发中','待验收','已完成'])
 def stage(rid):
  n=int(rid[1:])
  if n in (1,3):return 'D0'
@@ -31,14 +34,14 @@ def stage(rid):
  if 12<=n<=16:return 'D2'
  if 17<=n<=20:return 'D3'
  return 'D4'
-NOTES={'T02':'双端构建/底图有历史证据；建筑字段/现场/真机剩余部分不视为通过。','T04':'身份HTTP检查及历史iOS真实登录已通过；Android真实登录及异常会话验收仍待补。','T09':'仅本地信封加密；生产KMS/轮换/恢复未完成。','T19':'本人公寓相关页面已部分接入；其余账号/设置/删除链路未完成。','T21':'已有局部自动测试，完整集成/安全/设备/性能/现场验收未完成。','T26':'合成交互参考已提供；不等同真实OCR，也不代表所有规格状态已逐项验收。','T27':'私人库9个契约及类型已扩展；截图批次契约仍待完成。','T32':'本地私存/收藏/区域及owner隔离已实现并测试；完整业务验收未完成。','T33':'主动共享已实现；纠正/双阶段导入事务仍待完成。','T35':'双端页面已接真实API；真实账号原生完整流程未验收。'}
+NOTES=SNAPSHOT['notes']
 def body(t):
  s=STATES.get(t['id'],'待开发')
  content=f'''<!-- abasong-task:{t['id']} -->
 ## 目标
 {t['title']}
 
-阶段：{stage(t['id'])}；初始状态：{s}。前置：{t['dependencies']}。
+阶段：{stage(t['id'])}；当前状态：{s}；快照：{SNAPSHOT['as_of']}。前置：{t['dependencies']}。
 
 ## 验收标准
 - [ ] {t['acceptance']}
@@ -46,7 +49,7 @@ def body(t):
 - [ ] 同步源契约/生成类型、增量迁移和产品/工程文档（适用时）。
 
 ## 已有事实与限制
-{NOTES.get(t['id'],'初始状态基于研发总计划；未实现的设计契约/原型不作为完成证据。' if s!='已完成' else '本地工程范围已有实际验证证据；不代表生产部署完成。')}
+{NOTES.get(t['id'],'当前状态基于ADD-20研发总计划；未实现的设计契约/原型不作为完成证据。' if s!='已完成' else '本地工程范围已有实际验证证据；不代表生产部署完成。')}
 
 ## 依据
 - [研发总计划](https://github.com/olly888/abasong/blob/main/docs/Abasong_V12.1_项目开发与验收总计划.md)
@@ -65,7 +68,8 @@ if __name__=='__main__':
  if '--prepare-only' in sys.argv:print('Prepared35 tasks; no remote writes');raise SystemExit
  if not (ROOT/'.tooling/security/publish-approved.json').exists():raise RuntimeError('Run and review complete history audit before remote bootstrap')
  login=gh(['api','user'])['login'];assert login=='olly888'
- repo=gh(['repo','view',REPO,'--json','nameWithOwner,isPrivate,id']);assert repo['nameWithOwner']==REPO and repo['isPrivate']
+ repo=gh(['repo','view',REPO,'--json','nameWithOwner,isPrivate,id']);assert repo['nameWithOwner']==REPO
+ if not repo['isPrivate']:assert '--allow-public' in sys.argv, 'Public repository requires explicit --allow-public'
  labels={x['name'] for x in api(f'repos/{REPO}/labels?per_page=100')}
  definitions={'type:task':('1D76DB','总计划开发任务'),'priority:P0':('B60205','首版关键任务')}
  for d in range(5):definitions[f'stage:D{d}']=('5319E7',f'D{d}阶段')

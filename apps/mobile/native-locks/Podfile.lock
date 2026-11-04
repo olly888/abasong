@@ -1,4 +1,6 @@
 PODS:
+  - AbasongOcr (0.1.0):
+    - ExpoModulesCore
   - boost (1.84.0):
     - ReactNativeDependencies
   - DoubleConversion (1.1.6):
@@ -135,6 +137,8 @@ PODS:
   - ExpoFont (58.0.11):
     - ExpoModulesCore
   - ExpoGlassEffect (58.0.5):
+    - ExpoModulesCore
+  - ExpoImagePicker (58.0.10):
     - ExpoModulesCore
   - ExpoKeepAwake (58.0.3):
     - ExpoModulesCore
@@ -2319,6 +2323,7 @@ PODS:
     - React-Core-prebuilt
 
 DEPENDENCIES:
+  - AbasongOcr (from `../modules/abasong-ocr/ios`)
   - boost (from `build/rndeps-facades/boost`)
   - DoubleConversion (from `build/rndeps-facades/DoubleConversion`)
   - "EXConstants (from `../../../node_modules/.pnpm/expo-constants@58.0.14_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88_11394ecafcbdfa499a338a08212000aa/node_modules/expo-constants/ios`)"
@@ -2335,6 +2340,7 @@ DEPENDENCIES:
   - "ExpoFileSystem (from `../../../node_modules/.pnpm/expo-file-system@58.0.13_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._f2f9e22a94091a38903293dfa24f5a53/node_modules/expo-file-system/ios/ExpoFileSystem.podspec`)"
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@58.0.11_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@t_c53e7a5a646855000d7995236157f54f/node_modules/expo-font/ios/ExpoFont.podspec`)"
   - "ExpoGlassEffect (from `../../../node_modules/.pnpm/expo-glass-effect@58.0.5_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._52ef83a86a477c266c5aed651474ff02/node_modules/expo-glass-effect/ios`)"
+  - "ExpoImagePicker (from `../../../node_modules/.pnpm/expo-image-picker@58.0.10_expo@58.0.21/node_modules/expo-image-picker/ios`)"
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@58.0.3_expo@58.0.21_react@19.3.0/node_modules/expo-keep-awake/ios`)"
   - "ExpoLinking (from `../../../node_modules/.pnpm/expo-linking@58.0.15_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_65b0cc8048d4d1be05d6378be3becf3f/node_modules/expo-linking/ios`)"
   - "ExpoLocation (from `../../../node_modules/.pnpm/expo-location@58.0.20_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._b9dff5934e8ab920c56177bffdf558d3/node_modules/expo-location/ios`)"
@@ -2448,6 +2454,8 @@ SPEC REPOS:
     - Turf
 
 EXTERNAL SOURCES:
+  AbasongOcr:
+    :path: "../modules/abasong-ocr/ios"
   boost:
     :path: build/rndeps-facades/boost
   DoubleConversion:
@@ -2480,6 +2488,8 @@ EXTERNAL SOURCES:
     :podspec: "../../../node_modules/.pnpm/expo-font@58.0.11_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@t_c53e7a5a646855000d7995236157f54f/node_modules/expo-font/ios/ExpoFont.podspec"
   ExpoGlassEffect:
     :path: "../../../node_modules/.pnpm/expo-glass-effect@58.0.5_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._52ef83a86a477c266c5aed651474ff02/node_modules/expo-glass-effect/ios"
+  ExpoImagePicker:
+    :path: "../../../node_modules/.pnpm/expo-image-picker@58.0.10_expo@58.0.21/node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../../../node_modules/.pnpm/expo-keep-awake@58.0.3_expo@58.0.21_react@19.3.0/node_modules/expo-keep-awake/ios"
   ExpoLinking:
@@ -2689,6 +2699,7 @@ EXTERNAL SOURCES:
     :path: build/rncore-facades/Yoga
 
 SPEC CHECKSUMS:
+  AbasongOcr: 9ce0c197b90d8d52ad8853d63f91c2e7187c3f89
   boost: 8502bfdc46e2804408af2e163049ece181009af4
   DoubleConversion: 501a575c40c0b50c89685762dd3e415e6bb26fb0
   EXConstants: 0f47f210481f0a4eae5f0c82d3031ebb7fa1302e
@@ -2705,6 +2716,7 @@ SPEC CHECKSUMS:
   ExpoFileSystem: b619d80b490c53117a9a9c976021a4ce5a9da440
   ExpoFont: 77eaad26c6a7ef6be8d431963358def09d8e3a73
   ExpoGlassEffect: 6594e055df1e0b88d34cc189ba0b21589adec6bf
+  ExpoImagePicker: a466134ec92fed0b38bbf9062c7eb5f3c8c49d94
   ExpoKeepAwake: fd18a5d233329013c578030ad399d8e10b252b5f
   ExpoLinking: c4c98c2c889e183ab2cdd95c5d0739a3e187e6c0
   ExpoLocation: 743cb999a9e622b6cdb76298cd3dee0956e221f1

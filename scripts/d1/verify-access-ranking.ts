@@ -17,11 +17,11 @@ async function main() {
   const since = new Date('2026-10-22T20:00:00Z'); // Explicit synthetic test interval, not a production default.
   try {
     await db.query('BEGIN');
-    await db.query('SET LOCAL ROLE abasong_api');
     const owner = randomUUID(), voter1 = randomUUID(), voter2 = randomUUID(), source = randomUUID(), apartment = randomUUID();
     await db.query('INSERT INTO abasong.users(id) VALUES ($1),($2),($3)', [owner,voter1,voter2]);
     await db.query("INSERT INTO abasong.data_sources(id,source_type,license_reference,persistent_use_approved) VALUES($1,'own_field','synthetic-rollback-fixture',true)", [source]);
     await db.query("INSERT INTO abasong.apartments(id,address_line1,city,point,source_id,status) VALUES($1,'Synthetic test address','Test',extensions.ST_GeogFromText('SRID=4326;POINT(-118.24 34.05)'),$2,'active')", [apartment,source]);
+    await db.query("SELECT set_config('abasong.actor_id',$1,true)",[owner]);
     let serial = 0;
     async function record(day: number, overrides: { status?: string; scope?: string; expires?: Date; id?: string } = {}) {
       const id = overrides.id ?? randomUUID(); serial++;
@@ -35,7 +35,9 @@ async function main() {
         ON CONFLICT(record_id,user_id) DO UPDATE SET value=EXCLUDED.value,updated_at=EXCLUDED.updated_at,applicable=EXCLUDED.applicable,excluded_at=EXCLUDED.excluded_at`, [id,user,value,updated,applicable,excluded]);
     }
     async function ranked(limit = 20) {
-      return (await db.query<AccessRankingRow>(buildAccessRankingQuery({ apartmentId: apartment, scopeKeys: ['main'], asOf: now, effectiveUsefulSince: since, limit }))).rows;
+      await db.query('SET LOCAL ROLE abasong_sensitive');
+      try { return (await db.query<AccessRankingRow>(buildAccessRankingQuery({ apartmentId: apartment, scopeKeys: ['main'], asOf: now, effectiveUsefulSince: since, limit }))).rows; }
+      finally { await db.query('RESET ROLE'); }
     }
     const olderUseful = await record(23), newer = await record(28), newerUseful = await record(27);
     await feedback(olderUseful); await feedback(olderUseful,voter2); await feedback(newerUseful);
@@ -54,6 +56,14 @@ async function main() {
     }
     await feedback(olderUseful,voter1,'useful',since);
     assert.equal((await ranked())[0]?.id,olderUseful); checks++; // Interval boundary inclusive.
+    // Preserve the database's microseconds instead of rounding the cutoff down
+    // through a JS Date, which can temporarily hide a newly committed vote.
+    await db.query("UPDATE abasong.access_feedback SET updated_at='2026-10-29T20:00:00.000500Z' WHERE record_id=$1 AND user_id=$2", [olderUseful, voter1]);
+    for (const [cutoff, expected] of [['2026-10-29T20:00:00.000900Z', true], ['2026-10-29T20:00:00.000400Z', false]] as const) {
+      const rows = (await db.query<AccessRankingRow>(buildAccessRankingQuery({ apartmentId: apartment, scopeKeys: ['main'], asOf: cutoff, effectiveUsefulSince: since, limit: 20 }))).rows;
+      assert.equal(rows.find(row => row.id === olderUseful)?.has_current_effective_useful, expected); checks++;
+    }
+    await feedback(olderUseful,voter1,'useful',since);
     await db.query("UPDATE abasong.users SET status='suspended' WHERE id=$1",[voter1]);
     assert.equal((await ranked())[0]?.id,newer); checks++;
     await db.query("UPDATE abasong.users SET status='active' WHERE id=$1",[voter1]);

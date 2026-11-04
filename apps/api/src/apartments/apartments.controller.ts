@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Headers,
+  HttpCode,
   Inject,
   Param,
   Patch,
@@ -95,6 +96,37 @@ export class ApartmentsController {
   }
   @Get("me/contributions") contributions(@Req() r: ApiRequest) {
     return this.service.contributions(this.actor(r), r.query);
+  }
+  @Get("me/contributions/:contribution_id/summary") contributionSummary(
+    @Req() r: ApiRequest,
+    @Param("contribution_id") id: string,
+  ) {
+    return this.service.contributionSummary(this.noQuery(r), id);
+  }
+  @Get("me/contributions/:contribution_id") contributionDetail(
+    @Req() r: ApiRequest,
+    @Param("contribution_id") id: string,
+  ) {
+    return this.service.contributionDetail(this.noQuery(r), id);
+  }
+  @Post("me/contributions/:contribution_id/corrections")
+  @HttpCode(200)
+  correctContribution(
+    @Req() r: ApiRequest,
+    @Param("contribution_id") id: string,
+    @Body() b: unknown,
+    @Headers("idempotency-key") k: string | undefined,
+  ) {
+    return this.service.correctContribution(this.actor(r, true), id, b, k);
+  }
+  @Get("apartments/:apartment_id/map-context")
+  mapContext(@Req() r: ApiRequest, @Param("apartment_id") id: string) {
+    return this.service.mapContext(this.noQuery(r), id);
+  }
+  @Post("apartments/resolve")
+  @HttpCode(200)
+  resolve(@Req() r: ApiRequest, @Body() b: unknown) {
+    return this.service.resolve(this.actor(r, true), b);
   }
   @Get("apartments/:apartment_id") apartment(
     @Req() r: ApiRequest,

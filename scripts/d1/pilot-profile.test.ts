@@ -38,8 +38,16 @@ it("pilot uses separate identities, public cloud configuration and no cleartext 
 it("normal and field-review identities remain independent", () => {
   delete process.env.ABASONG_BUILD_PROFILE;
   expect(resolved().ios?.bundleIdentifier).toBe("com.abasong.mobile");
+  expect(resolved().ios?.infoPlist?.NSAppTransportSecurity).toEqual({
+    NSAllowsArbitraryLoads: false,
+    NSAllowsLocalNetworking: true,
+  });
   process.env.ABASONG_BUILD_PROFILE = "field-review";
   expect(resolved().ios?.bundleIdentifier).toBe("com.abasong.fieldreview");
+  expect(resolved().ios?.infoPlist?.NSAppTransportSecurity).toEqual({
+    NSAllowsArbitraryLoads: false,
+    NSAllowsLocalNetworking: false,
+  });
 });
 it("rejects LAN, other projects, secret keys, missing values and unknown profiles", () => {
   for (const override of [

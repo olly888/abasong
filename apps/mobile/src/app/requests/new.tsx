@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams, usePreventRemove } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
@@ -15,18 +7,9 @@ import { tokens } from "@abasong/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ListRow } from "../../ui/Primitives";
 import { useAuth } from "../../auth/AuthProvider";
-import {
-  AuthPage,
-  Field,
-  ActionButton,
-  FormError,
-} from "../../auth/AuthControls";
+import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
 import { dataRequest } from "../../apartments/client";
-import {
-  Choice,
-  RequestGate,
-  requestStyles as s,
-} from "../../requests/RequestUi";
+import { RequestGate, requestStyles as s } from "../../requests/RequestUi";
 import {
   kindLabels,
   centsInput,
@@ -34,57 +17,13 @@ import {
   localDateTime,
   type DeliveryRequest,
 } from "../../requests/presentation";
+import { SupportFormFields } from "../../requests/SupportForm";
+import {
+  defaultSupportFields as defaults,
+  changeSupportField,
+  type SupportFields as Fields,
+} from "../../requests/support-fields";
 type S = components["schemas"];
-type Fields = {
-  region: string;
-  pickup: string;
-  carrier: string;
-  route: string;
-  date: string;
-  start: string;
-  end: string;
-  endDate: string;
-  pickupEnd: string;
-  deliveryEnd: string;
-  quantity: string;
-  drivers: string;
-  minimum: string;
-  amount: string;
-  unit: "per_parcel" | "per_route" | "negotiable";
-  sorted: "sorted" | "unsorted" | "unknown";
-  handoff: "carrier_account" | "dsp_approval" | "contact_confirm";
-  experience: "any" | "delivery_experience" | "carrier_experience";
-  partial: "yes" | "no";
-  description: string;
-  terms: string;
-};
-function defaults(): Fields {
-  const now = localDateTime(null),
-    later = localDateTime(new Date(Date.now() + 2 * 3600000).toISOString());
-  return {
-    region: "",
-    pickup: "",
-    carrier: "",
-    route: "",
-    date: now.date,
-    start: now.time,
-    end: later.time,
-    endDate: later.date,
-    pickupEnd: "",
-    deliveryEnd: "",
-    quantity: "",
-    drivers: "",
-    minimum: "",
-    amount: "",
-    unit: "per_parcel",
-    sorted: "unknown",
-    handoff: "contact_confirm",
-    experience: "any",
-    partial: "yes",
-    description: "",
-    terms: "",
-  };
-}
 export default function NewRequest() {
   return (
     <RequestGate>
@@ -98,7 +37,6 @@ function Form() {
   const [kind, setKind] = useState<S["Request"]["kind"] | null>(null),
     [form, setForm] = useState(defaults),
     [regions, setRegions] = useState<S["Region"][]>([]),
-    [picker, setPicker] = useState<"region" | "pickup" | null>(null),
     [regionError, setRegionError] = useState<string | null>(null),
     [loading, setLoading] = useState(false),
     [busy, setBusy] = useState(false),
@@ -109,7 +47,7 @@ function Form() {
     working = useRef(false),
     createAttempt = useRef({ signature: "", key: randomUUID() });
   const update = <K extends keyof Fields>(key: K, value: Fields[K]) => {
-    setForm((old) => ({ ...old, [key]: value }));
+    setForm((old) => changeSupportField(old, key, value));
     setDirty(true);
     setError(null);
   };
@@ -355,8 +293,18 @@ function Form() {
           : { pathname: "/requests", params: { mine: "1" } },
       );
   }
-  const section = (name: string) => (
-    <Text style={{ ...s.headline, fontSize: 18, marginTop: 8 }}>{name}</Text>
+  const section = (title: string) => (
+    <Text
+      style={{
+        fontSize: 18,
+        lineHeight: 26,
+        fontWeight: "600",
+        color: tokens.color.ink,
+        marginTop: 16,
+      }}
+    >
+      {title}
+    </Text>
   );
   if (!kind && !loading && (params.edit || params.copy))
     return (
@@ -384,7 +332,7 @@ function Form() {
             backgroundColor: tokens.color.surface,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
-            paddingHorizontal: 22,
+            paddingHorizontal: 20,
             paddingTop: 20,
             maxHeight: "85%",
           }}
@@ -410,7 +358,7 @@ function Form() {
               <ListRow
                 key={k}
                 title={kindLabels[k]}
-                icon={k === "vehicle_help" ? "settings" : "message"}
+                icon={k === "vehicle_help" ? "car" : "message"}
                 onPress={() => {
                   setKind(k);
                   setDirty(true);
@@ -430,16 +378,12 @@ function Form() {
   const footer = (
     <View
       style={{
-        padding: 16,
         gap: 10,
-        backgroundColor: tokens.color.surface,
-        borderTopWidth: 1,
-        borderColor: tokens.color.border,
       }}
     >
       <FormError message={error} />
       <ActionButton
-        label={editingPublished ? "保存修改" : "预览发布"}
+        label={editingPublished ? "保存修改" : "核对并发布"}
         busy={busy}
         disabled={loading || !kind}
         onPress={() => void submit(true)}
@@ -447,7 +391,7 @@ function Form() {
       {!editingPublished ? (
         <ActionButton
           label="保存草稿"
-          secondary
+          variant="text"
           disabled={busy || loading}
           onPress={() => void submit(false)}
         />
@@ -462,259 +406,17 @@ function Form() {
     >
       {loading ? (
         <ActivityIndicator />
-      ) : (
-        <>
-          {section("区域")}
-          {(
-            ["region", ...(delivery ? ["pickup"] : [])] as Array<
-              "region" | "pickup"
-            >
-          ).map((k) => (
-            <View key={k} style={{ gap: 10 }}>
-              <Text style={s.label}>
-                {k === "region" ? "配送区域" : "取件区域"}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setPicker(k)}
-                style={s.choice}
-              >
-                <Text style={s.text}>
-                  {regions.find((r) => r.id === form[k])?.label ??
-                    "选择城市或区域"}
-                </Text>
-              </Pressable>
-            </View>
-          ))}
-          <FormError message={regionError} />
-          {regionError || !regions.length ? (
-            <ActionButton
-              label="重新读取区域"
-              secondary
-              onPress={() => void loadRegions()}
-            />
-          ) : null}
-          {delivery ? (
-            <>
-              <Field
-                label="承运商"
-                value={form.carrier}
-                maxLength={80}
-                onChangeText={(v) => update("carrier", v)}
-                placeholder="如 SwiftX、GOFO"
-              />
-              <Field
-                label="线路（选填）"
-                value={form.route}
-                maxLength={80}
-                onChangeText={(v) => update("route", v)}
-              />
-            </>
-          ) : null}
-          {section("时间")}
-          <Field
-            label="配送日期"
-            value={form.date}
-            onChangeText={(v) => update("date", v)}
-            placeholder="YYYY-MM-DD"
-            keyboardType="numbers-and-punctuation"
-          />
-          <Field
-            label="有效截止日期"
-            value={form.endDate}
-            onChangeText={(v) => update("endDate", v)}
-            placeholder="YYYY-MM-DD"
-            keyboardType="numbers-and-punctuation"
-          />
-          <View style={s.row}>
-            <View style={{ flex: 1 }}>
-              <Field
-                label="开始时间"
-                value={form.start}
-                onChangeText={(v) => update("start", v)}
-                placeholder="15:00"
-                keyboardType="numbers-and-punctuation"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Field
-                label="有效截止"
-                value={form.end}
-                onChangeText={(v) => update("end", v)}
-                placeholder="19:00"
-                keyboardType="numbers-and-punctuation"
-              />
-            </View>
-          </View>
-          {delivery ? (
-            <>
-              {section("数量与报价")}
-              <Field
-                label="本次包裹件数"
-                value={form.quantity}
-                onChangeText={(v) => update("quantity", v)}
-                keyboardType="number-pad"
-              />
-              {kind === "extra_drivers" ? (
-                <Field
-                  label="本次需要几人"
-                  value={form.drivers}
-                  onChangeText={(v) => update("drivers", v)}
-                  keyboardType="number-pad"
-                />
-              ) : null}
-              {kind !== "whole_route" ? (
-                <>
-                  <Choice
-                    label="是否允许分担"
-                    value={form.partial}
-                    options={[
-                      ["yes", "可以分担"],
-                      ["no", "整批接手"],
-                    ]}
-                    onChange={(v) => update("partial", v)}
-                  />
-                  <Field
-                    label="每人最低件数（选填）"
-                    value={form.minimum}
-                    onChangeText={(v) => update("minimum", v)}
-                    keyboardType="number-pad"
-                  />
-                </>
-              ) : null}
-              <Choice
-                label="报价单位"
-                value={form.unit}
-                options={[
-                  ["per_parcel", "每件"],
-                  ["per_route", "每线路"],
-                  ["negotiable", "联系议价"],
-                ]}
-                onChange={(v) => update("unit", v)}
-              />
-              {form.unit !== "negotiable" ? (
-                <Field
-                  label="报价（美元）"
-                  value={form.amount}
-                  onChangeText={(v) => update("amount", v)}
-                  keyboardType="decimal-pad"
-                  placeholder="1.85"
-                />
-              ) : null}
-              {section("接手条件")}
-              <Choice
-                label="理货状态"
-                value={form.sorted}
-                options={[
-                  ["sorted", "已理货"],
-                  ["unsorted", "未理货"],
-                  ["unknown", "联系确认"],
-                ]}
-                onChange={(v) => update("sorted", v)}
-              />
-              <Choice
-                label="包裹转交"
-                value={form.handoff}
-                options={[
-                  ["carrier_account", "须有承运商账号"],
-                  ["dsp_approval", "须 DSP 确认"],
-                  ["contact_confirm", "联系后确认"],
-                ]}
-                onChange={(v) => update("handoff", v)}
-              />
-              <Choice
-                label="配送经验"
-                value={form.experience}
-                options={[
-                  ["any", "不限"],
-                  ["delivery_experience", "有配送经验"],
-                  ["carrier_experience", "熟悉该承运商"],
-                ]}
-                onChange={(v) => update("experience", v)}
-              />
-              <View style={s.row}>
-                <View style={{ flex: 1 }}>
-                  <Field
-                    label="最晚取件（选填）"
-                    value={form.pickupEnd}
-                    onChangeText={(v) => update("pickupEnd", v)}
-                    placeholder="16:00"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Field
-                    label="配送截止（选填）"
-                    value={form.deliveryEnd}
-                    onChangeText={(v) => update("deliveryEnd", v)}
-                    placeholder="20:00"
-                  />
-                </View>
-              </View>
-              <Field
-                label="私下付款约定（选填）"
-                value={form.terms}
-                onChangeText={(v) => update("terms", v)}
-                maxLength={300}
-              />
-            </>
-          ) : null}
-          <Field
-            label={delivery ? "其他说明（选填）" : "需要什么帮助"}
-            value={form.description}
-            onChangeText={(v) => update("description", v)}
-            multiline
-            maxLength={1000}
-            style={{ minHeight: 100, textAlignVertical: "top" }}
-          />
-        </>
-      )}
-      <Modal
-        visible={picker !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setPicker(null)}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            backgroundColor: "rgba(0,0,0,.35)",
-          }}
-        >
-          <View
-            style={{
-              maxHeight: "75%",
-              backgroundColor: tokens.color.surface,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 22,
-              gap: 16,
-            }}
-          >
-            <Text style={s.headline}>选择区域</Text>
-            <ScrollView>
-              {regions.map((r) => (
-                <Pressable
-                  key={r.id}
-                  style={[s.choice, { marginVertical: 4 }]}
-                  accessibilityRole="button"
-                  onPress={() => {
-                    if (picker) update(picker, r.id);
-                    setPicker(null);
-                  }}
-                >
-                  <Text style={s.text}>{r.label}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <ActionButton
-              label="取消"
-              secondary
-              onPress={() => setPicker(null)}
-            />
-          </View>
-        </View>
-      </Modal>
+      ) : kind ? (
+        <SupportFormFields
+          kind={kind}
+          form={form}
+          regions={regions}
+          disabled={busy}
+          onChange={update}
+          regionError={regionError}
+          onRetryRegions={() => void loadRegions()}
+        />
+      ) : null}
     </AuthPage>
   );
 }

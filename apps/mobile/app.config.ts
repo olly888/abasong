@@ -20,7 +20,23 @@ export function validatePilotEnvironment(env: NodeJS.ProcessEnv) {
 export default ({ config }: ConfigContext): ExpoConfig => {
   const base = config as ExpoConfig;
   const profile = process.env.ABASONG_BUILD_PROFILE;
-  if (!profile) return base;
+  // Prebuild merges existing native plists. Explicitly restore the development
+  // app's local Metro access after a strict field/pilot build in this directory.
+  // Standalone profiles below keep HTTPS-only transport and separate identities.
+  if (!profile)
+    return {
+      ...base,
+      ios: {
+        ...base.ios,
+        infoPlist: {
+          ...base.ios?.infoPlist,
+          NSAppTransportSecurity: {
+            NSAllowsArbitraryLoads: false,
+            NSAllowsLocalNetworking: true,
+          },
+        },
+      },
+    };
   if (profile === "pilot-dev") {
     validatePilotEnvironment(process.env);
     return {

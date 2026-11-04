@@ -1,5 +1,17 @@
 # Abasong development status
 
+## Current execution — D2 request publishing; human pilot acceptance deferred (2026-11-03)
+
+Latest owner instruction explicitly defers real dual-SMS/cloud-business acceptance and independent iPhone package, prioritizing full functional development. [B1–B6 delivery order](docs/product/Abasong_V12.1_完整功能开发与集中验收计划.md). Stopped only loopback SMS login server; no more SMS/manual device requests this batch. Previous a9d901b exact CI41789361246 SUCCESS. Current branch codex/d2-request-publishing. D1/A4/A5 remain unaccepted, not blockers for independent implementation; existing cloud resources preserved, no new cloud writes/fees/rights.
+
+[B1 implementation](docs/technical/D2_需求发布与管理首批实现.md):9 authenticated/object-authorized request/region endpoints, native five-type publishing, drafts/preview/detail/my-posts and owner found/close; home + button enabled, existing V3/three-nav baseline retained. Versioned/idempotent publication/close, draft ownership, bidirectional blocks, DB-clock expiry, safe snapshots/audit, revoked-capability close permitted. No recruitment/settlement/dispatch. Published editing/reopen/gap/applications/messages/driver map remain B2–B4.
+
+0010 allows incomplete private draft quotes while published quote checks remain. Six nullable RequestPatch fields updated in generator/OpenAPI/types; clearing inputs no longer silently preserves old values. D0 now10versions/52RLS tables, six approximate service-area references initialized; no real driver grants/requests. DevWest remains9versions and old deployed images; future cloud migration/deployment separately reviewed, no D0-to-cloud script relaxation.
+
+Actual isolated request HTTP/PG51 PASS; auth54/libraryHTTP295/import124 plus existing related regressions PASS. Final complete check331/59 +lint/types/build PASS; corresponding remote CI to be recorded. Three-platform business JS export PASS, no native binary build. iOS restored its existing session and showed the actual type/form/region picker; old static LAN API404 fixed by reloading current source on the same approved address/port. Android actual P01 bottom sheet observed. No human request submission, new account grant or physical acceptance; no user SMS request. Python static full-contract validator lacks pglast; generation/types and real SQL execution passed. Next B2 applications + source-conversation transaction and manual gap; B3 full inbox/messages. Field/true AWS KMS/OCR sample quality remain concentrated acceptance gates.
+
+## Previous cloud preparation evidence
+
 ## Current execution — cloud business configuration and real-account acceptance (2026-11-03)
 
 [Current evidence and exact boundaries](docs/technical/A4_云业务配置与双账号验收.md). Branch codex/d1-cloud-business-acceptance, parent3380588/full CI41785650344 SUCCESS. Fixed a real cloud first-profile blocker: missing account-idempotency secret binding, reusing the existing DataHmac secret. Actual bounded change set changed only ApiTask/ApiService; final runtime UPDATE_COMPLETE, two healthy tasks/six alarms/five HTTPS/network/privacy checks passed again. Same971fd6f images, no new resources/roles/secrets. Ten original resource IDs preserved; ApiTask intentionally updated. Old task definition retained after scoped-role deregistration denial, no old running task or new compute; no IAM expansion/root cleanup.

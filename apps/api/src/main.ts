@@ -13,6 +13,8 @@ import { ImportsService } from "./imports/imports.service";
 import { ApartmentsController } from "./apartments/apartments.controller";
 import { ApartmentsService } from "./apartments/apartments.service";
 import { SensitiveDatabase } from "./apartments/sensitive-database";
+import { RequestsController } from "./requests/requests.controller";
+import { RequestsService } from "./requests/requests.service";
 import {
   Controller,
   Get,
@@ -58,6 +60,7 @@ class HealthController {
     ImportsController,
     SearchController,
     NearbyController,
+    RequestsController,
   ],
   providers: [
     { provide: ENVELOPE_CRYPTO, useFactory: createEnvelope },
@@ -70,6 +73,7 @@ class HealthController {
     ImportsService,
     SearchService,
     NearbyService,
+    RequestsService,
     {
       provide: MapboxNearbyProvider,
       useFactory: () => new MapboxNearbyProvider(),

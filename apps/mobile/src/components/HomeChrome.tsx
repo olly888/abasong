@@ -96,9 +96,8 @@ export function MapTools({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="发需求"
-        accessibilityState={{ disabled: true }}
-        disabled
-        style={[styles.help, styles.unavailable]}
+        onPress={() => router.push("/requests/new")}
+        style={styles.help}
       >
         <Icon name="plus" color={tokens.color.onBrand} size={20} />
         <Text style={styles.helpText}>发需求</Text>

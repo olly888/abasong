@@ -57,6 +57,13 @@ export default function Profile() {
               onPress={() => router.push("/apartments/library")}
             />
             <ListRow
+              title="我的发布"
+              icon="box"
+              onPress={() =>
+                router.push({ pathname: "/requests", params: { mine: "1" } })
+              }
+            />
+            <ListRow
               icon="settings"
               title="设置"
               onPress={() => router.push("/account/settings")}

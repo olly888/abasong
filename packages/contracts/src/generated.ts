@@ -1886,16 +1886,16 @@ export interface components {
             /** Format: date-time */
             starts_at?: string;
             /** Format: date-time */
-            pickup_deadline_at?: string;
+            pickup_deadline_at?: string | null;
             /** Format: date-time */
-            delivery_deadline_at?: string;
+            delivery_deadline_at?: string | null;
             /** Format: date-time */
             expires_at?: string;
             timezone?: string;
-            parcel_count?: number;
-            stop_count?: number;
-            drivers_needed?: number;
-            price_cents?: number;
+            parcel_count?: number | null;
+            stop_count?: number | null;
+            drivers_needed?: number | null;
+            price_cents?: number | null;
             /** @enum {string} */
             price_unit?: "per_parcel" | "per_route" | "negotiable";
             /** @enum {string} */

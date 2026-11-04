@@ -170,6 +170,19 @@ async function main() {
       await db.query(
         readFileSync("database/migrations/0009_kms_envelopes.sql", "utf8"),
       );
+    if (
+      !(
+        await db.query(
+          "SELECT 1 FROM abasong.schema_version WHERE version='V12.0010'",
+        )
+      ).rowCount
+    )
+      await db.query(
+        readFileSync(
+          "database/migrations/0010_request_draft_pricing.sql",
+          "utf8",
+        ),
+      );
     const tables = await db.query(
       "SELECT count(*)::int AS count, bool_and(relrowsecurity AND relforcerowsecurity) AS protected FROM pg_class c JOIN pg_namespace n ON c.relnamespace=n.oid WHERE n.nspname='abasong' AND relkind='r'",
     );

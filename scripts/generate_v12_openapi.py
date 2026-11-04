@@ -121,6 +121,8 @@ for name in ['RequestDraftInput','RequestPatch','Request','RequestVersion']:
  if name in ['Request','RequestVersion']:S[name]['required'].append('pickup_region_id')
  if name in ['RequestDraftInput','RequestPatch']:S[name]['properties'].pop('pickup_area',None)
 S['Application']['properties']['request_summary']={'allOf':[ref('Request')],'nullable':True}
+for field in ['price_cents','parcel_count','stop_count','drivers_needed','pickup_deadline_at','delivery_deadline_at']:
+ S['RequestPatch']['properties'][field]={**S['RequestPatch']['properties'][field],'nullable':True}
 S['Application']['required'].append('request_summary')
 S['AccessRecord']['properties']['contributor_display_name']=string(60)
 S['AccessRecord']['required'].append('contributor_display_name')

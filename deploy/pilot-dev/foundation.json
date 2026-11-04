@@ -34,13 +34,15 @@
           ]
         },
         "Tags": [
-          { "TagKey": "Project", "TagValue": "Abasong" },
-          { "TagKey": "Environment", "TagValue": "pilot-dev" }
+          { "Key": "Project", "Value": "Abasong" },
+          { "Key": "Environment", "Value": "pilot-dev" }
         ]
       }
     },
     "DataKeyAlias": {
       "Type": "AWS::KMS::Alias",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
       "Properties": {
         "AliasName": "alias/abasong-pilot-dev-data",
         "TargetKeyId": { "Ref": "DataKey" }

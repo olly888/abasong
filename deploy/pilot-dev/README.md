@@ -1,18 +1,18 @@
 # DevWest 内测部署材料 · A2
 
-更新：2026-11-03。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。DevWest九业务迁移及运行角色已执行，AWS资源尚未创建。[实际云接入与剩余出口](../../docs/technical/A4_账号接入与云数据库迁移记录.md)。
+更新：2026-11-03。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。DevWest九业务迁移及运行角色已执行；AWS六项基础资源已创建核对，同名stack管理已恢复至UPDATE_COMPLETE。[最新基础层记录](../../docs/technical/A4_基础层创建与保留资源恢复方案.md)。[实际云接入与剩余出口](../../docs/technical/A4_账号接入与云数据库迁移记录.md)。
 
 ## 当前启动工具（2026-11-03）
 
-用户已恢复按序推进；Mapbox账号用户名ollyyin，用户已添加付款方式，临时接口及本机永久编码已实测恢复；AWS已注册且本人确认官方CLI短期root登录；root MFA已开启，项目受限用户/角色已建，用户密码/MFA已由本人完成，正确用户登录及角色会话待核对。已在项目忽略目录安装并验证官方签名/公证AWS CLI2.39.3，`./scripts/aws --version`可用。包装脚本使用`.tooling/aws/config`、`.tooling/aws/credentials`、profile `abasong-pilot`及us-west-1；不使用全局默认配置，不代替IAM/目标核对。短期登录缓存另隔离于.tooling/aws/login/cache，umask077；未创建长期key。默认pilot profile留给专用用户，root会话隔离为abasong-bootstrap，当前基础角色最长一小时且要求MFA；本单账号不自动创建Organizations/IAM Identity Center。
+用户已恢复按序推进；Mapbox账号用户名ollyyin，用户已添加付款方式，临时接口及本机永久编码已实测恢复；AWS已注册且本人确认官方CLI短期root登录；root MFA已开启，项目受限用户/角色已建，用户密码/MFA已由本人完成，正确用户登录及MFA受限角色会话现已实际通过STS核对。已在项目忽略目录安装并验证官方签名/公证AWS CLI2.39.3，`./scripts/aws --version`可用。包装脚本使用`.tooling/aws/config`、`.tooling/aws/credentials`、profile `abasong-pilot`及us-west-1；不使用全局默认配置，不代替IAM/目标核对。短期登录缓存另隔离于.tooling/aws/login/cache，umask077；未创建长期key。默认pilot profile指向受限role，abasong-operator为短期用户source，root会话隔离为abasong-bootstrap，当前基础角色最长一小时且要求MFA；本单账号不自动创建Organizations/IAM Identity Center。
 
 `./scripts/dev mapbox:verify-live`或追加`--server-token`分别核验本机移动端/API公开token，最多6次临时公开样本请求、无重试/永久编码/正文落库；早前401时只发1次即停止；用户添加卡后六项临时探测均200，永久编码也经另批有界验证，本机已开启，云环境仍需单独配置。`./scripts/dev cloud:preflight --manifest`已生成9次离线迁移清单。真实云操作仍按下文预检和受控执行，不改D0防护。详见[启动记录](../../docs/technical/A4_Mapbox恢复与云内测启动记录.md)。
 
 本地已交付[独立业务构建配置及限期资格工具](../../docs/technical/A4_A5_独立内测配置与限期资格验收.md)：生产JS导出通过，但不是已签名安装包；资格执行器当前仅D0，云管理员角色/执行器待本环境明确审查，不能复用D0 postgres连接。普通API/worker权限不因本工具扩大。
 
-新增foundation.json已通过AWS validate-template：保留KMS key/alias、两个immutable仓库、两个14天日志组。未执行create/update stack；其余网络/角色/秘密/运行服务仍需补齐。`cloud:inspect-aws --expected-account ACCOUNT_ID`只读核对实际账号/方案/MFA/区域资源，报告不授予创建权限。
+新增foundation.json已通过AWS validate-template：保留KMS key/alias、两个immutable仓库、两个14天日志组。受限角色check及用户创建/费用批准已完成，6项资源已存在并核对；初次stack失败且原地恢复被AWS拒绝，管理记录释放/导入已获批准并完成，最终UPDATE_COMPLETE；其余网络/角色/秘密/运行服务仍需补齐。`cloud:inspect-aws --expected-account ACCOUNT_ID`只读核对实际账号/方案/MFA/区域资源，报告不授予创建权限。
 
-基础层命令 `./scripts/dev cloud:foundation --expected-account ACCOUNT_ID --check` 必须先通过实际STS账号、us-west-1及唯一 `abasong-pilot-dev-deployer` assumed-role核对，root和普通IAM用户均拒绝，再验证模板；继承的AWS环境覆盖被移除。确认授权范围后使用 `--create` 创建固定stack `abasong-pilot-dev-foundation`；不自动更新、删除或重建已有stack，创建请求回执不代表部署完成。失败时保留现场，先核对实际资源再重试。IAM策略是独立的权限边界，角色名字和此脚本不能替代实际策略审查。
+基础层命令 `./scripts/dev cloud:foundation --expected-account ACCOUNT_ID --check` 必须先通过实际STS账号、us-west-1及唯一 `abasong-pilot-dev-deployer` assumed-role核对，root和普通IAM用户均拒绝，再验证模板；继承的AWS环境覆盖被移除。确认授权范围后使用 `--create` 创建固定stack `abasong-pilot-dev-foundation`；不自动更新、删除或重建已有stack，创建请求回执不代表部署完成。失败时保留现场，先核对实际资源再重试。IAM策略是独立的权限边界，角色名字和此脚本不能替代实际策略审查。命令在AWS调用前另验证固定6项/Retain/CloudFormation标签结构；完整provider属性检查见最新基础层记录中的离线校验器，语法validate-template不能替代语义检查。
 
 ## 加密与运行边界
 

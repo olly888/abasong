@@ -240,7 +240,7 @@ function Form() {
               ? { pickup_deadline_at: laInstant(form.date, form.pickupEnd) }
               : {}),
             ...(form.deliveryEnd
-              ? { delivery_deadline_at: laInstant(form.date, form.deliveryEnd) }
+              ? { delivery_deadline_at: laInstant(form.endDate, form.deliveryEnd) }
               : {}),
           }
         : {}),

@@ -22,6 +22,14 @@ export default function Layout() {
           <Stack.Screen name="auth/phone" />
           <Stack.Screen name="auth/code" />
           <Stack.Screen name="auth/profile" />
+          <Stack.Screen
+            name="requests/new"
+            options={{
+              presentation: "transparentModal",
+              animation: "fade",
+              contentStyle: { backgroundColor: "transparent" },
+            }}
+          />
         </Stack>
       </View>
     </AuthProvider>

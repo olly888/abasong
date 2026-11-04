@@ -945,7 +945,17 @@ export function HomeApartmentContent({
           <Text style={styles.title}>
             {mode === "找活" ? "附近临时支援" : "附近可用司机"}
           </Text>
-          <Text style={styles.muted}>暂未开放</Text>
+          {mode === "找活" ? (
+            <Pressable
+              accessibilityRole="button"
+              style={{ minHeight: 48, justifyContent: "center" }}
+              onPress={() => router.push("/requests")}
+            >
+              <Text style={styles.link}>查看临时支援需求</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.muted}>暂未开放</Text>
+          )}
           {locationNotice ? (
             <Pressable
               accessibilityRole="button"

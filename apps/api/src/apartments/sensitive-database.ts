@@ -11,12 +11,15 @@ export class SensitiveDatabase {
         "SENSITIVE_SERVICE_UNAVAILABLE",
         "资料服务暂不可用",
       );
-    this.pool ??= new Pool({
-      connectionString: process.env.DATABASE_SENSITIVE_URL,
-      max: 3,
-      connectionTimeoutMillis: 3000,
-      statement_timeout: 3000,
-    });
+    if (!this.pool) {
+      this.pool = new Pool({
+        connectionString: process.env.DATABASE_SENSITIVE_URL,
+        max: 3,
+        connectionTimeoutMillis: 3000,
+        statement_timeout: 3000,
+      });
+      this.pool.on("error", () => console.error("Sensitive database connection unavailable"));
+    }
     try {
       return await this.pool.connect();
     } catch {

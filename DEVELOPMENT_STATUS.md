@@ -1,5 +1,15 @@
 # Abasong development status
 
+## Current execution — runtime and HTTPS prepared, not deployed (2026-11-03)
+
+Branch `codex/d1-runtime-deployment-preparation`, parent `9e92372` / exact CI41755847690 success. [Reviewed runtime identities, credentials, HTTPS, cost and gates](docs/technical/A4_运行身份凭据与HTTPS部署方案.md). Four generated templates: four task/execution roles, five empty secrets, notifications/budget, non-exportable ACM certificate and single API/worker runtime,43 resource definitions. No new cloud resources, credentials, IAM changes, DNS writes or Paid upgrade; previous6 foundation resources and DevWest9 migrations/52 tables unchanged. Read-only account check FREE/ACTIVE; ECS/ELB service-linked roles absent; public DNS uses Spaceship, no api-dev A/CNAME. New resource/fee approval remains separate from completed foundation authorization.
+
+Actual local implementation: cloud-only bounded request protection and coarse structured logs/no raw paths/IP/GPS/payload; single-ALB proxy assumption matches the template SG. Worker serial polls, atomic private heartbeat/stale/failed checks and shutdown wait; non-root writable scratch VOLUME with read-only root for Fargate. No native/UI/contract/DDL/dependency/lock change. Single-instance stop-first maintenance deployments are intentional because search sessions/limits are in process memory; no HA/distributed-limit claim. API ready checks schema/main DB only, not a complete business readiness guarantee.
+
+Executed check291/51 + lint/types/build; isolated D0 schema52 tables, auth54/libraryHTTP295/import124/ranking18 plus spatial/coverage/new-address/KMS-PG suites PASS. Linux/amd64 API+worker actually built/run with synthetic config, network none/non-root/read-only/scratch volume; API live200/ready503/auth401 and worker failed/valid/stale heartbeat PASS. Four AWS read-only validate-template calls and24 real regional provider schemas/43 resolved property checks PASS; not a changeset or deployment. Initial sandbox HTTP listen restrictions resolved by authorized local-port run, not test removal. Latest commit/remote CI tracked with batch integration.
+
+Next execution gates: reviewed project runtime deployment permission increment (existing foundation role denies IAM/PassRole), resource/fee approval, notification email/DNS access, protected credentials and pooler/TLS tests, certificate, runtime/KMS preflight, cloud configuration/admin/expiring driver qualifications, two real accounts, then A5 standalone iPhone. No repeat iPhone gestures required for this server-only batch.
+
 ## Current execution — six foundation resources managed and verified (2026-11-03)
 
 Branch codex/d1-pilot-foundation; parentd20199f/CI41748200322 and intermediatecb4dd5f/CI41752523276 passed; final exact-head CI tracked on PR63/PR49. [Actual foundation, failures and retained-resource recovery](docs/technical/A4_基础层创建与保留资源恢复方案.md). Owner explicitly approved creation/usage fees, then failed-management-record release and same-name import retaining actual resources. No approval remains pending for this completed foundation.

@@ -31,6 +31,7 @@ import { IdentityGuard } from "./auth/identity.guard";
 import { ApiExceptionFilter } from "./common/api-exception.filter";
 import type { ApiRequest } from "./common/request-context";
 import type { Response, NextFunction } from "express";
+import { cloudHttpProtection } from "./common/cloud-http";
 
 @Controller("health")
 class HealthController {
@@ -81,17 +82,19 @@ class HealthController {
 })
 class AppModule {}
 async function main() {
-  assertRuntimeEnvironment("api");
+  const runtime = assertRuntimeEnvironment("api");
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL required");
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ["error", "warn"],
+    logger: runtime === "pilot-dev" ? false : ["error", "warn"],
   });
+  if (runtime === "pilot-dev") app.set("trust proxy", 1);
   app.use((req: ApiRequest, res: Response, next: NextFunction) => {
     req.requestId = randomUUID();
     res.setHeader("X-Request-ID", req.requestId);
     if (req.path.startsWith("/v1/")) res.setHeader("Cache-Control", "no-store");
     next();
   });
+  if (runtime === "pilot-dev") app.use(cloudHttpProtection());
   // Only batch candidate JSON needs the larger budget; retain the existing
   // 16 KiB protection for authentication and every other business route.
   app.useBodyParser("json", {

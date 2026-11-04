@@ -8,6 +8,9 @@ export class Database {
     connectionTimeoutMillis: 3000,
     statement_timeout: 3000,
   });
+  constructor() {
+    this.pool.on('error', () => console.error('API database connection unavailable'));
+  }
   async onModuleDestroy() {
     await this.pool.end();
   }

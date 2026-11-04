@@ -115,3 +115,6 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 2026-11-03 AWS接入：复用官方CLI2.39.3的aws login（最低要求2.32），用户亲自确认短期root会话。新增AWS_LOGIN_CACHE_DIRECTORY和umask077，将缓存与配置限定.tooling/aws；不安装插件，不创建长期key/Organizations。新只读预检仅10个读取请求，账号匹配先行，敏感输出白名单；无依赖/锁/原生模块变更。DevWest使用供应商project-scoped迁移执行既有0001–0009与运行角色SQL，不复制D0，不改本地目标防护。真实KMS与运行连接仍待项目用户登录及受限角色核对。
 
 2026-11-03 AWS基础层续批：无新依赖、SDK、锁或业务DDL。用户已批准基础资源与费用；6项资源实际配置核对。修正创建参数为--disable-rollback（AWS拒绝DO_NOTHING失败栈原地恢复），补严格项目/区域/请求标签的初始KMS TagResource及固定stack/changeset管理权限，旧Allow/Deny保持；实际IAM模拟/Access Analyzer核对。alias补Retain供精确导入，真实资源不删除，管理记录释放/导入已获明确批准并完成，UPDATE_COMPLETE/6个物理标识不变。新增模板边界和真实CFN标签结构回归，复用已有jsonschema做官方provider Schema离线验证，无新增依赖。
+
+
+2026-11-03 A4运行准备：无新增依赖、SDK、锁文件、原生模块或业务DDL。复用Node24/pnpm10.32.1/现有pg、Node crypto/fs及jsonschema；4份CloudFormation由TypeScript生成并受CI漂移/拒绝边界测试约束。官方AWS区域24类provider schema只读获取，43项属性用合成引用离线验证，不当作实际部署。Fargate1.4.0/x86_64、单API/worker、只读根+UID1000可写scratch卷；不引入NAT/WAF/Redis。当前搜索会话/HTTP保护均单进程，故明确采用维护窗口stop-first，不声称横向扩容或无中断。HTTP日志只记粗路由/状态/耗时/服务器UUID，worker原子心跳仅状态时间。部署资源/费用及IAM增量仍待授权，未创建新资源、服务凭据、DNS或升级Paid。

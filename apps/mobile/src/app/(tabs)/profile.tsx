@@ -64,6 +64,11 @@ export default function Profile() {
               }
             />
             <ListRow
+              title="我的报名"
+              icon="box"
+              onPress={() => router.push("/requests/applications")}
+            />
+            <ListRow
               icon="settings"
               title="设置"
               onPress={() => router.push("/account/settings")}

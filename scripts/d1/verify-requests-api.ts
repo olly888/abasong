@@ -41,7 +41,7 @@ async function main() {
     new SignJWT({
       sub: id,
       role: "authenticated",
-      capabilities: ["request.publish"],
+      capabilities: ["request.publish", "request.apply"],
       iat: issued,
       exp: issued + 3600,
       iss: issuer,
@@ -471,6 +471,703 @@ async function main() {
       { expected_version: whole.version, price_unit: "negotiable" },
     );
     assert.equal(negotiable.price_cents, null);
+    // B2: actual transactions, source cards, ownership and version changes.
+    const supportDraft = await request(
+      "/v1/requests",
+      "POST",
+      auth,
+      201,
+      { ...body, parcel_count: 100, minimum_parcels: 25 },
+      randomUUID(),
+    );
+    let support = await request(
+      `/v1/requests/${supportDraft.id}/publish`,
+      "POST",
+      auth,
+      200,
+      { expected_version: supportDraft.version },
+      randomUUID(),
+    );
+    const arrival = new Date(Date.now() + 15 * 60000).toISOString(),
+      applyBody = {
+        expected_arrival_at: arrival,
+        capacity_parcels: 50,
+        observed_request_version: support.version,
+      };
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      403,
+      applyBody,
+      randomUUID(),
+    );
+    await db.query(
+      "INSERT INTO abasong.capabilities(user_id,capability,reason) SELECT u,'request.apply','TEST isolated B2' FROM unnest($1::uuid[]) u",
+      [[owner, reader, stranger]],
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      auth,
+      400,
+      applyBody,
+      randomUUID(),
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      400,
+      { ...applyBody, applicant_id: stranger },
+      randomUUID(),
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      422,
+      { ...applyBody, capacity_parcels: 10 },
+      randomUUID(),
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      422,
+      { ...applyBody, capacity_parcels: 101 },
+      randomUUID(),
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      422,
+      {
+        ...applyBody,
+        expected_arrival_at: new Date(Date.now() - 3600000).toISOString(),
+      },
+      randomUUID(),
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      409,
+      { ...applyBody, observed_request_version: 1 },
+      randomUUID(),
+    );
+    // A failed source insert must roll back the application, pair and idempotency row together.
+    const eventsBeforeFailure = Number(
+      (await db.query("SELECT count(*) AS n FROM abasong.outbox")).rows[0].n,
+    );
+    await db.query(
+      "CREATE FUNCTION abasong.test_source_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'TEST'; END $$; CREATE TRIGGER test_source_failure BEFORE INSERT ON abasong.conversation_sources FOR EACH ROW EXECUTE FUNCTION abasong.test_source_failure()",
+    );
+    const retryKey = randomUUID();
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      500,
+      applyBody,
+      retryKey,
+    );
+    assert.equal(
+      (
+        await db.query(
+          "SELECT (SELECT count(*) FROM abasong.applications)::integer AS apps,(SELECT count(*) FROM abasong.conversations)::integer AS chats,(SELECT count(*) FROM abasong.messages)::integer AS msgs",
+        )
+      ).rows[0].apps,
+      0,
+    );
+    assert.equal(
+      (
+        await db.query(
+          "SELECT count(*)::integer AS n FROM abasong.conversations",
+        )
+      ).rows[0].n,
+      0,
+    );
+    assert.equal(
+      Number(
+        (await db.query("SELECT count(*) AS n FROM abasong.outbox")).rows[0].n,
+      ),
+      eventsBeforeFailure,
+    );
+    await db.query(
+      "DROP TRIGGER test_source_failure ON abasong.conversation_sources; DROP FUNCTION abasong.test_source_failure()",
+    );
+    const applications = await Promise.all([
+      request(
+        `/v1/requests/${support.id}/applications`,
+        "POST",
+        other,
+        201,
+        applyBody,
+        retryKey,
+      ),
+      request(
+        `/v1/requests/${support.id}/applications`,
+        "POST",
+        other,
+        201,
+        applyBody,
+        retryKey,
+      ),
+      request(
+        `/v1/requests/${support.id}/applications`,
+        "POST",
+        other,
+        201,
+        applyBody,
+        randomUUID(),
+      ),
+    ]);
+    const applied = applications[0];
+    assert(
+      applications.every(
+        (x) =>
+          x.id === applied.id && x.conversation_id === applied.conversation_id,
+      ),
+    );
+    assert.equal(applied.applicant_profile.display_name, "TEST D2 Driver");
+    assert(!("phone" in applied.applicant_profile));
+    assert.equal(
+      (
+        await db.query(
+          "SELECT count(*)::integer AS n FROM abasong.application_events WHERE application_id=$1 AND event_type='applied'",
+          [applied.id],
+        )
+      ).rows[0].n,
+      1,
+    );
+    assert.equal(
+      (await request(`/v1/requests/${support.id}`)).remaining_parcels,
+      100,
+    );
+    const appsPage = await request(`/v1/requests/${support.id}/applications`);
+    assert.equal(appsPage.items[0].id, applied.id);
+    await request(`/v1/requests/${support.id}/applications`, "GET", other, 404);
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "GET",
+      noRights,
+      404,
+    );
+    assert.equal(
+      (
+        await request(
+          `/v1/me/applications?request_id=${support.id}`,
+          "GET",
+          other,
+        )
+      ).items[0].id,
+      applied.id,
+    );
+    assert.equal(
+      (await request("/v1/me/applications", "GET", noRights)).items.length,
+      0,
+    );
+    await request(
+      `/v1/me/applications?cursor=${applied.id}`,
+      "GET",
+      noRights,
+      404,
+    );
+    await request(`/v1/applications/${applied.id}`, "DELETE", auth, 404);
+    await request(
+      `/v1/applications/${applied.id}/contacted`,
+      "PUT",
+      other,
+      404,
+    );
+    await Promise.all([
+      request(`/v1/applications/${applied.id}/contacted`, "PUT"),
+      request(`/v1/applications/${applied.id}/contacted`, "PUT"),
+    ]);
+    assert.equal(
+      (
+        await db.query(
+          "SELECT count(*)::integer AS n FROM abasong.application_events WHERE application_id=$1 AND event_type='contacted'",
+          [applied.id],
+        )
+      ).rows[0].n,
+      1,
+    );
+    const conversationId = applied.conversation_id;
+    const contact = await request(
+      "/v1/conversations",
+      "POST",
+      other,
+      201,
+      {
+        other_user_id: owner,
+        source_request_id: support.id,
+        source_request_version: support.version,
+      },
+      randomUUID(),
+    );
+    assert.equal(contact.id, conversationId);
+    assert.equal(
+      (
+        await request(
+          "/v1/conversations",
+          "POST",
+          auth,
+          201,
+          {
+            other_user_id: reader.toUpperCase(),
+            source_request_id: support.id.toUpperCase(),
+            source_request_version: support.version,
+          },
+          randomUUID(),
+        )
+      ).id,
+      conversationId,
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      409,
+      { ...applyBody, capacity_parcels: 60 },
+      retryKey,
+    );
+    let cards = await request(
+      `/v1/conversations/${conversationId}/messages`,
+      "GET",
+      other,
+    );
+    assert.equal(cards.items.length, 1);
+    assert.equal(cards.items[0].request_snapshot.price_cents, 185);
+    await request(
+      `/v1/conversations/${conversationId}/messages`,
+      "GET",
+      noRights,
+      404,
+    );
+    await request(
+      `/v1/conversations/${conversationId}/read`,
+      "PUT",
+      noRights,
+      404,
+      { last_read_sequence: cards.items[0].sequence },
+    );
+    await request(
+      `/v1/conversations/${conversationId}/read`,
+      "PUT",
+      other,
+      400,
+      { last_read_sequence: 9999999 },
+    );
+    await request(
+      `/v1/conversations/${conversationId}/read`,
+      "PUT",
+      other,
+      200,
+      { last_read_sequence: cards.items[0].sequence },
+    );
+    await request(
+      `/v1/conversations/${conversationId}/read`,
+      "PUT",
+      other,
+      200,
+      { last_read_sequence: 0 },
+    );
+    assert.equal(
+      Number(
+        (
+          await db.query(
+            "SELECT last_read_sequence FROM abasong.conversation_reads WHERE conversation_id=$1 AND user_id=$2",
+            [conversationId, reader],
+          )
+        ).rows[0].last_read_sequence,
+      ),
+      cards.items[0].sequence,
+    );
+    await request(`/v1/requests/${support.id}/versions`, "GET", noRights, 404);
+    assert.equal(
+      (await request(`/v1/requests/${support.id}/versions`, "GET", other)).items
+        .length,
+      1,
+    );
+    support = await request(`/v1/requests/${support.id}`, "PATCH", auth, 200, {
+      expected_version: support.version,
+      price_cents: 195,
+    });
+    cards = await request(
+      `/v1/conversations/${conversationId}/messages`,
+      "GET",
+      other,
+    );
+    assert.deepEqual(
+      cards.items.map(
+        (m: { request_snapshot: { price_cents: number } }) =>
+          m.request_snapshot.price_cents,
+      ),
+      [185, 195],
+    );
+    const cardPage = await request(
+      `/v1/conversations/${conversationId}/messages?limit=1`,
+      "GET",
+      other,
+    );
+    assert(cardPage.next_cursor);
+    assert.equal(
+      (
+        await request(
+          `/v1/conversations/${conversationId}/messages?limit=1&cursor=${cardPage.next_cursor}`,
+          "GET",
+          other,
+        )
+      ).items[0].request_snapshot.price_cents,
+      195,
+    );
+    assert.equal(
+      (
+        await db.query(
+          "SELECT count(*)::integer AS n FROM abasong.notifications WHERE user_id=$1 AND kind='request_updated'",
+          [reader],
+        )
+      ).rows[0].n,
+      1,
+    );
+    assert.equal(
+      (
+        await request(
+          `/v1/me/applications?request_id=${support.id}`,
+          "GET",
+          other,
+        )
+      ).items[0].observed_request_version,
+      applied.observed_request_version,
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      noRights,
+      409,
+      applyBody,
+      randomUUID(),
+    );
+    await request(`/v1/requests/${support.id}/gap`, "PATCH", other, 404, {
+      expected_version: support.version,
+      remaining_parcels: 80,
+    });
+    await request(`/v1/requests/${support.id}/gap`, "PATCH", auth, 400, {
+      expected_version: support.version,
+      remaining_parcels: 101,
+    });
+    await request(`/v1/requests/${support.id}`, "PATCH", auth, 409, {
+      expected_version: support.version,
+      parcel_count: 80,
+    });
+    const gapVersion = support.version;
+    const [firstGap, secondGap] = await Promise.all([
+      fetch(`http://127.0.0.1:${port}/v1/requests/${support.id}/gap`, {
+        method: "PATCH",
+        headers: {
+          Authorization: "Bearer " + auth,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expected_version: gapVersion,
+          remaining_parcels: 80,
+        }),
+      }),
+      fetch(`http://127.0.0.1:${port}/v1/requests/${support.id}/gap`, {
+        method: "PATCH",
+        headers: {
+          Authorization: "Bearer " + auth,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expected_version: gapVersion,
+          remaining_parcels: 70,
+        }),
+      }),
+    ]);
+    assert.deepEqual([firstGap.status, secondGap.status].sort(), [200, 409]);
+    checks += 2;
+    support = await request(`/v1/requests/${support.id}`);
+    assert([70, 80].includes(support.remaining_parcels));
+    await db.query(
+      "INSERT INTO abasong.blocks(blocker_id,blocked_id) VALUES($1,$2)",
+      [owner, reader],
+    );
+    await request(
+      "/v1/conversations",
+      "POST",
+      other,
+      404,
+      { other_user_id: owner },
+      randomUUID(),
+    );
+    assert.equal(
+      (
+        await request(
+          `/v1/me/applications?request_id=${support.id}`,
+          "GET",
+          other,
+        )
+      ).items[0].request_summary,
+      null,
+    );
+    cards = await request(
+      `/v1/conversations/${conversationId}/messages`,
+      "GET",
+      other,
+    );
+    assert(
+      cards.items.every(
+        (m: { request_snapshot: unknown }) => m.request_snapshot === null,
+      ),
+    );
+    await request(`/v1/applications/${applied.id}/contacted`, "PUT", auth, 404);
+    assert.equal(
+      (await request(`/v1/requests/${support.id}/applications`)).items[0]
+        .applicant_profile,
+      null,
+    );
+    await db.query(
+      "DELETE FROM abasong.blocks WHERE blocker_id=$1 AND blocked_id=$2",
+      [owner, reader],
+    );
+    const beforeCorrection = await request(
+      `/v1/requests/${support.id}/versions?limit=1`,
+      "GET",
+      other,
+    );
+    assert(beforeCorrection.next_cursor);
+    const oldVersions = await request(
+      `/v1/requests/${support.id}/versions?limit=1&cursor=${beforeCorrection.next_cursor}`,
+      "GET",
+      other,
+    );
+    assert(oldVersions.items[0].version < beforeCorrection.items[0].version);
+    await db.query(
+      'UPDATE abasong.request_versions SET snapshot=snapshot||\'{"private_meeting_point":"TEST forbidden"}\'::jsonb WHERE request_id=$1',
+      [support.id],
+    );
+    assert(
+      (
+        await request(`/v1/requests/${support.id}/versions`, "GET", other)
+      ).items.every(
+        (s: Record<string, unknown>) => !("private_meeting_point" in s),
+      ),
+    );
+    assert(
+      (
+        await request(
+          `/v1/conversations/${conversationId}/messages`,
+          "GET",
+          other,
+        )
+      ).items.every(
+        (m: { request_snapshot: Record<string, unknown> }) =>
+          !("private_meeting_point" in m.request_snapshot),
+      ),
+    );
+    await db.query(
+      "UPDATE abasong.capabilities SET revoked_at=now() WHERE user_id=$1 AND capability='request.apply'",
+      [reader],
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      403,
+      { ...applyBody, observed_request_version: support.version },
+      randomUUID(),
+    );
+    await Promise.all([
+      request(`/v1/applications/${applied.id}`, "DELETE", other),
+      request(`/v1/applications/${applied.id}`, "DELETE", other),
+    ]);
+    assert.equal(
+      (
+        await db.query(
+          "SELECT count(*)::integer AS n FROM abasong.application_events WHERE application_id=$1 AND event_type='withdrawn'",
+          [applied.id],
+        )
+      ).rows[0].n,
+      1,
+    );
+    await request(`/v1/applications/${applied.id}/contacted`, "PUT", auth, 409);
+    await db.query(
+      "UPDATE abasong.capabilities SET revoked_at=NULL WHERE user_id=$1 AND capability='request.apply'",
+      [reader],
+    );
+    const reapplied = await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      other,
+      201,
+      { ...applyBody, observed_request_version: support.version },
+      randomUUID(),
+    );
+    assert.equal(reapplied.id, applied.id);
+    assert.equal(reapplied.contacted_at, null);
+    support = await request(
+      `/v1/requests/${support.id}/gap`,
+      "PATCH",
+      auth,
+      200,
+      { expected_version: support.version, remaining_parcels: 0 },
+    );
+    assert.equal(support.status, "open");
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      noRights,
+      422,
+      { ...applyBody, observed_request_version: support.version },
+      randomUUID(),
+    );
+    support = await request(
+      `/v1/requests/${support.id}/close`,
+      "POST",
+      auth,
+      200,
+      { expected_version: support.version, status: "found" },
+      randomUUID(),
+    );
+    await request(
+      `/v1/requests/${support.id}/applications`,
+      "POST",
+      noRights,
+      409,
+      { ...applyBody, observed_request_version: support.version },
+      randomUUID(),
+    );
+    assert(
+      (
+        await request(
+          `/v1/conversations/${conversationId}/messages`,
+          "GET",
+          other,
+        )
+      ).items.length > 1,
+    );
+    support = await request(
+      `/v1/requests/${support.id}/reopen`,
+      "POST",
+      auth,
+      200,
+      { expected_version: support.version },
+      randomUUID(),
+    );
+    assert.equal(support.remaining_parcels, 100);
+    await request(
+      `/v1/requests/${support.id}/reopen`,
+      "POST",
+      auth,
+      409,
+      { expected_version: support.version },
+      randomUUID(),
+    );
+    await db.query(
+      "UPDATE abasong.requests SET created_at=now()-interval '1 hour',expires_at=now()-interval '1 second' WHERE id=$1",
+      [support.id],
+    );
+    support = await request(`/v1/requests/${support.id}`);
+    assert.equal(support.status, "expired");
+    support = await request(`/v1/requests/${support.id}`, "PATCH", auth, 200, {
+      expected_version: support.version,
+      expires_at: new Date(Date.now() + 3600000).toISOString(),
+    });
+    assert.equal(support.status, "expired");
+    const reopenKey = randomUUID(),
+      reopenVersion = support.version;
+    support = await request(
+      `/v1/requests/${support.id}/reopen`,
+      "POST",
+      auth,
+      200,
+      { expected_version: reopenVersion },
+      reopenKey,
+    );
+    assert.equal(
+      (
+        await request(
+          `/v1/requests/${support.id}/reopen`,
+          "POST",
+          auth,
+          200,
+          { expected_version: reopenVersion },
+          reopenKey,
+        )
+      ).version,
+      support.version,
+    );
+    const wholePublished = await request(
+      `/v1/requests/${whole.id}/publish`,
+      "POST",
+      auth,
+      200,
+      { expected_version: negotiable.version },
+      randomUUID(),
+    );
+    await request(
+      `/v1/requests/${whole.id}/applications`,
+      "POST",
+      noRights,
+      422,
+      {
+        ...applyBody,
+        capacity_parcels: 50,
+        observed_request_version: wholePublished.version,
+      },
+      randomUUID(),
+    );
+    await request(`/v1/requests/${whole.id}/gap`, "PATCH", auth, 400, {
+      expected_version: wholePublished.version,
+      remaining_parcels: 10,
+    });
+    const wholeApplication = await request(
+      `/v1/requests/${whole.id}/applications`,
+      "POST",
+      noRights,
+      201,
+      {
+        ...applyBody,
+        capacity_parcels: wholePublished.parcel_count,
+        observed_request_version: wholePublished.version,
+      },
+      randomUUID(),
+    );
+    assert.equal(
+      wholeApplication.capacity_parcels,
+      wholePublished.parcel_count,
+    );
+    const otherCard = (
+      await request(
+        `/v1/conversations/${wholeApplication.conversation_id}/messages`,
+        "GET",
+        noRights,
+      )
+    ).items[0];
+    await request(
+      `/v1/conversations/${conversationId}/read`,
+      "PUT",
+      other,
+      400,
+      { last_read_sequence: otherCard.sequence },
+    );
+    const pendingEvents = (
+      await db.query("SELECT status,payload FROM abasong.outbox")
+    ).rows;
+    assert(pendingEvents.length > 0);
+    assert(
+      pendingEvents.every(
+        (e) =>
+          e.status === "pending" &&
+          Object.keys(e.payload).every((k) =>
+            ["request_id", "version", "conversation_id"].includes(k),
+          ),
+      ),
+    );
     await db.query(
       "UPDATE abasong.users SET session_invalid_before=now() WHERE id=$1",
       [owner],

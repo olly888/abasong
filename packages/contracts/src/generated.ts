@@ -2028,6 +2028,7 @@ export interface components {
             /** Format: uuid */
             conversation_id: string;
             request_summary: components["schemas"]["Request"] | (never | null);
+            applicant_profile: components["schemas"]["Profile"] | (never | null);
         };
         AvailabilityInput: {
             expected_version: number;
@@ -7726,6 +7727,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                request_id?: string;
             };
             header?: never;
             path?: never;

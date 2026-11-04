@@ -124,6 +124,8 @@ S['Application']['properties']['request_summary']={'allOf':[ref('Request')],'nul
 for field in ['price_cents','parcel_count','stop_count','drivers_needed','pickup_deadline_at','delivery_deadline_at']:
  S['RequestPatch']['properties'][field]={**S['RequestPatch']['properties'][field],'nullable':True}
 S['Application']['required'].append('request_summary')
+S['Application']['properties']['applicant_profile']={'allOf':[ref('Profile')],'nullable':True}
+S['Application']['required'].append('applicant_profile')
 S['AccessRecord']['properties']['contributor_display_name']=string(60)
 S['AccessRecord']['required'].append('contributor_display_name')
 out('ContributionSummary',{'id':uid,'record_id':uid,'apartment_id':uid,'address_label':string(300),'event_type':enum('created','same_value_validation','withdrawal_requested','withdrawn','corrected'),'record_status':enum('pending','active','review','invalid','withdrawn'),'occurred_at':dt,'status':enum('active','withdrawn','corrected'),'version':integer(1),'scope_label':string(100),'can_correct':boolean,'other_source_count':integer(0),'useful_count':integer(0),'not_useful_count':integer(0),'last_feedback_at':nullable_dt,'views_count':{'type':'integer','nullable':True,'minimum':0}})
@@ -219,7 +221,7 @@ op('/v1/requests/{request_id}/applications','get','listRequestApplications','仅
 op('/v1/applications/{application_id}','delete','withdrawApplication','仅报名者撤回')
 op('/v1/applications/{application_id}/contacted','put','markApplicationContacted','仅发布者标已联系，非已答应/到场')
 op('/v1/me/requests','get','listMyRequests','本人草稿与发布记录','RequestPage',list_query=True)
-op('/v1/me/applications','get','listMyApplications','本人报名与当前需求状态','ApplicationPage',list_query=True)
+op('/v1/me/applications','get','listMyApplications','本人报名与当前需求状态','ApplicationPage',list_query=True,queries=[query('request_id',uid)])
 op('/v1/me/availability','get','getMyAvailability','本人可用声明；不存在返回404','Availability')
 op('/v1/me/availability','put','setMyAvailability','首建expected_version=0，更新校验版本；后台到期','Availability','AvailabilityInput')
 op('/v1/drivers','get','listAvailableDrivers','仅主动开放且时段有效的区域司机','DriverPage',list_query=True,queries=[query('region_id',uid),query('carrier',string(80))])

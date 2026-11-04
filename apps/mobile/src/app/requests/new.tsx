@@ -94,7 +94,7 @@ export default function NewRequest() {
 }
 function Form() {
   const { session } = useAuth(),
-    params = useLocalSearchParams<{ edit?: string }>();
+    params = useLocalSearchParams<{ edit?: string; copy?: string }>();
   const [kind, setKind] = useState<S["Request"]["kind"] | null>(null),
     [form, setForm] = useState(defaults),
     [regions, setRegions] = useState<S["Region"][]>([]),
@@ -134,24 +134,28 @@ function Form() {
     return () => c.abort();
   }, [session?.access_token]);
   useEffect(() => {
-    if (!params.edit || !session) return;
+    const target = params.edit ?? params.copy;
+    if (!target || !session) return;
     const c = new AbortController();
     setLoading(true);
     void dataRequest<DeliveryRequest>(
       session,
-      "/v1/requests/" + encodeURIComponent(params.edit),
+      "/v1/requests/" + encodeURIComponent(target),
       { signal: c.signal },
     )
       .then((r) => {
         if (c.signal.aborted) return;
-        if (r.status !== "draft" || r.publisher.user_id !== session.user.id)
+        if (r.publisher.user_id !== session.user.id)
           throw new Error("当前需求不能编辑");
-        edit.current = r;
+        edit.current = params.copy ? null : r;
         setKind(r.kind);
-        const begin = localDateTime(r.starts_at),
-          end = r.expires_at
-            ? localDateTime(r.expires_at).time
-            : defaults().end;
+        const begin = params.copy
+            ? localDateTime(null)
+            : localDateTime(r.starts_at),
+          end =
+            !params.copy && r.expires_at
+              ? localDateTime(r.expires_at).time
+              : defaults().end;
         setForm({
           region: r.region_id ?? "",
           pickup: r.pickup_region_id ?? "",
@@ -160,13 +164,18 @@ function Form() {
           date: begin.date,
           start: begin.time,
           end,
-          endDate: r.expires_at ? localDateTime(r.expires_at).date : begin.date,
-          pickupEnd: r.pickup_deadline_at
-            ? localDateTime(r.pickup_deadline_at).time
-            : "",
-          deliveryEnd: r.delivery_deadline_at
-            ? localDateTime(r.delivery_deadline_at).time
-            : "",
+          endDate:
+            !params.copy && r.expires_at
+              ? localDateTime(r.expires_at).date
+              : defaults().endDate,
+          pickupEnd:
+            !params.copy && r.pickup_deadline_at
+              ? localDateTime(r.pickup_deadline_at).time
+              : "",
+          deliveryEnd:
+            !params.copy && r.delivery_deadline_at
+              ? localDateTime(r.delivery_deadline_at).time
+              : "",
           quantity: r.parcel_count?.toString() ?? "",
           drivers: r.drivers_needed?.toString() ?? "",
           minimum: r.minimum_parcels?.toString() ?? "",
@@ -189,7 +198,7 @@ function Form() {
         if (!c.signal.aborted) setLoading(false);
       });
     return () => c.abort();
-  }, [session?.access_token, params.edit]);
+  }, [session?.access_token, params.edit, params.copy]);
   const delivery = kind && !["vehicle_help", "other_help"].includes(kind);
   function body(): S["RequestDraftInput"] {
     if (!kind) throw new Error("请选择需求类型");
@@ -240,7 +249,12 @@ function Form() {
               ? { pickup_deadline_at: laInstant(form.date, form.pickupEnd) }
               : {}),
             ...(form.deliveryEnd
-              ? { delivery_deadline_at: laInstant(form.endDate, form.deliveryEnd) }
+              ? {
+                  delivery_deadline_at: laInstant(
+                    form.endDate,
+                    form.deliveryEnd,
+                  ),
+                }
               : {}),
           }
         : {}),
@@ -305,6 +319,7 @@ function Form() {
       setBusy(false);
     }
   }
+  const editingPublished = !!edit.current && edit.current.status !== "draft";
   usePreventRemove(dirty || busy, ({ repeat }) => {
     if (saved.current) {
       repeat();
@@ -322,7 +337,7 @@ function Form() {
         },
       },
       {
-        text: "保存草稿",
+        text: editingPublished ? "保存修改" : "保存草稿",
         onPress: () => {
           void saveDraft().then((r) => {
             if (r) repeat();
@@ -343,7 +358,7 @@ function Form() {
   const section = (name: string) => (
     <Text style={{ ...s.headline, fontSize: 18, marginTop: 8 }}>{name}</Text>
   );
-  if (!kind && !loading && params.edit)
+  if (!kind && !loading && (params.edit || params.copy))
     return (
       <AuthPage compact title="编辑草稿">
         <FormError message={error} />
@@ -424,17 +439,19 @@ function Form() {
     >
       <FormError message={error} />
       <ActionButton
-        label="预览发布"
+        label={editingPublished ? "保存修改" : "预览发布"}
         busy={busy}
         disabled={loading || !kind}
         onPress={() => void submit(true)}
       />
-      <ActionButton
-        label="保存草稿"
-        secondary
-        disabled={busy || loading}
-        onPress={() => void submit(false)}
-      />
+      {!editingPublished ? (
+        <ActionButton
+          label="保存草稿"
+          secondary
+          disabled={busy || loading}
+          onPress={() => void submit(false)}
+        />
+      ) : null}
     </View>
   );
   return (

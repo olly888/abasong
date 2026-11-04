@@ -1,5 +1,15 @@
-import type { ReactNode } from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
+import { Fragment, type ReactNode } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { tokens } from "@abasong/ui";
 import { useAuth } from "../auth/AuthProvider";
@@ -11,9 +21,47 @@ import {
   requestTime,
   type DeliveryRequest,
 } from "./presentation";
+export function RequestSheet({
+  children,
+  onRequestClose,
+}: {
+  children: ReactNode;
+  onRequestClose: () => void;
+}) {
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onRequestClose}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{
+          flex: 1,
+          justifyContent: "flex-end",
+          backgroundColor: "rgba(0,0,0,.3)",
+        }}
+      >
+        <SafeAreaView
+          edges={["bottom"]}
+          style={{
+            maxHeight: "95%",
+            backgroundColor: tokens.color.surface,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+          }}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: 22, gap: 16 }}
+          >
+            {children}
+          </ScrollView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
 export function RequestGate({ children }: { children: ReactNode }) {
   const auth = useAuth();
-  if (auth.phase === "ready" && auth.session) return children;
+  if (auth.phase === "ready" && auth.session)
+    return <Fragment key={auth.session.user.id}>{children}</Fragment>;
   if (auth.phase === "guest" || auth.phase === "needs-profile")
     return (
       <AuthPage compact title="临时配送支援">

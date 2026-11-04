@@ -10,6 +10,8 @@
 
 2026-11-03搜索兼容：`AddressSuggestion.provider_result_id`与`AddressRetrieveInput.provider_result_id`上限统一4096字符，处理供应商正常长ID；这是项目工程边界而非官方长度保证。禁止截断，仍须匹配本账号当前建议会话，固定供应商主机、编码路径、16KiB DTO和512KiB上游限制不变。源生成器与生成契约同步；[实际复现与原生验收](D1_未收录公寓原生补验.md)。
 
+2026-11-04当前D2实施：[报名、来源会话与需求管理](D2_报名来源会话与需求管理实现.md)。报名能力实时查库；本人名单、本人撤回、仅发布者已联系、pair参与者读来源卡与水位均实际执行。普通请求不接受applicant_id、publisher_id或伪能力。Application增加可空最小司机资料，自己的报名支持按request_id筛选；不返回电话/精确集合点。旧版本快照再次按白名单输出；屏蔽阻止新联系，既有历史的不可见来源卡不返回内容。消息正文/推送/集合点共享仍是B3设计，不代表本批完成。
+
 ## 1. 协议与身份
 
 HTTPS JSON，路径 `/v1`，UTF-8。响应为直接 DTO，列表为 `{items,next_cursor}`；不是另套未声明的 data 包装。服务响应 `X-Request-ID`，错误 `{code,message,request_id}`，不回栈、SQL、密文、手机号或供应商密钥。契约使用 `.invalid` 占位域名，不是真实已部署 API。

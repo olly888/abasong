@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { PoolClient } from "pg";
+import { z } from "zod";
 import type { components } from "@abasong/contracts";
 import { Database } from "../database/database.service";
 import { ENVELOPE_CRYPTO } from "../encryption/provider";
@@ -14,11 +15,13 @@ import {
   patchInput,
   versionInput,
   closeInput,
+  gapInput,
   requestPageInput,
   validatePublishing,
 } from "./request-input";
+import { notifyRequestChange, safeRequestSnapshot } from "./request-events";
 type S = components["schemas"];
-type Row = Record<string, unknown> & {
+export type RequestRow = Record<string, unknown> & {
   id: string;
   publisher_id: string;
   organization_id: string | null;
@@ -28,6 +31,7 @@ type Row = Record<string, unknown> & {
   discarded_at: Date | null;
   expires_at: Date | null;
 };
+type Row = RequestRow;
 const missing = () => new ApiError(404, "NOT_FOUND", "需求不存在或不可见");
 const conflict = () =>
   new ApiError(409, "VERSION_CONFLICT", "需求已更新，请重新查看");
@@ -61,7 +65,8 @@ export class RequestsService {
     @Inject(Database) private readonly db: Database,
     @Inject(ENVELOPE_CRYPTO) private readonly crypto: EnvelopeCrypto,
   ) {}
-  private async tx<T>(
+  // Shared transaction and object checks for request/application services.
+  async tx<T>(
     a: VerifiedIdentity,
     fn: (c: PoolClient) => Promise<T>,
     capability?: string,
@@ -91,7 +96,13 @@ export class RequestsService {
           )
         ).rowCount
       )
-        throw new ApiError(403, "CAPABILITY_REQUIRED", "当前未开通发布资格");
+        throw new ApiError(
+          403,
+          "CAPABILITY_REQUIRED",
+          capability === "request.apply"
+            ? "当前未开通报名资格"
+            : "当前未开通发布资格",
+        );
       const value = await fn(c);
       await c.query("COMMIT");
       return value;
@@ -102,7 +113,7 @@ export class RequestsService {
       c.release();
     }
   }
-  private async row(
+  async row(
     c: PoolClient,
     a: VerifiedIdentity,
     id: string,
@@ -118,7 +129,7 @@ export class RequestsService {
     if (!r || (owner && r.publisher_id !== a.userId)) throw missing();
     return r;
   }
-  private async view(c: PoolClient, r: Row): Promise<S["Request"]> {
+  async view(c: PoolClient, r: Row): Promise<S["Request"]> {
     const p = (
       await c.query(
         "SELECT user_id,display_name,bio,vehicle_type,experience FROM abasong.profiles WHERE user_id=$1",
@@ -330,21 +341,58 @@ export class RequestsService {
       async (c) => {
         const r = await this.row(c, a, rid, true, true);
         if (r.version !== p.expected_version) throw conflict();
-        if (r.status !== "draft")
-          throw new ApiError(
-            409,
-            "REQUEST_STATE_CONFLICT",
-            "当前仅可编辑未发布草稿",
-          );
         const data = await this.input(c, p, r),
           keys = Object.keys(data);
         if (!keys.length) return this.view(c, r);
+        if (r.status !== "draft") {
+          validatePublishing(
+            Object.fromEntries(
+              Object.entries({ ...r, ...data }).map(([k, v]) => [
+                k,
+                v instanceof Date ? v.toISOString() : v,
+              ]),
+            ),
+            (await c.query("SELECT now() AS clock")).rows[0].clock.getTime(),
+          );
+          if (
+            data.parcel_count !== undefined &&
+            Number(data.parcel_count) < Number(r.remaining_parcels ?? 0) &&
+            r.kind !== "whole_route"
+          )
+            throw new ApiError(
+              409,
+              "GAP_CONFLICT",
+              "总件数不能少于当前缺口，请先调整缺口",
+            );
+          if (
+            data.drivers_needed !== undefined &&
+            Number(data.drivers_needed) < Number(r.remaining_drivers ?? 0)
+          )
+            throw new ApiError(
+              409,
+              "GAP_CONFLICT",
+              "总人数不能少于当前缺口，请先调整缺口",
+            );
+          if (
+            r.kind === "whole_route" &&
+            data.parcel_count !== undefined &&
+            Number(r.remaining_parcels) > 0
+          )
+            data.remaining_parcels = data.parcel_count;
+          // Expiry must not be silently reversed by editing future dates.
+          if (r.is_expired === true) data.status = "expired";
+        }
+        const updateKeys = Object.keys(data);
         const row = (
           await c.query<Row>(
-            `UPDATE abasong.requests SET ${keys.map((k, i) => k + "=$" + (i + 2)).join(",")},version=version+1,updated_at=now() WHERE id=$1 RETURNING *`,
-            [rid, ...keys.map((k) => data[k])],
+            `UPDATE abasong.requests SET ${updateKeys.map((k, i) => k + "=$" + (i + 2)).join(",")},version=version+1,updated_at=now() WHERE id=$1 RETURNING *`,
+            [rid, ...updateKeys.map((k) => data[k])],
           )
         ).rows[0]!;
+        if (r.status !== "draft") {
+          await this.snapshot(c, row);
+          await notifyRequestChange(c, row.id, row.version, a.userId);
+        }
         await c.query(
           "INSERT INTO abasong.audit_events(actor_id,action,object_type,object_id,result) VALUES($1,'request.update','request',$2,'success')",
           [a.userId, rid],
@@ -454,9 +502,135 @@ export class RequestsService {
           )
         ).rows[0]!;
         await this.snapshot(c, next);
+        await notifyRequestChange(c, next.id, next.version, a.userId);
         return next;
       }),
     );
+  }
+  async reopen(a: VerifiedIdentity, id: unknown, body: unknown, key: unknown) {
+    const rid = requestId(id),
+      p = checked(versionInput, body);
+    return this.tx(
+      a,
+      (c) =>
+        this.write(c, a, `request.reopen:${rid}`, key, p, async () => {
+          const r = await this.row(c, a, rid, true, true);
+          if (r.version !== p.expected_version) throw conflict();
+          if (r.status === "draft" || (r.status === "open" && !r.is_expired))
+            throw new ApiError(
+              409,
+              "REQUEST_STATE_CONFLICT",
+              "只能重开已结束的需求",
+            );
+          validatePublishing(
+            Object.fromEntries(
+              Object.entries(r).map(([k, v]) => [
+                k,
+                v instanceof Date ? v.toISOString() : v,
+              ]),
+            ),
+            (await c.query("SELECT now() AS clock")).rows[0].clock.getTime(),
+          );
+          const next = (
+            await c.query<Row>(
+              "UPDATE abasong.requests SET status='open',remaining_parcels=parcel_count,remaining_drivers=drivers_needed,version=version+1,updated_at=now() WHERE id=$1 RETURNING *",
+              [rid],
+            )
+          ).rows[0]!;
+          await this.snapshot(c, next);
+          await notifyRequestChange(c, next.id, next.version, a.userId);
+          return next;
+        }),
+      "request.publish",
+    );
+  }
+  async gap(a: VerifiedIdentity, id: unknown, body: unknown) {
+    const rid = requestId(id),
+      p = checked(gapInput, body);
+    return this.tx(a, async (c) => {
+      const r = await this.row(c, a, rid, true, true);
+      if (r.version !== p.expected_version) throw conflict();
+      if (r.status !== "open" || r.is_expired)
+        throw new ApiError(
+          409,
+          "REQUEST_STATE_CONFLICT",
+          "只能更新开放需求的缺口",
+        );
+      for (const [value, total] of [
+        [p.remaining_parcels, r.parcel_count],
+        [p.remaining_drivers, r.drivers_needed],
+      ])
+        if (
+          value !== undefined &&
+          (typeof total !== "number" || Number(value) > total)
+        )
+          throw new ApiError(400, "INVALID_INPUT", "缺口不能超过本次总量");
+      if (
+        r.kind === "whole_route" &&
+        p.remaining_parcels !== undefined &&
+        p.remaining_parcels !== 0 &&
+        p.remaining_parcels !== r.parcel_count
+      )
+        throw new ApiError(400, "INVALID_INPUT", "整条线路须整线承接");
+      if (["vehicle_help", "other_help"].includes(r.kind))
+        throw new ApiError(400, "INVALID_INPUT", "此类求助无需件数缺口");
+      const next = (
+        await c.query<Row>(
+          "UPDATE abasong.requests SET remaining_parcels=COALESCE($2,remaining_parcels),remaining_drivers=COALESCE($3,remaining_drivers),version=version+1,updated_at=now() WHERE id=$1 RETURNING *",
+          [rid, p.remaining_parcels ?? null, p.remaining_drivers ?? null],
+        )
+      ).rows[0]!;
+      await this.snapshot(c, next);
+      await notifyRequestChange(c, next.id, next.version, a.userId);
+      await c.query(
+        "INSERT INTO abasong.audit_events(actor_id,action,object_type,object_id,result) VALUES($1,'request.gap','request',$2,'success')",
+        [a.userId, rid],
+      );
+      return this.view(c, next);
+    });
+  }
+  async versions(a: VerifiedIdentity, id: unknown, query: unknown) {
+    const rid = requestId(id),
+      q = checked(
+        requestPageInput
+          .pick({ limit: true })
+          .extend({
+            cursor: z.coerce
+              .number()
+              .int()
+              .positive()
+              .max(2147483647)
+              .optional(),
+          })
+          .strict(),
+        query,
+      );
+    return this.tx(a, async (c) => {
+      const r = await this.row(c, a, rid);
+      if (
+        r.publisher_id !== a.userId &&
+        !(
+          await c.query(
+            "SELECT id FROM abasong.applications WHERE request_id=$1 AND applicant_id=$2",
+            [rid, a.userId],
+          )
+        ).rowCount
+      )
+        throw missing();
+      const rows = (
+        await c.query(
+          "SELECT snapshot,version FROM abasong.request_versions WHERE request_id=$1 AND ($2::integer IS NULL OR version<$2) ORDER BY version DESC LIMIT $3",
+          [rid, q.cursor ?? null, q.limit + 1],
+        )
+      ).rows;
+      return {
+        items: rows
+          .slice(0, q.limit)
+          .map((x) => safeRequestSnapshot(x.snapshot)),
+        next_cursor:
+          rows.length > q.limit ? String(rows[q.limit - 1].version) : null,
+      };
+    });
   }
   async discard(a: VerifiedIdentity, id: unknown) {
     const rid = requestId(id);

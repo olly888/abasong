@@ -1,5 +1,15 @@
 # Abasong development status
 
+## Current execution — D2 applications and collaboration (2026-11-04)
+
+Owner resumed B2 from12c0ee1/exact CI41797919609 SUCCESS; current branch codex/d2-applications-collaboration. [Implementation and actual limits](docs/technical/D2_报名来源会话与需求管理实现.md). Real dual-SMS/cloud-business KMS/independent iPhone acceptance remains deferred to B6, not waived. No new cloud writes, user grants, SMS or real support requests.
+
+Eleven more existing contract operations wired: application/owner list/my list/withdraw/contacted, atomic source-conversation creation/read/read-watermark, reopen/gap/versions. B1 plus B2 now20 request/collaboration operations; published PATCH extended, not an extra new operation. Same V3/three-nav native application sheet, management, my applications and source-history routes. Whole-route/capacity/minimum/arrival/current-version constraints, account/capability/session/object/block checks; expiry edit cannot silently reopen. Application and source failure roll back together; idempotency/repeat events guarded. Manual gaps do not follow application counts. Historical snapshots filtered on write and read. Metadata-only notifications/outbox created transactionally; delivery worker/text messaging/full inbox remain B3, no delivered claim or fake send button.
+
+Application minimal profile and optional my-application request filter updated in generator/OpenAPI/types; no new migration/table/permissions/dependencies. D0 remains10/52, DevWest9/52, deployed cloud images unchanged. Complete check338/60 +lint/types/build and129 actual isolated HTTP/PG checks, auth54 PASS. Final-source three-platform business JS export PASS; exact-head remote CI recorded in PR. iOS actual normal account my-applications entry/API empty result observed without SMS. Android interaction stopped at Mac lock, full B2 native/visual/physical flow remains deferred; no repeated user unlock or gesture request. Next B3 text encryption, inbox/notifications, send/retry/read and explicit meeting sharing.
+
+## Previous B1 delivery evidence
+
 ## Current execution — D2 request publishing; human pilot acceptance deferred (2026-11-03)
 
 Latest owner instruction explicitly defers real dual-SMS/cloud-business acceptance and independent iPhone package, prioritizing full functional development. [B1–B6 delivery order](docs/product/Abasong_V12.1_完整功能开发与集中验收计划.md). Stopped only loopback SMS login server; no more SMS/manual device requests this batch. Previous a9d901b exact CI41789361246 SUCCESS. Current branch codex/d2-request-publishing. D1/A4/A5 remain unaccepted, not blockers for independent implementation; existing cloud resources preserved, no new cloud writes/fees/rights.

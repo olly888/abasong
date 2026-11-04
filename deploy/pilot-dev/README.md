@@ -2,7 +2,13 @@
 
 更新：2026-11-03。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。DevWest九业务迁移及运行角色已执行；AWS六项基础资源已创建核对，同名stack管理已恢复至UPDATE_COMPLETE。[最新基础层记录](../../docs/technical/A4_基础层创建与保留资源恢复方案.md)。[实际云接入与剩余出口](../../docs/technical/A4_账号接入与云数据库迁移记录.md)。
 
-## 下一批运行层准备（尚未部署）
+## 当前运行实施
+
+[实际身份、服务凭据和验收](../../docs/technical/A4_运行身份与服务凭据实施验收.md)：明确 IAM/资源授权已到位；四角色和五秘密 stack 完成，真实三账号 TLS 和五值写入通过，通知/预算已创建；证书/DNS与计算出口继续独立核对。下方准备说明保留原始依据，不代表当前没有授权或资源。
+
+固定目标执行器位于 `scripts/cloud/`：`create-service-roles.ts`（仅 IAM 初始化）、`create-service-secrets.ts`、`populate-service-secrets.ts`、`verify-service-logins.ts`、`verify-runtime-roles.ts` 和 `create-runtime-stack.ts`。每个要求显式 `--expected-account` 和对应模式，不自动重置密码、覆盖未知秘密版本或删除失败 stack。数据库 CA 仅用于 PG、必须被打包入两份镜像。实际账号/邮箱/凭据不写进本页或模板。
+
+## 原始运行层准备依据
 
 [完整方案/费用/执行及回滚出口](../../docs/technical/A4_运行身份凭据与HTTPS部署方案.md)。`identities.json`、`notifications.json`、`certificate.json`、`runtime.json`均为待审查材料，合计43资源，不重复foundation。模板不包含任何服务秘密正文；Metadata ReviewOnly不是权限机制。
 

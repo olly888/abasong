@@ -42,7 +42,30 @@ it("does not let the daily principal mutate IAM, pass a CFN role or decrypt serv
   expect(
     p.Statement.find((s) => s.Sid === "NoCredentialReadOrDataKeyAccess")
       ?.Action,
-  ).toContain("kms:*");
+  ).toContain("secretsmanager:GetSecretValue");
+  expect(p.Statement.find((s) => s.Sid === "NoDirectKms")?.Condition).toEqual({
+    StringNotEqualsIfExists: {
+      "kms:ViaService": [
+        "secretsmanager.us-west-1.amazonaws.com",
+        "acm.us-west-1.amazonaws.com",
+      ],
+    },
+  });
+  expect(
+    p.Statement.find((s) => s.Sid === "NoNonSecretsManagerKey")?.Condition,
+  ).toEqual({
+    "ForAllValues:StringNotEquals": {
+      "kms:ResourceAliases": ["alias/aws/secretsmanager", "alias/aws/acm"],
+    },
+  });
+  expect(p.Statement.find((s) => s.Sid === "NoDirectKms")?.NotAction).toBe(
+    "kms:DescribeKey",
+  );
+  expect(
+    p.Statement.filter((s) => s.Effect === "Allow").some((s) =>
+      JSON.stringify(s.Action).includes("kms:"),
+    ),
+  ).toBe(false);
   const stacks = p.Statement.find((s) => s.Sid === "OnlyReviewedStacks")!;
   expect(JSON.stringify(stacks)).not.toMatch(/foundation|service-roles/);
   const secret = p.Statement.find((s) => s.Sid === "OnlyFiveSecrets")!;

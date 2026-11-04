@@ -1,4 +1,7 @@
 export const PILOT_PROJECT = "mxlmemaunzoramgemiju";
+export { databaseConnectionOptions, pilotDatabaseOptions } from "./database";
+export type { DatabaseKey } from "./database";
+import { pilotDatabaseOptions, type DatabaseKey } from "./database";
 export const PILOT_API = "https://api-dev.abasong.com";
 export function assertCloudImageEnvironment(
   service: "api" | "worker",
@@ -44,29 +47,12 @@ export function assertRuntimeEnvironment(
       (expectedHost === `db.${PILOT_PROJECT}.supabase.co` ||
         /^aws-\d+-us-west-1\.pooler\.supabase\.com$/.test(expectedHost)),
   );
-  function database(key: string, login: string) {
-    const raw = env[key];
-    requireValue(raw);
-    const u = new URL(raw);
-    requireValue(
-      ["postgres:", "postgresql:"].includes(u.protocol) &&
-        u.hostname === expectedHost &&
-        (u.port === "5432" || !u.port) &&
-        u.pathname === "/postgres" &&
-        u.searchParams.get("sslmode") === "verify-full",
-    );
-    const expectedUser = u.hostname.startsWith("db.")
-      ? login
-      : `${login}.${PILOT_PROJECT}`;
-    requireValue(
-      decodeURIComponent(u.username) === expectedUser &&
-        u.password &&
-        [...u.searchParams.keys()].every((k) => k === "sslmode"),
-    );
+  function database(key: DatabaseKey) {
+    pilotDatabaseOptions(env[key], expectedHost, key);
   }
   if (service === "api") {
-    database("DATABASE_URL", "abasong_api_dev");
-    database("DATABASE_SENSITIVE_URL", "abasong_sensitive_dev");
+    database("DATABASE_URL");
+    database("DATABASE_SENSITIVE_URL");
     requireValue(
       env.WORKER_DATABASE_URL === undefined &&
         env.AUTH_ISSUER === `https://${PILOT_PROJECT}.supabase.co/auth/v1` &&
@@ -91,7 +77,7 @@ export function assertRuntimeEnvironment(
         Number(env.IDEMPOTENCY_RETENTION_SECONDS) <= 604800,
     );
   } else {
-    database("WORKER_DATABASE_URL", "abasong_worker_dev");
+    database("WORKER_DATABASE_URL");
     for (const key of [
       "DATABASE_URL",
       "DATABASE_SENSITIVE_URL",

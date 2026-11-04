@@ -9,6 +9,7 @@ COPY packages/runtime/package.json packages/runtime/tsconfig.json ./packages/run
 RUN pnpm install --frozen-lockfile --filter abasong --filter @abasong/api... --filter @abasong/worker...
 COPY packages/contracts/src ./packages/contracts/src
 COPY packages/runtime/src ./packages/runtime/src
+COPY packages/runtime/certs ./packages/runtime/certs
 COPY apps/api/src ./apps/api/src
 COPY apps/worker/src ./apps/worker/src
 RUN pnpm --filter @abasong/contracts --filter @abasong/runtime build \

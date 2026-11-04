@@ -27,7 +27,10 @@ export function assertRuntimeApproval(value: unknown, apply: boolean) {
 
 /** Initial daily deployment permissions. Compute permissions are a separate
  * reviewed increment. IAM bootstrap stays outside this principal. */
-export function runtimeSetupPolicy(account: string, ownerEmail: string) {
+export function runtimeSecretEncryptionPolicy(
+  account: string,
+  ownerEmail: string,
+) {
   if (
     !/^\d{12}$/.test(account) ||
     !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ownerEmail)
@@ -192,10 +195,31 @@ export function runtimeSetupPolicy(account: string, ownerEmail: string) {
         Action: [
           "secretsmanager:GetSecretValue",
           "secretsmanager:BatchGetSecretValue",
-          "kms:*",
           "acm:ExportCertificate",
         ],
         Resource: "*",
+      },
+      {
+        Sid: "NoDirectKms",
+        Effect: "Deny",
+        Action: ["kms:*"],
+        Resource: "*",
+        Condition: {
+          StringNotEqualsIfExists: {
+            "kms:ViaService": "secretsmanager.us-west-1.amazonaws.com",
+          },
+        },
+      },
+      {
+        Sid: "NoNonSecretsManagerKey",
+        Effect: "Deny",
+        Action: ["kms:*"],
+        Resource: "*",
+        Condition: {
+          "ForAllValues:StringNotEquals": {
+            "kms:ResourceAliases": ["alias/aws/secretsmanager"],
+          },
+        },
       },
       {
         Sid: "NoIamMutation",
@@ -233,6 +257,42 @@ export function runtimeSetupPolicy(account: string, ownerEmail: string) {
       },
     ],
   };
+}
+
+/** Managed-service calls use AWS key policies, including ACM's ViaService,
+ * GrantIsForAWSResource and GrantOperations restrictions. No KMS Allow here. */
+export function runtimeSetupPolicy(account: string, ownerEmail: string) {
+  const base = runtimeSecretEncryptionPolicy(account, ownerEmail);
+  const statements: Record<string, unknown>[] = base.Statement.map((s) => {
+    if (!["NoDirectKms", "NoNonSecretsManagerKey"].includes(s.Sid)) return s;
+    const { Action: _action, Sid, ...rest } = s;
+    void _action;
+    return {
+      ...rest,
+      Sid,
+      NotAction: "kms:DescribeKey",
+      Resource: "arn:aws:kms:*:*:key/*",
+      Condition:
+        Sid === "NoDirectKms"
+          ? {
+              StringNotEqualsIfExists: {
+                "kms:ViaService": [
+                  "secretsmanager.us-west-1.amazonaws.com",
+                  "acm.us-west-1.amazonaws.com",
+                ],
+              },
+            }
+          : {
+              "ForAllValues:StringNotEquals": {
+                "kms:ResourceAliases": [
+                  "alias/aws/secretsmanager",
+                  "alias/aws/acm",
+                ],
+              },
+            },
+    };
+  });
+  return { Version: base.Version, Statement: statements };
 }
 
 /** Fixed one-API/one-worker infrastructure scope. No account-wide IAM, database,

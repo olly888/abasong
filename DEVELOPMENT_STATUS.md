@@ -1,5 +1,17 @@
 # Abasong development status
 
+## Current execution — actual runtime identities, credentials and verified TLS (2026-11-03)
+
+[Implementation and evidence](docs/technical/A4_运行身份与服务凭据实施验收.md). Owner explicitly approved the specific IAM initialization; prior auto-review rejection is resolved. Created project MFA runtime deployer/two managed policies/operator Assume grant/ECS+ELB linked roles; original foundation unchanged. Four-role IAM-only stack CREATE_COMPLETE and all actual trust/policies/tags/no-extra permissions exactly verified. Five-secret stack CREATE_COMPLETE and five protected values initialized with fixed idempotent versions; deployer still cannot read secret bodies or use business KMS. No Paid upgrade or D0 data/key copy.
+
+DevWest three restricted logins initialized once using server-random SCRAM/PGP-only transfer. First TLS correctly refused untrusted vendor CA; official downloaded public CA now packaged and scoped only to reviewed PostgreSQL clients. All three real logins pass certificate+hostname/TLS verification and sensitive-table permission separation. No SSL downgrade or global trust change. Secrets Manager managed-key FAS exception and ACM standard managed-service exception (AWS-owned ViaService/resource-grant/operation guards, no identity KMS Allow) were separately analyzed/simulated before exact policy updates; old versions retained. Two final policy Analyzer findings0 and14 boundary simulations PASS. No generic IAM or data-key privilege expansion.
+
+Notifications/budget stack CREATE_COMPLETE; owner SNS subscription pending explicit email confirmation. Certificate request exposed incomplete DNS options then ACM metadata dependency; source/guards repaired without deleting resources. Certificate/DNS status remains under active verification. API+worker rebuilt linux/amd64 and actually run non-root/read-only/network-none; production environment refusal/live200/ready503/auth401/worker heartbeat checks PASS. Full check303/54+lint/types/build passed; both real Linux images also passed all3 cloud DB TLS/permission probes, no business writes; final exact-source checks/remote CI remain tracked with this batch. PR65 previous67de0cc CI41766501028 is preparation evidence only.
+
+Next: certificate DNS validation and immutable ECR release → single API/worker/ALB/HTTPS/alarms → real KMS/cloud business configuration/limited qualifications/two real accounts → A5 independent signed iPhone business build and cellular field acceptance. Spaceship owner login confirmed; only api-dev and validation CNAME may be added. No native UI change or repeated gesture request. A4/A5/D1 not complete; Android physical device still unavailable.
+
+## Earlier execution and evidence
+
 ## Current execution — runtime resource/fee approval received (2026-11-03)
 
 Owner approved the reviewed runtime resources, usage fees and protected DevWest service credential configuration, and supplied a private alert email. Do not ask for the same approval again. Runtime preparation PR64 merged into D1 at1ff279b; exact integrated CI41761535592 SUCCESS, feature387c7e0/CI41761058849 also SUCCESS. Current execution branch codex/d1-runtime-identity-provisioning. No actual new runtime resources or credential changes yet at this checkpoint. Existing foundation remains6 managed resources.

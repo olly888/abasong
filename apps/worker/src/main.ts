@@ -1,5 +1,8 @@
 import { Pool } from "pg";
-import { assertRuntimeEnvironment } from "@abasong/runtime";
+import {
+  assertRuntimeEnvironment,
+  databaseConnectionOptions,
+} from "@abasong/runtime";
 import { heartbeatPath, writeHeartbeat } from "./heartbeat.js";
 import { startWorkerLoop } from "./loop.js";
 async function main() {
@@ -7,12 +10,14 @@ async function main() {
   const connectionString = process.env.WORKER_DATABASE_URL;
   if (!connectionString) throw new Error("WORKER_DATABASE_URL required");
   const pool = new Pool({
-    connectionString,
+    ...databaseConnectionOptions("WORKER_DATABASE_URL"),
     max: 1,
     connectionTimeoutMillis: 3000,
     statement_timeout: 3000,
   });
-  pool.on("error", () => console.error("Worker database connection unavailable"));
+  pool.on("error", () =>
+    console.error("Worker database connection unavailable"),
+  );
   const interval = Number(process.env.WORKER_POLL_MS ?? 5000);
   if (!Number.isFinite(interval) || interval < 1000 || interval > 60000)
     throw new Error("Invalid worker poll interval");

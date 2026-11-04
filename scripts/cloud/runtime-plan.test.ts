@@ -11,6 +11,13 @@ import {
 } from "./runtime-plan";
 
 const plan = () => JSON.parse(JSON.stringify(buildRuntimeTemplates()));
+it("uses external DNS certificate request without an incomplete domain validation option", () => {
+  const p = plan().certificate.Resources.ApiCertificate.Properties;
+  expect(p.DomainName).toBe("api-dev.abasong.com");
+  expect(p.ValidationMethod).toBe("DNS");
+  expect(p.CertificateExport).toBe("DISABLED");
+  expect(p.DomainValidationOptions).toBeUndefined();
+});
 it("does not print private input excerpts or stack traces when binding JSON is invalid", () => {
   const directory = mkdtempSync(join(tmpdir(), "abasong-plan-"));
   const input = join(directory, "bindings.json");

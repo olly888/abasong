@@ -168,14 +168,18 @@ function main() {
     {
       name: "deny-data-and-iam",
       actions: [
-        "kms:Decrypt",
-        "kms:GenerateDataKey",
         "secretsmanager:GetSecretValue",
         "iam:CreateUser",
         "iam:PutRolePolicy",
         "freetier:UpgradeAccountPlan",
       ],
       resource: "*",
+      expected: "explicitDeny",
+    },
+    {
+      name: "deny-direct-business-kms",
+      actions: ["kms:Decrypt", "kms:GenerateDataKey"],
+      resource: `arn:aws:kms:us-west-1:${account}:key/11111111-1111-4111-8111-111111111111`,
       expected: "explicitDeny",
     },
     {

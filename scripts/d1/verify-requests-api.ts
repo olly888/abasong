@@ -7,17 +7,18 @@ import { readFileSync, readdirSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { setTimeout as pause } from "node:timers/promises";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
-import { Client } from "pg";
+import { Client, escapeLiteral } from "pg";
 import { localTarget } from "../d0/database-target";
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     adminUrl = localTarget(env.DATABASE_ADMIN_URL),
     runtime = localTarget(env.DATABASE_URL),
-    sensitive = localTarget(env.DATABASE_SENSITIVE_URL);
+    sensitive = new URL(runtime);
   assert.equal(adminUrl.username, "postgres");
   assert.equal(adminUrl.pathname, "/abasong_d0");
   assert.equal(runtime.username, "abasong_api_local");
   const name = "abasong_d2_requests_test_" + randomBytes(8).toString("hex"),
+    sensitiveRole = "abasong_message_test_" + randomBytes(8).toString("hex"),
     admin = new Client({ connectionString: adminUrl.href });
   const pair = await generateKeyPair("ES256", { extractable: true }),
     jwk = {
@@ -56,6 +57,7 @@ async function main() {
   let db: Client | undefined,
     api: ChildProcess | undefined,
     created = false,
+    createdRole = false,
     port = 0,
     checks = 0;
   async function request(
@@ -107,6 +109,16 @@ async function main() {
       .filter((f) => /^\d{4}_.+\.sql$/.test(f))
       .sort())
       await db.query(readFileSync("database/migrations/" + f, "utf8"));
+    // CI deliberately has no persistent sensitive-service login. Use the same
+    // disposable restricted-role pattern as the library/import HTTP harnesses.
+    const sensitivePassword = randomBytes(24).toString("hex");
+    await admin.query(
+      `CREATE ROLE ${sensitiveRole} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(sensitivePassword)}`,
+    );
+    createdRole = true;
+    await admin.query(`GRANT abasong_sensitive TO ${sensitiveRole}`);
+    sensitive.username = sensitiveRole;
+    sensitive.password = sensitivePassword;
     await db.query("INSERT INTO abasong.users(id) SELECT unnest($1::uuid[])", [
       [owner, reader, stranger],
     ]);
@@ -1608,6 +1620,10 @@ async function main() {
     if (created) {
       assert(/^abasong_d2_requests_test_[a-f0-9]{16}$/.test(name));
       await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);
+    }
+    if (createdRole) {
+      assert(/^abasong_message_test_[a-f0-9]{16}$/.test(sensitiveRole));
+      await admin.query(`DROP ROLE ${sensitiveRole}`);
     }
     await admin.end();
   }

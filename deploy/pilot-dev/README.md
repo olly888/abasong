@@ -1,6 +1,23 @@
-# DevWest 内测部署材料 · A2
+# DevWest 内测部署材料 · A2/A4
 
 更新：2026-11-03。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。DevWest九业务迁移及运行角色已执行；AWS六项基础资源已创建核对，同名stack管理已恢复至UPDATE_COMPLETE。[最新基础层记录](../../docs/technical/A4_基础层创建与保留资源恢复方案.md)。[实际云接入与剩余出口](../../docs/technical/A4_账号接入与云数据库迁移记录.md)。
+
+## 下一批运行层准备（尚未部署）
+
+[完整方案/费用/执行及回滚出口](../../docs/technical/A4_运行身份凭据与HTTPS部署方案.md)。`identities.json`、`notifications.json`、`certificate.json`、`runtime.json`均为待审查材料，合计43资源，不重复foundation。模板不包含任何服务秘密正文；Metadata ReviewOnly不是权限机制。
+
+```sh
+./scripts/dev cloud:templates
+./scripts/dev cloud:runtime-plan
+# Optional local-only binding validation: AccountId + Parameters, never secret values.
+./scripts/dev cloud:runtime-plan --parameters .tooling/cloud-runtime/reviewed-bindings.json
+# Provider schemas must be fetched separately, with read-only describe-type.
+PYTHONPATH=.tooling/contract-validation python3 scripts/cloud/validate-runtime-schemas.py --schema-dir .tooling/cloud-runtime/provider-schemas
+```
+
+准备命令不调用AWS且没有apply开关。实际CloudFormation change set、IAM增量、服务凭据配置和云业务初始化在费用/资源授权后的执行批完成；现有foundation角色明确拒绝IAM，不能拿它直接创建角色或PassRole。通知邮箱与Spaceship编辑权限待提供/核对。预计北加州低流量总AWS约62–75美元/月，100美元预算仅提醒；不升级Paid。
+
+运行层选单API/worker、stop-first维护窗口；API搜索会话/保护计数当前仅进程内存。不能改DesiredCount或滚动重叠比例并假定支持多实例。`/health/ready`只验证主数据库/迁移；敏感连接、真实KMS、Mapbox和两账号资格必须另验。worker心跳为进程/数据库任务可用信号，不代表已实现outbox/OCR消费者。
 
 ## 当前启动工具（2026-11-03）
 

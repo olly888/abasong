@@ -39,6 +39,8 @@
     "cloud:preflight": "tsx scripts/cloud/preflight.ts",
     "cloud:inspect-aws": "tsx scripts/cloud/inspect-aws.ts",
     "cloud:foundation": "tsx scripts/cloud/create-foundation.ts",
+    "cloud:runtime-plan": "node --import tsx scripts/cloud/prepare-runtime.ts",
+    "cloud:templates": "node --import tsx scripts/cloud/generate-runtime-templates.ts",
     "ocr:evaluate": "node --import tsx scripts/ocr/evaluate-quality.ts",
     "pilot:prepare": "tsx scripts/d1/prepare-pilot.ts"
   },

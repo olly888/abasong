@@ -118,3 +118,6 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 
 
 2026-11-03 A4运行准备：无新增依赖、SDK、锁文件、原生模块或业务DDL。复用Node24/pnpm10.32.1/现有pg、Node crypto/fs及jsonschema；4份CloudFormation由TypeScript生成并受CI漂移/拒绝边界测试约束。官方AWS区域24类provider schema只读获取，43项属性用合成引用离线验证，不当作实际部署。Fargate1.4.0/x86_64、单API/worker、只读根+UID1000可写scratch卷；不引入NAT/WAF/Redis。当前搜索会话/HTTP保护均单进程，故明确采用维护窗口stop-first，不声称横向扩容或无中断。HTTP日志只记粗路由/状态/耗时/服务器UUID，worker原子心跳仅状态时间。部署资源/费用及IAM增量仍待授权，未创建新资源、服务凭据、DNS或升级Paid。
+
+
+2026-11-03 A4 IAM准备续批：无新应用依赖、锁、SDK、DDL或原生修改。复用Node子进程/crypto及现有官方AWS CLI，准备两份managed policy（分别低于6144字符）、MFA一小时项目身份和IAM/五秘密模板拆分；Access Analyzer0 findings与13组权限模拟通过。复用本机既有GPG及DevWest pgcrypto验证RSA加密子密钥的TEST密封传输，不安装新加密包、不设置真实服务密码。自动审批在执行前拒绝未逐项授权的新部署身份/策略及ECS/ELB服务关联角色，未尝试绕过；apply新增独立IAM批准开关，费用批准不代替权限批准。

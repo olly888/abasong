@@ -49,7 +49,7 @@ export function RequestSheet({
         >
           <ScrollView
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 22, gap: 16 }}
+            contentContainerStyle={{ padding: 20, gap: 16 }}
           >
             {children}
           </ScrollView>
@@ -82,11 +82,13 @@ export function Choice<T extends string>({
   value,
   options,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: T;
   options: ReadonlyArray<readonly [T, string]>;
   onChange: (v: T) => void;
+  disabled?: boolean;
 }) {
   return (
     <View style={{ gap: 10 }}>
@@ -96,7 +98,8 @@ export function Choice<T extends string>({
           <Pressable
             key={v}
             accessibilityRole="radio"
-            accessibilityState={{ checked: value === v }}
+            accessibilityState={{ checked: value === v, disabled }}
+            disabled={disabled}
             onPress={() => onChange(v)}
             style={[
               requestStyles.choice,

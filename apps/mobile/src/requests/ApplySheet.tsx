@@ -1,25 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text } from "react-native";
+import { Text } from "react-native";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { useAuth } from "../auth/AuthProvider";
-import { Field, ActionButton, FormError } from "../auth/AuthControls";
+import { ActionButton, FormError } from "../auth/AuthControls";
+import { ApplicationFields } from "./ApplicationFields";
 import { dataRequest } from "../apartments/client";
 import { AccountError } from "../auth/api-client";
-import {
-  localDateTime,
-  laInstant,
-  requestPrice,
-  type DeliveryRequest,
-} from "./presentation";
+import { localDateTime, laInstant, type DeliveryRequest } from "./presentation";
 import { requestStyles as s, RequestSheet } from "./RequestUi";
 export function ApplySheet({
   request: r,
+  regionLabel,
   onClose,
   onRefresh,
 }: {
   request: DeliveryRequest;
+  regionLabel?: string;
   onClose: () => void;
   onRefresh: () => void;
 }) {
@@ -98,43 +96,17 @@ export function ApplySheet({
       }}
     >
       <Text style={s.headline}>{delivery ? "报名支援" : "我能帮忙"}</Text>
-      <Text style={s.text}>
-        {r.carrier} {r.route_label}
-      </Text>
-      {delivery ? (
-        <Text style={s.price}>
-          {requestPrice(r)} · 剩余 {r.remaining_parcels} 件
-        </Text>
-      ) : null}
-      <View style={s.row}>
-        <View style={{ flex: 1 }}>
-          <Field
-            label="可到日期"
-            value={date}
-            onChangeText={setDate}
-            placeholder="YYYY-MM-DD"
-            editable={!busy}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Field
-            label="可到时间"
-            value={time}
-            onChangeText={setTime}
-            placeholder="HH:mm"
-            editable={!busy}
-          />
-        </View>
-      </View>
-      {delivery ? (
-        <Field
-          label={r.accepts_partial ? "本次可接件数" : "整批件数"}
-          value={capacity}
-          onChangeText={setCapacity}
-          keyboardType="number-pad"
-          editable={!busy && r.accepts_partial}
-        />
-      ) : null}
+      <ApplicationFields
+        request={r}
+        regionLabel={regionLabel}
+        date={date}
+        time={time}
+        capacity={capacity}
+        disabled={busy}
+        onDate={setDate}
+        onTime={setTime}
+        onCapacity={setCapacity}
+      />
       <FormError message={error} />
       {changed ? (
         <ActionButton
@@ -151,7 +123,12 @@ export function ApplySheet({
           onPress={() => void apply()}
         />
       )}
-      <ActionButton label="取消" secondary disabled={busy} onPress={onClose} />
+      <ActionButton
+        label="取消"
+        variant="text"
+        disabled={busy}
+        onPress={onClose}
+      />
     </RequestSheet>
   );
 }

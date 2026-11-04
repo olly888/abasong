@@ -124,3 +124,10 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 # 2026-11-03 pilot image assessment
 
 Pinned Node 24.22.1/bookworm image and pnpm dependencies unchanged. Actual ECR scans exposed five unfixed stable-system High findings; [scoped mitigation and expiry](docs/technical/A4_内测镜像扫描与运行限制.md). Strip SUID/SGID and enforce C.UTF-8/empty LANGUAGE, no unstable distro or unpinned package upgrade. New/critical/changed-package findings and expired assessment block deployment. This is not a zero-vulnerability claim.
+
+
+## 2026-11-04 UI样板与系统选择器
+
+新增移动端`@react-native-community/datetimepicker`精确9.2.1，按[Expo58官方版本说明](https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/)选择，来自官方npm注册表，兼容锁定Expo58/RN0.88；不安装@expo/ui或全面迁移SwiftUI。使用当前接口onValueChange，LA timeZoneName固定；iOS滚轮在品牌面板内、Android系统对话框，web有独立HTML字段回退。无新系统权限/网络上传。
+
+app.json加入config plugin，prebuild --no-install --no-clean保留既有目录，pnpm锁和native-locks/Podfile.lock仅增加此模块；无Mapbox/RN升级。已执行Pod安装、Android原生编译和双端/web JS导出。iOS本机CocoaPods缓存中的RNCore/Hermes与配置标记不一致，使用RN供应商的Debug替换构建脚本恢复生成产物；不编辑node_modules源码、不以全局环境或关闭新架构绕过。最终iOS标准模拟器签名编译/启动及部分实际系统控件交互通过；Android输入可靠性仍保留待验，结果分别记录于UI实施文档。普通开发profile显式恢复LocalNetworking，任意HTTP仍false；pilot/field两独立profile保持LocalNetworking false并有回归。不能让旧开发包只收热刷新来验证新原生依赖。

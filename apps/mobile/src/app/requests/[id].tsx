@@ -159,11 +159,7 @@ function Detail() {
     r && own ? (
       <View
         style={{
-          padding: 16,
           gap: 10,
-          backgroundColor: tokens.color.surface,
-          borderTopWidth: 1,
-          borderColor: tokens.color.border,
         }}
       >
         <FormError message={error} />
@@ -234,9 +230,7 @@ function Detail() {
         )}
       </View>
     ) : r ? (
-      <View
-        style={{ padding: 16, gap: 10, backgroundColor: tokens.color.surface }}
-      >
+      <View style={{ gap: 10 }}>
         <FormError message={error} />
         {application?.status === "applied" ? (
           <ActionButton
@@ -384,6 +378,7 @@ function Detail() {
             ) : null}
             <ActionButton
               label="确认"
+              variant={confirmation === "discard" ? "danger" : "primary"}
               onPress={() => {
                 if (confirmation) void action(confirmation);
               }}
@@ -399,6 +394,7 @@ function Detail() {
       {r && applying ? (
         <ApplySheet
           request={r}
+          regionLabel={regions[r.region_id ?? ""]}
           onClose={() => setApplying(false)}
           onRefresh={() => void load()}
         />

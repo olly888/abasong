@@ -6,6 +6,7 @@
     "@abasong/contracts": "workspace:*",
     "@abasong/ui": "workspace:*",
     "@abasong/web-map": "workspace:*",
+    "@react-native-community/datetimepicker": "9.2.1",
     "@react-native/metro-config": "0.88.1",
     "@rnmapbox/maps": "10.3.16",
     "@supabase/supabase-js": "2.118.0",

@@ -110,30 +110,59 @@ export function ActionButton({
   busy = false,
   disabled = false,
   secondary = false,
+  variant,
 }: {
   label: string;
   onPress: () => void;
   busy?: boolean;
   disabled?: boolean;
   secondary?: boolean;
+  variant?: "primary" | "secondary" | "text" | "danger";
 }) {
+  const kind = variant ?? (secondary ? "secondary" : "primary"),
+    unavailable = disabled || busy;
+  const foreground =
+    kind === "primary" || kind === "danger"
+      ? tokens.color.onBrand
+      : kind === "text"
+        ? tokens.color.brandPrimary
+        : tokens.color.ink;
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: disabled || busy, busy }}
       onPress={onPress}
       disabled={disabled || busy}
-      style={[
+      style={({ pressed }) => [
         styles.button,
-        secondary && styles.secondary,
-        (disabled || busy) && { opacity: 0.45 },
+        kind === "secondary" && styles.secondary,
+        kind === "text" && { backgroundColor: "transparent", borderWidth: 0 },
+        kind === "danger" && { backgroundColor: tokens.color.danger },
+        pressed &&
+          !unavailable && {
+            backgroundColor:
+              kind === "primary"
+                ? tokens.color.brandPressed
+                : kind === "danger"
+                  ? "#8F2C2A"
+                  : tokens.color.surfaceMuted,
+          },
+        disabled && {
+          backgroundColor:
+            kind === "text" ? "transparent" : tokens.color.surfaceMuted,
+          borderColor: tokens.color.border,
+        },
       ]}
     >
       {busy ? (
-        <ActivityIndicator color={secondary ? tokens.color.ink : "#FFFFFF"} />
+        <ActivityIndicator color={foreground} />
       ) : (
         <Text
-          style={[styles.buttonText, secondary && { color: tokens.color.ink }]}
+          style={[
+            styles.buttonText,
+            { color: disabled ? tokens.color.textMuted : foreground },
+          ]}
         >
           {label}
         </Text>
@@ -217,7 +246,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: tokens.color.controlBorder,
-    borderRadius: 12,
+    borderRadius: 10,
     minHeight: 52,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -226,14 +255,18 @@ const styles = StyleSheet.create({
   },
   button: {
     minHeight: 52,
-    borderRadius: 12,
+    borderRadius: 10,
     backgroundColor: tokens.color.brandPrimary,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  secondary: { backgroundColor: tokens.color.surfaceMuted },
+  secondary: {
+    backgroundColor: tokens.color.surface,
+    borderWidth: 1,
+    borderColor: tokens.color.controlBorder,
+  },
   buttonText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
 });
 

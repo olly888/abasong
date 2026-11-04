@@ -2034,6 +2034,29 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNDateTimePicker (9.2.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-cxxstableapi
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNGestureHandler (3.3.0):
     - hermes-engine
     - RCTRequired
@@ -2438,6 +2461,7 @@ DEPENDENCIES:
   - "ReactCommon/turbomodule/core (from `../../../node_modules/.pnpm/react-native@0.88.1_@react-native+metro-config@0.88.1_@types+react@19.3.0_react@19.3.0/node_modules/react-native/ReactCommon`)"
   - "ReactNativeDependencies (from `../../../node_modules/.pnpm/react-native@0.88.1_@react-native+metro-config@0.88.1_@types+react@19.3.0_react@19.3.0/node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)"
   - "RNCMaskedView (from `../../../node_modules/.pnpm/@react-native-masked-view+masked-view@0.3.2_react-native@0.88.1_@react-native+metro-con_21577e18d845368d68b441705699c241/node_modules/@react-native-masked-view/masked-view`)"
+  - "RNDateTimePicker (from `../../../node_modules/.pnpm/@react-native-community+datetimepicker@9.2.1_expo@58.0.21_react-native@0.88.1_@react-na_27f9afdba4d975863655ad5c4bf338eb/node_modules/@react-native-community/datetimepicker`)"
   - "RNGestureHandler (from `../../../node_modules/.pnpm/react-native-gesture-handler@3.3.0_react-native@0.88.1_@react-native+metro-config@0.88._a61407ccc182d2e7638a187e6580df36/node_modules/react-native-gesture-handler`)"
   - "rnmapbox-maps (from `../../../node_modules/.pnpm/@rnmapbox+maps@10.3.16_expo@58.0.21_react-dom@19.3.0_react@19.3.0__react-native@0.88.1__fafbbc9e16b7c8c09e18b19e355e1720/node_modules/@rnmapbox/maps`)"
   - "RNReanimated (from `../../../node_modules/.pnpm/react-native-reanimated@4.7.1_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-na_01a23fe6740562f6379fac6048402404/node_modules/react-native-reanimated`)"
@@ -2683,6 +2707,8 @@ EXTERNAL SOURCES:
     :podspec: "../../../node_modules/.pnpm/react-native@0.88.1_@react-native+metro-config@0.88.1_@types+react@19.3.0_react@19.3.0/node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
   RNCMaskedView:
     :path: "../../../node_modules/.pnpm/@react-native-masked-view+masked-view@0.3.2_react-native@0.88.1_@react-native+metro-con_21577e18d845368d68b441705699c241/node_modules/@react-native-masked-view/masked-view"
+  RNDateTimePicker:
+    :path: "../../../node_modules/.pnpm/@react-native-community+datetimepicker@9.2.1_expo@58.0.21_react-native@0.88.1_@react-na_27f9afdba4d975863655ad5c4bf338eb/node_modules/@react-native-community/datetimepicker"
   RNGestureHandler:
     :path: "../../../node_modules/.pnpm/react-native-gesture-handler@3.3.0_react-native@0.88.1_@react-native+metro-config@0.88._a61407ccc182d2e7638a187e6580df36/node_modules/react-native-gesture-handler"
   rnmapbox-maps:
@@ -2816,6 +2842,7 @@ SPEC CHECKSUMS:
   ReactCommon: b63ce798b898ed77c6cfdeb80b18080161f52ed5
   ReactNativeDependencies: a5164c3ebbe90d992022b5d9cbabbf770a6d7d05
   RNCMaskedView: 89bb912716973f9715102cfe932f3ca6793b21f9
+  RNDateTimePicker: 5ddeb7b9142ea2b53386cf9e1737fd0ddc5a186f
   RNGestureHandler: e19fcf39b0212e0eb8bc7ca1e645500eb492f6be
   rnmapbox-maps: f336eb346b1c840ae33b71584a9b30505168abb5
   RNReanimated: 388a07d69ed546ca5e9e77ce42c1cb3e581978c7

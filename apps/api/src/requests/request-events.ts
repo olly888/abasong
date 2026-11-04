@@ -144,6 +144,17 @@ export async function notifyRequestChange(
     owner,
     { version },
   );
+  const current = (
+    await c.query("SELECT status FROM abasong.requests WHERE id=$1", [
+      requestId,
+    ])
+  ).rows[0];
+  const notificationKind =
+    current?.status === "found"
+      ? "request_found"
+      : current?.status === "closed"
+        ? "request_closed"
+        : "request_updated";
   const recipients = (
     await c.query(
       "SELECT a.applicant_id,c.id AS conversation_id FROM abasong.applications a JOIN abasong.users u ON u.id=a.applicant_id JOIN abasong.conversations c ON c.pair_low=LEAST($2::uuid,a.applicant_id) AND c.pair_high=GREATEST($2::uuid,a.applicant_id) WHERE a.request_id=$1 AND a.status='applied' AND u.status='active' AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=a.applicant_id) OR (b.blocker_id=a.applicant_id AND b.blocked_id=$2)) ORDER BY c.id",
@@ -157,8 +168,13 @@ export async function notifyRequestChange(
     );
     await attachRequestSource(c, r.conversation_id, requestId, version, owner);
     await c.query(
-      "INSERT INTO abasong.notifications(user_id,event_key,kind,object_type,object_id) VALUES($1,$2,'request_updated','request',$3) ON CONFLICT DO NOTHING",
-      [r.applicant_id, `request:${requestId}:version:${version}`, requestId],
+      "INSERT INTO abasong.notifications(user_id,event_key,kind,object_type,object_id) VALUES($1,$2,$4,'request',$3) ON CONFLICT DO NOTHING",
+      [
+        r.applicant_id,
+        `request:${requestId}:version:${version}`,
+        requestId,
+        notificationKind,
+      ],
     );
   }
 }

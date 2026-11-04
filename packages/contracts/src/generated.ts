@@ -782,6 +782,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅参与者；读取元数据与双方已读水位 */
+        get: operations["getConversation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -2075,20 +2092,41 @@ export interface components {
             other_profile: components["schemas"]["Profile"];
             unread_count: number;
             last_sequence: number;
+            my_last_read_sequence: number;
+            other_last_read_sequence: number;
+            can_send: boolean;
+            last_request_region_label: string | null;
+            last_request_snapshot: components["schemas"]["RequestVersion"] | (never | null);
             /** Format: date-time */
             updated_at: string;
         };
-        MessageInput: {
+        TextMessageInput: {
             /** Format: uuid */
             client_message_id: string;
-            /** @enum {string} */
-            kind: "text" | "request_card";
-            text?: string;
-            /** Format: uuid */
-            source_request_id?: string;
-            source_request_version?: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "text";
+            text: string;
         };
+        RequestCardMessageInput: {
+            /** Format: uuid */
+            client_message_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "request_card";
+            /** Format: uuid */
+            source_request_id: string;
+            source_request_version: number;
+        };
+        MessageInput: components["schemas"]["TextMessageInput"] | components["schemas"]["RequestCardMessageInput"];
         Message: {
+            request_region_label: string | null;
+            /** Format: uuid */
+            client_message_id: string;
             /** Format: uuid */
             id: string;
             sequence: number;
@@ -8404,12 +8442,109 @@ export interface operations {
             };
         };
     };
+    getConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     listMessages: {
         parameters: {
             query?: {
                 cursor?: string;
                 limit?: number;
                 after_sequence?: number;
+                before_sequence?: number;
             };
             header?: never;
             path: {

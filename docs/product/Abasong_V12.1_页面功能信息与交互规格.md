@@ -574,7 +574,9 @@
 
 **必须制作的状态：** 对话；通知；空；未读；推送被禁但站内有记录；刷新失败。
 
-**接口 operationId：** listConversations、listNotifications、getInboxSummary、readNotification。
+**接口 operationId：** listConversations、getConversation、listNotifications、getInboxSummary、readNotification。
+
+2026-11-04 B3落地：列表不解密正文预览；总角标和各分栏未读由服务提供。点击单条通知仅标该条；更早分页阅读不被定时刷新替换。中心不添加未实现的“全部清空”或推送送达状态。通知偏好接口已接，实际系统推送继续下一子批。
 
 **验收：** 进入中心不清空全部未读；无消息正文锁屏预览。 首页搜索右侧为消息主入口，打开本二级页；我的顶部不重复放入口。
 
@@ -607,6 +609,8 @@
 **接口 operationId：** listMessages、sendMessage、readConversation、shareMeeting、getSharedMeeting、revokeMeetingShare。
 
 **验收：** 无支付、视频、语音、群聊；消息接受不显示成对方已读；已读水位不跨会话。
+
+2026-11-04 B3落地：1–2000字符，空白禁发；发送中/已发送/发送失败·重新发送/对方已读分开。重试复用原client_message_id和正文，不新增气泡；只有对方已读水位覆盖才标已读。页面前台可见消息才确认本会话水位，切后台或账号时取消旧请求。初次取最新消息，更早历史与增量轮询独立。来源卡保留区域/类型、报价/数量、时间和历史版本，整张点击查看当前需求；本批仅返回/刷新标题操作，不放未实现的更多/集合点按钮。明确分享集合点与屏蔽/常联系操作保留规划，不能因已有契约标为全部接通。Android使用height键盘避让，iOS使用padding；完整软键盘/真人跨设备集中B6。
 
 **需求映射：** V12-15、V12-17。
 

@@ -136,6 +136,8 @@ async function main() {
     await verifyBackfill();
     await db.query(readFileSync("database/migrations/0009_kms_envelopes.sql", "utf8"));
     await db.query(readFileSync("database/migrations/0010_request_draft_pricing.sql", "utf8"));
+    await db.query(readFileSync("database/migrations/0011_messaging.sql", "utf8"));
+    await db.query(readFileSync("database/migrations/0012_message_source_regions.sql", "utf8"));
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,

@@ -167,6 +167,8 @@ async function main() {
       "0008_contribution_sources.sql",
       "0009_kms_envelopes.sql",
       "0010_request_draft_pricing.sql",
+      "0011_messaging.sql",
+      "0012_message_source_regions.sql",
     ])
       await db.query(readFileSync(`database/migrations/${file}`, "utf8"));
     const password = randomBytes(24).toString("hex");

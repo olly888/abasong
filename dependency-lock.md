@@ -131,3 +131,8 @@ Pinned Node 24.22.1/bookworm image and pnpm dependencies unchanged. Actual ECR s
 新增移动端`@react-native-community/datetimepicker`精确9.2.1，按[Expo58官方版本说明](https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/)选择，来自官方npm注册表，兼容锁定Expo58/RN0.88；不安装@expo/ui或全面迁移SwiftUI。使用当前接口onValueChange，LA timeZoneName固定；iOS滚轮在品牌面板内、Android系统对话框，web有独立HTML字段回退。无新系统权限/网络上传。
 
 app.json加入config plugin，prebuild --no-install --no-clean保留既有目录，pnpm锁和native-locks/Podfile.lock仅增加此模块；无Mapbox/RN升级。已执行Pod安装、Android原生编译和双端/web JS导出。iOS本机CocoaPods缓存中的RNCore/Hermes与配置标记不一致，使用RN供应商的Debug替换构建脚本恢复生成产物；不编辑node_modules源码、不以全局环境或关闭新架构绕过。最终iOS标准模拟器签名编译/启动及部分实际系统控件交互通过；Android输入可靠性仍保留待验，结果分别记录于UI实施文档。普通开发profile显式恢复LocalNetworking，任意HTTP仍false；pilot/field两独立profile保持LocalNetworking false并有回归。不能让旧开发包只收热刷新来验证新原生依赖。
+
+
+## 2026-11-04 B3消息
+
+无新增依赖、SDK、原生模块、系统权限或锁文件。复用现有EnvelopeCrypto/Node crypto、pg、Nest、Zod、Expo/RN FlatList与KeyboardAvoidingView。前台有界轮询先完成完整本地消息：会话4秒、中心12秒、首页未读15秒；后台/离页取消。设备推送与明确集合点分享留B3下一子批，不引入WebSocket/通知供应商假接通。密文正文不用于列表或锁屏预览；本地与AWS KMS格式严格隔离，云业务验证仍B6，不降级。D0增量0011及0012分开保留已应用历史；无云迁移/云IAM变更。

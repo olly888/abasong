@@ -33,14 +33,26 @@ export const messageQuery = z
       .min(0)
       .max(Number.MAX_SAFE_INTEGER)
       .default(0),
-    cursor: z.coerce
+    before_sequence: z.coerce
       .number()
       .int()
-      .min(0)
+      .min(1)
       .max(Number.MAX_SAFE_INTEGER)
       .optional(),
+    cursor: z
+      .string()
+      .regex(/^(?:b:)?[0-9]{1,16}$/)
+      .refine((x) => Number.isSafeInteger(Number(x.replace(/^b:/, ""))))
+      .optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (q) =>
+      !(
+        q.cursor !== undefined &&
+        (q.after_sequence > 0 || q.before_sequence !== undefined)
+      ) && !(q.before_sequence !== undefined && q.after_sequence > 0),
+  );
 export const readInput = z
   .object({
     last_read_sequence: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),

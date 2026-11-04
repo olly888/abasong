@@ -58,13 +58,19 @@ export function RequestSheet({
     </Modal>
   );
 }
-export function RequestGate({ children }: { children: ReactNode }) {
+export function RequestGate({
+  children,
+  title = "临时配送支援",
+}: {
+  children: ReactNode;
+  title?: string;
+}) {
   const auth = useAuth();
   if (auth.phase === "ready" && auth.session)
     return <Fragment key={auth.session.user.id}>{children}</Fragment>;
   if (auth.phase === "guest" || auth.phase === "needs-profile")
     return (
-      <AuthPage compact title="临时配送支援">
+      <AuthPage compact title={title}>
         <ActionButton
           label={auth.phase === "guest" ? "登录" : "完善资料"}
           onPress={() =>

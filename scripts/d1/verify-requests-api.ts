@@ -7,16 +7,18 @@ import { readFileSync, readdirSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { setTimeout as pause } from "node:timers/promises";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
-import { Client } from "pg";
+import { Client, escapeLiteral } from "pg";
 import { localTarget } from "../d0/database-target";
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     adminUrl = localTarget(env.DATABASE_ADMIN_URL),
-    runtime = localTarget(env.DATABASE_URL);
+    runtime = localTarget(env.DATABASE_URL),
+    sensitive = new URL(runtime);
   assert.equal(adminUrl.username, "postgres");
   assert.equal(adminUrl.pathname, "/abasong_d0");
   assert.equal(runtime.username, "abasong_api_local");
   const name = "abasong_d2_requests_test_" + randomBytes(8).toString("hex"),
+    sensitiveRole = "abasong_message_test_" + randomBytes(8).toString("hex"),
     admin = new Client({ connectionString: adminUrl.href });
   const pair = await generateKeyPair("ES256", { extractable: true }),
     jwk = {
@@ -55,6 +57,7 @@ async function main() {
   let db: Client | undefined,
     api: ChildProcess | undefined,
     created = false,
+    createdRole = false,
     port = 0,
     checks = 0;
   async function request(
@@ -74,7 +77,17 @@ async function main() {
       },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
+    assert.equal(r.headers.get("cache-control"), "no-store");
     const value = await r.json();
+    if (r.status !== status)
+      console.error(
+        "HTTP mismatch",
+        method,
+        (path.split("?")[0] ?? "").replace(/[0-9a-f-]{36}/gi, ":id"),
+        status,
+        r.status,
+        /^[A-Z_]{1,80}$/.test(value.code ?? "") ? value.code : "unknown",
+      );
     assert.equal(
       r.status,
       status,
@@ -89,12 +102,23 @@ async function main() {
     created = true;
     adminUrl.pathname = "/" + name;
     runtime.pathname = "/" + name;
+    sensitive.pathname = "/" + name;
     db = new Client({ connectionString: adminUrl.href });
     await db.connect();
     for (const f of readdirSync("database/migrations")
       .filter((f) => /^\d{4}_.+\.sql$/.test(f))
       .sort())
       await db.query(readFileSync("database/migrations/" + f, "utf8"));
+    // CI deliberately has no persistent sensitive-service login. Use the same
+    // disposable restricted-role pattern as the library/import HTTP harnesses.
+    const sensitivePassword = randomBytes(24).toString("hex");
+    await admin.query(
+      `CREATE ROLE ${sensitiveRole} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(sensitivePassword)}`,
+    );
+    createdRole = true;
+    await admin.query(`GRANT abasong_sensitive TO ${sensitiveRole}`);
+    sensitive.username = sensitiveRole;
+    sensitive.password = sensitivePassword;
     await db.query("INSERT INTO abasong.users(id) SELECT unnest($1::uuid[])", [
       [owner, reader, stranger],
     ]);
@@ -125,6 +149,7 @@ async function main() {
         DATA_ENCRYPTION_PROVIDER: "local-development",
         LOCAL_DATA_KEK: randomBytes(32).toString("hex"),
         DATABASE_URL: runtime.href,
+        DATABASE_SENSITIVE_URL: sensitive.href,
         AUTH_ISSUER: issuer,
         AUTH_AUDIENCE: "authenticated",
         AUTH_JWT_ALGORITHM: "ES256",
@@ -1155,6 +1180,404 @@ async function main() {
       400,
       { last_read_sequence: otherCard.sequence },
     );
+    // B3: synthetic participants only. No SMS, cloud or real-account grants.
+    const beforeSummary = await request("/v1/me/inbox-summary", "GET", other);
+    const conversationMeta = await request(
+      `/v1/conversations/${conversationId}`,
+      "GET",
+      auth,
+    );
+    assert.equal(conversationMeta.can_send, true);
+    await request(`/v1/conversations/${conversationId}`, "GET", noRights, 404);
+    await request("/v1/conversations?limit=101", "GET", auth, 400);
+    await request("/v1/conversations?cursor=bad", "GET", auth, 400);
+    const sendPath = `/v1/conversations/${conversationId}/messages`;
+    const clientMessage = randomUUID(),
+      textBody = {
+        client_message_id: clientMessage,
+        kind: "text",
+        text: "TEST B3 encrypted\nmessage",
+      };
+    const sendKey = randomUUID();
+    const accepted = await request(
+      sendPath,
+      "POST",
+      auth,
+      201,
+      textBody,
+      sendKey,
+    );
+    assert.equal(accepted.text, textBody.text);
+    assert.equal(accepted.client_message_id, clientMessage);
+    assert.equal(
+      (await request(sendPath, "POST", auth, 201, textBody, sendKey)).id,
+      accepted.id,
+    );
+    assert.equal(
+      (await request(sendPath, "POST", auth, 201, textBody, randomUUID())).id,
+      accepted.id,
+    );
+    await request(
+      sendPath,
+      "POST",
+      auth,
+      409,
+      { ...textBody, text: "TEST changed" },
+      sendKey,
+    );
+    await request(
+      sendPath,
+      "POST",
+      auth,
+      409,
+      { ...textBody, text: "TEST changed" },
+      randomUUID(),
+    );
+    await request(
+      sendPath,
+      "POST",
+      noRights,
+      404,
+      { ...textBody, client_message_id: randomUUID() },
+      randomUUID(),
+    );
+    for (const body of [
+      { ...textBody, text: " " },
+      { ...textBody, text: "x".repeat(2001) },
+      { ...textBody, sender_id: reader },
+      { client_message_id: randomUUID(), kind: "request_card" },
+    ])
+      await request(sendPath, "POST", auth, 400, body, randomUUID());
+    await request(sendPath, "POST", auth, 400, textBody);
+    assert.equal(
+      (await request("/v1/me/inbox-summary", "GET", other)).unread_messages,
+      beforeSummary.unread_messages + 1,
+    );
+    const inboxBefore = await request("/v1/conversations", "GET", other);
+    const listed = inboxBefore.items.find(
+      (x: { id: string }) => x.id === conversationId,
+    );
+    assert(listed);
+    assert(!JSON.stringify(listed).includes(textBody.text));
+    assert.equal(
+      (await request("/v1/me/inbox-summary", "GET", other)).unread_messages,
+      beforeSummary.unread_messages + 1,
+    );
+    assert(
+      (await request(`/v1/conversations/${conversationId}`, "GET", auth))
+        .other_last_read_sequence < accepted.sequence,
+    );
+    const stored = (
+      await db.query(
+        "SELECT s.* FROM abasong.message_secrets s WHERE message_id=$1",
+        [accepted.id],
+      )
+    ).rows[0];
+    assert.equal(stored.cipher_version, "local-envelope-v1");
+    assert.equal(stored.content_hmac.length, 32);
+    assert(!stored.ciphertext.toString().includes(textBody.text));
+    const regular = new Client({ connectionString: runtime.href });
+    await regular.connect();
+    try {
+      await assert.rejects(
+        regular.query("SELECT * FROM abasong.message_secrets"),
+        (e: unknown) => (e as { code: string }).code === "42501",
+      );
+    } finally {
+      await regular.end();
+    }
+    const latest = await request(
+      `${sendPath}?before_sequence=${Number.MAX_SAFE_INTEGER}&limit=2`,
+      "GET",
+      other,
+    );
+    assert.equal(latest.items.at(-1).id, accepted.id);
+    assert(latest.next_cursor.startsWith("b:"));
+    const previous = await request(
+      `${sendPath}?cursor=${encodeURIComponent(latest.next_cursor)}&limit=2`,
+      "GET",
+      other,
+    );
+    assert(
+      previous.items.every(
+        (m: { sequence: number }) => m.sequence < latest.items[0].sequence,
+      ),
+    );
+    const concurrentBody = {
+        client_message_id: randomUUID(),
+        kind: "text",
+        text: "TEST concurrent retry",
+      },
+      concurrentKey = randomUUID();
+    const copies = await Promise.all([
+      request(sendPath, "POST", auth, 201, concurrentBody, concurrentKey),
+      request(sendPath, "POST", auth, 201, concurrentBody, concurrentKey),
+    ]);
+    assert.equal(copies[0].id, copies[1].id);
+    assert.equal(
+      Number(
+        (
+          await db.query(
+            "SELECT count(*) AS n FROM abasong.messages WHERE sender_id=$1 AND client_message_id=$2",
+            [owner, concurrentBody.client_message_id],
+          )
+        ).rows[0].n,
+      ),
+      1,
+    );
+    await db.query(
+      "UPDATE abasong.idempotency_keys SET expires_at=now()-interval '1 second' WHERE actor_id=$1 AND route='message.send' AND key=$2",
+      [owner, concurrentKey],
+    );
+    assert.equal(
+      (
+        await request(
+          sendPath,
+          "POST",
+          auth,
+          201,
+          concurrentBody,
+          concurrentKey,
+        )
+      ).id,
+      copies[0].id,
+    );
+    const incremental = await request(
+      `${sendPath}?after_sequence=${accepted.sequence}`,
+      "GET",
+      other,
+    );
+    assert.equal(incremental.items.at(-1).id, copies[0].id);
+    await request(
+      `${sendPath}?before_sequence=100&after_sequence=1`,
+      "GET",
+      other,
+      400,
+    );
+    await request(
+      `${sendPath}?cursor=b:10&after_sequence=1`,
+      "GET",
+      other,
+      400,
+    );
+    const otherBefore = await request("/v1/me/inbox-summary", "GET", noRights);
+    await request(
+      `/v1/conversations/${conversationId}/read`,
+      "PUT",
+      other,
+      200,
+      { last_read_sequence: copies[0].sequence },
+    );
+    assert.equal(
+      (await request(`/v1/conversations/${conversationId}`, "GET", auth))
+        .other_last_read_sequence,
+      copies[0].sequence,
+    );
+    assert.equal(
+      (await request(`/v1/conversations/${conversationId}`, "GET", other))
+        .unread_count,
+      0,
+    );
+    assert.deepEqual(
+      await request("/v1/me/inbox-summary", "GET", noRights),
+      otherBefore,
+    );
+    const corrupted = Buffer.from(stored.auth_tag);
+    await db.query(
+      "UPDATE abasong.message_secrets SET auth_tag=$2 WHERE message_id=$1",
+      [accepted.id, Buffer.alloc(16)],
+    );
+    await request(
+      `${sendPath}?after_sequence=${accepted.sequence - 1}`,
+      "GET",
+      other,
+      503,
+    );
+    await request("/v1/conversations", "GET", other);
+    await request("/v1/me/inbox-summary", "GET", other);
+    await db.query(
+      "UPDATE abasong.message_secrets SET auth_tag=$2 WHERE message_id=$1",
+      [accepted.id, corrupted],
+    );
+    // A database failure after metadata insertion must roll back message, secret, event and retry reference.
+    await db.query(
+      "CREATE FUNCTION abasong.test_message_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'TEST only'; END $$; CREATE TRIGGER test_message_failure BEFORE INSERT ON abasong.message_secrets FOR EACH ROW EXECUTE FUNCTION abasong.test_message_failure()",
+    );
+    const failedBody = {
+        client_message_id: randomUUID(),
+        kind: "text",
+        text: "TEST atomic failure",
+      },
+      failedKey = randomUUID();
+    await request(sendPath, "POST", auth, 500, failedBody, failedKey);
+    assert.equal(
+      Number(
+        (
+          await db.query(
+            "SELECT count(*) AS n FROM abasong.messages WHERE client_message_id=$1",
+            [failedBody.client_message_id],
+          )
+        ).rows[0].n,
+      ),
+      0,
+    );
+    assert.equal(
+      Number(
+        (
+          await db.query(
+            "SELECT count(*) AS n FROM abasong.idempotency_keys WHERE actor_id=$1 AND route='message.send' AND key=$2",
+            [owner, failedKey],
+          )
+        ).rows[0].n,
+      ),
+      0,
+    );
+    await db.query(
+      "DROP TRIGGER test_message_failure ON abasong.message_secrets; DROP FUNCTION abasong.test_message_failure()",
+    );
+    await request(sendPath, "POST", auth, 201, failedBody, failedKey);
+    const prefs = { chat_push: false, request_push: false, system_push: false };
+    assert.deepEqual(
+      await request(
+        "/v1/me/notification-preferences",
+        "PUT",
+        other,
+        200,
+        prefs,
+      ),
+      prefs,
+    );
+    assert.deepEqual(
+      await request("/v1/me/notification-preferences", "GET", other),
+      prefs,
+    );
+    await request("/v1/me/notification-preferences", "PUT", other, 400, {
+      chat_push: "false",
+    });
+    const ownNotifications = await request("/v1/me/notifications", "GET", auth);
+    assert(ownNotifications.items.length > 0);
+    assert(
+      ownNotifications.items.every(
+        (n: Record<string, unknown>) => !("text" in n) && !("body" in n),
+      ),
+    );
+    const notification = ownNotifications.items[0];
+    const noticeCount = await request("/v1/me/inbox-summary", "GET", auth);
+    await request("/v1/me/notifications", "GET", auth);
+    assert.equal(
+      (await request("/v1/me/inbox-summary", "GET", auth)).unread_notifications,
+      noticeCount.unread_notifications,
+    );
+    await request(
+      `/v1/me/notifications/${notification.id}/read`,
+      "PUT",
+      other,
+      404,
+    );
+    await request(`/v1/me/notifications/${notification.id}/read`, "PUT", auth);
+    await request(`/v1/me/notifications/${notification.id}/read`, "PUT", auth);
+    assert.equal(
+      (await request("/v1/me/inbox-summary", "GET", auth)).unread_notifications,
+      noticeCount.unread_notifications - Number(!notification.read_at),
+    );
+    const sourceBody = {
+      client_message_id: randomUUID(),
+      kind: "request_card",
+      source_request_id: support.id,
+      source_request_version: support.version,
+    };
+    const sourceSent = await request(
+      sendPath,
+      "POST",
+      auth,
+      201,
+      sourceBody,
+      randomUUID(),
+    );
+    assert.equal(sourceSent.request_snapshot.version, support.version);
+    assert(sourceSent.request_region_label);
+    assert(!("private_meeting_point" in sourceSent.request_snapshot));
+    assert.equal(
+      (await request(sendPath, "POST", auth, 201, sourceBody, randomUUID())).id,
+      sourceSent.id,
+    );
+    await request(
+      sendPath,
+      "POST",
+      auth,
+      409,
+      {
+        ...sourceBody,
+        client_message_id: randomUUID(),
+        source_request_version: support.version - 1,
+      },
+      randomUUID(),
+    );
+    const conversationPage = await request(
+      "/v1/conversations?limit=1",
+      "GET",
+      auth,
+    );
+    assert(conversationPage.next_cursor);
+    const nextConversation = await request(
+      `/v1/conversations?limit=1&cursor=${encodeURIComponent(conversationPage.next_cursor)}`,
+      "GET",
+      auth,
+    );
+    assert.notEqual(conversationPage.items[0].id, nextConversation.items[0].id);
+    await db.query(
+      "INSERT INTO abasong.blocks(blocker_id,blocked_id) VALUES($1,$2)",
+      [reader, owner],
+    );
+    assert.equal(
+      (await request(`/v1/conversations/${conversationId}`, "GET", auth))
+        .can_send,
+      false,
+    );
+    await request(
+      sendPath,
+      "POST",
+      auth,
+      403,
+      { ...failedBody, client_message_id: randomUUID() },
+      randomUUID(),
+    );
+    await request(
+      sendPath,
+      "POST",
+      other,
+      403,
+      { ...failedBody, client_message_id: randomUUID() },
+      randomUUID(),
+    );
+    const blockedHistory = await request(sendPath, "GET", other);
+    assert(
+      blockedHistory.items.some((m: { id: string }) => m.id === accepted.id),
+    );
+    await db.query(
+      "DELETE FROM abasong.blocks WHERE blocker_id=$1 AND blocked_id=$2",
+      [reader, owner],
+    );
+    await db.query("UPDATE abasong.users SET status='suspended' WHERE id=$1", [
+      reader,
+    ]);
+    assert.equal(
+      (await request(`/v1/conversations/${conversationId}`, "GET", auth))
+        .can_send,
+      false,
+    );
+    await request(
+      sendPath,
+      "POST",
+      auth,
+      403,
+      { ...failedBody, client_message_id: randomUUID() },
+      randomUUID(),
+    );
+    await request(sendPath, "GET", other, 403);
+    await db.query("UPDATE abasong.users SET status='active' WHERE id=$1", [
+      reader,
+    ]);
     const pendingEvents = (
       await db.query("SELECT status,payload FROM abasong.outbox")
     ).rows;
@@ -1173,6 +1596,7 @@ async function main() {
       [owner],
     );
     await request("/v1/me/requests", "GET", auth, 401);
+    await request(sendPath, "GET", auth, 401);
     const versions = (
       await db.query(
         "SELECT snapshot FROM abasong.request_versions WHERE request_id=$1 ORDER BY version",
@@ -1197,10 +1621,25 @@ async function main() {
       assert(/^abasong_d2_requests_test_[a-f0-9]{16}$/.test(name));
       await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);
     }
+    if (createdRole) {
+      assert(/^abasong_message_test_[a-f0-9]{16}$/.test(sensitiveRole));
+      await admin.query(`DROP ROLE ${sensitiveRole}`);
+    }
     await admin.end();
   }
 }
-void main().catch(() => {
+void main().catch((error: unknown) => {
+  // Only our own source location: never SQL, credentials, payload or provider error text.
+  if (error instanceof Error) {
+    const frames = error.stack
+      ?.split("\n")
+      .filter(
+        (line) =>
+          line.trim().startsWith("at ") &&
+          line.includes("/scripts/d1/verify-requests-api.ts:"),
+      );
+    for (const frame of frames ?? []) console.error(frame.trim());
+  }
   console.error(
     "Isolated request API verification failed; private details omitted.",
   );

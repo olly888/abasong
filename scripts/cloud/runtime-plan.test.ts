@@ -1,4 +1,7 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { expect, it } from "vitest";
 import { buildRuntimeTemplates } from "./runtime-templates";
 import {
@@ -8,6 +11,31 @@ import {
 } from "./runtime-plan";
 
 const plan = () => JSON.parse(JSON.stringify(buildRuntimeTemplates()));
+it("does not print private input excerpts or stack traces when binding JSON is invalid", () => {
+  const directory = mkdtempSync(join(tmpdir(), "abasong-plan-"));
+  const input = join(directory, "bindings.json");
+  try {
+    writeFileSync(input, "TEST-PRIVATE-INPUT invalid JSON", { mode: 0o600 });
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--import",
+        "tsx",
+        "scripts/cloud/prepare-runtime.ts",
+        "--parameters",
+        input,
+      ],
+      { encoding: "utf8" },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("input details omitted");
+    expect(result.stdout + result.stderr).not.toMatch(
+      /TEST-PRIVATE|SyntaxError|postgres:| at /,
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 it("keeps generated artifacts current and validates every resource dependency", () => {
   const t = plan();
   for (const name of Object.keys(t))

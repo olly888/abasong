@@ -1,5 +1,11 @@
 # Abasong development status
 
+## Current action — prototype parity / iOS framework assessment (2026-11-04)
+
+Owner requested UI review before further business development and asked whether iOS should use SwiftUI. [Evidence, findings and proposed next batch](docs/design/D2_UI对齐审查与iOS原生方案评估.md). Review only: no App/API/schema/dependency/framework change. B2 exact6264b62 CI41861898650 now SUCCESS (previous queued checkpoint superseded), not UI acceptance. Actual simulator home/type-panel/screenshots and current prototype observed; Device Hub display timed out, simctl screenshots worked, P03 full native/gestures and populated multi-card readiness not certified. Do not turn test/JS success into visual acceptance. Found prototype P01 outdated versus latest panel specification, typed dates/carrier, duplicate footer insets, limited button variants and vehicle gear icon. Recommendation: reconcile baseline and polish RN business UI, use native controls selectively; Expo58 SwiftUI interop is feasible but not installed/proven here. No blanket SwiftUI rewrite authorized or performed; current B3 implementation has not started during this review.
+
+## Previous B2 functional delivery
+
 ## Current execution — D2 applications and collaboration (2026-11-04)
 
 Owner resumed B2 from12c0ee1/exact CI41797919609 SUCCESS; current branch codex/d2-applications-collaboration. [Implementation and actual limits](docs/technical/D2_报名来源会话与需求管理实现.md). Real dual-SMS/cloud-business KMS/independent iPhone acceptance remains deferred to B6, not waived. No new cloud writes, user grants, SMS or real support requests.

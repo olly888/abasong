@@ -4,7 +4,9 @@
 
 ## 当前运行实施
 
-[实际身份、服务凭据和验收](../../docs/technical/A4_运行身份与服务凭据实施验收.md)：明确 IAM/资源授权已到位；四角色和五秘密 stack 完成，真实三账号 TLS 和五值写入通过，通知/预算已创建；证书/DNS与计算出口继续独立核对。下方准备说明保留原始依据，不代表当前没有授权或资源。
+[实际身份、服务凭据和验收](../../docs/technical/A4_运行身份与服务凭据实施验收.md)：明确 IAM/资源授权已到位；四角色和五秘密 stack 完成，真实三账号 TLS 和五值写入通过，通知/预算已创建；证书/DNS、单API/worker与HTTPS现已上线，两个任务/DB/六告警和网络保护已验；业务KMS/云资格/双账号与独立iPhone出口继续核对。下方准备说明保留原始依据，不代表当前没有授权或资源。
+
+只读运行复验：`./scripts/dev exec node --import tsx scripts/cloud/verify-runtime-live.ts --expected-account ACCOUNT_ID --verify-live`。需要已配置的项目MFA会话，只观察固定pilot-dev，不打印正文或写业务数据。
 
 固定目标执行器位于 `scripts/cloud/`：`create-service-roles.ts`（仅 IAM 初始化）、`create-service-secrets.ts`、`populate-service-secrets.ts`、`verify-service-logins.ts`、`verify-runtime-roles.ts` 和 `create-runtime-stack.ts`。每个要求显式 `--expected-account` 和对应模式，不自动重置密码、覆盖未知秘密版本或删除失败 stack。数据库 CA 仅用于 PG、必须被打包入两份镜像。实际账号/邮箱/凭据不写进本页或模板。
 
@@ -25,7 +27,7 @@ PYTHONPATH=.tooling/contract-validation python3 scripts/cloud/validate-runtime-s
 
 运行层选单API/worker、stop-first维护窗口；API搜索会话/保护计数当前仅进程内存。不能改DesiredCount或滚动重叠比例并假定支持多实例。`/health/ready`只验证主数据库/迁移；敏感连接、真实KMS、Mapbox和两账号资格必须另验。worker心跳为进程/数据库任务可用信号，不代表已实现outbox/OCR消费者。
 
-## 当前启动工具（2026-11-03）
+## 初始启动工具与基础层历史（2026-11-03）
 
 用户已恢复按序推进；Mapbox账号用户名ollyyin，用户已添加付款方式，临时接口及本机永久编码已实测恢复；AWS已注册且本人确认官方CLI短期root登录；root MFA已开启，项目受限用户/角色已建，用户密码/MFA已由本人完成，正确用户登录及MFA受限角色会话现已实际通过STS核对。已在项目忽略目录安装并验证官方签名/公证AWS CLI2.39.3，`./scripts/aws --version`可用。包装脚本使用`.tooling/aws/config`、`.tooling/aws/credentials`、profile `abasong-pilot`及us-west-1；不使用全局默认配置，不代替IAM/目标核对。短期登录缓存另隔离于.tooling/aws/login/cache，umask077；未创建长期key。默认pilot profile指向受限role，abasong-operator为短期用户source，root会话隔离为abasong-bootstrap，当前基础角色最长一小时且要求MFA；本单账号不自动创建Organizations/IAM Identity Center。
 

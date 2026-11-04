@@ -2,7 +2,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { buildRuntimeTemplates } from "./runtime-templates";
-import { assertRuntimePlan } from "./runtime-plan";
+import {
+  assertRuntimePlan,
+  assertInitialRuntimeRecovery,
+} from "./runtime-plan";
 import { prepareRuntimeBindings } from "./runtime-bindings";
 import {
   awsRuntime,
@@ -135,49 +138,85 @@ function main() {
     return;
   }
   if (action === "repair") {
-    if (name !== "certificate")
-      throw new Error("Only initial empty certificate failure can be repaired");
-    const before = (
-      aws(["cloudformation", "describe-stacks", "--stack-name", stackName])
-        .Stacks as Array<{ StackStatus: string }>
-    )[0]!;
-    const resources = aws([
-      "cloudformation",
-      "list-stack-resources",
-      "--stack-name",
-      stackName,
-    ]).StackResourceSummaries as Array<{
-      ResourceType: string;
-      PhysicalResourceId?: string;
-    }>;
-    if (
-      !["CREATE_FAILED", "UPDATE_FAILED"].includes(before.StackStatus) ||
-      resources.some(
-        (r) =>
-          r.PhysicalResourceId ||
-          r.ResourceType !== "AWS::CertificateManager::Certificate",
+    if (name === "runtime") {
+      const before = (
+        aws(["cloudformation", "describe-stacks", "--stack-name", stackName])
+          .Stacks as Array<{
+          StackStatus: string;
+          Parameters: Array<{ ParameterKey: string; ParameterValue: string }>;
+        }>
+      )[0]!;
+      if (
+        !["CREATE_FAILED", "UPDATE_FAILED"].includes(before.StackStatus) ||
+        !runtime
       )
-    )
-      throw new Error("Certificate repair scope refused");
-    const prior = aws([
-      "cloudformation",
-      "get-template",
-      "--stack-name",
-      stackName,
-    ]).TemplateBody;
-    const old = structuredClone(template);
-    (
-      old.Resources.ApiCertificate as { Properties: Record<string, unknown> }
-    ).Properties.DomainValidationOptions = [
-      { DomainName: "api-dev.abasong.com" },
-    ];
-    const priorValue = typeof prior === "string" ? JSON.parse(prior) : prior;
-    if (
-      !isDeepStrictEqual(priorValue, old) &&
-      !isDeepStrictEqual(priorValue, template)
-    )
-      throw new Error("Failed template differs from exact initial template");
-    save("certificate-failed-template", priorValue);
+        throw new Error("Failed initial runtime required");
+      const resources = aws([
+        "cloudformation",
+        "list-stack-resources",
+        "--stack-name",
+        stackName,
+      ]).StackResourceSummaries as Array<{ LogicalResourceId: string }>;
+      const old = aws([
+        "cloudformation",
+        "get-template",
+        "--stack-name",
+        stackName,
+      ]).TemplateBody;
+      assertInitialRuntimeRecovery(
+        typeof old === "string" ? JSON.parse(old) : old,
+        before.Parameters,
+        resources.map((r) => r.LogicalResourceId),
+        runtime,
+      );
+      save("runtime-recovery-before", { stack: before, resources });
+    } else {
+      if (name !== "certificate")
+        throw new Error(
+          "Only initial empty certificate failure can be repaired",
+        );
+      const before = (
+        aws(["cloudformation", "describe-stacks", "--stack-name", stackName])
+          .Stacks as Array<{ StackStatus: string }>
+      )[0]!;
+      const resources = aws([
+        "cloudformation",
+        "list-stack-resources",
+        "--stack-name",
+        stackName,
+      ]).StackResourceSummaries as Array<{
+        ResourceType: string;
+        PhysicalResourceId?: string;
+      }>;
+      if (
+        !["CREATE_FAILED", "UPDATE_FAILED"].includes(before.StackStatus) ||
+        resources.some(
+          (r) =>
+            r.PhysicalResourceId ||
+            r.ResourceType !== "AWS::CertificateManager::Certificate",
+        )
+      )
+        throw new Error("Certificate repair scope refused");
+      const prior = aws([
+        "cloudformation",
+        "get-template",
+        "--stack-name",
+        stackName,
+      ]).TemplateBody;
+      const old = structuredClone(template);
+      (
+        old.Resources.ApiCertificate as { Properties: Record<string, unknown> }
+      ).Properties.DomainValidationOptions = [
+        { DomainName: "api-dev.abasong.com" },
+      ];
+      const priorValue = typeof prior === "string" ? JSON.parse(prior) : prior;
+      if (
+        !isDeepStrictEqual(priorValue, old) &&
+        !isDeepStrictEqual(priorValue, template)
+      )
+        throw new Error("Failed template differs from exact initial template");
+      save("certificate-failed-template", priorValue);
+    }
   }
   const result = aws([
     "cloudformation",

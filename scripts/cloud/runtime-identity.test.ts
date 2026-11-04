@@ -3,6 +3,7 @@ import { assertDependencyGraph } from "./runtime-plan";
 import {
   runtimeSetupPolicy,
   runtimeComputePolicy,
+  runtimeParentNetworkPolicy,
   assertRuntimeApproval,
   serviceRoleTemplate,
   serviceSecretTemplate,
@@ -103,7 +104,26 @@ it("requires specific IAM approval in addition to the approved resource costs", 
 });
 
 it("bounds compute to the pilot namespaces and keeps both policies within IAM quotas", () => {
-  const compute = runtimeComputePolicy("111122223333");
+  const compute = runtimeParentNetworkPolicy("111122223333");
+  const operational = runtimeComputePolicy("111122223333");
+  expect(JSON.stringify(operational).length).toBeLessThanOrEqual(6144);
+  expect(
+    operational.Statement.filter((s) =>
+      (s.Action as string[]).includes("ecs:ListTasks"),
+    ),
+  ).toEqual([
+    {
+      Effect: "Allow",
+      Action: ["ecs:ListTasks"],
+      Resource: "*",
+      Condition: {
+        ArnEquals: {
+          "ecs:cluster":
+            "arn:aws:ecs:us-west-1:111122223333:cluster/abasong-pilot-dev",
+        },
+      },
+    },
+  ]);
   expect(JSON.stringify(compute).length).toBeLessThanOrEqual(6144);
   expect(
     JSON.stringify(runtimeSetupPolicy("111122223333", "test@example.com"))
@@ -121,6 +141,22 @@ it("bounds compute to the pilot namespaces and keeps both policies within IAM qu
   const repos = compute.Statement.find(
     (s) => s.Sid === "PublishOnlyTwoRepositories",
   )!;
+  const parent = compute.Statement.find(
+    (s) => s.Sid === "ManageOwnedNetworkOnly",
+  )!;
+  expect(parent.Action).toEqual(
+    expect.arrayContaining([
+      "ec2:CreateSubnet",
+      "ec2:CreateRouteTable",
+      "ec2:CreateSecurityGroup",
+    ]),
+  );
+  expect(parent.Condition).toMatchObject({
+    StringEquals: {
+      "aws:ResourceTag/Project": "Abasong",
+      "aws:ResourceTag/Environment": "pilot-dev",
+    },
+  });
   expect(repos.Resource).toHaveLength(2);
   expect(JSON.stringify(compute)).not.toMatch(
     /ec2:RunInstances|CreateNatGateway|rds:|iam:Put|iam:Create|ecr:DeleteRepository/,

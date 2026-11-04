@@ -297,7 +297,7 @@ export function runtimeSetupPolicy(account: string, ownerEmail: string) {
 
 /** Fixed one-API/one-worker infrastructure scope. No account-wide IAM, database,
  * key administration, NAT, EC2 instances, RDS or arbitrary repository writes. */
-export function runtimeComputePolicy(account: string) {
+export function runtimeParentNetworkPolicy(account: string) {
   if (!/^\d{12}$/.test(account)) throw new Error("Compute target refused");
   const arn = (service: string, resource: string) =>
     `arn:aws:${service}:us-west-1:${account}:${resource}`;
@@ -337,7 +337,7 @@ export function runtimeComputePolicy(account: string) {
     Version: "2012-10-17",
     Statement: [
       allow(
-        "RegionalInfrastructureMetadata",
+        "RegionalMetadata",
         [
           "ec2:DescribeVpcs",
           "ec2:DescribeSubnets",
@@ -346,6 +346,10 @@ export function runtimeComputePolicy(account: string) {
           "ec2:DescribeSecurityGroups",
           "ec2:DescribeAvailabilityZones",
           "ec2:DescribeNetworkInterfaces",
+          "ec2:DescribeVpcAttribute",
+          "ec2:DescribeNetworkAcls",
+          "ec2:DescribeVpcEncryptionControls",
+          "ec2:DescribeSecurityGroupRules",
           "elasticloadbalancing:Describe*",
         ],
         "*",
@@ -354,7 +358,9 @@ export function runtimeComputePolicy(account: string) {
       allow(
         "CreateTaggedNetworkOnly",
         create.map((a) => `ec2:${a}`),
-        ec2,
+        // Actions enumerate five creation APIs; AWS supplies their resource
+        // kinds. This avoids repeating ARN lists without broadening actions.
+        arn("ec2", "*/*"),
         {
           StringEquals: {
             "aws:RequestTag/Project": "Abasong",
@@ -362,7 +368,7 @@ export function runtimeComputePolicy(account: string) {
           },
         },
       ),
-      allow("TagNewNetworkOnly", ["ec2:CreateTags"], ec2, {
+      allow("TagNewNetworkOnly", ["ec2:CreateTags"], arn("ec2", "*/*"), {
         StringEquals: {
           "ec2:CreateAction": create,
           "aws:RequestTag/Project": "Abasong",
@@ -372,6 +378,9 @@ export function runtimeComputePolicy(account: string) {
       allow(
         "ManageOwnedNetworkOnly",
         [
+          "ec2:CreateSubnet",
+          "ec2:CreateSecurityGroup",
+          "ec2:CreateRouteTable",
           "ec2:ModifyVpcAttribute",
           "ec2:ModifySubnetAttribute",
           "ec2:AttachInternetGateway",
@@ -403,6 +412,9 @@ export function runtimeComputePolicy(account: string) {
           "ecs:DescribeTaskDefinition",
           "ecs:ListTasks",
           "ecs:DescribeTasks",
+          "ecs:DescribeServiceDeployments",
+          "ecs:ListServiceDeployments",
+          "ecs:ListTagsForResource",
           "ecs:CreateCluster",
           "ecs:UpdateCluster",
           "ecs:DeleteCluster",
@@ -420,6 +432,7 @@ export function runtimeComputePolicy(account: string) {
           ...["api", "worker"].flatMap((kind) => [
             arn("ecs", `service/${scope}/${scope}-${kind}`),
             arn("ecs", `task-definition/${scope}-${kind}:*`),
+            arn("ecs", `service-deployment/${scope}/${scope}-${kind}/*`),
           ]),
         ],
       ),
@@ -506,6 +519,32 @@ export function runtimeComputePolicy(account: string) {
       },
     ],
   };
+}
+
+/** SIDs are review labels only; omit them in the quota-limited managed policy.
+ * Fargate task listing needs a wildcard resource with the exact cluster context,
+ * rather than the cluster/task ARN list used by object-level operations. */
+export function runtimeComputePolicy(account: string) {
+  const base = runtimeParentNetworkPolicy(account);
+  const statements: Record<string, unknown>[] = base.Statement.map((s) => {
+    const { Sid: _sid, ...statement } = s;
+    void _sid;
+    return {
+      ...statement,
+      Action: statement.Action.filter((a) => a !== "ecs:ListTasks"),
+    };
+  });
+  statements.push({
+    Effect: "Allow",
+    Action: ["ecs:ListTasks"],
+    Resource: "*",
+    Condition: {
+      ArnEquals: {
+        "ecs:cluster": `arn:aws:ecs:us-west-1:${account}:cluster/abasong-pilot-dev`,
+      },
+    },
+  });
+  return { Version: base.Version, Statement: statements };
 }
 
 /** Split the reviewed blueprint so root is used only for IAM initialization,

@@ -114,4 +114,4 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 
 2026-11-03 AWS接入：复用官方CLI2.39.3的aws login（最低要求2.32），用户亲自确认短期root会话。新增AWS_LOGIN_CACHE_DIRECTORY和umask077，将缓存与配置限定.tooling/aws；不安装插件，不创建长期key/Organizations。新只读预检仅10个读取请求，账号匹配先行，敏感输出白名单；无依赖/锁/原生模块变更。DevWest使用供应商project-scoped迁移执行既有0001–0009与运行角色SQL，不复制D0，不改本地目标防护。真实KMS与运行连接仍待项目用户登录及受限角色核对。
 
-2026-11-03 AWS基础层续批：无新依赖、SDK、锁或业务DDL。用户已批准基础资源与费用；6项资源实际配置核对。修正创建参数为--disable-rollback（AWS拒绝DO_NOTHING失败栈原地恢复），补严格项目/区域/请求标签的初始KMS TagResource及固定stack/changeset管理权限，旧Allow/Deny保持；实际IAM模拟/Access Analyzer核对。alias补Retain供精确导入，真实资源不删除，管理记录释放/导入等待明确批准。
+2026-11-03 AWS基础层续批：无新依赖、SDK、锁或业务DDL。用户已批准基础资源与费用；6项资源实际配置核对。修正创建参数为--disable-rollback（AWS拒绝DO_NOTHING失败栈原地恢复），补严格项目/区域/请求标签的初始KMS TagResource及固定stack/changeset管理权限，旧Allow/Deny保持；实际IAM模拟/Access Analyzer核对。alias补Retain供精确导入，真实资源不删除，管理记录释放/导入已获明确批准并完成，UPDATE_COMPLETE/6个物理标识不变。新增模板边界和真实CFN标签结构回归，复用已有jsonschema做官方provider Schema离线验证，无新增依赖。

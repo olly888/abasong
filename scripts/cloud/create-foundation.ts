@@ -1,10 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { PILOT_REGION } from "./aws-inspection";
 import {
   assertFoundationIdentity,
   FOUNDATION_STACK,
 } from "./foundation-target";
+import { assertFoundationTemplate } from "./foundation-template";
 
 function main() {
   const args = process.argv.slice(2);
@@ -15,6 +16,9 @@ function main() {
     !["--check", "--create"].includes(args[2]!)
   )
     throw new Error("Explicit target and check/create mode required");
+  assertFoundationTemplate(
+    JSON.parse(readFileSync("deploy/pilot-dev/foundation.json", "utf8")),
+  );
   const env = { ...process.env };
   for (const key of Object.keys(env))
     if (key.startsWith("AWS_")) delete env[key];

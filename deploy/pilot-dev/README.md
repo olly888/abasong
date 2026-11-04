@@ -1,6 +1,6 @@
 # DevWest 内测部署材料 · A2
 
-更新：2026-11-03。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。DevWest九业务迁移及运行角色已执行；AWS六项基础资源已创建核对，失败stack管理恢复待批准。[最新基础层记录](../../docs/technical/A4_基础层创建与保留资源恢复方案.md)。[实际云接入与剩余出口](../../docs/technical/A4_账号接入与云数据库迁移记录.md)。
+更新：2026-11-03。环境 `pilot-dev`；区域 `us-west-1`；唯一 Supabase 项目 `mxlmemaunzoramgemiju`；目标 API `https://api-dev.abasong.com`。DevWest九业务迁移及运行角色已执行；AWS六项基础资源已创建核对，同名stack管理已恢复至UPDATE_COMPLETE。[最新基础层记录](../../docs/technical/A4_基础层创建与保留资源恢复方案.md)。[实际云接入与剩余出口](../../docs/technical/A4_账号接入与云数据库迁移记录.md)。
 
 ## 当前启动工具（2026-11-03）
 
@@ -10,9 +10,9 @@
 
 本地已交付[独立业务构建配置及限期资格工具](../../docs/technical/A4_A5_独立内测配置与限期资格验收.md)：生产JS导出通过，但不是已签名安装包；资格执行器当前仅D0，云管理员角色/执行器待本环境明确审查，不能复用D0 postgres连接。普通API/worker权限不因本工具扩大。
 
-新增foundation.json已通过AWS validate-template：保留KMS key/alias、两个immutable仓库、两个14天日志组。受限角色check及用户创建/费用批准已完成，6项资源已存在并核对；初次stack失败且原地恢复被AWS拒绝，保留资源的管理记录释放/导入待明确批准；其余网络/角色/秘密/运行服务仍需补齐。`cloud:inspect-aws --expected-account ACCOUNT_ID`只读核对实际账号/方案/MFA/区域资源，报告不授予创建权限。
+新增foundation.json已通过AWS validate-template：保留KMS key/alias、两个immutable仓库、两个14天日志组。受限角色check及用户创建/费用批准已完成，6项资源已存在并核对；初次stack失败且原地恢复被AWS拒绝，管理记录释放/导入已获批准并完成，最终UPDATE_COMPLETE；其余网络/角色/秘密/运行服务仍需补齐。`cloud:inspect-aws --expected-account ACCOUNT_ID`只读核对实际账号/方案/MFA/区域资源，报告不授予创建权限。
 
-基础层命令 `./scripts/dev cloud:foundation --expected-account ACCOUNT_ID --check` 必须先通过实际STS账号、us-west-1及唯一 `abasong-pilot-dev-deployer` assumed-role核对，root和普通IAM用户均拒绝，再验证模板；继承的AWS环境覆盖被移除。确认授权范围后使用 `--create` 创建固定stack `abasong-pilot-dev-foundation`；不自动更新、删除或重建已有stack，创建请求回执不代表部署完成。失败时保留现场，先核对实际资源再重试。IAM策略是独立的权限边界，角色名字和此脚本不能替代实际策略审查。
+基础层命令 `./scripts/dev cloud:foundation --expected-account ACCOUNT_ID --check` 必须先通过实际STS账号、us-west-1及唯一 `abasong-pilot-dev-deployer` assumed-role核对，root和普通IAM用户均拒绝，再验证模板；继承的AWS环境覆盖被移除。确认授权范围后使用 `--create` 创建固定stack `abasong-pilot-dev-foundation`；不自动更新、删除或重建已有stack，创建请求回执不代表部署完成。失败时保留现场，先核对实际资源再重试。IAM策略是独立的权限边界，角色名字和此脚本不能替代实际策略审查。命令在AWS调用前另验证固定6项/Retain/CloudFormation标签结构；完整provider属性检查见最新基础层记录中的离线校验器，语法validate-template不能替代语义检查。
 
 ## 加密与运行边界
 

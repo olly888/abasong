@@ -113,8 +113,44 @@ try {
       image,
     ]);
     assert.equal(run(["exec", name, "id", "-u"]), "1000");
-    assert.equal(run(["inspect", "--format", "{{.HostConfig.ReadonlyRootfs}}", name]), "true");
-    assert.equal(run(["exec", name, "node", "-e", "require('node:fs').writeFileSync('/app-tmp/volume-check','TEST');console.log('PASS')"]), "PASS");
+    assert.equal(
+      run([
+        "exec",
+        name,
+        "find",
+        "/usr",
+        "-xdev",
+        "-type",
+        "f",
+        "-perm",
+        "/6000",
+      ]),
+      "",
+    );
+    assert.equal(
+      run([
+        "exec",
+        name,
+        "node",
+        "-e",
+        "if(process.env.LC_ALL!=='C.UTF-8'||process.env.LANG!=='C.UTF-8'||process.env.LANGUAGE!=='')process.exit(1);console.log('PASS')",
+      ]),
+      "PASS",
+    );
+    assert.equal(
+      run(["inspect", "--format", "{{.HostConfig.ReadonlyRootfs}}", name]),
+      "true",
+    );
+    assert.equal(
+      run([
+        "exec",
+        name,
+        "node",
+        "-e",
+        "require('node:fs').writeFileSync('/app-tmp/volume-check','TEST');console.log('PASS')",
+      ]),
+      "PASS",
+    );
     if (kind === "api") {
       const probe = `(async()=>{let ok=false;for(let i=0;i<25;i++){try{const r=await fetch('http://127.0.0.1:3001/health/live');if(r.status===200){ok=true;break;}}catch{}await new Promise(r=>setTimeout(r,200));}if(!ok)process.exit(1);for(const [path,status]of [['/health/ready',503],['/v1/me',401]]){const r=await fetch('http://127.0.0.1:3001'+path);if(r.status!==status)process.exit(1);const b=await r.text();if(/TEST|postgres:|stack|SELECT/.test(b))process.exit(1);}console.log('PASS');})().catch(()=>process.exit(1));`;
       assert.equal(run(["exec", name, "node", "-e", probe]), "PASS");
@@ -124,16 +160,34 @@ try {
         "true",
       );
       // Actual worker writes a failed heartbeat with a disconnected database.
-      const heartbeat = "(async()=>{for(let i=0;i<50;i++){try{const r=JSON.parse(require('node:fs').readFileSync('/app-tmp/worker-health.json','utf8'));if(r.healthy!==false)process.exit(1);console.log('PASS');return;}catch{}await new Promise(r=>setTimeout(r,200));}process.exit(1);})()";
+      const heartbeat =
+        "(async()=>{for(let i=0;i<50;i++){try{const r=JSON.parse(require('node:fs').readFileSync('/app-tmp/worker-health.json','utf8'));if(r.healthy!==false)process.exit(1);console.log('PASS');return;}catch{}await new Promise(r=>setTimeout(r,200));}process.exit(1);})()";
       assert.equal(run(["exec", name, "node", "-e", heartbeat]), "PASS");
       const checkHealth = (expected) => {
-        try { run(["exec", name, "node", "dist/health.js"]); assert.equal(expected, 0); }
-        catch (error) { assert.equal(expected, 1); assert.equal(error.status, 1); }
+        try {
+          run(["exec", name, "node", "dist/health.js"]);
+          assert.equal(expected, 0);
+        } catch (error) {
+          assert.equal(expected, 1);
+          assert.equal(error.status, 1);
+        }
       };
       checkHealth(1);
-      run(["exec", name, "node", "-e", "require('node:fs').writeFileSync('/app-tmp/worker-health.json',JSON.stringify({healthy:true,at:Date.now()}))"]);
+      run([
+        "exec",
+        name,
+        "node",
+        "-e",
+        "require('node:fs').writeFileSync('/app-tmp/worker-health.json',JSON.stringify({healthy:true,at:Date.now()}))",
+      ]);
       checkHealth(0);
-      run(["exec", name, "node", "-e", "require('node:fs').writeFileSync('/app-tmp/worker-health.json',JSON.stringify({healthy:true,at:Date.now()-1000000}))"]);
+      run([
+        "exec",
+        name,
+        "node",
+        "-e",
+        "require('node:fs').writeFileSync('/app-tmp/worker-health.json',JSON.stringify({healthy:true,at:Date.now()-1000000}))",
+      ]);
       checkHealth(1);
     }
     run(["stop", "--time", "5", name]);

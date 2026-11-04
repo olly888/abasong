@@ -10,6 +10,9 @@ export function assertCloudImageEnvironment(
   requireValue(
     env.ABASONG_ENV === "pilot-dev" && env.NODE_ENV === "production",
   );
+  requireValue(
+    env.LC_ALL === "C.UTF-8" && env.LANG === "C.UTF-8" && env.LANGUAGE === "",
+  );
   return assertRuntimeEnvironment(service, env);
 }
 type Env = Record<string, string | undefined>;

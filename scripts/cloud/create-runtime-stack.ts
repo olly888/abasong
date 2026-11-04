@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { buildRuntimeTemplates } from "./runtime-templates";
 import { assertRuntimePlan } from "./runtime-plan";
+import { prepareRuntimeBindings } from "./runtime-bindings";
 import {
   awsRuntime,
   assertRuntimeCaller,
@@ -13,9 +14,11 @@ import {
 function main() {
   const { account, mode, approval } = runtimeTarget();
   const match =
-    /^--(certificate|notifications)-(check|create|repair|status)$/.exec(mode);
+    /^--(certificate|notifications|runtime)-(check|create|repair|status)$/.exec(
+      mode,
+    );
   if (!match) throw new Error("Reviewed stack and mode required");
-  const name = match[1] as "certificate" | "notifications",
+  const name = match[1] as "certificate" | "notifications" | "runtime",
     action = match[2];
   const aws = awsRuntime();
   assertRuntimeCaller(aws, account);
@@ -71,7 +74,7 @@ function main() {
         save("certificate-validation", { arn, ...description });
         certificate = description.Status;
       }
-    } else if (stack.Outputs?.length) {
+    } else if (name === "notifications" && stack.Outputs?.length) {
       const arn = stack.Outputs.find(
         (o) => o.OutputKey === "AlertTopicArn",
       )?.OutputValue;
@@ -108,8 +111,16 @@ function main() {
   )
     throw new Error("Source template differs");
   save(`${name}-template`, template);
-  const parameters =
-    name === "notifications"
+  const runtime =
+    name === "runtime"
+      ? prepareRuntimeBindings(account, approval, aws)
+      : undefined;
+  const parameters = runtime
+    ? Object.entries(runtime).map(([ParameterKey, ParameterValue]) => ({
+        ParameterKey,
+        ParameterValue,
+      }))
+    : name === "notifications"
       ? [{ ParameterKey: "OwnerEmail", ParameterValue: approval.alert_email }]
       : [];
   save(`${name}-parameters`, parameters);

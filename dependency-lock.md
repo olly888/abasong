@@ -121,3 +121,6 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 
 
 2026-11-03 A4 IAM准备续批：无新应用依赖、锁、SDK、DDL或原生修改。复用Node子进程/crypto及现有官方AWS CLI，准备两份managed policy（分别低于6144字符）、MFA一小时项目身份和IAM/五秘密模板拆分；Access Analyzer0 findings与13组权限模拟通过。复用本机既有GPG及DevWest pgcrypto验证RSA加密子密钥的TEST密封传输，不安装新加密包、不设置真实服务密码。自动审批在执行前拒绝未逐项授权的新部署身份/策略及ECS/ELB服务关联角色，未尝试绕过；apply新增独立IAM批准开关，费用批准不代替权限批准。
+# 2026-11-03 pilot image assessment
+
+Pinned Node 24.22.1/bookworm image and pnpm dependencies unchanged. Actual ECR scans exposed five unfixed stable-system High findings; [scoped mitigation and expiry](docs/technical/A4_内测镜像扫描与运行限制.md). Strip SUID/SGID and enforce C.UTF-8/empty LANGUAGE, no unstable distro or unpinned package upgrade. New/critical/changed-package findings and expired assessment block deployment. This is not a zero-vulnerability claim.

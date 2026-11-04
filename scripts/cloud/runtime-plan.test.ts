@@ -8,9 +8,61 @@ import {
   assertDependencyGraph,
   assertRuntimeParameters,
   assertRuntimePlan,
+  assertInitialRuntimeRecovery,
 } from "./runtime-plan";
 
 const plan = () => JSON.parse(JSON.stringify(buildRuntimeTemplates()));
+it("refuses to combine failed runtime recovery with image drift, parameters or unknown resources", () => {
+  const template = plan().runtime,
+    values = { TEST_BINDING: "same" },
+    parameters = [{ ParameterKey: "TEST_BINDING", ParameterValue: "same" }];
+  expect(() =>
+    assertInitialRuntimeRecovery(
+      template,
+      parameters,
+      ["Vpc", "ApiTask"],
+      values,
+    ),
+  ).not.toThrow();
+  const changed = structuredClone(template);
+  changed.Resources.ApiService.Properties.DesiredCount = 2;
+  for (const run of [
+    () => assertInitialRuntimeRecovery(changed, parameters, ["Vpc"], values),
+    () =>
+      assertInitialRuntimeRecovery(
+        template,
+        parameters,
+        ["UnknownVpc"],
+        values,
+      ),
+    () =>
+      assertInitialRuntimeRecovery(
+        template,
+        parameters,
+        ["Vpc", "Vpc"],
+        values,
+      ),
+    () =>
+      assertInitialRuntimeRecovery(template, parameters, ["Vpc"], {
+        TEST_BINDING: "new-image-or-binding",
+      }),
+    () =>
+      assertInitialRuntimeRecovery(
+        template,
+        [...parameters, ...parameters],
+        ["Vpc"],
+        values,
+      ),
+  ])
+    expect(run).toThrow();
+});
+it("uses external DNS certificate request without an incomplete domain validation option", () => {
+  const p = plan().certificate.Resources.ApiCertificate.Properties;
+  expect(p.DomainName).toBe("api-dev.abasong.com");
+  expect(p.ValidationMethod).toBe("DNS");
+  expect(p.CertificateExport).toBe("DISABLED");
+  expect(p.DomainValidationOptions).toBeUndefined();
+});
 it("does not print private input excerpts or stack traces when binding JSON is invalid", () => {
   const directory = mkdtempSync(join(tmpdir(), "abasong-plan-"));
   const input = join(directory, "bindings.json");

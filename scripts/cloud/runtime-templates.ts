@@ -233,7 +233,6 @@ export function buildRuntimeTemplates() {
           DomainName: "api-dev.abasong.com",
           CertificateExport: "DISABLED",
           ValidationMethod: "DNS",
-          DomainValidationOptions: [{ DomainName: "api-dev.abasong.com" }],
           Tags: tags,
         },
         true,

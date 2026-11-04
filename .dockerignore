@@ -26,4 +26,6 @@
 !packages/runtime/tsconfig.json
 !packages/runtime/src/
 !packages/runtime/src/**
+!packages/runtime/certs/
+!packages/runtime/certs/**
 **/*.test.ts

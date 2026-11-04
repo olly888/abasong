@@ -1,6 +1,33 @@
 import { buildRuntimeTemplates } from "./runtime-templates";
+import { isDeepStrictEqual } from "node:util";
 
 type Obj = Record<string, unknown>;
+/** Resume only the exact failed initial runtime plan; preserve all successful
+ * resources and never combine recovery with a new image or parameter change. */
+export function assertInitialRuntimeRecovery(
+  template: unknown,
+  oldParameters: Array<{ ParameterKey: string; ParameterValue: string }>,
+  resourceIds: string[],
+  values: Record<string, string>,
+) {
+  if (
+    !isDeepStrictEqual(template, buildRuntimeTemplates().runtime) ||
+    oldParameters.length !== Object.keys(values).length ||
+    new Set(oldParameters.map((p) => p.ParameterKey)).size !==
+      oldParameters.length ||
+    !isDeepStrictEqual(
+      Object.fromEntries(
+        oldParameters.map((p) => [p.ParameterKey, p.ParameterValue]),
+      ),
+      values,
+    ) ||
+    new Set(resourceIds).size !== resourceIds.length ||
+    resourceIds.some((id) => !(id in buildRuntimeTemplates().runtime.Resources))
+  )
+    throw new Error(
+      "Initial runtime recovery differs from exact reviewed plan",
+    );
+}
 function obj(value: unknown): Obj {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error("Deployment structure refused");

@@ -26,6 +26,9 @@ function valid() {
     DATA_HMAC_KEY: "a".repeat(64),
     DATA_HMAC_KEY_VERSION: "pilot-v1",
     IDEMPOTENCY_RETENTION_SECONDS: "86400",
+    LC_ALL: "C.UTF-8",
+    LANG: "C.UTF-8",
+    LANGUAGE: "",
   };
 }
 test("fixed cloud image entrypoint refuses relabeling as local even with a development NODE_ENV", () => {
@@ -38,6 +41,16 @@ test("fixed cloud image entrypoint refuses relabeling as local even with a devel
     }),
   ).toThrow();
   expect(assertCloudImageEnvironment("api", valid())).toBe("pilot-dev");
+});
+test("cloud images refuse environment-selected gettext catalogs", () => {
+  for (const patch of [
+    { LC_ALL: "en_US.UTF-8" },
+    { LANG: "en_US.UTF-8" },
+    { LANGUAGE: "../../app-tmp" },
+  ])
+    expect(() =>
+      assertCloudImageEnvironment("api", { ...valid(), ...patch }),
+    ).toThrow();
 });
 test("pilot enforces provider/project/TLS/role and cannot be bypassed by changing NODE_ENV", () => {
   expect(assertRuntimeEnvironment("api", valid())).toBe("pilot-dev");

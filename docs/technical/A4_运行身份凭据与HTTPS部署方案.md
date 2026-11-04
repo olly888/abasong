@@ -91,7 +91,7 @@ ALB集成使用的非导出ACM公有证书没有额外证书费用，不包含AL
 - API容器检查`/health/live`；ALB检查`/health/ready`，后者验证数据库和全部必要迁移。**ready并未检测敏感连接、KMS、资格、Mapbox，不能代替业务预检。**
 - worker增加原子写入的0600状态心跳及独立`dist/health.js`；数据库失败、记录缺失/损坏/过期均失败。轮询串行，停止时先等当前操作结束再关连接，避免积压。心跳只含状态/时间，不含数据库异常正文。
 - 云API仅信任一跳ALB，且必须与ALB追加XFF、API仅允许ALB安全组配套；不能单独复制trust-proxy设置到任意公开服务器。[ALB转发头](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html)、[Express规则](https://expressjs.com/en/guide/behind-proxies/)。
-- 首批保护为单进程总量50请求/秒、同来源240请求/分钟、最多5000个内存计数条目；来源仅以进程临时HMAC保留，过期删除，不记录IP。多人共用网络可能共用限额，试点观察后调整；它不是WAF或分布式配额。原有Mapbox会话/用户配额继续生效。
+- 首批保护为单进程业务50请求/秒、独立健康检查10请求/秒、同来源240请求/分钟、最多5000个内存计数条目；来源仅以进程临时HMAC保留，过期删除，不记录IP。多人共用网络可能共用限额，试点观察后调整；它不是WAF或分布式配额。原有Mapbox会话/用户配额继续生效。
 - 应用HTTP日志只记录服务器request UUID、粗路由组、方法、状态和耗时；不记录路径、query、正文、JWT、联系方式、门禁密码或GPS。关闭云端Nest原始异常日志及ALB完整访问日志，避免地址/坐标进入日志；CloudTrail保留AWS控制面审计。
 - 六项标准告警：两个服务各CPU/内存、无健康API目标、目标5xx；SNS邮箱需本人确认订阅。100美元/月预算按账号总量、不含credit/refund抵扣计算，50/80/100%实际用量提醒，不发送预算动作、不自动停机。预算告警有延迟且不是费用硬上限。[无动作预算免费](https://aws.amazon.com/aws-cost-management/aws-budgets/faqs/)。
 

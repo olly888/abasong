@@ -29,6 +29,7 @@ export function cloudHttpProtection(
   const clients = new Map<string, Counter>();
   const key = randomBytes(32); // Process-local identifier, not the business HMAC.
   let global: Counter = { start: now(), count: 0 };
+  let health: Counter = { start: now(), count: 0 };
   let lastCleanup = now();
   return (req: ApiRequest, res: Response, next: NextFunction) => {
     const started = now();
@@ -77,18 +78,18 @@ export function cloudHttpProtection(
       else client.count = 240;
     }
     if (started - global.start >= 1000) global = { start: started, count: 0 };
+    if (started - health.start >= 1000) health = { start: started, count: 0 };
     // Reserve a small separate health budget so client traffic cannot mark the
     // process unhealthy by exhausting the public request counter.
-    const globalAllowed = route === "health" || ++global.count <= 50;
+    const globalAllowed =
+      route === "health" ? ++health.count <= 10 : ++global.count <= 50;
     if (++client.count > 240 || !globalAllowed) {
       res.setHeader("Retry-After", "60");
-      res
-        .status(429)
-        .json({
-          code: "RATE_LIMITED",
-          message: "请求过于频繁",
-          request_id: req.requestId,
-        });
+      res.status(429).json({
+        code: "RATE_LIMITED",
+        message: "请求过于频繁",
+        request_id: req.requestId,
+      });
       return;
     }
     next();

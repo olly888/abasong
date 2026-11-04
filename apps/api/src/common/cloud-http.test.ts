@@ -82,6 +82,19 @@ it("bounds per-client requests even below the global burst ceiling; health still
   health.emit("finish");
   expect(health.statusCode).toBe(200);
   expect(sink).not.toHaveBeenCalled();
+  for (let i = 0; i < 9; i++)
+    handler(
+      request("192.0.2.2", "/health/ready"),
+      response() as unknown as Response,
+      next,
+    );
+  const excessiveHealth = response();
+  handler(
+    request("192.0.2.3", "/health/ready"),
+    excessiveHealth as unknown as Response,
+    next,
+  );
+  expect(excessiveHealth.statusCode).toBe(429);
   time += 60000;
   const reset = response();
   handler(request(), reset as unknown as Response, next);

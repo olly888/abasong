@@ -1,5 +1,7 @@
 # Abasong V12.1 原型升级制作与验收方案
 
+本轮补验入口：[五核心任务](../../design/abasong-independent-v1/v12.1-experience/review.html)，查码/截图贡献/本人纠正/临时支援/联系。B05修正“未收录只能私存”的旧限制，完整地址本人核对后共享；不生成假坐标或附近成员。实际10项核心报告与34项地图报告分开，真人0/7。后续按[任务包](../usability/V3.2_五司机两DSP可用性测试包.md)观察，不把评审快捷入口教给参与者。
+
 更新2026-11-05。状态：**R2a核心原型已制作，待用户体验确认**。[新版入口](../../design/abasong-independent-v1/v12.1-experience/index.html)、[实际检查](../../design/abasong-independent-v1/v12.1-experience/验收记录.md)；[旧版](../../design/abasong-independent-v1/v12.1-import/index.html)保留。本方案引用[产品收敛](Abasong_V12.1_产品体验升级与需求收敛方案.md)、[V3.2设计目标](../design/Abasong_设计系统_V3.2_升级方案.md)、[文案表](../design/Abasong_界面文案与状态规范_V1.md)及[技术增量](../technical/V12.1_地图协作架构增量方案.md)，不证明App或双端已升级。
 
 ## 1. 制作原则与交付结构

@@ -433,7 +433,11 @@
       return `<section class="home-sheet ex-expanded ex-no-access" aria-label="公寓资料"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll"><div class="apartment-heading"><h2>${addressHTML(a.address, true)}</h2>${ib("collapse", "down", "收起密码记录")}</div><p>${state.logged ? "暂未开通资料查看资格" : "登录后查看密码"}</p>${state.logged ? "" : btn("login-access", "登录", "button")}</div></section>`;
     if (state.expanded)
       return `<section class="home-sheet ex-expanded" aria-label="公寓密码详情"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll" id="sheet-scroll"><div class="apartment-heading"><div class="address-heading"><h2>${addressHTML(a.address, true)}</h2><div class="address">${esc(a.address.split(",").slice(1).join(","))}</div><div class="address">${esc(a.name)}</div></div>${ib("collapse", "down", "收起密码记录")}</div>${btn("add-code", I("plus") + "添加密码", "button secondary")}${ex.code.status === "loading" || ex.code.id !== a.id ? '<div class="ex-skeleton" aria-label="正在读取密码"></div>' : ex.code.status === "error" ? `<div class="ex-error">密码暂时无法加载${btn("ex-retry-code", "重新读取", "text-btn")}</div>` : codes.map((c) => `<article class="code-record" data-record="${c.id}"><div class="ex-code">${esc(c.value)}</div><div class="scope">${esc(c.scope || "大门")}</div><div class="caption">${esc(contributionLabel(c))}</div><div class="feedback-row">${btn("vote", I("thumb") + "有用", "feedback-btn", `data-id="${c.id}" data-vote="useful" aria-pressed="${c.vote === "useful"}"`)}${btn("vote", "不能用", "feedback-btn", `data-id="${c.id}" data-vote="not_useful" aria-pressed="${c.vote === "not_useful"}"`)}</div></article>`).join("") || '<p class="ex-card-state">暂无共享密码</p>'}</div></section>`;
-    return mapCardCarousel("apartments", model.apartments, a.id);
+    return mapCardCarousel(
+      "apartments",
+      model.apartments.filter((p) => p.nearby !== false || p.id === a.id),
+      a.id,
+    );
   }
   function mapCardCarousel(kind, items, selectedId) {
     const name = { apartments: "公寓", jobs: "需求", people: "司机" }[kind];
@@ -1166,7 +1170,7 @@
   readCode("a1");
   render();
   window.abasongExperience = {
-    version: "3.2-r2a2",
+    version: "3.2-r3-core",
     demoDay: TODAY,
     state: ex,
     warehouses,
@@ -1174,4 +1178,14 @@
     setApt,
     querySupport,
   };
+  // Review shortcuts live outside the product. Human usability sessions start at home.
+  const reviewTask = new URLSearchParams(location.search).get("task");
+  if (reviewTask === "contribution") actions("lib-contribute", { dataset: {} });
+  if (reviewTask === "correction") {
+    nav("contributions", {}, true);
+    actions("lib-tab", { dataset: { id: "shared" } });
+  }
+  if (reviewTask === "support")
+    actions("map-view", { dataset: { id: "jobs" } });
+  if (reviewTask === "messages") nav("inbox", {}, true);
 })();

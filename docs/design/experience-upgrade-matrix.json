@@ -4,7 +4,7 @@
   "status": "planned",
   "current_design": "V3.1",
   "target_design": "V3.2-proposal",
-  "prototype_status": "r2a2_cards_ready_for_user_review",
+  "prototype_status": "r3_core_synthetic_ready_human_pending",
   "app_changed": false,
   "items": [
     {
@@ -44,7 +44,10 @@
         "C14",
         "C15",
         "C16",
-        "C17"
+        "C17",
+        "C85",
+        "C86",
+        "C87"
       ],
       "batch": "R2b",
       "acceptance": [
@@ -286,5 +289,7 @@
     }
   ],
   "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/index.html",
-  "browser_report": "../../design/abasong-independent-v1/v12.1-experience/browser-checks.json"
+  "browser_report": "../../design/abasong-independent-v1/v12.1-experience/browser-checks.json",
+  "development_gate": "../product/V3.2_开发基准状态.json",
+  "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json"
 }

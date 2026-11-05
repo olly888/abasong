@@ -1,6 +1,6 @@
 {
   "prototype_version": "3.2-r3-core",
-  "executed_at": "2026-11-05T18:50:47.239Z",
+  "executed_at": "2026-11-05T19:47:43.791Z",
   "scope": "isolated Chromium synthetic core flow checks; not human/native/field acceptance",
   "checks": [
     {

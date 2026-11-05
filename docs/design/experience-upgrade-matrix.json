@@ -1,10 +1,10 @@
 {
-  "version": "1.5",
+  "version": "1.6",
   "date": "2026-11-05",
   "status": "planned",
   "current_design": "V3.1",
   "target_design": "V3.2-proposal",
-  "prototype_status": "r3_circle_images_synthetic_pending_user_review",
+  "prototype_status": "r3_account_synthetic_pending_user_review",
   "app_changed": false,
   "items": [
     {
@@ -352,6 +352,83 @@
       ],
       "implementation_dependency": "D15_D17_private_media_upload_read_lifecycle",
       "prototype_status": "photos_implemented_synthetic_native_pending"
+    },
+    {
+      "id": "UP15",
+      "pages": [
+        "U01",
+        "U02",
+        "U03",
+        "D02"
+      ],
+      "copy_ids": [
+        "C120",
+        "C121",
+        "C124",
+        "C125",
+        "C136",
+        "C138",
+        "C139"
+      ],
+      "batch": "B5-prototype",
+      "acceptance": [
+        "UX13"
+      ],
+      "implementation_dependency": "D18_own_profile_purpose_not_grant",
+      "prototype_status": "account_implemented_synthetic_native_service_pending"
+    },
+    {
+      "id": "UP16",
+      "pages": [
+        "U08",
+        "M02",
+        "D02"
+      ],
+      "copy_ids": [
+        "C128",
+        "C129",
+        "C130",
+        "C131",
+        "C132",
+        "C133",
+        "C134",
+        "C135",
+        "C136"
+      ],
+      "batch": "B5-prototype",
+      "acceptance": [
+        "UX14"
+      ],
+      "implementation_dependency": "D19_private_contacts_owner_and_chat",
+      "prototype_status": "account_implemented_synthetic_native_service_pending"
+    },
+    {
+      "id": "UP17",
+      "pages": [
+        "U10",
+        "P03",
+        "D01",
+        "D02"
+      ],
+      "copy_ids": [
+        "C122",
+        "C123",
+        "C124",
+        "C126",
+        "C127",
+        "C129",
+        "C130",
+        "C131",
+        "C136",
+        "C137",
+        "C138"
+      ],
+      "batch": "B5-prototype",
+      "acceptance": [
+        "UX15"
+      ],
+      "implementation_dependency": "D20_own_team_opt_in_contact_source_snapshot",
+      "prototype_status": "account_implemented_synthetic_native_service_pending"
     }
   ],
   "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/index.html",
@@ -359,5 +436,6 @@
   "development_gate": "../product/V3.2_开发基准状态.json",
   "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json",
   "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
-  "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json"
+  "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json",
+  "account_report": "../../design/abasong-independent-v1/v12.1-experience/account-checks.json"
 }

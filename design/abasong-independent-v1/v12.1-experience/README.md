@@ -4,7 +4,7 @@
 
 未收录截图可在核对完整地址后确认共享；仅创建合成业务关联，不造地图点、不混进附近200米候选。明确共享/私存意图、疑字符核对、部分失败只重试失败项、离开后从头选图保留。评审快捷入口用于复核，真人观察从首页开始，不给按钮路线提示。
 
-入口：<http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-images>。静态服务根目录为`design/abasong-independent-v1`，只监听本机。2026-11-05制作；状态：**核心原型已制作，待用户体验确认**。旧版[v12.1-import](../v12.1-import/index.html)和实际App保留。
+入口：<http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-account>。静态服务根目录为`design/abasong-independent-v1`，只监听本机。2026-11-05制作；状态：**核心原型已制作，待用户体验确认**。旧版[v12.1-import](../v12.1-import/index.html)和实际App保留。
 
 ## 本轮范围
 
@@ -58,3 +58,11 @@ Google使用[官方Maps URLs](https://developers.google.com/maps/documentation/u
 [直接体验司机圈](index.html?v=r3-images&task=circle)：正文下可选0–3张图，拍照/相册、预览/移除/顺序、部分失败重试、发帖失败复用已就绪图；单图限高/多图网格，大图左右切换/点击缩放/关闭回原位置，回复仍文字。TEST图片是自行绘制SVG，不读本机照片、不访问相机、不上传任何文件。生产上传不允许SVG，私有媒体和元数据处理待B5。
 
 [17项报告](circle-images-checks.json)、[可复跑函数](circle-images-checks.browser.js)；[发布](evidence/circle-images-editor.png)、[信息流](evidence/circle-images-feed.png)、[大图](evidence/circle-images-viewer.png)、[部分失败](evidence/circle-images-retry.png)。外壳可切权限、坏图、加载和上传失败；这些不是产品菜单。320/390/430默认浏览器通过，系统权限/相册/相机/键盘/真实上传/读屏/200%字号仍待原生阶段；真人0/7不变。
+
+## 我的与团队增量（2026-11-05，r3-account）
+
+[直接体验我的](index.html?v=r3-account&task=me)。本人资料/双用途、个人私有联系方式、可编辑DSP团队、多合作快递/区域、业务联系默认off/主动开放、常联系私人备注与移除、发布身份/历史来源已接入合成原型。会话“更多→我的联系方式”仅展示/复制，不自动发送；不含收费或成员系统。新增TEST号码均为虚构演示，不从Auth取号，不调用实际服务/拨号。
+
+[24项检查](account-checks.json)PASS，原[34地图](browser-checks.json)/[10核心](core-checks.json)/[19司机圈](circle-checks.json)/[17图片](circle-images-checks.json)回归PASS，共104项合成，0脚本异常/外部请求。包括默认与撤销可见性、发布源快照、首次建团队回草稿、备注/资料失败保留、阻止迟到写入、移出不删聊天、屏蔽/注销、复制失败和320/390/430布局。修正聊天菜单不可达与资料折叠组重绘、返回草稿判断问题。
+
+[我的截图](evidence/account-my.png)、[个人资料](evidence/account-profile.png)、[团队资料](evidence/account-team.png)、[常联系](evidence/account-contacts.png)、[业务联系方式TEST](evidence/account-business-contact.png)为独立Chromium截图；外壳故障开关仅供检查，不在产品页面。真人0/7，资料跟进7行not_run，不计新参与者。系统键盘/返回、200%字号、读屏、真实电话/服务端授权、iOS/Android尚未验；实际App/接口/数据库未改，现行设计仍V3.1，原型体验后再B5实现。

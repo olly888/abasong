@@ -1,9 +1,9 @@
 {
-  "version": "V3.2-R3-invite",
+  "version": "V3.2-R3-delivery",
   "date": "2026-11-05",
   "code_audit_base": "99a76da38708f796fe64e2d6ce7363138fa36916",
   "app_design": "V3.1",
-  "prototype": "3.2-r3-invite",
+  "prototype": "3.2-r3-delivery",
   "scope": "documents_and_independent_prototype_only",
   "app_changed": false,
   "gates": {
@@ -16,7 +16,8 @@
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
-    "invitation_prototype": "synthetic_only_pending_user_confirmation_system_share_distribution_native"
+    "invitation_prototype": "synthetic_only_pending_user_confirmation_system_share_distribution_native",
+    "delivery_prototype": "synthetic_only_pending_user_confirmation_contract_and_native_not_changed"
   },
   "human_testing": {
     "drivers_required": 5,
@@ -59,7 +60,10 @@
     "G18",
     "G19",
     "G20",
-    "G21"
+    "G21",
+    "G22",
+    "G23",
+    "G24"
   ],
   "difference_ids": [
     "D01",
@@ -82,7 +86,10 @@
     "D18",
     "D19",
     "D20",
-    "D21"
+    "D21",
+    "D22",
+    "D23",
+    "D24"
   ],
   "evidence_ids": [
     "E01",
@@ -118,7 +125,8 @@
     "circle_image_tasks": 17,
     "account_tasks": 20,
     "simplification_tasks": 12,
-    "invitation_tasks": 20
+    "invitation_tasks": 20,
+    "delivery_tasks": 25
   },
   "circle_requirements": "Abasong_V3.2_司机圈定位与最小社区补充.md",
   "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
@@ -155,10 +163,10 @@
     "U08"
   ],
   "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json",
-  "requirements_version": "invitation_prototype_20261105",
-  "prototype_audit_base": "8841d6bc41380e44d0f181a446ee79aab0e9d611",
-  "active_page_count": 40,
-  "state_requirements": 374,
+  "requirements_version": "two_delivery_scenarios_20261105",
+  "prototype_audit_base": "7240c03d4dd48ea7a7b33aa0f4b21946c05771e4",
+  "active_page_count": 39,
+  "state_requirements": 387,
   "invitation": {
     "status": "synthetic_prototype_pending_user_confirmation",
     "requirements": "Abasong_V3.2_邀请司机功能方案.md",
@@ -178,5 +186,17 @@
     "scope": "documents_and_independent_prototype_only",
     "report": "../../design/abasong-independent-v1/v12.1-experience/invitation-checks.json",
     "regressions": "../../design/abasong-independent-v1/v12.1-experience/invitation-regressions.json"
+  },
+  "deferred_page_ids": [
+    "P04"
+  ],
+  "delivery": {
+    "status": "synthetic_pending_user_confirmation",
+    "requirements": "Abasong_V3.2_两场景发布与公寓卡片优化补充.md",
+    "app_changed": false,
+    "report": "../../design/abasong-independent-v1/v12.1-experience/delivery-checks.json",
+    "regressions": "../../design/abasong-independent-v1/v12.1-experience/delivery-regressions.json",
+    "p1_apartment_list_implemented": false,
+    "deferred_specialized_help": true
   }
 }

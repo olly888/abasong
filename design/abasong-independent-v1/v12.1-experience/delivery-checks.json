@@ -1,0 +1,113 @@
+{
+  "prototype_version": "3.2-r3-delivery",
+  "executed_at": "2026-11-05T23:12:21.212Z",
+  "scope": "isolated synthetic browser UI; no live publishing, API, GPS, SMS or settlement",
+  "checks": [
+    {
+      "name": "入口仅两个场景，取消回到原首页；P1专用求助不伪装可发布",
+      "status": "PASS"
+    },
+    {
+      "name": "仓库场景默认仓库/约数/1人，身份不自动切为DSP",
+      "status": "PASS"
+    },
+    {
+      "name": "代送场景默认途中交接/尽快，不索要或公开当前位置",
+      "status": "PASS"
+    },
+    {
+      "name": "主表单收敛；线路/理货/最低量/自定义下架仅补充设置，草稿可达",
+      "status": "PASS"
+    },
+    {
+      "name": "必填缺失有定位错误，不发布、不清输入",
+      "status": "PASS"
+    },
+    {
+      "name": "公寓及找活迟到响应不重建发布表单，地址候选和焦点保持",
+      "status": "PASS"
+    },
+    {
+      "name": "仓库候选后修改为手填地址，清旧关联/自动名称，以新城市展示",
+      "status": "PASS"
+    },
+    {
+      "name": "仓库切途中清旧地址，交接区重新确认；其他输入保留",
+      "status": "PASS"
+    },
+    {
+      "name": "仓库约数发布：预览/管理/地图一致，不假算每人分配；重复确认不重复",
+      "status": "PASS"
+    },
+    {
+      "name": "途中代送：尽快/明确件数/交接区可发布，送完与下架分开",
+      "status": "PASS"
+    },
+    {
+      "name": "待确认件数：预览/管理/详情/动态/公开摘要不显示0或null件",
+      "status": "PASS"
+    },
+    {
+      "name": "待确认件数仍能报名；不强填假件数，不自动扣减人数或任务量",
+      "status": "PASS"
+    },
+    {
+      "name": "约数报名不作为剩余上限；意向不是已接单",
+      "status": "PASS"
+    },
+    {
+      "name": "整线范围在表单内，件数不确定时阻止假整批承诺",
+      "status": "PASS"
+    },
+    {
+      "name": "明天快捷关闭尽快，日期变化重新计算默认下架",
+      "status": "PASS"
+    },
+    {
+      "name": "最迟接手生成默认下架；非法自定义下架/过去时间明确报错",
+      "status": "PASS"
+    },
+    {
+      "name": "硬性账号/经验条件在核对及详情可见；付款仍私下约定",
+      "status": "PASS"
+    },
+    {
+      "name": "模拟保存失败保留场景/地址/金额，原页重试只发布一次",
+      "status": "PASS"
+    },
+    {
+      "name": "已发布版本冲突阻止覆盖，已有发布身份锁定",
+      "status": "PASS"
+    },
+    {
+      "name": "本人明确团队身份可沿用；新需求预填不替换历史来源",
+      "status": "PASS"
+    },
+    {
+      "name": "保存草稿/复制草稿保留场景与未知口径；未完整草稿不公开",
+      "status": "PASS"
+    },
+    {
+      "name": "取消核对保持输入，离开编辑有确认；公寓列表仍P1未显示",
+      "status": "PASS"
+    },
+    {
+      "name": "公寓城市左/距离右，明确门别旁置，贡献人/符号保留，仍192等高",
+      "status": "PASS"
+    },
+    {
+      "name": "无明确门别不猜填；切卡、空/错误/资格状态无串码或假暂无",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430：两场景表单/核对/固定操作无横溢出，长门别不挤完整密码",
+      "status": "PASS"
+    }
+  ],
+  "passed": 25,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "human_participants": 0,
+  "native_acceptance": false
+}

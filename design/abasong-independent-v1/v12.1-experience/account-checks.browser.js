@@ -452,6 +452,7 @@ async (page) => {
           .getAttribute("aria-pressed")) === "true",
         "personal default",
       );
+      await p.locator(".delivery-identity > summary").click();
       await p.locator('[data-action="account-create-team"]').click();
       await input("name", "TEST New Team");
       await submit();

@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlsplit,unquote
 import csv,json,re,subprocess
-root=Path(__file__).resolve().parents[3];base='8841d6bc41380e44d0f181a446ee79aab0e9d611';checks=[]
+root=Path(__file__).resolve().parents[3];base='7240c03d4dd48ea7a7b33aa0f4b21946c05771e4';checks=[]
 def ok(test,label):
  if not test:raise AssertionError(label)
  checks.append(label)
@@ -24,17 +24,17 @@ for name in sorted(changed):
   ok(target.exists(),f'link {name}: {ref}')
   links+=1
 catalog=json.loads((root/'docs/product/V12.1_页面与状态目录.json').read_text());pages={p['id']:p for p in catalog['pages']}
-ok(len(pages)==40 and sum(len(p['states']) for p in pages.values())==374,'40 active nodes/374 required states')
+ok(len(pages)==39 and sum(len(p['states']) for p in pages.values())==387,'39 active nodes/387 required states')
 production=list(csv.DictReader((root/'docs/product/V12.1_页面制作清单.csv').open(encoding='utf-8-sig')))
-ok(len(production)==40,'40 production rows')
+ok(len(production)==39,'39 production rows')
 for p in production:ok(int(p['state_count'])==len(pages[p['id']]['states']),f"state count {p['id']}")
 for ident in ['C01','C02','C03']:ok(len(pages[ident]['states'])=={'C01':9,'C02':10,'C03':13}[ident],ident+' image state requirements')
 state=json.loads((root/'docs/product/V3.2_开发基准状态.json').read_text())
 ok(state['development_ready'] is False and state['b5_ready'] is False and state['app_changed'] is False,'unpassed gates honest')
 ok(state['human_testing']['completed']==0 and state['human_testing']['template_rows']==38,'core human testing remains 0/7 and38rows')
 diffs=list(csv.DictReader((root/'docs/technical/V3.2_代码差异清单.csv').open()))
-ok([d['id'] for d in diffs]==state['difference_ids']==[f'D{i:02}' for i in range(1,22)],'D01–D21 trace')
-ok(state['requirement_ids']==[f'G{i:02}' for i in range(1,22)],'G01–G21 trace')
+ok([d['id'] for d in diffs]==state['difference_ids']==[f'D{i:02}' for i in range(1,25)],'D01–D24 trace')
+ok(state['requirement_ids']==[f'G{i:02}' for i in range(1,25)],'G01–G24 trace')
 for d in diffs:
  for ref in d['code_paths'].split(';'):ok((root/ref).is_file(),'actual difference source '+ref)
 for name,count in [('V3.2_可用性记录模板.csv',38),('V3.2_司机圈任务记录模板.csv',10),('V3.2_我的团队任务记录模板.csv',7)]:
@@ -48,16 +48,16 @@ proto=root/'design/abasong-independent-v1/v12.1-experience'
 for name,total in [('browser-checks.json',34),('core-checks.json',10),('circle-checks.json',19),('circle-images-checks.json',17),('account-checks.json',20),('simplification-checks.json',12)]:
  d=json.loads((proto/name).read_text());ok(d['passed']==total and d['failed']==0 and not d['console_errors'] and not d['external_request_hosts'] and not d['native_acceptance'],f'{name}: {total}PASS/0 errors/external; native not claimed')
 for p in proto.glob('*.js'):subprocess.run(['./scripts/dev','exec','node','--check',str(p)],cwd=root,check=True,stdout=subprocess.DEVNULL)
-ok(len(list(proto.glob('*.js')))==15,'fifteen JS syntax checks')
+ok(len(list(proto.glob('*.js')))==17,'seventeen JS syntax checks')
 old=cmd(['git','show',base+':DEVELOPMENT_STATUS.md'])
-ok((root/'docs/archive/invitation-prototype-20261105/工程状态_8841d6b快照.md').read_text()==old,'prior current status fully preserved')
-for ident,ux in [('UP15','UX13'),('UP16','UX14'),('UP17','UX15'),('UP18','UX16')]:
+ok((root/'docs/archive/delivery-simple-20261105/工程状态_7240c03快照.md').read_text()==old,'prior current status fully preserved')
+for ident,ux in [('UP15','UX13'),('UP16','UX14'),('UP17','UX15'),('UP18','UX16'),('UP19','UX17'),('UP20','UX18'),('UP21','UX19')]:
  u=next(x for x in matrix['items'] if x['id']==ident)
  ok(ux in u['acceptance'] and all(c in copy for c in u['copy_ids']),ident+' copy and UX trace')
 spec=(root/'docs/product/Abasong_V12.1_页面功能信息与交互规格.md').read_text()
 for p in pages.values():
  ok(f"| {p['id']} | {p['name']} | {p['surface']} | {len(p['states'])} |" in spec,'spec page table '+p['id'])
-for ident in ['U01','U02','U03','U10','D02','D01','P03','M02','U15','X02']:
+for ident in ['U01','U02','U03','U10','D02','D01','P01','P03','P08','P09','H01','M02','U15','X02']:
  p=pages[ident];part=spec.split('### '+ident+' · ')[1].split('\n### ')[0]
  ok(all(x in part for x in p['states']),'spec states '+ident)
 ok(state['account_follow_up']['completed']==0 and state['account_follow_up']['template_rows']==7 and not state['account_follow_up']['blocks_core_R4_preparation'],'account followup 0/7 does not add core prep blocker')
@@ -77,4 +77,13 @@ for report,total in [(inv,20),(reg,112)]:
 ok(inv['actual_downloads']==0 and not inv['unexpected_side_effects'],'invitation tests no real distribution/clipboard/share')
 ok(invitation['tests_executed']==inv['passed'] and state['synthetic_checks']['invitation_tasks']==20,'invitation report/gate trace')
 ok([(x['source'],x['passed']) for x in reg['suites']]==[('checks.browser.js',34),('core-flows.browser.js',10),('account-checks.browser.js',20),('circle-checks.browser.js',19),('circle-images-checks.browser.js',17),('simplification-checks.browser.js',12)],'112 regressions source trace')
-print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':15,'pages':40,'state_requirements':374,'difference_rows':21,'invitation_synthetic_tests':20,'existing_synthetic_regressions':112,'prototype_ui_changed':True,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))
+new=json.loads((proto/'delivery-checks.json').read_text());current=json.loads((proto/'delivery-regressions.json').read_text())
+for report,total in [(new,25),(current,132)]:
+ ok(report['passed']==total and report['failed']==0 and not report['console_errors'] and not report['external_request_hosts'] and not report['native_acceptance'] and report['human_participants']==0,'delivery current synthetic report '+str(total))
+ok(len(current['suites'])==7 and sum(x['passed'] for x in current['suites'])==132,'seven rerun suites total132')
+ok('P04' not in pages and [p['id'] for p in catalog['deferred_pages']]==['P04'] and state['deferred_page_ids']==['P04'],'P04 specialized form deferred, history retained')
+ok(not any(a['target']=='P04' for p in pages.values() for a in p['actions']),'no active route to deferred P04')
+ok(not state['delivery']['app_changed'] and not state['delivery']['p1_apartment_list_implemented'],'actual App and P1 list unchanged')
+ok(next(d for d in diffs if d['id']=='D24')['status']=='P1_documented_not_implemented','P1 list not marked done')
+ok(catalog['planned_features'][0]['id']=='G24' and catalog['planned_features'][0]['status']=='documented_not_implemented','P1 planned feature separate from active pages')
+print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':17,'pages':39,'state_requirements':387,'difference_rows':24,'delivery_synthetic_tests':25,'existing_synthetic_regressions':132,'p1_apartment_list_implemented':False,'prototype_ui_changed':True,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))

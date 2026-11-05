@@ -390,7 +390,7 @@ async (page) => {
   await run("发布：完整仓库地址必填，候选/预览/存储一致", async () => {
     await p.locator('[data-ex-flow="publish"]').click();
     await p
-      .locator('[data-action="publish-kind"][data-id="partial_route"]')
+      .locator('[data-action="delivery-scene"][data-id="warehouse"]')
       .click();
     await p.locator('.fixed-actions [type="submit"]').click();
     assert(
@@ -405,7 +405,7 @@ async (page) => {
     await p.locator('[data-action="ex-pickup-choice"][data-id="w1"]').click();
     await p.locator('[name="date"]').fill("2026-11-04");
     await p.locator('[name="start"]').fill("15:00");
-    await p.locator('[name="end"]').fill("19:00");
+    assert((await p.locator('[name="end"]').count()) === 0, "default expiry not another required field");
     await p.locator('[name="qty"]').fill("120");
     await p.locator('[name="price"]').fill("1.90");
     await p.locator(".fixed-actions [type=submit]").click();
@@ -432,7 +432,7 @@ async (page) => {
   await run("仓库/途中切换清理旧地点，草稿输入保留", async () => {
     await p.locator('[data-ex-flow="publish"]').click();
     await p
-      .locator('[data-action="publish-kind"][data-id="partial_route"]')
+      .locator('[data-action="delivery-scene"][data-id="warehouse"]')
       .click();
     await p.locator('[name="pickupAddress"]').fill("5685");
     await p.locator('[data-action="ex-pickup-choice"]').click();
@@ -508,7 +508,7 @@ async (page) => {
   await run("手填完整仓库地址未定位时，不画假点而可复制/导航", async () => {
     await p.locator('[data-ex-flow="publish"]').click();
     await p
-      .locator('[data-action="publish-kind"][data-id="partial_route"]')
+      .locator('[data-action="delivery-scene"][data-id="warehouse"]')
       .click();
     await p
       .locator('[name="pickupAddress"]')

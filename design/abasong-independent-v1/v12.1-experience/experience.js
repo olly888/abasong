@@ -236,7 +236,7 @@
             : scenario === "empty"
               ? "empty"
               : "ready";
-        if (state.homeView === mode) render();
+        if (state.homeView === mode && state.route.view === "home") render();
       },
       scenario === "slow" ? 2000 : 100,
     );
@@ -255,7 +255,7 @@
         id,
         status: state.scenario === "offline" && !retry ? "error" : "ready",
       };
-      render();
+      if (state.route.view === "home") render();
     }, 120);
   }
   function setApt(id, manual = true) {
@@ -414,7 +414,7 @@
         head +
         `<p class="ex-card-state">暂无共享门禁码</p>${btn("add-code", I("plus") + "添加门禁码", "ex-inline-add")}`
       );
-    return `${head}<div class="ex-code">${esc(codes[0].value)}</div><div class="ex-code-meta">${esc(contributionLabel(codes[0]))}</div><span class="ex-card-chevron" aria-hidden="true">${I("up")}</span>`;
+    return `${head}<div class="delivery-code-line"><div class="ex-code">${esc(codes[0].value)}</div>${codes[0].scope ? `<span class="delivery-door">${esc(codes[0].scope)}</span>` : ""}</div><div class="ex-code-meta">${esc(contributionLabel(codes[0]))}</div><span class="ex-card-chevron" aria-hidden="true">${I("up")}</span>`;
   }
   function apartmentSurface() {
     if (state.temporaryDestination)

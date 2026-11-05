@@ -311,8 +311,8 @@ async (page) => {
   await run("评审快捷入口不计作用户测试，产品无研究备注", async () => {
     await p.goto("http://127.0.0.1:8765/v12.1-experience/review.html");
     assert(
-      (await p.locator("article").count()) === 7,
-      "five core tasks plus circle and account follow-ups",
+      (await p.locator("article").count()) === 8,
+      "five core tasks plus circle, account and invitation follow-ups",
     );
     await p.locator("nav a").click();
     await p.waitForFunction(() => window.abasongExperience);

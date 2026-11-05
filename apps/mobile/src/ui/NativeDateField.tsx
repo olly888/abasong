@@ -6,7 +6,7 @@ import DateTimePicker, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 import { Icon } from "./Icon";
-import { ActionButton } from "../auth/AuthControls";
+import { ActionButton } from "./Controls";
 import {
   pickerDate,
   pickedValue,
@@ -94,10 +94,11 @@ export function NativeDateField({
           flexDirection: "row",
           alignItems: "center",
           gap: 10,
-          backgroundColor: pressed
-            ? tokens.color.surfaceMuted
-            : tokens.color.surface,
-          opacity: disabled ? 0.5 : 1,
+          backgroundColor: disabled
+            ? tokens.color.disabledSurface
+            : pressed
+              ? tokens.color.surfaceMuted
+              : tokens.color.surface,
         })}
       >
         <Text
@@ -105,7 +106,11 @@ export function NativeDateField({
             flex: 1,
             fontSize: 16,
             lineHeight: 24,
-            color: value ? tokens.color.ink : tokens.color.textSecondary,
+            color: disabled
+              ? tokens.color.disabledText
+              : value
+                ? tokens.color.ink
+                : tokens.color.textSecondary,
           }}
         >
           {value
@@ -127,7 +132,7 @@ export function NativeDateField({
             style={{
               flex: 1,
               justifyContent: "flex-end",
-              backgroundColor: "rgba(0,0,0,.3)",
+              backgroundColor: tokens.color.overlay,
             }}
           >
             <SafeAreaView

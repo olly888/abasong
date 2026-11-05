@@ -1,4 +1,4 @@
-/* V3 prototype baseline; CSS px map to platform logical units in native components. */
+/* Generated from docs/design/tokens-v3.json (V3.1). Do not edit. */
 :root {
   --ab-color-ink: #101114;
   --ab-color-inkSoft: #303236;
@@ -29,6 +29,10 @@
   --ab-color-brandPressed: #1054B3;
   --ab-color-brandSurface: #EDF4FF;
   --ab-color-onBrand: #FFFFFF;
+  --ab-color-dangerPressed: #8F2C2A;
+  --ab-color-disabledSurface: #F0F0F0;
+  --ab-color-disabledText: #686C73;
+  --ab-color-overlay: rgba(16,17,20,0.32);
   --ab-space-0: 0px;
   --ab-space-2: 2px;
   --ab-space-4: 4px;
@@ -56,6 +60,10 @@
   --ab-fontSize-heading: 28px;
   --ab-fontSize-display: 40px;
   --ab-fontSize-code: 40px;
+  --ab-fontSize-metadata: 12px;
+  --ab-fontSize-pageHeader: 19px;
+  --ab-fontSize-subheading: 22px;
+  --ab-fontSize-hero: 32px;
   --ab-fontWeight-regular: 400;
   --ab-fontWeight-medium: 500;
   --ab-fontWeight-semibold: 600;
@@ -71,4 +79,19 @@
   --ab-semantic-surfaceApp: var(--ab-color-canvas);
   --ab-semantic-surfaceCard: var(--ab-color-surface);
   --ab-semantic-actionPrimaryPressed: var(--ab-color-brandPressed);
+  --ab-layout-pageInset: 20px;
+  --ab-layout-compactInset: 16px;
+  --ab-layout-header: 64px;
+  --ab-layout-sectionGap: 20px;
+  --ab-layout-fieldGap: 8px;
+  --ab-layout-cardGap: 12px;
+  --ab-layout-apartmentCollapsed: 192px;
+  --ab-layout-apartmentPeekInset: 32px;
+  --ab-lineHeight-metadata: 18px;
+  --ab-lineHeight-caption: 22px;
+  --ab-lineHeight-body: 24px;
+  --ab-lineHeight-title: 28px;
+  --ab-lineHeight-heading: 36px;
+  --ab-lineHeight-hero: 40px;
+  --ab-lineHeight-code: 48px;
 }

@@ -322,7 +322,7 @@ function Form() {
       <View
         style={{
           flex: 1,
-          backgroundColor: "rgba(0,0,0,.3)",
+          backgroundColor: tokens.color.overlay,
           justifyContent: "flex-end",
         }}
       >
@@ -368,7 +368,7 @@ function Form() {
             <FormError message={error} />
             <ActionButton
               label="取消"
-              secondary
+              variant="text"
               onPress={() => router.back()}
             />
           </ScrollView>

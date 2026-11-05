@@ -29,7 +29,11 @@ export const tokens = {
     "brandPrimary": "#1467D8",
     "brandPressed": "#1054B3",
     "brandSurface": "#EDF4FF",
-    "onBrand": "#FFFFFF"
+    "onBrand": "#FFFFFF",
+    "dangerPressed": "#8F2C2A",
+    "disabledSurface": "#F0F0F0",
+    "disabledText": "#686C73",
+    "overlay": "rgba(16,17,20,0.32)"
   },
   "space": {
     "0": {
@@ -145,6 +149,22 @@ export const tokens = {
     "code": {
       "value": 40,
       "unit": "px"
+    },
+    "metadata": {
+      "value": 12,
+      "unit": "px"
+    },
+    "pageHeader": {
+      "value": 19,
+      "unit": "px"
+    },
+    "subheading": {
+      "value": 22,
+      "unit": "px"
+    },
+    "hero": {
+      "value": 32,
+      "unit": "px"
     }
   },
   "fontWeight": {
@@ -176,5 +196,69 @@ export const tokens = {
     "surfaceApp": "#F6F6F6",
     "surfaceCard": "#FFFFFF",
     "actionPrimaryPressed": "#1054B3"
+  },
+  "layout": {
+    "pageInset": {
+      "value": 20,
+      "unit": "px"
+    },
+    "compactInset": {
+      "value": 16,
+      "unit": "px"
+    },
+    "header": {
+      "value": 64,
+      "unit": "px"
+    },
+    "sectionGap": {
+      "value": 20,
+      "unit": "px"
+    },
+    "fieldGap": {
+      "value": 8,
+      "unit": "px"
+    },
+    "cardGap": {
+      "value": 12,
+      "unit": "px"
+    },
+    "apartmentCollapsed": {
+      "value": 192,
+      "unit": "px"
+    },
+    "apartmentPeekInset": {
+      "value": 32,
+      "unit": "px"
+    }
+  },
+  "lineHeight": {
+    "metadata": {
+      "value": 18,
+      "unit": "px"
+    },
+    "caption": {
+      "value": 22,
+      "unit": "px"
+    },
+    "body": {
+      "value": 24,
+      "unit": "px"
+    },
+    "title": {
+      "value": 28,
+      "unit": "px"
+    },
+    "heading": {
+      "value": 36,
+      "unit": "px"
+    },
+    "hero": {
+      "value": 40,
+      "unit": "px"
+    },
+    "code": {
+      "value": 48,
+      "unit": "px"
+    }
   }
 } as const;

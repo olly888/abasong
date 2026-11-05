@@ -1,15 +1,12 @@
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { useAuth } from "../../auth/AuthProvider";
 import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
+import { StatusPanel } from "../../ui/Feedback";
 import { dataRequest } from "../../apartments/client";
-import {
-  RequestGate,
-  RequestCard,
-  requestStyles,
-} from "../../requests/RequestUi";
+import { RequestGate, RequestCard } from "../../requests/RequestUi";
 import type { DeliveryRequest } from "../../requests/presentation";
 export default function Requests() {
   return (
@@ -90,11 +87,14 @@ function List() {
           onPress={() => void load()}
         />
       ) : null}
-      {busy ? <ActivityIndicator /> : null}
+      {busy && !rows.length ? (
+        <StatusPanel state="loading" title="正在加载需求" />
+      ) : null}
       {!busy && !error && !rows.length ? (
-        <Text style={requestStyles.secondary}>
-          {mine ? "还没有发布的需求" : "暂无开放的临时支援需求"}
-        </Text>
+        <StatusPanel
+          state="empty"
+          title={mine ? "还没有发布的需求" : "暂无开放的临时支援需求"}
+        />
       ) : null}
       <View style={{ gap: 12 }}>
         {rows.map((r) => (

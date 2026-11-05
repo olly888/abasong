@@ -1,14 +1,18 @@
-import { Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { tokens } from "@abasong/ui";
+import { PageHeader } from "../../ui/PageFrame";
+import { StatusPanel } from "../../ui/Feedback";
 export default function Circle() {
   return (
-    <SafeAreaView style={styles.page}>
-      <Text style={styles.title}>司机圈</Text>
-      <Text>暂无动态</Text>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: tokens.color.surface }}
+      edges={["top"]}
+    >
+      <PageHeader title="司机圈" />
+      <View style={{ paddingHorizontal: 20 }}>
+        <StatusPanel state="unavailable" title="司机圈尚未开放" />
+      </View>
     </SafeAreaView>
   );
 }
-const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#FFFFFF', padding: 24, gap: 24 },
-  title: { fontSize: 28, fontWeight: '700' },
-});

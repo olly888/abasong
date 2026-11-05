@@ -1,15 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View, Text, Pressable } from "react-native";
 import { router } from "expo-router";
 import { tokens } from "@abasong/ui";
 import { useAuth } from "../auth/AuthProvider";
@@ -21,43 +11,7 @@ import {
   requestTime,
   type DeliveryRequest,
 } from "./presentation";
-export function RequestSheet({
-  children,
-  onRequestClose,
-}: {
-  children: ReactNode;
-  onRequestClose: () => void;
-}) {
-  return (
-    <Modal transparent animationType="slide" onRequestClose={onRequestClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{
-          flex: 1,
-          justifyContent: "flex-end",
-          backgroundColor: "rgba(0,0,0,.3)",
-        }}
-      >
-        <SafeAreaView
-          edges={["bottom"]}
-          style={{
-            maxHeight: "95%",
-            backgroundColor: tokens.color.surface,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-          }}
-        >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 20, gap: 16 }}
-          >
-            {children}
-          </ScrollView>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
+export { BottomSheet as RequestSheet } from "../ui/BottomSheet";
 export function RequestGate({
   children,
   title = "临时配送支援",

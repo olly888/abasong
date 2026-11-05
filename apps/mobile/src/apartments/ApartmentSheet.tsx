@@ -209,7 +209,7 @@ export function ApartmentSheet(p: SheetProps) {
         ) : null}
         {p.status === "denied" ? (
           <View style={[styles.state, !p.expanded && styles.compactState]}>
-            <Text style={styles.stateTitle}>暂未获得资料查看资格</Text>
+            <Text style={styles.stateTitle}>暂未开通资料查看资格</Text>
           </View>
         ) : null}
         {p.status === "error" ? (

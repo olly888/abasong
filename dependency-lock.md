@@ -136,3 +136,8 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 ## 2026-11-04 B3消息
 
 无新增依赖、SDK、原生模块、系统权限或锁文件。复用现有EnvelopeCrypto/Node crypto、pg、Nest、Zod、Expo/RN FlatList与KeyboardAvoidingView。前台有界轮询先完成完整本地消息：会话4秒、中心12秒、首页未读15秒；后台/离页取消。设备推送与明确集合点分享留B3下一子批，不引入WebSocket/通知供应商假接通。密文正文不用于列表或锁屏预览；本地与AWS KMS格式严格隔离，云业务验证仍B6，不降级。D0增量0011及0012分开保留已应用历史；无云迁移/云IAM变更。
+
+
+## 2026-11-04 设计系统V3.1收敛
+
+无新增依赖、SDK、系统权限、锁文件、业务DDL或云修改。复用Expo58/RN0.88的Pressable/TextInput/Modal/KeyboardAvoidingView及已安装的系统选择器。唯一tokens-v3.json生成原生与三份CSS；旧Python入口仅代理同一Node生成器。共用UI从认证模块提取，旧导出兼容保留；不全面改写SwiftUI。DEV-only组件目录不连接业务写入。官方RN组件API已核对，原生壳仅接收本批JS；三平台JS导出不代表本次重新原生编译或真机验收。

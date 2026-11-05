@@ -311,7 +311,7 @@ function Content() {
         }
       />
       {!isPrivate && !a.me?.capabilities.includes("access.contribute") ? (
-        <Text>暂未获得共享资格</Text>
+        <Text>暂未开通共享资格</Text>
       ) : null}
       {target ? (
         <View style={{ gap: 12 }}>

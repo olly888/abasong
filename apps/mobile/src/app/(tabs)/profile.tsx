@@ -1,10 +1,17 @@
 import { openContributionMenu } from "../../apartments/contribution-entry";
 import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "../../auth/AuthProvider";
 import { ListRow } from "../../ui/Primitives";
+import { PageHeader } from "../../ui/PageFrame";
 import { ActionButton, FormError } from "../../auth/AuthControls";
 import { tokens } from "@abasong/ui";
 export default function Profile() {
@@ -24,10 +31,13 @@ export default function Profile() {
   }
   return (
     <SafeAreaView style={styles.page} edges={["top"]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>我的</Text>
+      <View style={{ marginHorizontal: -20 }}>
+        <PageHeader title="我的" />
       </View>
-      <View style={{ gap: 20, marginTop: 24 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ gap: 20, paddingTop: 24, paddingBottom: 24 }}
+      >
         {auth.phase === "restoring" ||
         auth.phase === "loading-account" ||
         auth.phase === "signing-out" ? (
@@ -45,7 +55,7 @@ export default function Profile() {
             <Text style={styles.secondary}>
               {auth.me.capabilities.includes("access.read")
                 ? "公寓资料查看资格已开通"
-                : "资料查看资格待审核"}
+                : "暂未开通资料查看资格"}
             </Text>
             <ActionButton
               label="＋ 贡献公寓密码"
@@ -127,7 +137,7 @@ export default function Profile() {
           </>
         )}
         <FormError message={error} />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -136,14 +146,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.color.surface,
     paddingHorizontal: 20,
-  },
-  header: {
-    height: 64,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: -20,
-    borderBottomWidth: 1,
-    borderColor: tokens.color.surfaceMuted,
   },
   identity: { flexDirection: "row", alignItems: "center", gap: 16 },
   avatar: {
@@ -159,7 +161,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: tokens.color.brandPrimary,
   },
-  title: { fontSize: 19, fontWeight: "700", color: tokens.color.ink },
   name: { fontSize: 24, fontWeight: "600", color: tokens.color.ink },
   secondary: {
     fontSize: 15,

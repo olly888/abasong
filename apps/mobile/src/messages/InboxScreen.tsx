@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  AppState,
-  ActivityIndicator,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { AppState, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
@@ -13,6 +7,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { AuthPage, ActionButton, FormError } from "../auth/AuthControls";
 import { dataRequest } from "../apartments/client";
 import { ConversationRows, NotificationRows } from "./MessageViews";
+import { StatusPanel } from "../ui/Feedback";
 type S = components["schemas"];
 export default function InboxScreen() {
   const { session } = useAuth(),
@@ -214,7 +209,9 @@ export default function InboxScreen() {
           onPress={() => void load(scope.current)}
         />
       ) : null}
-      {busy && !items.length ? <ActivityIndicator /> : null}
+      {busy && !items.length ? (
+        <StatusPanel state="loading" title="正在加载消息" />
+      ) : null}
       {tab === "conversations" ? (
         <ConversationRows
           items={conversations}
@@ -229,16 +226,10 @@ export default function InboxScreen() {
         />
       )}
       {!busy && !error && !items.length ? (
-        <Text
-          style={{
-            textAlign: "center",
-            paddingTop: 48,
-            color: tokens.color.textSecondary,
-            fontSize: 16,
-          }}
-        >
-          {tab === "conversations" ? "暂无对话" : "暂无通知"}
-        </Text>
+        <StatusPanel
+          state="empty"
+          title={tab === "conversations" ? "暂无对话" : "暂无通知"}
+        />
       ) : null}
       {cursor ? (
         <ActionButton

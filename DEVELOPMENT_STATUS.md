@@ -1,5 +1,19 @@
 # Abasong development status
 
+## Acceptance update — B4 Android experience filter (2026-11-04)
+
+Owner replied to the earlier GOFO experience-filter task: confirmed. Record user-operated Android TEST acceptance: after 查看结果 only TEST小林 appears; switching to list retains that same sole result. Close the B4 final manual filter/map-list consistency item previously pending below. [Updated B4 evidence](docs/technical/D2_可用司机与地图找活找人实现.md). This is owner-confirmed simulator memory data, not new automated clicks, real accounts, messages, physical-device or field evidence. No App/data/grants/cloud changes or test rerun. Canonical architecture and master B4 status synchronized; prior pending notes below are historical. Current next work stays R2a prototype including warehouse pickup, then R3/R4 before B5; B6 gates unchanged.
+
+## Current action — DashLink pickup-location supplement (2026-11-04)
+
+Owner supplied five additional DashLink screenshots and clarified warehouse pickup before route delivery. Reviewed supplied images and current request form/DTOs; current implementation has pickup/delivery regions, not a structured warehouse address/map/copy/navigation chain. [UP11 product/design/technical supplement](docs/product/Abasong_V12.1_仓库取件地址与导航补充.md) adds this as R2a prototype target, not existing functionality. Warehouse pickup defaults to full confirmed address/name optional; en-route handoff remains coarse area plus ordinary text contact. No retired meeting-card API revival, warehouse directory, waitlist, priority ratings, guaranteed income, scanning/POD or route SDK. Existing all-regions/point/current-result discovery and apartment priorities remain.
+
+Updated product baseline/convergence, V3.2 target, C60–C73 copy, P03/D01 page targets, architecture value-object/privacy/version constraints, master roadmap and UP11/UX09 mapping. Detail can show an authorized published commercial pickup address before application; public summary/H5/push remain coarse. No exact driver location in navigation URL, false warehouse pin, or automatic application/arrival state. Google universal Maps URL and RN Linking official behavior checked; no external account or app operations. No images/GPS/profile copied/uploaded; only design observations recorded. No subagents or skills invoked this supplement.
+
+Branch codex/dashlink-pickup-plan from7939ab1/PR76; documentation only, App/HTML/tokens/OpenAPI/DDL/dependencies/cloud/grants/SMS unchanged. V3.1 remains active, upgraded prototype still not started; next R2a includes warehouse context. Prior B4 evidence and B6 real-account/KMS/push/physical/field gates unchanged. Documentation checks PASS: 15 documentation-only files, 304 local Markdown links, UP01–11 against the39-node page catalog/copy IDs/UX01–09, C60–C73 references and git diff whitespace check. Redacted staged secret scan is recorded in the PR after staging; no engineering/native test rerun for this scope.
+
+## Previous upgrade-plan delivery
+
 ## Current action — product, design and architecture upgrade plans (2026-11-04)
 
 Owner requests role-specific requirement/design-system/architecture summaries, corresponding documentation/copy updates and a prototype upgrade plan. Branch `codex/product-design-architecture-upgrade` from `e93fe12` (DoorDash research/PR75). Three independent AI role advisors reviewed product, UI and architecture read-only in isolated worktrees; root authored the converged documents. No outside human designer/Uber/Amazon signoff claimed. [Upgrade overview](docs/Abasong_V12.1_产品设计技术升级总览.md) links product plan, V3.2 proposal, copy V1, architecture increment, prototype R2/R3/R4 plan and UP/UX traceability.

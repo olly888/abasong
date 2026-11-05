@@ -126,7 +126,7 @@
       "prototype": "apply",
       "native": "apps/mobile/src/requests/ApplySheet.tsx",
       "implementation": "已实现",
-      "evidence": "iOS TEST实际报名面板截图；通用BottomSheet取消保留数据，Android默认版面需复开核对",
+      "evidence": "双端TEST实际报名面板截图；通用BottomSheet取消保留数据",
       "remaining": "真实报名不重复提交"
     },
     {
@@ -357,10 +357,9 @@
   ],
   "evidence_summary": {
     "prototype": "36 catalog pages plus mixed import, P03/P04/B02 validation and U09 inspector; browser synthetic only",
-    "native": "paired default-font screenshots and iOS component actions; no real business submissions",
+    "native": "paired default-font screenshots, iOS component actions, Android retry/sheet actions owner-confirmed; no real business submissions",
     "engineering": "358 tests / 64 files plus lint, typecheck, build; three-platform JS export",
     "pending": [
-      "Android component retry and sheet actions (user supplement requested)",
       "physical devices, software keyboard, large fonts and screen readers",
       "B6 real-account/cloud and business success states",
       "B4/B5 unimplemented pages"

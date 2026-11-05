@@ -1,5 +1,7 @@
 # Abasong 研发文档入口
 
+待决策评审：[“我的”、DSP身份与商业模式建议稿](product/reviews/Abasong_V3.2_我的菜单与DSP身份商业模式评审.md)（2026-11-05）。仅评审，未修改菜单/角色/联系方式可见性或收费，不能作为已生效规则。
+
 司机圈新增已批准目标：[首版图片发布](product/Abasong_V3.2_司机圈图片发布补充.md)、[定位与最小社区](product/Abasong_V3.2_司机圈定位与最小社区补充.md)、[C01–03原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-images&task=circle)。原生仍未开放，D15/D16/D17排B5；合成原型不是业务上线。
 
 ## 本轮先看：进入B5之前

@@ -2,7 +2,13 @@
 
 Updated2026-11-05 (America/Los_Angeles). Read [产品基线](产品基线.md), [docs index](docs/README.md), [development gate](docs/Abasong_V3.2_可开发与可验收基线.md). Previous current status preserved in the [bcfa054 snapshot](docs/archive/circle-images-20261105/工程状态_bcfa054快照.md); earlier history remains linked there.
 
-## Current batch — optional photos in the circle prototype
+## Current review — My menu, DSP identity and business model
+
+2026-11-05 owner requested a detailed review. [Review proposal](docs/product/reviews/Abasong_V3.2_我的菜单与DSP身份商业模式评审.md), branch `codex/v32-my-account-review` fromce6b45d/PR82: inspected current synthetic My/profile/organization/contacts screens and actual native/API/initial models; checked official Apple/Google purchase policy. Three screenshots and a synthetic observation record accompany the proposal. No save/send/API, user contact, auth, permission, subscription or UI behavior change. Recommendations are pending decision, not new product rules or adopted G/D/UP entries. App/contract/DB/cloud and existing release gates unchanged; no full build or native test for this review-only batch.
+
+Proposals: retain private contacts; use My Team / DSP Team Details; unified accounts with optional delivery/team purposes; voluntary contact sharing without exposing Auth phone; first release has no member joining or new DSP console; DSP subscription remains a later validation hypothesis, not an activated payment plan. Actual prior prototype evidence follows and is not reused as acceptance of these new proposals.
+
+## Last prototype delivery — optional photos in the circle prototype
 
 Owner approved text plus up to3 photos for the first circle release. Branch `codex/v32-circle-images`, based on `bcfa054` / PR81 (`codex/v32-driver-circle`). Documentation and independent V3.2 browser prototype only. App remains V3.1; native circle and actual media service remain pending B5. No apps/packages/OpenAPI/generator/migrations/dependencies/cloud/IAM/env/grants/SMS or real messages changed. No user photo, attachment, camera or photo library accessed.
 

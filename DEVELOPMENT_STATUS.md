@@ -1,5 +1,9 @@
 # Abasong development status
 
+## Acceptance update — B4 Android experience filter (2026-11-04)
+
+Owner replied to the earlier GOFO experience-filter task: confirmed. Record user-operated Android TEST acceptance: after 查看结果 only TEST小林 appears; switching to list retains that same sole result. Close the B4 final manual filter/map-list consistency item previously pending below. [Updated B4 evidence](docs/technical/D2_可用司机与地图找活找人实现.md). This is owner-confirmed simulator memory data, not new automated clicks, real accounts, messages, physical-device or field evidence. No App/data/grants/cloud changes or test rerun. Canonical architecture and master B4 status synchronized; prior pending notes below are historical. Current next work stays R2a prototype including warehouse pickup, then R3/R4 before B5; B6 gates unchanged.
+
 ## Current action — DashLink pickup-location supplement (2026-11-04)
 
 Owner supplied five additional DashLink screenshots and clarified warehouse pickup before route delivery. Reviewed supplied images and current request form/DTOs; current implementation has pickup/delivery regions, not a structured warehouse address/map/copy/navigation chain. [UP11 product/design/technical supplement](docs/product/Abasong_V12.1_仓库取件地址与导航补充.md) adds this as R2a prototype target, not existing functionality. Warehouse pickup defaults to full confirmed address/name optional; en-route handoff remains coarse area plus ordinary text contact. No retired meeting-card API revival, warehouse directory, waitlist, priority ratings, guaranteed income, scanning/POD or route SDK. Existing all-regions/point/current-result discovery and apartment priorities remain.

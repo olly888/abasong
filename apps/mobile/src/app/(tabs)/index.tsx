@@ -12,6 +12,7 @@ export default function Home() {
   }>();
   const [mode, setMode] = useState<HomeMode>("公寓");
   const [list, setList] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   useEffect(() => {
     if (params.apartment_id || params.destination_key) {
       setMode("公寓");
@@ -23,9 +24,11 @@ export default function Home() {
       mode={mode}
       list={list}
       onToggleList={() => setList(!list)}
+      onSearch={() => setFiltersOpen(true)}
       onMode={(m) => {
         setMode(m);
         setList(false);
+        setFiltersOpen(false);
       }}
     />
   );
@@ -35,6 +38,9 @@ export default function Home() {
         toolbar={toolbar}
         mode={mode}
         list={list}
+        filtersOpen={filtersOpen}
+        onCloseFilters={() => setFiltersOpen(false)}
+        onToggleList={() => setList(!list)}
         destinationKey={
           typeof params.destination_key === "string"
             ? params.destination_key

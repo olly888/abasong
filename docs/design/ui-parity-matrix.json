@@ -43,19 +43,19 @@
       "id": "H02",
       "name": "首页·找活",
       "prototype": "home/jobs",
-      "native": "apps/mobile/src/components/HomeChrome.tsx",
-      "implementation": "部分实现",
-      "evidence": "模式外壳，列表与地图完整数据仍B4",
-      "remaining": "不把未接通标为空任务或通过"
+      "native": "apps/mobile/src/drivers/CollaborationHome.tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端TEST区域需求卡/地图列表与筛选；原型同步。区域点不等于精确取件点",
+      "remaining": "真实需求、完整大字号/读屏/物理设备B6"
     },
     {
       "id": "H03",
       "name": "首页·找人",
       "prototype": "home/people",
-      "native": "apps/mobile/src/components/HomeChrome.tsx",
-      "implementation": "部分实现",
-      "evidence": "模式外壳；司机可用区域服务B4",
-      "remaining": "不展示假实时司机"
+      "native": "apps/mobile/src/drivers/CollaborationHome.tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端TEST司机地图/列表、资料返回、筛选、失败重试及声明到期清卡；不发布GPS",
+      "remaining": "真实账号协作/现场B6"
     },
     {
       "id": "S01",
@@ -151,10 +151,10 @@
       "id": "D02",
       "name": "司机档案",
       "prototype": "driver",
-      "native": null,
-      "implementation": "待开发",
-      "evidence": "仅原型；司机资料完整原生尚未接",
-      "remaining": "B4，未编造验收"
+      "native": "apps/mobile/src/app/drivers/[id].tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端TEST公开档案和联系回调；实际HTTP字段隔离/屏蔽；常联系与举报仍B5",
+      "remaining": "真实文字联系B6；B5补本人经验编辑"
     },
     {
       "id": "M01",
@@ -216,17 +216,17 @@
       "prototype": "profile",
       "native": "apps/mobile/src/app/auth/profile.tsx",
       "implementation": "部分实现",
-      "evidence": "仅最小显示名；原型更多经验尚未接",
-      "remaining": "B4，不能以A04通过代替U02"
+      "evidence": "仅最小显示名；读取已有自报经验已接，但编辑尚未接",
+      "remaining": "B5优先补最小本人资料与经验编辑，不以A04代替"
     },
     {
       "id": "U03",
       "name": "可接活设置",
       "prototype": "availability",
-      "native": null,
-      "implementation": "待开发",
-      "evidence": "仅原型",
-      "remaining": "B4"
+      "native": "apps/mobile/src/app/account/availability.tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端共用实际表单，关闭保存与日期控件；真实HTTP/PG版本、时间、区域、关闭及到期",
+      "remaining": "真人保存/完整软键盘与辅助技术B6"
     },
     {
       "id": "U04",
@@ -362,7 +362,8 @@
     "pending": [
       "physical devices, software keyboard, large fonts and screen readers",
       "B6 real-account/cloud and business success states",
-      "B4/B5 unimplemented pages"
-    ]
+      "B5 remaining pages including own profile/experience editing"
+    ],
+    "b4": "本轮报告D2_可用司机与地图找活找人实现.md；双端TEST实际业务组件与隔离HTTP/PG分列，无新原生二进制/云变化"
   }
 }

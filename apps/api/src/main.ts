@@ -1,3 +1,5 @@
+import { DriversController } from "./requests/drivers.controller";
+import { DriversService } from "./requests/drivers.service";
 import { DevicesService } from "./requests/devices.service";
 import {
   DevicesController,
@@ -71,6 +73,7 @@ class HealthController {
     RequestsController,
     CollaborationController,
     DevicesController,
+    DriversController,
     InstallationRevocationController,
   ],
   providers: [
@@ -88,6 +91,7 @@ class HealthController {
     CollaborationService,
     MessagingService,
     DevicesService,
+    DriversService,
     {
       provide: MapboxNearbyProvider,
       useFactory: () => new MapboxNearbyProvider(),

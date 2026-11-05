@@ -15,11 +15,13 @@ export function HomeChrome({
   onMode,
   list = false,
   onToggleList,
+  onSearch,
 }: {
   mode: HomeMode;
   onMode: (m: HomeMode) => void;
   list?: boolean;
   onToggleList?: () => void;
+  onSearch?: () => void;
 }) {
   const unread = useInboxCount();
   return (
@@ -30,9 +32,11 @@ export function HomeChrome({
           accessibilityLabel={
             mode === "公寓" ? "搜索公寓或地址" : "搜索区域或承运商"
           }
-          accessibilityState={{ disabled: mode !== "公寓" }}
-          disabled={mode !== "公寓"}
-          onPress={() => router.push("/apartments")}
+          accessibilityState={{ disabled: mode !== "公寓" && !onSearch }}
+          disabled={mode !== "公寓" && !onSearch}
+          onPress={() =>
+            mode === "公寓" ? router.push("/apartments") : onSearch?.()
+          }
           style={styles.search}
         >
           <Icon name="search" size={21} color={tokens.color.textSecondary} />

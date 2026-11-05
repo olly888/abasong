@@ -95,6 +95,7 @@ export const requestPageInput = z
     kind: requestKind.optional(),
     carrier: text(80).optional(),
     query: text(200).optional(),
+    day: z.iso.date().optional(),
   })
   .strict();
 export function checked<T>(schema: z.ZodType<T>, input: unknown): T {

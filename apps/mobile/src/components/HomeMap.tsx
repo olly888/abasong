@@ -1,4 +1,5 @@
 import Mapbox from "@rnmapbox/maps";
+import { tokens } from "@abasong/ui";
 import { Text, StyleSheet, View } from "react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Camera } from "@rnmapbox/maps";
@@ -35,6 +36,9 @@ export default function HomeMap({
   bottomInset = 210,
   topInset = 164,
   overlay,
+  areaMarkers = [],
+  selectedAreaIds = [],
+  onAreaSelect,
   testMapStyle,
   onTestBuildingResult,
 }: HomeMapProps = {}) {
@@ -461,6 +465,39 @@ export default function HomeMap({
             />
           </Mapbox.PointAnnotation>
         ))}
+      {areaMarkers.map((r) => (
+        <Mapbox.PointAnnotation
+          anchor={{ x: 0.5, y: 1 }}
+          key={`support-${r.id}`}
+          id={`support-${r.id}`}
+          coordinate={[r.point.lng, r.point.lat]}
+          onSelected={() => onAreaSelect?.(r.id)}
+        >
+          <View
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 16,
+              borderWidth: 2,
+              borderColor: tokens.color.surface,
+              backgroundColor: selectedAreaIds.includes(r.id)
+                ? tokens.color.brandPrimary
+                : tokens.color.ink,
+            }}
+          >
+            <Text
+              style={{
+                color: tokens.color.onBrand,
+                fontSize: 13,
+                fontWeight: "600",
+              }}
+            >
+              {r.label}
+              {r.count > 1 ? ` · ${r.count}` : ""}
+            </Text>
+          </View>
+        </Mapbox.PointAnnotation>
+      ))}
       {overlay}
     </Mapbox.MapView>
   );

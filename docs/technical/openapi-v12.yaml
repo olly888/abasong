@@ -2882,6 +2882,18 @@ paths:
         schema:
           type: string
           maxLength: 200
+      - name: carrier
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 80
+      - name: day
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
       - name: kind
         in: query
         required: false
@@ -2893,12 +2905,6 @@ paths:
           - extra_drivers
           - vehicle_help
           - other_help
-      - name: carrier
-        in: query
-        required: false
-        schema:
-          type: string
-          maxLength: 80
     post:
       operationId: createDraft
       summary: 创建本人需求草稿
@@ -4132,7 +4138,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     put:
       operationId: setMyAvailability
-      summary: 首建expected_version=0，更新校验版本；后台到期
+      summary: 首建expected_version=0，更新校验版本；启用必填7天内开始、最长24小时的时段与1–5个区域；关闭只需版本和enabled=false；按服务端时间自然到期
       tags:
       - me
       responses:
@@ -4203,7 +4209,7 @@ paths:
   /v1/drivers:
     get:
       operationId: listAvailableDrivers
-      summary: 仅主动开放且时段有效的区域司机
+      summary: 仅主动开放、未到期的当前或未来7天内区域声明；非在线状态；无精确GPS
       tags:
       - drivers
       responses:
@@ -4290,6 +4296,12 @@ paths:
         schema:
           type: string
           maxLength: 80
+      - name: day
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
   /v1/drivers/{user_id}:
     get:
       operationId: getDriver
@@ -10417,6 +10429,7 @@ components:
         expected_version:
           type: integer
           minimum: 0
+          maximum: 2147483646
         enabled:
           type: boolean
         starts_at:
@@ -10430,18 +10443,21 @@ components:
           items:
             type: string
             format: uuid
+          minItems: 1
+          maxItems: 5
+          uniqueItems: true
         capacity_parcels:
           type: integer
           minimum: 1
+          maximum: 10000
+          nullable: true
         latest_finish_at:
           type: string
           format: date-time
+          nullable: true
       required:
       - expected_version
       - enabled
-      - starts_at
-      - ends_at
-      - region_ids
     Availability:
       type: object
       additionalProperties: false

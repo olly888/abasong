@@ -83,10 +83,12 @@ export function Choice<T extends string>({
 export function RequestCard({
   request: r,
   region,
+  pickupRegion,
   onPress,
 }: {
   request: DeliveryRequest;
   region?: string;
+  pickupRegion?: string;
   onPress: () => void;
 }) {
   return (
@@ -104,8 +106,12 @@ export function RequestCard({
       </Text>
       <View style={requestStyles.row}>
         <Text style={requestStyles.text}>
-          {r.parcel_count ? `${r.parcel_count} 件` : r.description || ""}
-          {r.drivers_needed ? ` · ${r.drivers_needed} 人` : ""}
+          {r.parcel_count
+            ? `剩余 ${r.remaining_parcels ?? r.parcel_count} 件`
+            : r.description || ""}
+          {r.drivers_needed
+            ? ` · 需 ${r.remaining_drivers ?? r.drivers_needed} 人`
+            : ""}
         </Text>
         <Text style={requestStyles.price}>
           {["vehicle_help", "other_help"].includes(r.kind)
@@ -113,6 +119,17 @@ export function RequestCard({
             : requestPrice(r)}
         </Text>
       </View>
+      {r.parcel_count ? (
+        <Text style={requestStyles.secondary}>
+          {pickupRegion ? `取件 ${pickupRegion} · ` : ""}
+          {r.accepts_partial
+            ? r.minimum_parcels
+              ? `最低 ${r.minimum_parcels} 件`
+              : "可拆分承接"
+            : "整批承接"}
+          {r.carrier ? ` · ${r.carrier}` : ""}
+        </Text>
+      ) : null}
       <Text style={requestStyles.secondary}>
         {requestTime(r.starts_at)} · {r.publisher.display_name}
       </Text>
@@ -121,7 +138,7 @@ export function RequestCard({
 }
 export const requestStyles = StyleSheet.create({
   label: { color: tokens.color.ink, fontSize: 15, fontWeight: "600" },
-  headline: { fontSize: 22, fontWeight: "700", color: tokens.color.ink },
+  headline: { fontSize: 20, fontWeight: "700", color: tokens.color.ink },
   text: {
     color: tokens.color.ink,
     fontSize: 16,
@@ -143,7 +160,7 @@ export const requestStyles = StyleSheet.create({
     padding: 18,
     borderWidth: 1,
     borderColor: tokens.color.border,
-    borderRadius: 18,
+    borderRadius: 16,
     gap: 12,
     backgroundColor: tokens.color.surface,
   },

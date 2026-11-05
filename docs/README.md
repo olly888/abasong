@@ -1,6 +1,6 @@
 # Abasong 研发文档入口
 
-更新2026-11-04。当前先完成产品/设计/技术收敛与新版原型，再按差异恢复代码批次。文档已写、原型可操作、服务已实现、原生观察及现场验收是不同状态。
+更新2026-11-05。产品/设计/技术已收敛，R2a核心原型已制作待用户确认，再按差异恢复实际代码批次。文档已写、原型可操作、服务已实现、原生观察及现场验收是不同状态。
 
 ## 当前入口
 
@@ -12,8 +12,9 @@
 
 - [产品体验升级与需求收敛](product/Abasong_V12.1_产品体验升级与需求收敛方案.md)：目标优先级、日期/区域/数量含义、UX01–09。
 - [页面功能与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[现行39节点目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
-- [当前原型v12.1-import](../design/abasong-independent-v1/v12.1-import/index.html)、[说明](../design/abasong-independent-v1/v12.1-import/README.md)、[历史验收](../design/abasong-independent-v1/v12.1-import/验收记录.md)：合成交互，不能证明真实接口与权限。
-- [新版原型制作与验收方案](product/Abasong_V12.1_原型升级制作与验收方案.md)：R2地图→填写恢复→共用状态；尚未制作。
+- [V3.2新版原型](../design/abasong-independent-v1/v12.1-experience/index.html)、[说明](../design/abasong-independent-v1/v12.1-experience/README.md)、[R2a实际检查](../design/abasong-independent-v1/v12.1-experience/验收记录.md)：核心地图/滑卡/找活找人/仓库流程可体验，24项浏览器检查通过，待用户确认；App未改。
+- [旧版参考v12.1-import](../design/abasong-independent-v1/v12.1-import/index.html)、[说明](../design/abasong-independent-v1/v12.1-import/README.md)、[历史验收](../design/abasong-independent-v1/v12.1-import/验收记录.md)：合成交互，不能证明真实接口与权限。
+- [新版原型制作与验收方案](product/Abasong_V12.1_原型升级制作与验收方案.md)：R2a核心已制作待确认；R2b/R2c未覆盖状态继续单列。
 - [仓库取件地址与导航补充](product/Abasong_V12.1_仓库取件地址与导航补充.md)：本轮DashLink截图借鉴，UP11/UX09原型目标；不恢复独立集合点或候补。
 - [截图贡献需求](product/Abasong_V12.1_截图批量贡献需求补充.md)、[附近滑卡补充](product/Abasong_V12.1_附近公寓滑卡补充.md)、[我的公寓](product/Abasong_V12.1_我的公寓与私存共享补充.md)。旧细节服从最新产品基线。
 - [V12基础PRD](../Abasong_PRD_V12_首版产品需求.md)、[V12.1补充](Abasong_V12.1_需求补充与原型决策.md)。

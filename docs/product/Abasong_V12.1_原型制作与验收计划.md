@@ -2,10 +2,12 @@
 
 2026-11-04收敛。下一版制作唯一执行入口为[原型升级制作与验收方案](Abasong_V12.1_原型升级制作与验收方案.md)，避免与历史页数/状态计数及旧交互要求并行。
 
+[本轮V3.2体验入口](../../design/abasong-independent-v1/v12.1-experience/index.html)、[浏览器检查范围](../../design/abasong-independent-v1/v12.1-experience/验收记录.md)。旧原型及实际App保留，24项浏览器检查不代替原生验收。
+
 ## 现行与目标
 
 - 当前可体验：[v12.1-import](../../design/abasong-independent-v1/v12.1-import/index.html)，App组件规范仍V3.1。
-- 目标：[V3.2设计方案](../design/Abasong_设计系统_V3.2_升级方案.md)、[文案V1](../design/Abasong_界面文案与状态规范_V1.md)，原型尚未制作。
+- 目标：[V3.2设计方案](../design/Abasong_设计系统_V3.2_升级方案.md)、[文案V1](../design/Abasong_界面文案与状态规范_V1.md)，R2a核心原型已制作，待用户确认；其他状态未全部补齐。
 - 现行页面ID/目录保留；本次新增[升级追踪矩阵](../design/experience-upgrade-matrix.json)，不拿目标状态覆盖既有原生验收记录。
 
 ## 顺序与出口

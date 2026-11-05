@@ -57,7 +57,8 @@
     "G17",
     "G18",
     "G19",
-    "G20"
+    "G20",
+    "G21"
   ],
   "difference_ids": [
     "D01",
@@ -79,7 +80,8 @@
     "D17",
     "D18",
     "D19",
-    "D20"
+    "D20",
+    "D21"
   ],
   "evidence_ids": [
     "E01",
@@ -150,5 +152,23 @@
   "retired_page_ids": [
     "U08"
   ],
-  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json"
+  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json",
+  "requirements_version": "invitation_proposal_20261105",
+  "invitation_proposal": {
+    "status": "documented_not_prototyped",
+    "requirements": "Abasong_V3.2_邀请司机功能方案.md",
+    "planned_page_ids": [
+      "U15",
+      "X02"
+    ],
+    "difference_id": "D21",
+    "design_upgrade": "UP18",
+    "acceptance": "UX16",
+    "app_changed": false,
+    "prototype_changed": false,
+    "invite_sent": false,
+    "tests_executed": 0,
+    "active_page_count_unchanged": 38,
+    "scope": "documents_and_baseline_validation_only"
+  }
 }

@@ -1,5 +1,5 @@
 {
-  "version": "1.7",
+  "version": "1.8",
   "date": "2026-11-05",
   "status": "planned",
   "current_design": "V3.1",
@@ -431,6 +431,32 @@
       ],
       "implementation_dependency": "D20_own_team_opt_in_contact_source_snapshot",
       "prototype_status": "account_implemented_synthetic_native_service_pending"
+    },
+    {
+      "id": "UP18",
+      "pages": [
+        "U01",
+        "U15",
+        "X02"
+      ],
+      "copy_ids": [
+        "C146",
+        "C147",
+        "C148",
+        "C149",
+        "C150",
+        "C151",
+        "C152",
+        "C153",
+        "C154",
+        "C155"
+      ],
+      "batch": "B5-invitation-plan",
+      "acceptance": [
+        "UX16"
+      ],
+      "implementation_dependency": "D21_generic_share_qr_landing_valid_distribution_links_no_grant",
+      "prototype_status": "proposal_only_not_implemented"
     }
   ],
   "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/index.html",
@@ -440,5 +466,6 @@
   "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
   "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json",
   "account_report": "../../design/abasong-independent-v1/v12.1-experience/account-checks.json",
-  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json"
+  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json",
+  "invitation_plan": "../product/Abasong_V3.2_邀请司机功能方案.md"
 }

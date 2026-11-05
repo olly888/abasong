@@ -1,0 +1,340 @@
+/* V3.2 circle uses the existing tokens and natural-height feed variants. */
+.circle-root .circle-scroll {
+  padding: 0;
+  scrollbar-width: none;
+}
+.circle-root-head {
+  position: sticky;
+  top: 0;
+  background: var(--ab-color-surface, #fff);
+  z-index: 3;
+  padding: 0 20px;
+  border-bottom: 1px solid #edf0f3;
+  min-height: 64px;
+  margin: 0;
+}
+.circle-publish {
+  border: 0;
+  background: none;
+  color: #1467d8;
+  font-size: 16px;
+  font-weight: 600;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0;
+}
+.circle-card {
+  padding: 22px 20px 14px;
+  border-bottom: 1px solid #e7ebef;
+  background: #fff;
+}
+.circle-author-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.circle-author {
+  padding: 0;
+  border: 0;
+  background: none;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  color: #101114;
+}
+.circle-author .avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.circle-author b {
+  font-size: 15px;
+  font-weight: 600;
+  display: block;
+}
+.circle-author small {
+  display: block;
+  font-size: 12px;
+  line-height: 18px;
+  color: #686c73;
+  margin-top: 3px;
+}
+.circle-author-row > .icon-btn {
+  width: 48px;
+  min-height: 48px;
+  align-self: flex-start;
+}
+.circle-topic {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 18px;
+  color: #686c73;
+  background: #f3f5f7;
+  border-radius: 6px;
+  padding: 3px 7px;
+  margin-bottom: 9px;
+}
+.circle-text {
+  font-size: 16px;
+  line-height: 26px;
+  color: #101114;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.circle-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.circle-text-action {
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  min-height: 48px;
+  color: #1467d8;
+  font-size: 14px;
+}
+.circle-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.circle-reply-link {
+  border: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #686c73;
+  font-size: 14px;
+  min-height: 48px;
+  padding: 0 3px 0 14px;
+}
+.circle-reply-link svg {
+  width: 18px;
+  height: 18px;
+}
+.circle-source {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  background: #fafcff;
+  color: #101114;
+  text-align: left;
+  margin-top: 14px;
+}
+.circle-source-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: #686c73;
+}
+.circle-source-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.circle-source-title b {
+  font-size: 18px;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.circle-source-title strong {
+  font-size: 18px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.circle-source-title strong > span {
+  font-size: 12px;
+  color: #686c73;
+  font-weight: 400;
+}
+.circle-source-facts {
+  font-size: 13px;
+  line-height: 20px;
+  color: #53565b;
+}
+.circle-source-unavailable {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f5f6f8;
+  color: #686c73;
+  font-size: 14px;
+}
+.circle-status {
+  padding: 40px 20px;
+  text-align: center;
+  color: #686c73;
+}
+.circle-status h2 {
+  font-size: 18px;
+  color: #53565b;
+  font-weight: 600;
+  margin: 0 0 22px;
+}
+.circle-status .button {
+  margin: 18px auto 0;
+}
+.circle-detail {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.circle-detail-head {
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+.circle-detail-head .page-head {
+  margin: 0;
+  border-bottom: 1px solid #edf0f3;
+  min-height: 64px;
+}
+.circle-detail-scroll {
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+}
+.circle-detail .circle-card {
+  border-bottom: 0;
+}
+.circle-comments {
+  padding: 0 20px 24px;
+}
+.circle-comments h2 {
+  font-size: 16px;
+  font-weight: 600;
+  padding-top: 18px;
+  border-top: 1px solid #e7ebef;
+}
+.circle-comment {
+  padding: 14px 0;
+  border-bottom: 1px solid #edf0f3;
+}
+.circle-comment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 40px;
+}
+.circle-comment-head > button {
+  padding: 0;
+  min-height: 48px;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: #101114;
+  font-weight: 600;
+}
+.circle-comment-head > span {
+  font-size: 12px;
+  color: #686c73;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.circle-comment-head .text-btn {
+  font-size: 12px;
+  padding: 0 6px;
+  min-height: 48px;
+}
+.circle-comment p {
+  font-size: 16px;
+  line-height: 26px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.circle-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 12px 20px 20px;
+  border-top: 1px solid #e7ebef;
+  background: #fff;
+  flex-shrink: 0;
+}
+.circle-composer textarea {
+  height: 52px;
+  min-height: 52px;
+  max-height: 110px;
+  padding: 12px;
+  font-size: 16px;
+  line-height: 24px;
+  resize: vertical;
+  background: #f6f7f9;
+}
+.circle-composer .button {
+  height: 52px;
+  min-height: 52px;
+  padding: 0 16px;
+  align-self: end;
+}
+.circle-error {
+  font-size: 14px;
+  line-height: 22px;
+  color: #ad3331;
+  grid-column: 1/-1;
+  margin: 0;
+}
+.circle-editor {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.circle-editor > .page-scroll {
+  padding: 0 20px 24px;
+  flex: 1;
+  min-height: 0;
+}
+.circle-editor .page-head {
+  margin: 0 0 16px;
+  min-height: 64px;
+}
+.circle-editor textarea {
+  min-height: 180px;
+  font-size: 16px;
+  line-height: 26px;
+  resize: vertical;
+}
+.circle-editor-options {
+  margin-top: 20px;
+}
+.circle-editor-actions {
+  padding: 12px 20px 20px;
+  border-top: 1px solid #e7ebef;
+  flex-shrink: 0;
+}
+.circle-editor-actions > .button {
+  width: 100%;
+}
+.circle-composer .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 740px) {
+  .circle-composer,
+  .circle-editor-actions {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}

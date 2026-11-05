@@ -1,0 +1,89 @@
+{
+  "prototype_version": "3.2-circle",
+  "executed_at": "2026-11-05T16:59:49.123Z",
+  "scope": "isolated synthetic circle browser checks; state injection only for reference/version fault; no business services",
+  "checks": [
+    {
+      "name": "根页无返回箭头，发布清晰，空回复无零数值、自然高度",
+      "status": "PASS"
+    },
+    {
+      "name": "地区与轻量标签、自报作者可读，不显示精确司机距离",
+      "status": "PASS"
+    },
+    {
+      "name": "长文四行展开、收起不跳滚动，详情返回保留列表位置",
+      "status": "PASS"
+    },
+    {
+      "name": "作者进入最小资料、复用私聊与常联系",
+      "status": "PASS"
+    },
+    {
+      "name": "发布菜单分动态与临时需求，后者使用统一发布流程",
+      "status": "PASS"
+    },
+    {
+      "name": "动态可选地区标签和同ID需求，发布成功出现在最新首位",
+      "status": "PASS"
+    },
+    {
+      "name": "发布失败保留文字、地区、标签和引用，再试不重复发布",
+      "status": "PASS"
+    },
+    {
+      "name": "空动态校验、不公开明确门码文本",
+      "status": "PASS"
+    },
+    {
+      "name": "离开发动态：继续编辑、保留草稿、放弃各自明确",
+      "status": "PASS"
+    },
+    {
+      "name": "回复失败不加假回复，保留输入，同条重试只成功一次",
+      "status": "PASS"
+    },
+    {
+      "name": "各动态回复草稿隔离，返回后输入仍保留",
+      "status": "PASS"
+    },
+    {
+      "name": "需求引用实时读同对象：价格/缺口/终态更新，无旧副本",
+      "status": "PASS"
+    },
+    {
+      "name": "引用不可见时不显示旧报价或完整仓库地址",
+      "status": "PASS"
+    },
+    {
+      "name": "屏蔽作者即时移除动态和回复通知，其他本人内容保留",
+      "status": "PASS"
+    },
+    {
+      "name": "本人删除与旧通知回跳：显示已删除，无旧正文",
+      "status": "PASS"
+    },
+    {
+      "name": "回复通知复用消息中心、打开标已读，圈内不加消息图标",
+      "status": "PASS"
+    },
+    {
+      "name": "加载/空/失败区分，重试后恢复且无假动态",
+      "status": "PASS"
+    },
+    {
+      "name": "退出清除圈内草稿，游客发布需登录且不生成动态",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430窄屏：信息流不横溢出，编辑/回复操作可见",
+      "status": "PASS"
+    }
+  ],
+  "passed": 19,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "human_participants": 0,
+  "native_acceptance": false
+}

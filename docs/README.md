@@ -1,5 +1,9 @@
 # Abasong 研发文档入口
 
+## 本轮先看：进入B5之前
+
+[可开发与可验收基线](Abasong_V3.2_可开发与可验收基线.md)统一六步和门槛：[竞品证据](research/Abasong_竞品与替代方案证据表_2026-11-05.md) → [需求缺口](product/V3.2_首版需求缺口与范围裁决.md) → [五核心原型](../design/abasong-independent-v1/v12.1-experience/review.html) → [5司机/2DSP任务包](usability/V3.2_五司机两DSP可用性测试包.md) → [源码差异与分批](technical/V3.2_原型到代码差异与实施批次.md)。真实观察0/7，准备不等于通过；App未改、B5未启。旧工程状态和总计划全文移到[历史档案](archive/development-gate-20261105/README.md)。
+
 更新2026-11-05。产品/设计/技术已收敛，R2a核心原型已制作待用户确认，再按差异恢复实际代码批次。文档已写、原型可操作、服务已实现、原生观察及现场验收是不同状态。
 
 ## 当前入口
@@ -10,7 +14,7 @@
 
 ## 产品与原型
 
-- [产品体验升级与需求收敛](product/Abasong_V12.1_产品体验升级与需求收敛方案.md)：目标优先级、日期/区域/数量含义、UX01–09。
+- [产品体验升级与需求收敛](product/Abasong_V12.1_产品体验升级与需求收敛方案.md)：目标优先级、日期/区域/数量含义、UX01–10。
 - [页面功能与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[现行39节点目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
 - [V3.2新版原型](../design/abasong-independent-v1/v12.1-experience/index.html)、[说明](../design/abasong-independent-v1/v12.1-experience/README.md)、[R2a实际检查](../design/abasong-independent-v1/v12.1-experience/验收记录.md)：核心地图/滑卡/找活找人/仓库流程可体验，34项浏览器检查通过，待用户确认；App未改。
 - [旧版参考v12.1-import](../design/abasong-independent-v1/v12.1-import/index.html)、[说明](../design/abasong-independent-v1/v12.1-import/README.md)、[历史验收](../design/abasong-independent-v1/v12.1-import/验收记录.md)：合成交互，不能证明真实接口与权限。

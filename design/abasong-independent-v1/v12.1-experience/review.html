@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Abasong · 核心流程评审</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f5f7fa;
+      color: #101114;
+      font:
+        16px/1.6 system-ui,
+        sans-serif;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: 32px;
+      line-height: 1.2;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+    p {
+      color: #53565b;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    a {
+      color: #1467d8;
+    }
+    nav a {
+      display: block;
+      padding: 12px 18px;
+      background: #1467d8;
+      color: #fff;
+      border-radius: 12px;
+      text-decoration: none;
+      min-height: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    article {
+      background: #fff;
+      border: 1px solid #e5e8ed;
+      border-radius: 20px;
+      padding: 24px;
+    }
+    small {
+      color: #686c73;
+    }
+    a:focus-visible {
+      outline: 3px solid #1467d8;
+      outline-offset: 4px;
+    }
+    li {
+      margin: 8px 0;
+    }
+  </style>
+  <main>
+    <small>V3.2 · R3 核心流程评审 / 2026-11-05</small>
+    <h1>先把核心任务走通。</h1>
+    <p>
+      查码、贡献、本人纠正、临时支援和联系。本页是评审入口，不是司机产品页面。全部为合成资料，不会发送消息或共享到真实服务。
+    </p>
+    <nav><a href="index.html?v=r3-core">从首页开始体验</a></nav>
+    <div class="grid">
+      <article>
+        <h2>01 核对地址与查码</h2>
+        <p>
+          门牌和密码直接读；横滑切公寓、地图同步；暂无密码和读取失败分别表达。
+        </p>
+        <a href="index.html?v=r3-core">查看公寓流程</a>
+      </article>
+      <article>
+        <h2>02 贡献公寓资料</h2>
+        <p>
+          选择TEST截图、检查字符和地址、确认共享。未收录地址须由本人核对，不猜绑附近公寓。
+        </p>
+        <a href="index.html?v=r3-core&amp;task=contribution">查看贡献入口</a>
+      </article>
+      <article>
+        <h2>03 纠正本人贡献</h2>
+        <p>
+          查看自己的共享来源并纠正；他人的资料与历史反馈保留，没有普通撤回入口。
+        </p>
+        <a href="index.html?v=r3-core&amp;task=correction">查看我共享的</a>
+      </article>
+      <article>
+        <h2>04 临时配送支援</h2>
+        <p>
+          区域与日期筛选、滑卡和列表；核对仓库完整地址、复制/地图/导航；报名后继续文字联系。
+        </p>
+        <a href="index.html?v=r3-core&amp;task=support">查看找活流程</a>
+      </article>
+      <article>
+        <h2>05 联系与失败恢复</h2>
+        <p>
+          来源需求保留报价版本。发送失败可重试；报名、已发送、已读和到场各自不同。
+        </p>
+        <a href="index.html?v=r3-core&amp;task=messages">查看统一消息</a>
+      </article>
+    </div>
+    <h2>如何记录本轮体验</h2>
+    <ul>
+      <li>真实参与者从首页开始，主持人不使用上述快捷入口提示路线。</li>
+      <li>记录是否独立完成、耗时、误操作和困惑；本页不自动收集行为。</li>
+      <li>地图/GPS/OCR/权限及共享均为演示；真人可用性和双端原生另行验收。</li>
+    </ul>
+    <p>
+      <a href="README.md">原型范围说明</a> ·
+      <a href="验收记录.md">工程检查与未测范围</a>
+    </p>
+  </main>
+</html>

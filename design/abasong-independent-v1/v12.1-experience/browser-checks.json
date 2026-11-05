@@ -1,6 +1,6 @@
 {
-  "prototype_version": "3.2-r2a2",
-  "executed_at": "2026-11-05T09:10:56.978Z",
+  "prototype_version": "3.2-r3-core",
+  "executed_at": "2026-11-05T15:58:06.823Z",
   "scope": "isolated Chromium prototype; synthetic business data; external navigation not opened; clipboard stubbed",
   "checks": [
     {

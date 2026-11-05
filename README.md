@@ -1,11 +1,13 @@
 # Abasong
 
+[本轮六步开发基准](docs/Abasong_V3.2_可开发与可验收基线.md)：竞品证据、需求缺口、核心原型及代码差异已准备；5司机/2DSP任务未测，B5在门槛和P0差异后。
+
 [GitHub仓库](https://github.com/olly888/abasong) · [开发任务](https://github.com/olly888/abasong/issues) · [里程碑](https://github.com/olly888/abasong/milestones) · [项目看板（需权限）](https://github.com/users/olly888/projects/1) · [自动检查](https://github.com/olly888/abasong/actions)
 
 
 V12.1 临时配送支援与公寓进入信息协作应用。产品基线见 [产品基线](产品基线.md)，工程进度见 [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md)。
 
-[V3.2新版原型已可体验](http://127.0.0.1:8765/v12.1-experience/index.html?v=r2a2)，核心交互待用户确认；范围见[升级总览](docs/Abasong_V12.1_产品设计技术升级总览.md)。App仍执行V3.1；V3.2是待验证目标，本轮未修改应用或云环境。
+[V3.2新版原型已可体验](http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-core)，核心交互待用户确认；范围见[升级总览](docs/Abasong_V12.1_产品设计技术升级总览.md)。App仍执行V3.1；V3.2是待验证目标，本轮未修改应用或云环境。
 
 ## 本地启动
 

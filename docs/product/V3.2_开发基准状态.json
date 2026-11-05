@@ -1,0 +1,100 @@
+{
+  "version": "V3.2-R3",
+  "date": "2026-11-05",
+  "code_audit_base": "849cc759a4c92c2f1d16093ab5ceff65459ed733",
+  "app_design": "V3.1",
+  "prototype": "3.2-r3-core",
+  "scope": "documents_and_independent_prototype_only",
+  "app_changed": false,
+  "gates": {
+    "research_evidence": "documented_primary_sources_not_competitor_account_test",
+    "requirements": "scoped",
+    "core_prototype": "synthetic_checks_only",
+    "human_usability": "not_scheduled",
+    "baseline_documents": "aligned_target_not_released_contracts",
+    "implementation": "queued_not_started"
+  },
+  "human_testing": {
+    "drivers_required": 5,
+    "dsp_required": 2,
+    "completed": 0,
+    "template_rows": 38,
+    "results": "not_run"
+  },
+  "development_ready": false,
+  "b5_ready": false,
+  "pending": [
+    "human_task_observation",
+    "prototype_user_confirmation",
+    "R4_P0_differences_before_B5"
+  ],
+  "evidence": "../research/Abasong_竞品与替代方案证据表_2026-11-05.md",
+  "requirements": "V3.2_首版需求缺口与范围裁决.md",
+  "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/review.html",
+  "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json",
+  "usability": "../usability/V3.2_五司机两DSP可用性测试包.md",
+  "differences": "../technical/V3.2_代码差异清单.csv",
+  "requirement_ids": [
+    "G01",
+    "G02",
+    "G03",
+    "G04",
+    "G05",
+    "G06",
+    "G07",
+    "G08",
+    "G09",
+    "G10",
+    "G11",
+    "G12",
+    "G13",
+    "G14"
+  ],
+  "difference_ids": [
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06",
+    "D07",
+    "D08",
+    "D09",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14"
+  ],
+  "evidence_ids": [
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "E11",
+    "E12"
+  ],
+  "user_task_ids": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09"
+  ],
+  "synthetic_checks": {
+    "map_warehouse": 34,
+    "core_tasks": 10,
+    "human_participants": 0,
+    "native_acceptance": false
+  }
+}

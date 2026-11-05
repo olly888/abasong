@@ -974,7 +974,7 @@ async (page) => {
   await mode("jobs");
   await p.locator("#device").screenshot({ path: folder + "/jobs-small.png" });
   const report = {
-    prototype_version: "3.2-r2a2",
+    prototype_version: "3.2-r3-core",
     executed_at: new Date().toISOString(),
     scope:
       "isolated Chromium prototype; synthetic business data; external navigation not opened; clipboard stubbed",

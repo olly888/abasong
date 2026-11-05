@@ -1,10 +1,10 @@
 {
-  "version": "1.2",
-  "date": "2026-11-04",
+  "version": "1.3",
+  "date": "2026-11-05",
   "status": "planned",
   "current_design": "V3.1",
   "target_design": "V3.2-proposal",
-  "prototype_status": "r2a_ready_for_user_review",
+  "prototype_status": "r2a2_cards_ready_for_user_review",
   "app_changed": false,
   "items": [
     {
@@ -257,6 +257,31 @@
         "UX09"
       ],
       "implementation_dependency": "versioned_pickup_location_authenticated_detail_external_navigation_public_summary_excludes_exact_address",
+      "prototype_status": "core_implemented_pending_user_review"
+    },
+    {
+      "id": "UP12",
+      "pages": [
+        "H01",
+        "H02",
+        "H03",
+        "S01",
+        "D01",
+        "D02"
+      ],
+      "copy_ids": [
+        "C02",
+        "C80",
+        "C81",
+        "C82",
+        "C83",
+        "C84"
+      ],
+      "batch": "R2a",
+      "acceptance": [
+        "UX10"
+      ],
+      "implementation_dependency": "shared_map_card_carousel_distance_basis_origin_freshness_query_selection_separation",
       "prototype_status": "core_implemented_pending_user_review"
     }
   ],

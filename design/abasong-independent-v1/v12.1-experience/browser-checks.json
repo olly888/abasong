@@ -1,5 +1,6 @@
 {
-  "executed_at": "2026-11-05T08:27:29.653Z",
+  "prototype_version": "3.2-r2a2",
+  "executed_at": "2026-11-05T09:10:56.978Z",
   "scope": "isolated Chromium prototype; synthetic business data; external navigation not opened; clipboard stubbed",
   "checks": [
     {
@@ -97,11 +98,51 @@
     {
       "name": "取件地图可缩放，导航取消保留视野且不改首页相机",
       "status": "PASS"
+    },
+    {
+      "name": "地址分级与近似距离，不挤占单行街道",
+      "status": "PASS"
+    },
+    {
+      "name": "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与密码",
+      "status": "PASS"
+    },
+    {
+      "name": "三模式共用192px外框与12px间距，找人不是精确司机定位",
+      "status": "PASS"
+    },
+    {
+      "name": "找活横滑高亮当前配送区，不改全部区域或自动报名",
+      "status": "PASS"
+    },
+    {
+      "name": "找活滑卡进入详情、列表再返回仍是同一对象",
+      "status": "PASS"
+    },
+    {
+      "name": "找人跨区一人一卡，滑卡同步声明区域并保留经验筛选",
+      "status": "PASS"
+    },
+    {
+      "name": "单结果无假邻卡，多结果中间卡露两边且过滤不被滑动修改",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430三模式同高且距离不重叠门牌或拖柄",
+      "status": "PASS"
+    },
+    {
+      "name": "找活与找人鼠标横拖切卡，不误开详情",
+      "status": "PASS"
+    },
+    {
+      "name": "快速切公寓不串密码，调整屏宽保持选中对象",
+      "status": "PASS"
     }
   ],
   "console_errors": [],
   "external_request_hosts": [],
-  "passed": 24,
+  "passed": 34,
   "failed": 0,
   "native_acceptance": false
 }

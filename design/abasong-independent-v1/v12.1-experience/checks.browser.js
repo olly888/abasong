@@ -220,7 +220,9 @@ async (page) => {
       "tomorrow count",
     );
     assert(
-      (await p.locator(".ex-support-surface").innerText()).includes("明天"),
+      (await p.locator(".ex-map-card:not([inert])").innerText()).includes(
+        "明天",
+      ),
       "tomorrow label",
     );
   });
@@ -241,7 +243,9 @@ async (page) => {
     await p.selectOption('#overlay [name="day"]', "2026-11-05");
     await applyFilter();
     assert(
-      (await p.locator(".ex-support-surface").innerText()).includes("阿峰"),
+      (await p.locator(".ex-map-card:not([inert])").innerText()).includes(
+        "阿峰",
+      ),
       "future driver",
     );
   });
@@ -312,13 +316,13 @@ async (page) => {
     await p.selectOption("#support-scenario", "ready");
     await p.waitForTimeout(180);
     assert(
-      (await p.locator(".ex-support-surface .ex-job-card").count()) === 1,
+      (await p.locator(".ex-map-card:not([inert]) .ex-job-card").count()) === 1,
       "recovered",
     );
   });
   await run("仓库地址/地图/导航取消回原图，复制内容准确", async () => {
     await mode("jobs");
-    await p.locator(".ex-job-card").click();
+    await p.locator(".ex-map-card:not([inert])").click();
     const address = await p.locator(".ex-address-link span").innerText();
     await p.locator('[data-action="ex-copy-address"]').click();
     assert(
@@ -346,7 +350,7 @@ async (page) => {
   });
   await run("仓库地图失败仍能复制和选择导航", async () => {
     await mode("jobs");
-    await p.locator(".ex-job-card").click();
+    await p.locator(".ex-map-card:not([inert])").click();
     await p.check("#pickup-map-fail");
     await p.locator('[data-action="ex-pickup-map"]').click();
     assert(
@@ -373,7 +377,7 @@ async (page) => {
   await run("途中交接没有假仓库点或导航", async () => {
     await mode("jobs");
     await selectRegion("West Covina");
-    await p.locator(".ex-job-card").click();
+    await p.locator(".ex-map-card:not([inert])").click();
     assert(
       (await p.locator(".ex-pickup").innerText()).includes("联系确认"),
       "contact",
@@ -557,32 +561,399 @@ async (page) => {
     },
   );
   await run("同城两个仓库按需求保持独立，不串地址", async () => {
-    await mode("jobs"); await selectRegion("Pasadena"); await p.locator('[data-action="map-list"]').click();
-    await p.locator('.ex-home-list [data-id="j1"]').click(); const first=await p.locator('.ex-address-link span').innerText();
-    await p.locator('.page-head [data-action="back"]').click(); await p.waitForSelector('.ex-home-list');
-    await p.locator('.ex-home-list [data-id="j5"]').click(); const second=await p.locator('.ex-address-link span').innerText();
-    assert(first!==second && first.includes("Los Angeles") && second.includes("Los Angeles"),"distinct same-city warehouses");
-    await p.locator('[data-action="ex-navigate"]').click(); const url=await p.locator('[data-provider="google"]').getAttribute('href');
-    assert(decodeURIComponent(url).includes(second) && !decodeURIComponent(url).includes(first),"only current destination");
+    await mode("jobs");
+    await selectRegion("Pasadena");
+    await p.locator('[data-action="map-list"]').click();
+    await p.locator('.ex-home-list [data-id="j1"]').click();
+    const first = await p.locator(".ex-address-link span").innerText();
+    await p.locator('.page-head [data-action="back"]').click();
+    await p.waitForSelector(".ex-home-list");
+    await p.locator('.ex-home-list [data-id="j5"]').click();
+    const second = await p.locator(".ex-address-link span").innerText();
+    assert(
+      first !== second &&
+        first.includes("Los Angeles") &&
+        second.includes("Los Angeles"),
+      "distinct same-city warehouses",
+    );
+    await p.locator('[data-action="ex-navigate"]').click();
+    const url = await p
+      .locator('[data-provider="google"]')
+      .getAttribute("href");
+    assert(
+      decodeURIComponent(url).includes(second) &&
+        !decodeURIComponent(url).includes(first),
+      "only current destination",
+    );
   });
   await run("取件地图可缩放，导航取消保留视野且不改首页相机", async () => {
-    await mode("jobs"); const before=await p.evaluate(()=>JSON.stringify(window.abasongExperience.state.contexts.jobs));
-    await p.locator('.ex-job-card').click(); await p.locator('[data-action="ex-pickup-map"]').click();
-    await p.locator('.ex-place-map [data-ex-map="place"]').focus(); for(let i=0;i<4;i++)await p.keyboard.press('+');
-    assert((await p.locator('.ex-place-scale').innerText()).includes('50 ft'),"place scale");
-    await p.locator('.ex-place-map [data-action="ex-navigate"]').click(); await p.locator('[data-action="ex-nav-cancel"]').first().click();
-    assert((await p.locator('.ex-place-scale').innerText()).includes('50 ft'),"place camera retained");
-    assert(before===await p.evaluate(()=>JSON.stringify(window.abasongExperience.state.contexts.jobs)),"home camera unchanged");
+    await mode("jobs");
+    const before = await p.evaluate(() =>
+      JSON.stringify(window.abasongExperience.state.contexts.jobs),
+    );
+    await p.locator(".ex-map-card:not([inert])").click();
+    await p.locator('[data-action="ex-pickup-map"]').click();
+    await p.locator('.ex-place-map [data-ex-map="place"]').focus();
+    for (let i = 0; i < 4; i++) await p.keyboard.press("+");
+    assert(
+      (await p.locator(".ex-place-scale").innerText()).includes("50 ft"),
+      "place scale",
+    );
+    await p.locator('.ex-place-map [data-action="ex-navigate"]').click();
+    await p.locator('[data-action="ex-nav-cancel"]').first().click();
+    assert(
+      (await p.locator(".ex-place-scale").innerText()).includes("50 ft"),
+      "place camera retained",
+    );
+    assert(
+      before ===
+        (await p.evaluate(() =>
+          JSON.stringify(window.abasongExperience.state.contexts.jobs),
+        )),
+      "home camera unchanged",
+    );
+  });
+  const swipeNext = async () => {
+    const track = p.locator(".ex-carousel");
+    const before = await track.getAttribute("data-active-id");
+    await p.locator(".ex-map-card:not([inert])").focus();
+    await p.keyboard.press("ArrowRight");
+    await p.waitForFunction(
+      (id) => document.querySelector(".ex-carousel")?.dataset.activeId !== id,
+      before,
+    );
+    await p.waitForTimeout(200);
+  };
+  await run("地址分级与近似距离，不挤占单行街道", async () => {
+    const style = await p
+      .locator(".ex-apartment-card:not([inert]) .address-primary")
+      .evaluate((n) => ({
+        street: getComputedStyle(n).fontWeight,
+        number: getComputedStyle(n.querySelector("b")).fontWeight,
+        size: getComputedStyle(n).fontSize,
+        nowrap: getComputedStyle(n).whiteSpace,
+      }));
+    assert(
+      style.street === "400" &&
+        Number(style.number) >= 700 &&
+        style.size === "20px" &&
+        style.nowrap === "nowrap",
+      "address hierarchy",
+    );
+    assert(
+      (await p
+        .locator(".ex-apartment-card:not([inert]) .ex-distance")
+        .innerText()) === "约40 ft · 至边界",
+      "discovery-boundary distance",
+    );
+    await p.locator(".ex-apartment-card:not([inert])").click();
+    assert(
+      (await p.locator(".ex-expanded").getAttribute("aria-label")) ===
+        "公寓密码详情",
+      "valid expanded markup",
+    );
+    assert(
+      (await p.locator(".ex-expanded .address-heading").innerText()).includes(
+        "CA",
+      ),
+      "full address in detail",
+    );
+  });
+  await run(
+    "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与密码",
+    async () => {
+      await p.selectOption("#distance-quality", "approximate");
+      assert(
+        (await p
+          .locator(".ex-apartment-card:not([inert]) .ex-distance")
+          .innerText()) === "位置较粗略",
+        "no false precision",
+      );
+      await p.selectOption("#distance-quality", "stale");
+      assert(
+        (await p.locator(".ex-distance").count()) === 0,
+        "stale distances hidden",
+      );
+      assert(
+        (await p
+          .locator(".ex-apartment-card:not([inert]) .ex-code")
+          .innerText()) === "*0128#",
+        "code remains same property",
+      );
+    },
+  );
+  await run("三模式共用192px外框与12px间距，找人不是精确司机定位", async () => {
+    for (const kind of ["apartments", "jobs", "people"]) {
+      if (kind !== "apartments") await mode(kind);
+      const frame = await p
+        .locator(".ex-carousel")
+        .evaluate((n) => ({
+          gap: getComputedStyle(n).gap,
+          items: [...n.children].map((c) => ({
+            h: c.getBoundingClientRect().height,
+            r: getComputedStyle(c).borderRadius,
+            w: c.getBoundingClientRect().width,
+            overflow: c.scrollHeight > c.clientHeight,
+          })),
+        }));
+      assert(
+        frame.gap === "12px" &&
+          frame.items.every(
+            (c) => c.h === 192 && c.r === "24px" && !c.overflow,
+          ),
+        "frame " + kind,
+      );
+      if (kind === "people")
+        assert(
+          !(await p.locator(".ex-carousel").innerText()).match(
+            /(?:\b\d+(?:\.\d+)?\s*(?:ft|mi)\b|距您|距你)/,
+          ),
+          "no driver GPS distance",
+        );
+    }
+  });
+  await run("找活横滑高亮当前配送区，不改全部区域或自动报名", async () => {
+    await mode("jobs");
+    await swipeNext();
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "j2",
+      "second job",
+    );
+    assert(
+      (await p
+        .locator('.ex-region[data-object-selected="true"]')
+        .getAttribute("data-id")) === "Alhambra",
+      "current delivery region",
+    );
+    assert(
+      (await p.locator(".ex-query").innerText()).includes("全部区域"),
+      "filter unchanged",
+    );
+    assert(
+      (await p.locator(".ex-map-card:not([inert])").innerText()).includes(
+        "Alhambra",
+      ),
+      "card matches region",
+    );
+    assert(
+      (await p.locator("#screen-id").innerText()) === "H02",
+      "no apply navigation",
+    );
+    await p.locator('[data-action="locate"]').click();
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "j2",
+      "support recenter preserves selection",
+    );
+  });
+  await run("找活滑卡进入详情、列表再返回仍是同一对象", async () => {
+    await mode("jobs");
+    await swipeNext();
+    await p.locator(".ex-map-card:not([inert])").click();
+    await p.locator('.page-head [data-action="back"]').click();
+    await p.waitForSelector(".ex-carousel");
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "j2",
+      "detail return",
+    );
+    await p.locator('[data-action="map-list"]').click();
+    assert(
+      (await p.locator(".ex-home-list .ex-job-card").count()) === 5,
+      "same results",
+    );
+    await p.locator('[data-action="return-map"]').click();
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "j2",
+      "list return",
+    );
+  });
+  await run("找人跨区一人一卡，滑卡同步声明区域并保留经验筛选", async () => {
+    await mode("people");
+    await openFilter();
+    await p.locator('#overlay [name="text"]').fill("GOFO");
+    await applyFilter();
+    assert(
+      (await p.locator(".ex-map-card").count()) === 2,
+      "one card per unique driver",
+    );
+    assert(
+      (await p.locator('.ex-region[data-object-selected="true"]').count()) ===
+        2,
+      "first driver declares two regions",
+    );
+    await swipeNext();
+    assert(
+      (await p.locator(".ex-map-card:not([inert])").innerText()).includes(
+        "阿峰",
+      ),
+      "next driver",
+    );
+    assert(
+      (await p
+        .locator('.ex-region[data-object-selected="true"]')
+        .getAttribute("data-id")) === "West Covina",
+      "next region",
+    );
+    assert(
+      (await p.locator(".ex-query").innerText()).includes("GOFO"),
+      "experience unchanged",
+    );
+    await p.locator(".ex-map-card:not([inert])").click();
+    await p.locator('.page-head [data-action="back"]').click();
+    await p.waitForSelector(".ex-carousel");
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "d4",
+      "driver return",
+    );
+  });
+  await run(
+    "单结果无假邻卡，多结果中间卡露两边且过滤不被滑动修改",
+    async () => {
+      await mode("jobs");
+      await selectRegion("Pasadena");
+      await swipeNext();
+      assert(
+        (await p.locator(".ex-carousel").getAttribute("data-active-id")) ===
+          "j5",
+        "same region next",
+      );
+      assert(
+        (await p.locator(".ex-query").innerText()).includes("Pasadena"),
+        "region retained",
+      );
+      await p.locator('[data-action="clear-support-filters"]').click();
+      await p.waitForTimeout(200);
+      await p.locator(".ex-map-card:not([inert])").focus();
+      await p.keyboard.press("ArrowLeft");
+      await p.waitForTimeout(200);
+      const peek = await p.locator(".ex-carousel").evaluate((n) => {
+        const c = n.querySelector("[tabindex]");
+        const b = c.getBoundingClientRect(),
+          l = c.previousElementSibling?.getBoundingClientRect(),
+          r = c.nextElementSibling?.getBoundingClientRect(),
+          t = n.getBoundingClientRect();
+        return (
+          !!l && !!r && l.right > t.left && r.left < t.right && b.left > t.left
+        );
+      });
+      assert(peek, "both neighboring edges");
+      await openFilter();
+      await p.selectOption('#overlay [name="day"]', "2026-11-05");
+      await applyFilter();
+      assert(
+        (await p
+          .locator(".ex-carousel.ex-single-card .ex-map-card")
+          .count()) === 1,
+        "single real result",
+      );
+    },
+  );
+  await run("320/390/430三模式同高且距离不重叠门牌或拖柄", async () => {
+    for (const width of [320, 390, 430]) {
+      await p.setViewportSize({ width, height: 844 });
+      for (const kind of ["apartments", "jobs", "people"]) {
+        await mode(kind);
+        const frame = await p
+          .locator(".ex-carousel")
+          .evaluate((n) => ({
+            h: [...n.children].map((c) =>
+              Math.round(c.getBoundingClientRect().height),
+            ),
+            overflow: [...n.children].some(
+              (c) => c.scrollHeight > c.clientHeight,
+            ),
+          }));
+        assert(
+          frame.h.every((h) => h === frame.h[0] && h >= 192) && !frame.overflow,
+          "equal adaptive frames " + width + " " + kind,
+        );
+        if (width >= 390)
+          assert(
+            frame.h.every((h) => h === 192),
+            "standard frames " + width + " " + kind,
+          );
+        if (kind === "apartments") {
+          const overlap = await p
+            .locator(".ex-map-card:not([inert])")
+            .evaluate((n) => {
+              const d = n.querySelector(".ex-distance").getBoundingClientRect(),
+                h = n.querySelector(".card-handle").getBoundingClientRect(),
+                a = n.querySelector("h2").getBoundingClientRect();
+              return (
+                (d.left < h.right &&
+                  d.right > h.left &&
+                  d.top < h.bottom &&
+                  d.bottom > h.top) ||
+                d.bottom > a.top
+              );
+            });
+          assert(!overlap, "distance overlap " + width);
+        }
+      }
+    }
+    await p.setViewportSize({ width: 1400, height: 980 });
+  });
+  await run("找活与找人鼠标横拖切卡，不误开详情", async () => {
+    for (const kind of ["jobs", "people"]) {
+      await mode(kind);
+      const before = await p
+        .locator(".ex-carousel")
+        .getAttribute("data-active-id");
+      const box = await p.locator(".ex-carousel").boundingBox();
+      await p.mouse.move(box.x + box.width - 75, box.y + 90);
+      await p.mouse.down();
+      await p.mouse.move(box.x + 52, box.y + 90, { steps: 15 });
+      await p.mouse.up();
+      await p.waitForFunction(
+        (id) => document.querySelector(".ex-carousel")?.dataset.activeId !== id,
+        before,
+      );
+      assert(
+        (await p.locator(".ex-home").count()) === 1,
+        "drag did not open detail " + kind,
+      );
+    }
+  });
+  await run("快速切公寓不串密码，调整屏宽保持选中对象", async () => {
+    await p.locator(".ex-map-card:not([inert])").focus();
+    await p.keyboard.press("ArrowRight");
+    await p.keyboard.press("ArrowRight");
+    await p.waitForTimeout(350);
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "a3",
+      "third apartment",
+    );
+    assert(
+      (await p.locator(".ex-map-card:not([inert]) .ex-code").count()) === 0,
+      "no previous password",
+    );
+    await mode("jobs");
+    await swipeNext();
+    await p.setViewportSize({ width: 320, height: 844 });
+    await p.waitForTimeout(350);
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "j2",
+      "selected through resize",
+    );
+    await p.setViewportSize({ width: 1400, height: 980 });
+    await p.waitForTimeout(350);
+    assert(
+      (await p.locator(".ex-carousel").getAttribute("data-active-id")) === "j2",
+      "selected after restore",
+    );
   });
   // Capture clean review states, not assertions of native or physical-device acceptance.
-  const folder =
-    "design/abasong-independent-v1/v12.1-experience/evidence";
+  const folder = "design/abasong-independent-v1/v12.1-experience/evidence";
   await fresh();
   await p.setViewportSize({ width: 1400, height: 980 });
   await p.locator("#device").screenshot({ path: folder + "/home.png" });
   await mode("jobs");
   await p.locator("#device").screenshot({ path: folder + "/jobs.png" });
-  await p.locator(".ex-job-card").click();
+  await swipeNext();
+  await p.locator("#device").screenshot({ path: folder + "/jobs-middle.png" });
+  await p.locator(".ex-map-card:not([inert])").focus();
+  await p.keyboard.press("ArrowLeft");
+  await p.waitForTimeout(200);
+  await p.locator(".ex-map-card:not([inert])").click();
   await p
     .locator(".ex-pickup")
     .screenshot({ path: folder + "/pickup-detail.png" });
@@ -591,10 +962,19 @@ async (page) => {
   await fresh();
   await mode("people");
   await p.locator("#device").screenshot({ path: folder + "/people.png" });
+  await swipeNext();
+  await p
+    .locator("#device")
+    .screenshot({ path: folder + "/people-middle.png" });
   await fresh();
   await p.setViewportSize({ width: 390, height: 844 });
   await p.locator("#device").screenshot({ path: folder + "/mobile-home.png" });
+  await fresh();
+  await p.setViewportSize({ width: 320, height: 844 });
+  await mode("jobs");
+  await p.locator("#device").screenshot({ path: folder + "/jobs-small.png" });
   const report = {
+    prototype_version: "3.2-r2a2",
     executed_at: new Date().toISOString(),
     scope:
       "isolated Chromium prototype; synthetic business data; external navigation not opened; clipboard stubbed",

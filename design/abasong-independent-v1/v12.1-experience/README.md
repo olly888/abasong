@@ -66,3 +66,9 @@ Google使用[官方Maps URLs](https://developers.google.com/maps/documentation/u
 [12项简化检查](simplification-checks.json)、[20项保留账户检查](account-checks.json)和原34地图/10核心/19司机圈/17图片回归共112项合成通过。新增覆盖开关取消/保存失败/未来/到期/关闭恢复、直接B02/地址联想/更换/无候选核对/失败回程、不造新地址坐标、屏蔽恢复、城市+m和320/390/430布局。修复候选点击前blur重绘吞点击，以及新用词下原型门码提醒的匹配；这只是演示检查，不是完整内容安全实现。
 
 [我的](evidence/simple-my.png)、[公寓卡](evidence/simple-apartment.png)、[接活设置](evidence/simple-availability.png)、[地址候选](evidence/simple-address-candidates.png)、[手填](evidence/simple-manual.png)为TEST浏览器截图。Mapbox/GPS/OCR/SMS/API/拨号/业务库没有被调用；实际App/合同/迁移未改，双端原生和真人0/7未验。历史报告按原时点范围解释，不以旧常联系通过当当前功能。
+
+## 邀请司机增量（r3-invite，2026-11-05）
+
+[我的](index.html?v=r3-invite&task=me)、[邀请页](index.html?v=r3-invite&task=invite)、[接收页](index.html?v=r3-invite&task=invite-receive)。V3.2品牌邀请图与TEST QR，分享预览/取消、复制及保存的成功/失败演示，公开介绍与已安装/内测/平台未开放/微信受阻状态。未开放分发时不放假下载。二维码为保留域名，所有分享/保存/复制只内存演示，不调用系统或外发。
+
+[20项邀请检查](invitation-checks.json)＋[112项本轮回归](invitation-regressions.json)通过；40活动节点/374状态要求。实际App/接口/数据库/资格/云/分发未变，待用户体验后再实施。[详细范围与证据](邀请验收记录.md)区分浏览器默认/放大宽度检查与真实原生、系统权限、域名关联、分发及真人未验项。

@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlsplit,unquote
 import csv,json,re,subprocess
-root=Path(__file__).resolve().parents[3];base='9ebf2a663e04a8ddaf23670d94db57d6a8409d61';checks=[]
+root=Path(__file__).resolve().parents[3];base='8841d6bc41380e44d0f181a446ee79aab0e9d611';checks=[]
 def ok(test,label):
  if not test:raise AssertionError(label)
  checks.append(label)
@@ -10,8 +10,7 @@ changed=set(cmd(['git','diff',base,'--name-only']).splitlines())|set(cmd(['git',
 allowed=lambda p:p in ['产品基线.md','DEVELOPMENT_STATUS.md','Abasong_PRD_V12_首版产品需求.md'] or p.startswith('docs/') or p.startswith('design/abasong-independent-v1/v12.1-experience/')
 ok(all(allowed(p) for p in changed),'all changes limited to approved docs and independent prototype')
 ok(not cmd(['git','diff',base,'--','apps','packages','database','scripts','deploy','pnpm-lock.yaml','dependency-lock.md','design/abasong-independent-v1/v12.1-import','design/abasong-independent-v1/tokens-v3.json']).strip(),'native/services/contracts/old prototype/tokens unchanged')
-ok(not cmd(['git','diff',base,'--','*.js','*.css','*.html','docs/technical/openapi-v12.yaml']).strip(),'invitation batch does not change prototype UI or OpenAPI')
-ok(all(not p.endswith(('.js','.css','.html')) for p in changed),'no new prototype UI files')
+ok(not cmd(['git','diff',base,'--','docs/technical/openapi-v12.yaml']).strip(),'invitation prototype does not change released OpenAPI')
 links=0
 for name in sorted(changed):
  p=root/name
@@ -25,9 +24,9 @@ for name in sorted(changed):
   ok(target.exists(),f'link {name}: {ref}')
   links+=1
 catalog=json.loads((root/'docs/product/V12.1_页面与状态目录.json').read_text());pages={p['id']:p for p in catalog['pages']}
-ok(len(pages)==38 and sum(len(p['states']) for p in pages.values())==354,'38 active nodes/354 required states')
+ok(len(pages)==40 and sum(len(p['states']) for p in pages.values())==374,'40 active nodes/374 required states')
 production=list(csv.DictReader((root/'docs/product/V12.1_页面制作清单.csv').open(encoding='utf-8-sig')))
-ok(len(production)==38,'38 production rows')
+ok(len(production)==40,'40 production rows')
 for p in production:ok(int(p['state_count'])==len(pages[p['id']]['states']),f"state count {p['id']}")
 for ident in ['C01','C02','C03']:ok(len(pages[ident]['states'])=={'C01':9,'C02':10,'C03':13}[ident],ident+' image state requirements')
 state=json.loads((root/'docs/product/V3.2_开发基准状态.json').read_text())
@@ -49,16 +48,16 @@ proto=root/'design/abasong-independent-v1/v12.1-experience'
 for name,total in [('browser-checks.json',34),('core-checks.json',10),('circle-checks.json',19),('circle-images-checks.json',17),('account-checks.json',20),('simplification-checks.json',12)]:
  d=json.loads((proto/name).read_text());ok(d['passed']==total and d['failed']==0 and not d['console_errors'] and not d['external_request_hosts'] and not d['native_acceptance'],f'{name}: {total}PASS/0 errors/external; native not claimed')
 for p in proto.glob('*.js'):subprocess.run(['./scripts/dev','exec','node','--check',str(p)],cwd=root,check=True,stdout=subprocess.DEVNULL)
-ok(len(list(proto.glob('*.js')))==13,'thirteen JS syntax checks')
+ok(len(list(proto.glob('*.js')))==15,'fifteen JS syntax checks')
 old=cmd(['git','show',base+':DEVELOPMENT_STATUS.md'])
-ok((root/'docs/archive/invitation-plan-20261105/工程状态_9ebf2a6快照.md').read_text()==old,'prior current status fully preserved')
+ok((root/'docs/archive/invitation-prototype-20261105/工程状态_8841d6b快照.md').read_text()==old,'prior current status fully preserved')
 for ident,ux in [('UP15','UX13'),('UP16','UX14'),('UP17','UX15'),('UP18','UX16')]:
  u=next(x for x in matrix['items'] if x['id']==ident)
  ok(ux in u['acceptance'] and all(c in copy for c in u['copy_ids']),ident+' copy and UX trace')
 spec=(root/'docs/product/Abasong_V12.1_页面功能信息与交互规格.md').read_text()
 for p in pages.values():
  ok(f"| {p['id']} | {p['name']} | {p['surface']} | {len(p['states'])} |" in spec,'spec page table '+p['id'])
-for ident in ['U01','U02','U03','U10','D02','D01','P03','M02']:
+for ident in ['U01','U02','U03','U10','D02','D01','P03','M02','U15','X02']:
  p=pages[ident];part=spec.split('### '+ident+' · ')[1].split('\n### ')[0]
  ok(all(x in part for x in p['states']),'spec states '+ident)
 ok(state['account_follow_up']['completed']==0 and state['account_follow_up']['template_rows']==7 and not state['account_follow_up']['blocks_core_R4_preparation'],'account followup 0/7 does not add core prep blocker')
@@ -66,11 +65,16 @@ ok(state['synthetic_checks']['account_tasks']==20 and state['scope']=='documents
 ok('U08' not in pages and [p['id'] for p in catalog['retired_pages']]==['U08'],'U08 retired, IDs not renumbered')
 ok(next(d for d in diffs if d['id']=='D19')['status']=='cancelled_scope' and state['cancelled_difference_ids']==['D19'],'D19 cancelled, not queued implementation')
 ok(not any(a['target']=='U08' for p in pages.values() for a in p['actions']),'no active links to retired U08')
-planned=catalog['planned_extensions'];invitation=state['invitation_proposal']
-ok([p['id'] for p in planned]==['U15','X02'] and all(p['id'] not in pages for p in planned),'invitation page IDs reserved, not active')
-ok(all(p['status'].startswith('proposal_only') for p in planned),'invitation pages not prototyped or deployed')
-ok(invitation['status']=='documented_not_prototyped' and not invitation['app_changed'] and not invitation['prototype_changed'] and not invitation['invite_sent'] and invitation['tests_executed']==0,'invitation implementation and acceptance not claimed')
-ok(next(d for d in diffs if d['id']=='D21')['status']=='proposal_only_not_prototyped','D21 remains a proposal')
-ok(next(u for u in matrix['items'] if u['id']=='UP18')['prototype_status']=='proposal_only_not_implemented','UP18 not falsely implemented')
+invitation=state['invitation']
+ok(not catalog['planned_extensions'] and all(x in pages for x in ['U15','X02']),'invitation IDs now active prototype pages')
+ok(invitation['status']=='synthetic_prototype_pending_user_confirmation' and not invitation['app_changed'] and invitation['prototype_changed'] and not invitation['invite_sent'] and not invitation['distribution_deployed'],'synthetic prototype not native or deployed')
+ok(next(d for d in diffs if d['id']=='D21')['status']=='prototype_synthetic_20_pass_actual_implementation_pending','D21 actual code still pending')
+ok(next(u for u in matrix['items'] if u['id']=='UP18')['prototype_status']=='synthetic_20_pass_pending_user_confirmation_native_distribution_pending','UP18 accurate scope')
 ok((root/'docs/product'/invitation['requirements']).is_file(),'invitation specification exists')
-print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':13,'pages':38,'state_requirements':354,'difference_rows':21,'planned_invitation_pages':['U15','X02'],'invitation_functional_tests':0,'prototype_ui_changed':False,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))
+inv=json.loads((proto/'invitation-checks.json').read_text());reg=json.loads((proto/'invitation-regressions.json').read_text())
+for report,total in [(inv,20),(reg,112)]:
+ ok(report['passed']==total and report['failed']==0 and not report['console_errors'] and not report['external_request_hosts'] and not report['native_acceptance'] and report['human_participants']==0,'current synthetic report '+str(total))
+ok(inv['actual_downloads']==0 and not inv['unexpected_side_effects'],'invitation tests no real distribution/clipboard/share')
+ok(invitation['tests_executed']==inv['passed'] and state['synthetic_checks']['invitation_tasks']==20,'invitation report/gate trace')
+ok([(x['source'],x['passed']) for x in reg['suites']]==[('checks.browser.js',34),('core-flows.browser.js',10),('account-checks.browser.js',20),('circle-checks.browser.js',19),('circle-images-checks.browser.js',17),('simplification-checks.browser.js',12)],'112 regressions source trace')
+print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':15,'pages':40,'state_requirements':374,'difference_rows':21,'invitation_synthetic_tests':20,'existing_synthetic_regressions':112,'prototype_ui_changed':True,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))

@@ -1,18 +1,15 @@
 {
   "result": "PASS",
-  "validated_assertions": 483,
-  "local_links_assets": 302,
-  "scoped_files": 24,
-  "javascript_syntax_files": 13,
-  "pages": 38,
-  "state_requirements": 354,
+  "validated_assertions": 624,
+  "local_links_assets": 434,
+  "scoped_files": 42,
+  "javascript_syntax_files": 15,
+  "pages": 40,
+  "state_requirements": 374,
   "difference_rows": 21,
-  "planned_invitation_pages": [
-    "U15",
-    "X02"
-  ],
-  "invitation_functional_tests": 0,
-  "prototype_ui_changed": false,
+  "invitation_synthetic_tests": 20,
+  "existing_synthetic_regressions": 112,
+  "prototype_ui_changed": true,
   "unrun_observations": [
     38,
     10,
@@ -20,9 +17,9 @@
   ],
   "human_participants": 0,
   "native_acceptance": false,
-  "executed_at": "2026-11-05T21:28:29Z",
+  "executed_at": "2026-11-05T21:52:02Z",
   "command": "python3 design/abasong-independent-v1/v12.1-experience/account-baseline-checks.py",
-  "scope": "invitation_documentation_plan_only",
+  "scope": "documents_and_synthetic_invitation_prototype_only",
   "staged_diff_check": "PASS",
   "staged_secret_scan": "gitleaks --staged --redact=100: PASS, no leaks found"
 }

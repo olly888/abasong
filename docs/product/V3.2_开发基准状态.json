@@ -1,9 +1,9 @@
 {
-  "version": "V3.2-R3-simple",
+  "version": "V3.2-R3-invite",
   "date": "2026-11-05",
   "code_audit_base": "99a76da38708f796fe64e2d6ce7363138fa36916",
   "app_design": "V3.1",
-  "prototype": "3.2-r3-simple",
+  "prototype": "3.2-r3-invite",
   "scope": "documents_and_independent_prototype_only",
   "app_changed": false,
   "gates": {
@@ -15,7 +15,8 @@
     "implementation": "queued_not_started",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
-    "my_account": "simplified_synthetic_only_native_service_pending"
+    "my_account": "simplified_synthetic_only_native_service_pending",
+    "invitation_prototype": "synthetic_only_pending_user_confirmation_system_share_distribution_native"
   },
   "human_testing": {
     "drivers_required": 5,
@@ -116,7 +117,8 @@
     "circle_tasks": 19,
     "circle_image_tasks": 17,
     "account_tasks": 20,
-    "simplification_tasks": 12
+    "simplification_tasks": 12,
+    "invitation_tasks": 20
   },
   "circle_requirements": "Abasong_V3.2_司机圈定位与最小社区补充.md",
   "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
@@ -153,11 +155,14 @@
     "U08"
   ],
   "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json",
-  "requirements_version": "invitation_proposal_20261105",
-  "invitation_proposal": {
-    "status": "documented_not_prototyped",
+  "requirements_version": "invitation_prototype_20261105",
+  "prototype_audit_base": "8841d6bc41380e44d0f181a446ee79aab0e9d611",
+  "active_page_count": 40,
+  "state_requirements": 374,
+  "invitation": {
+    "status": "synthetic_prototype_pending_user_confirmation",
     "requirements": "Abasong_V3.2_邀请司机功能方案.md",
-    "planned_page_ids": [
+    "page_ids": [
       "U15",
       "X02"
     ],
@@ -165,10 +170,13 @@
     "design_upgrade": "UP18",
     "acceptance": "UX16",
     "app_changed": false,
-    "prototype_changed": false,
+    "prototype_changed": true,
     "invite_sent": false,
-    "tests_executed": 0,
-    "active_page_count_unchanged": 38,
-    "scope": "documents_and_baseline_validation_only"
+    "tests_executed": 20,
+    "native_acceptance": false,
+    "distribution_deployed": false,
+    "scope": "documents_and_independent_prototype_only",
+    "report": "../../design/abasong-independent-v1/v12.1-experience/invitation-checks.json",
+    "regressions": "../../design/abasong-independent-v1/v12.1-experience/invitation-regressions.json"
   }
 }

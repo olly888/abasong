@@ -1,0 +1,544 @@
+{
+  "prototype_version": "3.2-r3-invite",
+  "executed_at": "2026-11-05T21:43:37.047Z",
+  "scope": "existing 112 synthetic browser regressions rerun after invitation prototype; no native or human acceptance",
+  "suites": [
+    {
+      "source": "checks.browser.js",
+      "prototype_version": "3.2-r3-core",
+      "executed_at": "2026-11-05T21:41:11.709Z",
+      "scope": "isolated Chromium prototype; synthetic business data; external navigation not opened; clipboard stubbed",
+      "checks": [
+        {
+          "name": "公寓独立192px卡、完整符号与贡献人，无重复标题",
+          "status": "PASS"
+        },
+        {
+          "name": "鼠标横拖切公寓，地图/门禁码同步，展开收起保持选择",
+          "status": "PASS"
+        },
+        {
+          "name": "公寓无码可直接贡献并返回同地址",
+          "status": "PASS"
+        },
+        {
+          "name": "查码失败保持地址且不冒充无码，重试恢复",
+          "status": "PASS"
+        },
+        {
+          "name": "无公寓低高度统一贡献入口；首页与我的入口一致",
+          "status": "PASS"
+        },
+        {
+          "name": "点区域真实筛选，地图列表同源",
+          "status": "PASS"
+        },
+        {
+          "name": "需求日期按接手日；今天明天与有效截止分开",
+          "status": "PASS"
+        },
+        {
+          "name": "司机多服务区总人数去重，日期与经验筛选独立",
+          "status": "PASS"
+        },
+        {
+          "name": "详情往返保留区域、列表和相机；定位不清筛选",
+          "status": "PASS"
+        },
+        {
+          "name": "不同模式慢响应不覆盖当前结果",
+          "status": "PASS"
+        },
+        {
+          "name": "读取失败不是0，调整场景后重试恢复",
+          "status": "PASS"
+        },
+        {
+          "name": "仓库地址/地图/导航取消回原图，复制内容准确",
+          "status": "PASS"
+        },
+        {
+          "name": "仓库地图失败仍能复制和选择导航",
+          "status": "PASS"
+        },
+        {
+          "name": "途中交接没有假仓库点或导航",
+          "status": "PASS"
+        },
+        {
+          "name": "发布：完整仓库地址必填，候选/预览/存储一致",
+          "status": "PASS"
+        },
+        {
+          "name": "仓库/途中切换清理旧地点，草稿输入保留",
+          "status": "PASS"
+        },
+        {
+          "name": "可接活快捷日期/跨日明确，关闭旧时段可保存",
+          "status": "PASS"
+        },
+        {
+          "name": "地图缩放改变比例尺，卡片保持；定位恢复推荐",
+          "status": "PASS"
+        },
+        {
+          "name": "未登录或无查看资格，展开不展示合成门禁码",
+          "status": "PASS"
+        },
+        {
+          "name": "手填完整仓库地址未定位时，不画假点而可复制/导航",
+          "status": "PASS"
+        },
+        {
+          "name": "洛杉矶日期边界包含DST短日与长日",
+          "status": "PASS"
+        },
+        {
+          "name": "320/390/430小屏：卡片等高、无整页横溢出、固定操作可见",
+          "status": "PASS"
+        },
+        {
+          "name": "同城两个仓库按需求保持独立，不串地址",
+          "status": "PASS"
+        },
+        {
+          "name": "取件地图可缩放，导航取消保留视野且不改首页相机",
+          "status": "PASS"
+        },
+        {
+          "name": "地址分级与近似距离，不挤占单行街道",
+          "status": "PASS"
+        },
+        {
+          "name": "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与门禁码",
+          "status": "PASS"
+        },
+        {
+          "name": "三模式共用192px外框与12px间距，找人不是精确司机定位",
+          "status": "PASS"
+        },
+        {
+          "name": "找活横滑高亮当前配送区，不改全部区域或自动报名",
+          "status": "PASS"
+        },
+        {
+          "name": "找活滑卡进入详情、列表再返回仍是同一对象",
+          "status": "PASS"
+        },
+        {
+          "name": "找人跨区一人一卡，滑卡同步声明区域并保留经验筛选",
+          "status": "PASS"
+        },
+        {
+          "name": "单结果无假邻卡，多结果中间卡露两边且过滤不被滑动修改",
+          "status": "PASS"
+        },
+        {
+          "name": "320/390/430三模式同高且距离不重叠门牌或拖柄",
+          "status": "PASS"
+        },
+        {
+          "name": "找活与找人鼠标横拖切卡，不误开详情",
+          "status": "PASS"
+        },
+        {
+          "name": "快速切公寓不串门禁码，调整屏宽保持选中对象",
+          "status": "PASS"
+        }
+      ],
+      "console_errors": [],
+      "external_request_hosts": [],
+      "passed": 34,
+      "failed": 0,
+      "native_acceptance": false
+    },
+    {
+      "source": "core-flows.browser.js",
+      "prototype_version": "3.2-r3-core",
+      "executed_at": "2026-11-05T21:42:57.873Z",
+      "scope": "isolated Chromium synthetic core flow checks; not human/native/field acceptance",
+      "checks": [
+        {
+          "name": "截图两张：有疑字符不自动共享，核对后确认完整符号",
+          "status": "PASS"
+        },
+        {
+          "name": "未收录截图：完整地址须本人确认，共享后不造附近位置",
+          "status": "PASS"
+        },
+        {
+          "name": "纠正本人来源：同码他人资料保留，旧来源不再展示门禁码",
+          "status": "PASS"
+        },
+        {
+          "name": "纠正取消保留原资料、不生成新来源",
+          "status": "PASS"
+        },
+        {
+          "name": "支援条件变化：重新核对后报名，进入同一来源会话",
+          "status": "PASS"
+        },
+        {
+          "name": "文字发送失败与重试：同条恢复，无重复气泡或假已读",
+          "status": "PASS"
+        },
+        {
+          "name": "截图退出后从头添加，不出现跨次续填",
+          "status": "PASS"
+        },
+        {
+          "name": "截图部分失败只重试未成功项，已共享不重复",
+          "status": "PASS"
+        },
+        {
+          "name": "DSP标记已找到：停止展示，保留已有消息和记录",
+          "status": "PASS"
+        },
+        {
+          "name": "评审快捷入口不计作用户测试，产品无研究备注",
+          "status": "PASS"
+        }
+      ],
+      "passed": 10,
+      "failed": 0,
+      "console_errors": [],
+      "external_request_hosts": [],
+      "human_participants": 0,
+      "native_acceptance": false
+    },
+    {
+      "source": "account-checks.browser.js",
+      "prototype_version": "3.2-account",
+      "executed_at": "2026-11-05T21:41:26.880Z",
+      "scope": "isolated synthetic UI; TEST fixtures only; no Auth phone, services, roles, subscriptions or real contact; clipboard stubbed",
+      "checks": [
+        {
+          "name": "我的顺序、唯一贡献入口与底部设置，无收费/成员/重复消息",
+          "status": "PASS"
+        },
+        {
+          "name": "统一登录无司机/DSP二选一，游客不能编辑资料",
+          "status": "PASS"
+        },
+        {
+          "name": "司机资料多选与其他快递保存，回到本人资料保持",
+          "status": "PASS"
+        },
+        {
+          "name": "只找人的DSP不必填写车型，保存不改变资格且仍可选择接活",
+          "status": "PASS"
+        },
+        {
+          "name": "资料保存失败保留全部字段并重试，未伪造保存成功",
+          "status": "PASS"
+        },
+        {
+          "name": "未修改直接返回；修改后继续/保留/放弃各自明确",
+          "status": "PASS"
+        },
+        {
+          "name": "个人电话/微信只在本人资料和自愿复制处，不自动发消息",
+          "status": "PASS"
+        },
+        {
+          "name": "DSP团队可编辑多快递/多区域，数据自填不提供核验/成员/收费开关",
+          "status": "PASS"
+        },
+        {
+          "name": "业务联系方式默认关闭，填写但未开放时需求不显示",
+          "status": "PASS"
+        },
+        {
+          "name": "本人主动开放后资料/需求可查看，关闭后停止展示",
+          "status": "PASS"
+        },
+        {
+          "name": "公开业务电话仍不进入地图、列表、通知或公开分享摘要",
+          "status": "PASS"
+        },
+        {
+          "name": "开放无联系方式、坏号码与空名称均须修正",
+          "status": "PASS"
+        },
+        {
+          "name": "团队保存失败保留展示开关及输入，不更改已保存团队",
+          "status": "PASS"
+        },
+        {
+          "name": "已有团队改名不覆盖历史需求发布来源，已发布需求身份锁定",
+          "status": "PASS"
+        },
+        {
+          "name": "普通司机可个人发需求；首次添加团队后回原表单并保留条件",
+          "status": "PASS"
+        },
+        {
+          "name": "对方关闭展示或注销，大图层式联系方式不残留旧号码",
+          "status": "PASS"
+        },
+        {
+          "name": "复制失败保留可手动选择的联系文字，不假装已复制",
+          "status": "PASS"
+        },
+        {
+          "name": "关闭接活用途须确认关闭已有声明，取消不改已保存状态",
+          "status": "PASS"
+        },
+        {
+          "name": "账号退出丢弃未保存资料，迟到保存不覆盖其他界面",
+          "status": "PASS"
+        },
+        {
+          "name": "320/390/430布局，个人/团队的保存和输入始终可达",
+          "status": "PASS"
+        }
+      ],
+      "passed": 20,
+      "failed": 0,
+      "console_errors": [],
+      "external_request_hosts": [],
+      "human_participants": 0,
+      "native_acceptance": false
+    },
+    {
+      "source": "circle-checks.browser.js",
+      "prototype_version": "3.2-circle-images",
+      "executed_at": "2026-11-05T21:42:09.970Z",
+      "scope": "isolated synthetic circle browser checks; state injection only for reference/version fault; no business services",
+      "checks": [
+        {
+          "name": "根页无返回箭头，发布清晰，空回复无零数值、自然高度",
+          "status": "PASS"
+        },
+        {
+          "name": "地区与轻量标签、自报作者可读，不显示精确司机距离",
+          "status": "PASS"
+        },
+        {
+          "name": "长文四行展开、收起不跳滚动，详情返回保留列表位置",
+          "status": "PASS"
+        },
+        {
+          "name": "作者进入个人资料与既有私聊，无常联系功能",
+          "status": "PASS"
+        },
+        {
+          "name": "发布菜单分动态与临时需求，后者使用统一发布流程",
+          "status": "PASS"
+        },
+        {
+          "name": "动态可选地区标签和同ID需求，发布成功出现在最新首位",
+          "status": "PASS"
+        },
+        {
+          "name": "发布失败保留文字、地区、标签和引用，再试不重复发布",
+          "status": "PASS"
+        },
+        {
+          "name": "空动态校验、不公开明确门码文本",
+          "status": "PASS"
+        },
+        {
+          "name": "离开发动态：继续编辑、保留草稿、放弃各自明确",
+          "status": "PASS"
+        },
+        {
+          "name": "回复失败不加假回复，保留输入，同条重试只成功一次",
+          "status": "PASS"
+        },
+        {
+          "name": "各动态回复草稿隔离，返回后输入仍保留",
+          "status": "PASS"
+        },
+        {
+          "name": "需求引用实时读同对象：价格/缺口/终态更新，无旧副本",
+          "status": "PASS"
+        },
+        {
+          "name": "引用不可见时不显示旧报价或完整仓库地址",
+          "status": "PASS"
+        },
+        {
+          "name": "屏蔽作者即时移除动态和回复通知，其他本人内容保留",
+          "status": "PASS"
+        },
+        {
+          "name": "本人删除与旧通知回跳：显示已删除，无旧正文",
+          "status": "PASS"
+        },
+        {
+          "name": "回复通知复用消息中心、打开标已读，圈内不加消息图标",
+          "status": "PASS"
+        },
+        {
+          "name": "加载/空/失败区分，重试后恢复且无假动态",
+          "status": "PASS"
+        },
+        {
+          "name": "退出清除圈内草稿，游客发布需登录且不生成动态",
+          "status": "PASS"
+        },
+        {
+          "name": "320/390/430窄屏：信息流不横溢出，编辑/回复操作可见",
+          "status": "PASS"
+        }
+      ],
+      "passed": 19,
+      "failed": 0,
+      "console_errors": [],
+      "external_request_hosts": [],
+      "human_participants": 0,
+      "native_acceptance": false
+    },
+    {
+      "source": "circle-images-checks.browser.js",
+      "prototype_version": "3.2-circle-images",
+      "executed_at": "2026-11-05T21:42:24.856Z",
+      "scope": "isolated synthetic browser photos; TEST SVG fixtures; no device camera, picker, uploads, services or real data",
+      "checks": [
+        {
+          "name": "单图限制高度、点击查看，不增加回复图片入口",
+          "status": "PASS"
+        },
+        {
+          "name": "相册最多三张并按选择顺序，不重复添加",
+          "status": "PASS"
+        },
+        {
+          "name": "取消相册不改变文字、字段和已选图片",
+          "status": "PASS"
+        },
+        {
+          "name": "移除中间图片后补选，顺序和其他输入保留",
+          "status": "PASS"
+        },
+        {
+          "name": "发布前大图预览与关闭，保留图片和编辑位置",
+          "status": "PASS"
+        },
+        {
+          "name": "拍照、重拍、取消不丢输入，确认后才添加",
+          "status": "PASS"
+        },
+        {
+          "name": "相册及相机不可用可返回或改用另一方式，不误清空",
+          "status": "PASS"
+        },
+        {
+          "name": "坏图读取失败保留原图片与正文，可重新选择",
+          "status": "PASS"
+        },
+        {
+          "name": "部分上传失败不发布，重试只处理失败图且成功仅一条",
+          "status": "PASS"
+        },
+        {
+          "name": "图片上传成功但发帖失败，重试保留并复用全部图片",
+          "status": "PASS"
+        },
+        {
+          "name": "三图网格顺序、大图切换缩放和关闭保持原位置",
+          "status": "PASS"
+        },
+        {
+          "name": "大图加载失败可重试，不影响帖子正文和图片顺序",
+          "status": "PASS"
+        },
+        {
+          "name": "动态删除或屏蔽后大图不保留可见内容",
+          "status": "PASS"
+        },
+        {
+          "name": "纯图片仍需文字；图片草稿可保留、放弃并在退出登录清除",
+          "status": "PASS"
+        },
+        {
+          "name": "上传中离开或重置，不产生迟到动态或残留上传状态",
+          "status": "PASS"
+        },
+        {
+          "name": "320/390/430宽度：选图网格、发布和大图关闭均可见",
+          "status": "PASS"
+        },
+        {
+          "name": "缩略图损坏仍保留正文和回复，不显示假图片",
+          "status": "PASS"
+        }
+      ],
+      "passed": 17,
+      "failed": 0,
+      "console_errors": [],
+      "external_request_hosts": [],
+      "human_participants": 0,
+      "native_acceptance": false
+    },
+    {
+      "source": "simplification-checks.browser.js",
+      "prototype_version": "3.2-simple",
+      "executed_at": "2026-11-05T21:42:34.308Z",
+      "scope": "isolated Chromium synthetic UI; no real Mapbox/OCR/Auth/GPS/contact service",
+      "checks": [
+        {
+          "name": "我的：资料→接活开关→共享；公寓/发布/报名同组，48px开关热区",
+          "status": "PASS"
+        },
+        {
+          "name": "开启只进入本次设置；取消不提前开启；保存未来时段后明确显示明天",
+          "status": "PASS"
+        },
+        {
+          "name": "接活保存失败保留表单和关闭状态；重试成功；关闭失败保持开启后可重试",
+          "status": "PASS"
+        },
+        {
+          "name": "时段到期显示关闭；退出账号时迟到关闭操作不写入",
+          "status": "PASS"
+        },
+        {
+          "name": "常联系首版完整退役：资料/会话无入口，旧路由回我的，旧操作不改关系",
+          "status": "PASS"
+        },
+        {
+          "name": "通用手填直接同一添加表单，无公寓目录/重复截图按钮；未确认地址不共享",
+          "status": "PASS"
+        },
+        {
+          "name": "地址候选选择后保留输入，符号/前导零直接共享并回到正确公寓",
+          "status": "PASS"
+        },
+        {
+          "name": "首页卡添加复用相同字段；更换地址清来源确认，失败保留正确目标/密码",
+          "status": "PASS"
+        },
+        {
+          "name": "未收录地址可在同一表单手动核对；保存不伪造附近坐标或距离",
+          "status": "PASS"
+        },
+        {
+          "name": "屏蔽保留但下沉：无记录无空菜单，屏蔽后设置可解除，不恢复常联系",
+          "status": "PASS"
+        },
+        {
+          "name": "城市/米制距离复用辅助行，门牌街道单行；过期不留距离数值",
+          "status": "PASS"
+        },
+        {
+          "name": "320/390/430：我的分组、开关、地址联想及保存操作不溢出",
+          "status": "PASS"
+        }
+      ],
+      "passed": 12,
+      "failed": 0,
+      "console_errors": [],
+      "external_request_hosts": [],
+      "human_participants": 0,
+      "native_acceptance": false
+    }
+  ],
+  "passed": 112,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "native_acceptance": false,
+  "human_participants": 0
+}

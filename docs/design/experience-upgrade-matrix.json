@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "date": "2026-11-04",
   "status": "planned",
   "current_design": "V3.1",
@@ -16,6 +16,7 @@
     {"id":"UP07","pages":["U03","H03"],"copy_ids":["C30","C31","C33","C34","C36","C37","C38","C39"],"batch":"R2b","acceptance":["UX06","UX07"],"implementation_dependency":"one_window_versioned_declaration"},
     {"id":"UP08","pages":["M01","M02","U11"],"copy_ids":["C50","C51","C52","C53"],"batch":"R2c","acceptance":["UX05","UX07"],"implementation_dependency":"existing_notifications_only_new_opportunity_opt_in_deferred"},
     {"id":"UP09","pages":["H01","H02","H03","U03"],"copy_ids":[],"batch":"R2c","acceptance":["UX07","UX08"],"implementation_dependency":"V3.1_tokens_retained_V3.2_not_active"},
-    {"id":"UP10","pages":["H01","H02","H03","U03","B02","B04","B05","B06","M01","M02"],"copy_ids":["C05","C08","C09","C14","C27","C38","C39","C52"],"batch":"R2c","acceptance":["UX07","UX08"],"implementation_dependency":"shared_states_and_native_accessibility_acceptance"}
+    {"id":"UP10","pages":["H01","H02","H03","U03","B02","B04","B05","B06","M01","M02"],"copy_ids":["C05","C08","C09","C14","C27","C38","C39","C52"],"batch":"R2c","acceptance":["UX07","UX08"],"implementation_dependency":"shared_states_and_native_accessibility_acceptance"},
+    {"id":"UP11","pages":["H02","P03","D01","P09","G02","X01"],"copy_ids":["C60","C61","C62","C63","C64","C65","C66","C67","C68","C69","C70","C71","C72","C73"],"batch":"R2a","acceptance":["UX09"],"implementation_dependency":"versioned_pickup_location_authenticated_detail_external_navigation_public_summary_excludes_exact_address"}
   ]
 }

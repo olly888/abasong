@@ -1,0 +1,27 @@
+# Abasong development status
+
+Updated 2026-11-05 (America/Los_Angeles). Read [产品基线](产品基线.md), [document index](docs/README.md) and [V3.2 development gate](docs/Abasong_V3.2_可开发与可验收基线.md). Prior batch preserved in the [2e5a509 snapshot](docs/archive/driver-circle-20261105/工程状态_2e5a509快照.md); earlier engineering history remains linked there.
+
+## Current batch — driver-circle specification and prototype
+
+Owner approved the circle positioning and optimization. Branch `codex/v32-driver-circle`, stacked on `2e5a509` / PR80 (`codex/v32-development-gate`). Documentation and independent V3.2 browser prototype only; actual App stays V3.1 and native circle remains unopened. No apps/packages/contracts/scripts/database/deploy/dependencies, credentials, cloud/grants/SMS or real messages changed. No new skill/plugin or external designer sign-off claimed.
+
+- [C01–03 product supplement](docs/product/Abasong_V3.2_司机圈定位与最小社区补充.md): latest text feed for delivery questions/experience/stories; optional topic and author-selected region, never GPS. Root has labelled publish/no back. Reuses structured temporary-support publish, existing author profile/chat/contacts, report/block/delete and unified notifications. No images/likes/follows/trending/transaction market or new message platform.
+- [Interactive circle](design/abasong-independent-v1/v12.1-experience/index.html?v=r3-circle&task=circle): natural-height feed, four-line expand, detail/reply and editor; same-ID live request summary with coarse pickup only; failure keeps input, retry does not duplicate; session drafts clear at logout. Explicit code regex is a synthetic demonstration, not a production privacy control. [Review entry](design/abasong-independent-v1/v12.1-experience/review.html) adds a sixth shortcut outside product UI.
+- [Design V3.2](docs/design/Abasong_设计系统_V3.2_升级方案.md), page catalog, copy C90–C105, UP13/UX11 and [architecture target](docs/technical/V12.1_地图协作架构增量方案.md) aligned. Existing V3.1 tokens/old prototype unchanged; circle does not inherit map192px height/carousel. Catalog has39 nodes/319 state requirements, not319 passed states.
+- [G01–G16 scope](docs/product/V3.2_首版需求缺口与范围裁决.md), [D01–D16 implementation differences](docs/technical/V3.2_原型到代码差异与实施批次.md) and [CSV](docs/technical/V3.2_代码差异清单.csv): D15 new real posts/comments + optional topic/region + authorized current-source summary; D16 reuse relationships/report/block and define reply-event visibility/deletion handling. These remain B5 after R4 P0, not an implemented API or new migration.
+- Human testing remains0/7 with the original38 `not_run` rows. [T10/T11 follow-up](docs/usability/V3.2_五司机两DSP可用性测试包.md) adds [10 unrun driver-circle rows](docs/usability/V3.2_司机圈任务记录模板.csv), not more participants or a new blocker to independent R4 preparation. Machine gate remains development_ready=false/b5_ready=false.
+
+## Executed evidence and limits
+
+[Circle report](design/abasong-independent-v1/v12.1-experience/circle-checks.json):19 isolated Chromium checks PASS, no script errors/external requests. Covers feed/long text/return, author chat/contacts, current request versus unavailable source, posting and reply failures, draft isolation/logout, delete/block/notification routing, loading/empty/retry, guest login and320/390/430 layouts. Fixed duplicate exit confirmation, feed-scroll loss on same-route render and cleared session drafts on logout. Publication and reply only affect synthetic memory; nothing was sent to another person.
+
+Existing [34 map/warehouse checks](design/abasong-independent-v1/v12.1-experience/browser-checks.json) and [10 core-flow checks](design/abasong-independent-v1/v12.1-experience/core-checks.json) rerun PASS against the circle extension. Each JSON retains its actual execution time. These63 automated checks do not certify39-node parity, human usability, native UI, real services, physical devices or field experience. Default screenshots for feed/reply/editor are in the prototype evidence directory.
+
+Local delivery checks PASS: nine prototype JS syntax checks and467 baseline assertions including366 local links/assets, catalog/state counts, G/D/UP/copy trace,16 actual source-path differences and38+10 unrun rows. `git diff --cached --check` clean; staged Gitleaks redacted scan found no leaks (about91KB scanned). Exact commit and remote CI are tracked in this delivery PR; an older green run is not this batch's result. No full App build, DB/HTTP or iOS/Android retest for this docs/prototype-only batch. System keyboard/back gestures,200% text and screen readers remain unverified.
+
+## Next order and release gates
+
+Experience confirmation and R3 core observation/problem fixes → R4-1 native cards/region/camera/distance semantics → R4-2 date/pickup/declaration → R4-3 contribution/correction/application/message protective regression → B5 minimum profile/experience, contacts and now-specified driver circle. [Master current plan](docs/Abasong_V12.1_项目开发与验收总计划.md) and [machine gate](docs/product/V3.2_开发基准状态.json) are current. Do not restart existing capabilities or label prototype tests as native acceptance.
+
+Real two-account cloud business KMS, independent pilot, remote push credentials/delivery, Android physical device and field quality remain B6; deferred scheduling is not completion. Existing AWS/Mapbox/Supabase state unchanged in this batch. No new participant or iPhone action needed for this prototype delivery.

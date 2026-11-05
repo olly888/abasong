@@ -1,9 +1,9 @@
 {
-  "version": "V3.2-R3-circle",
+  "version": "V3.2-R3-circle-images",
   "date": "2026-11-05",
-  "code_audit_base": "2e5a5092c7e8ee591c8ce7fe11915f6fcb43f597",
+  "code_audit_base": "bcfa054d1689a27c2b3c859430bdb088c585647c",
   "app_design": "V3.1",
-  "prototype": "3.2-r3-core+circle",
+  "prototype": "3.2-r3-core+circle-images",
   "scope": "documents_and_independent_prototype_only",
   "app_changed": false,
   "gates": {
@@ -13,7 +13,8 @@
     "human_usability": "not_scheduled",
     "baseline_documents": "aligned_target_not_released_contracts",
     "implementation": "queued_not_started",
-    "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5"
+    "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
+    "circle_images": "synthetic_only_private_media_and_native_pending_B5"
   },
   "human_testing": {
     "drivers_required": 5,
@@ -51,7 +52,8 @@
     "G13",
     "G14",
     "G15",
-    "G16"
+    "G16",
+    "G17"
   ],
   "difference_ids": [
     "D01",
@@ -69,7 +71,8 @@
     "D13",
     "D14",
     "D15",
-    "D16"
+    "D16",
+    "D17"
   ],
   "evidence_ids": [
     "E01",
@@ -101,7 +104,8 @@
     "core_tasks": 10,
     "human_participants": 0,
     "native_acceptance": false,
-    "circle_tasks": 19
+    "circle_tasks": 19,
+    "circle_image_tasks": 17
   },
   "circle_requirements": "Abasong_V3.2_司机圈定位与最小社区补充.md",
   "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
@@ -115,5 +119,7 @@
     "results": "not_run",
     "template": "../usability/V3.2_司机圈任务记录模板.csv",
     "blocks_core_R4_preparation": false
-  }
+  },
+  "circle_image_requirements": "Abasong_V3.2_司机圈图片发布补充.md",
+  "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json"
 }

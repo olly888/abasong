@@ -4,7 +4,7 @@
 
 未收录截图可在核对完整地址后确认共享；仅创建合成业务关联，不造地图点、不混进附近200米候选。明确共享/私存意图、疑字符核对、部分失败只重试失败项、离开后从头选图保留。评审快捷入口用于复核，真人观察从首页开始，不给按钮路线提示。
 
-入口：<http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-circle>。静态服务根目录为`design/abasong-independent-v1`，只监听本机。2026-11-05制作；状态：**核心原型已制作，待用户体验确认**。旧版[v12.1-import](../v12.1-import/index.html)和实际App保留。
+入口：<http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-images>。静态服务根目录为`design/abasong-independent-v1`，只监听本机。2026-11-05制作；状态：**核心原型已制作，待用户体验确认**。旧版[v12.1-import](../v12.1-import/index.html)和实际App保留。
 
 ## 本轮范围
 
@@ -47,8 +47,14 @@ Google使用[官方Maps URLs](https://developers.google.com/maps/documentation/u
 
 ## 司机圈增量（r3-circle）
 
-[直接体验C01–03](index.html?v=r3-circle&task=circle)。最新文字信息流；可选配送地区/标签；发布菜单复用临时需求；同ID引用当前状态；回复失败保留；作者→资料/私聊/常联系；删除/屏蔽和现有消息中心通知。自然高度，不使用地图192px卡壳或横滑。所有内容/发布/通知仍为内存合成，无实际发送。
+[直接体验C01–03](index.html?v=r3-images&task=circle)。最新文字信息流；可选配送地区/标签；发布菜单复用临时需求；同ID引用当前状态；回复失败保留；作者→资料/私聊/常联系；删除/屏蔽和现有消息中心通知。自然高度，不使用地图192px卡壳或横滑。所有内容/发布/通知仍为内存合成，无实际发送。
 
 [19项司机圈检查](circle-checks.json)与[可复跑函数](circle-checks.browser.js)独立记录；既有34项地图、10项核心检查已对增量重跑。评审入口增加第6项，不增加产品内导航。截图：[信息流](evidence/circle-home.png)、[回复](evidence/circle-detail.png)、[发布](evidence/circle-publish.png)。浏览器宽度320/390/430通过；系统键盘/手势/200%字号/读屏及原生、服务权限仍待B5，不伪装为真人设计师签审。
 
 普通动态草稿仅当前会话。显式门码文本的正则是合成演示，不能作生产识别/防泄漏保证；密码仍使用统一贡献入口。详见[规则与代码差异](../../../docs/product/Abasong_V3.2_司机圈定位与最小社区补充.md)。
+
+## 首版图片增量（r3-images）
+
+[直接体验司机圈](index.html?v=r3-images&task=circle)：正文下可选0–3张图，拍照/相册、预览/移除/顺序、部分失败重试、发帖失败复用已就绪图；单图限高/多图网格，大图左右切换/点击缩放/关闭回原位置，回复仍文字。TEST图片是自行绘制SVG，不读本机照片、不访问相机、不上传任何文件。生产上传不允许SVG，私有媒体和元数据处理待B5。
+
+[17项报告](circle-images-checks.json)、[可复跑函数](circle-images-checks.browser.js)；[发布](evidence/circle-images-editor.png)、[信息流](evidence/circle-images-feed.png)、[大图](evidence/circle-images-viewer.png)、[部分失败](evidence/circle-images-retry.png)。外壳可切权限、坏图、加载和上传失败；这些不是产品菜单。320/390/430默认浏览器通过，系统权限/相册/相机/键盘/真实上传/读屏/200%字号仍待原生阶段；真人0/7不变。

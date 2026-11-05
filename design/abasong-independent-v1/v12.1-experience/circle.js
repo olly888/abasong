@@ -2,6 +2,32 @@
 // Synthetic driver-circle prototype. No service, GPS, notifications or messages are sent.
 (() => {
   const base = { render, actions, submitForm, resetPrototype, nav, inboxPage };
+  const fixtures = [
+    { id: "entry", src: "assets/circle-entry.svg", alt: "TEST 公寓入口示意图" },
+    {
+      id: "courtyard",
+      src: "assets/circle-courtyard.svg",
+      alt: "TEST 庭院通道示意图",
+    },
+    {
+      id: "parcel",
+      src: "assets/circle-parcel-room.svg",
+      alt: "TEST 包裹房示意图",
+    },
+  ];
+  const fixture = (id) => fixtures.find((x) => x.id === id);
+  const photoMode = () => $("#circle-photo-state").value;
+  const photos = (p) => (p?.images || []).filter((x) => fixture(x.id));
+  function pictureGrid(p) {
+    const list = photos(p);
+    if (!list.length) return "";
+    return `<div class="circle-pictures circle-pictures-${list.length}">${list.map((x, i) => `<button class="circle-picture" data-action="circle-view-photo" data-id="${p.id}" data-index="${i}" aria-label="查看第${i + 1}张图片，共${list.length}张"><img src="${fixture(x.id).src}" alt="${fixture(x.id).alt}" width="960" height="640" data-circle-thumb="true" draggable="false" /></button>`).join("")}</div>`;
+  }
+  function photoEditor(f) {
+    const list = photos(f),
+      disabled = ui.publishing ? "disabled" : "";
+    return `<section class="circle-photo-editor" aria-label="添加图片"><div class="circle-photo-heading"><span>图片 <small>选填</small></span><span>${list.length}/3</span></div><div class="circle-photo-thumbs">${list.map((x, i) => `<div class="circle-photo-thumb" data-photo-id="${x.id}"><button class="circle-photo-preview" data-action="circle-preview-draft" data-index="${i}" aria-label="预览第${i + 1}张图片" ${disabled}><img src="${fixture(x.id).src}" alt="${fixture(x.id).alt}" width="960" height="640" draggable="false" /></button><button class="circle-photo-remove" data-action="circle-remove-photo" data-id="${x.id}" aria-label="移除第${i + 1}张图片" ${disabled}>${I("close")}</button>${x.upload === "uploading" ? '<span class="circle-photo-progress" role="status">上传中</span>' : x.upload === "failed" ? '<span class="circle-photo-progress failed">上传失败</span>' : ""}</div>`).join("")}${list.length < 3 ? `<button class="circle-photo-add" data-action="circle-add-photo" aria-label="添加图片" ${disabled}>${I("plus")}<span>添加图片</span></button>` : ""}</div><p class="circle-photo-note">不要上传面单、住户信息或门禁密码。</p></section>`;
+  }
   const topics = ["配送提问", "经验分享", "路上见闻"];
   const ui = {
     scenario: "normal",
@@ -24,6 +50,7 @@
       region: "Alhambra",
       topic: "经验分享",
       order: 100,
+      images: [{ id: "entry" }],
     });
     Object.assign(model.posts[1], {
       region: "West Covina",
@@ -84,7 +111,7 @@
     const expanded = detail || ui.expanded.has(p.id),
       long = p.text.length > 100;
     const comments = p.comments.filter((c) => !model.blocks.includes(c.author));
-    return `<article class="feed-card circle-card" data-post-id="${p.id}">${author(p)}${p.topic ? `<span class="circle-topic">${esc(p.topic)}</span>` : ""}<div class="post-text circle-text ${long && !expanded ? "circle-clamp" : ""}" ${!detail ? `role="button" tabindex="0" data-action="post" data-id="${p.id}" aria-label="查看动态详情"` : ""}>${esc(p.text)}</div>${long && !detail ? btn("circle-expand", expanded ? "收起" : "展开", "circle-text-action", `data-id="${p.id}" aria-expanded="${expanded}"`) : ""}${p.job ? sourceCard(p.job) : ""}${detail ? "" : `<div class="circle-footer">${btn("post", I("chat") + (comments.length ? `回复 ${comments.length}` : "回复"), "circle-reply-link", `data-id="${p.id}"`)}</div>`}</article>`;
+    return `<article class="feed-card circle-card" data-post-id="${p.id}">${author(p)}${p.topic ? `<span class="circle-topic">${esc(p.topic)}</span>` : ""}<div class="post-text circle-text ${long && !expanded ? "circle-clamp" : ""}" ${!detail ? `role="button" tabindex="0" data-action="post" data-id="${p.id}" aria-label="查看动态详情"` : ""}>${esc(p.text)}</div>${long && !detail ? btn("circle-expand", expanded ? "收起" : "展开", "circle-text-action", `data-id="${p.id}" aria-expanded="${expanded}"`) : ""}${pictureGrid(p)}${p.job ? sourceCard(p.job) : ""}${detail ? "" : `<div class="circle-footer">${btn("post", I("chat") + (comments.length ? `回复 ${comments.length}` : "回复"), "circle-reply-link", `data-id="${p.id}"`)}</div>`}</article>`;
   };
   circlePage = () => {
     const list =
@@ -135,8 +162,9 @@
       topic: "",
       region: "",
       job: "",
+      images: [],
     });
-    return `<div class="root-content circle-editor"><div class="page-scroll">${header("发布动态")}<form data-submit="post" novalidate>${ui.publishError ? `<p class="circle-error" role="alert">${esc(ui.publishError)}</p>` : ""}${field("post", "text", "内容", "textarea", { placeholder: "分享配送经验、提问或路上见闻", max: 2000 })}<div class="circle-editor-options">${field("post", "topic", "内容标签", "text", { optional: true, choices: [["", "不选择"], ...topics] })}${field("post", "region", "配送区域", "text", { optional: true, choices: [["", "不选择"], ...areas] })}${field("post", "job", "关联我的支援需求", "text", { optional: true, choices: [["", "不关联"], ...model.jobs.filter((j) => j.owner === "me" && j.status !== "draft" && !j.discarded).map((j) => [j.id, `${j.region} · ${statusLabel(j.status)}`])] })}</div></form></div><div class="circle-editor-actions"><button class="button" type="submit" form="circle-post-form" ${ui.publishing ? "disabled" : ""}>${ui.publishing ? "发布中" : "发布"}</button></div></div>`;
+    return `<div class="root-content circle-editor"><div class="page-scroll">${header("发布动态")}<form data-submit="post" novalidate>${ui.publishError ? `<p class="circle-error" role="alert">${esc(ui.publishError)}</p>` : ""}${field("post", "text", "内容", "textarea", { placeholder: "分享配送经验、提问或路上见闻", max: 2000 })}${photoEditor(f)}<div class="circle-editor-options">${field("post", "topic", "内容标签", "text", { optional: true, choices: [["", "不选择"], ...topics] })}${field("post", "region", "配送区域", "text", { optional: true, choices: [["", "不选择"], ...areas] })}${field("post", "job", "关联我的支援需求", "text", { optional: true, choices: [["", "不关联"], ...model.jobs.filter((j) => j.owner === "me" && j.status !== "draft" && !j.discarded).map((j) => [j.id, `${j.region} · ${statusLabel(j.status)}`])] })}</div></form></div><div class="circle-editor-actions"><button class="button" type="submit" form="circle-post-form" ${ui.publishing ? "disabled" : ""}>${ui.publishing ? "发布中" : ui.publishError ? "重新发布" : "发布"}</button></div></div>`;
   };
   const sensitive = (text) =>
     /(?:(?:门禁|大门|进门|公寓|行人门|侧门).{0,8}(?:密码|门码)|gate\s*code|access\s*code)\s*[:：]?\s*[#*\d]{4,}/i.test(
@@ -180,16 +208,52 @@
       render();
       return;
     }
-    const data = { ...f, text },
+    const data = { ...f, text, images: photos(f).map((x) => ({ ...x })) },
       g = ui.generation,
       failed = failOnce("#circle-post-fail");
+    const failPhoto = failOnce("#circle-image-fail");
     ui.publishing = true;
     ui.publishError = null;
     render();
-    setTimeout(() => {
-      if (g !== ui.generation) return;
+    const active = () => {
+      const yes =
+        g === ui.generation &&
+        state.logged &&
+        state.forms.post === f &&
+        state.route.view === "postForm";
+      if (!yes && g === ui.generation) {
+        ui.publishing = false;
+        for (const image of f.images || [])
+          if (image.upload === "uploading") image.upload = "selected";
+      }
+      return yes;
+    };
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 350));
+    (async () => {
+      let failedThisTime = false;
+      for (const x of f.images || []) {
+        if (x.upload === "ready") continue;
+        x.upload = "uploading";
+        if (state.route.view === "postForm") render();
+        await tick();
+        if (!active()) return;
+        if (failPhoto && !failedThisTime) {
+          x.upload = "failed";
+          failedThisTime = true;
+        } else x.upload = "ready";
+        if (state.route.view === "postForm") render();
+      }
+      if (!(f.images || []).length) {
+        await tick();
+        if (!active()) return;
+      }
       ui.publishing = false;
-      if (!state.logged || failed) {
+      if ((f.images || []).some((x) => x.upload !== "ready")) {
+        ui.publishError = "图片未上传成功，请重试或移除";
+        render();
+        return;
+      }
+      if (failed) {
         ui.publishError = "发布未成功，填写内容已保留";
         if (state.route.view === "postForm") render();
         return;
@@ -216,12 +280,13 @@
         time: "刚刚",
         order: ++ui.order,
         comments: [],
+        images: data.images.map((x) => ({ id: x.id })),
       };
       model.posts.unshift(p);
       state.forms.post = null;
       nav("post", { id: p.id }, true);
       toast("已发布");
-    }, 320);
+    })();
   }
   function reply() {
     const id = state.route.args.id,
@@ -258,13 +323,174 @@
     }, 260);
   }
   const baseModal = renderModal;
+  function viewerItems(m) {
+    if (m.draft) return photos(state.forms.post);
+    const p = post(m.postId);
+    return visible(p) && ui.scenario !== "deleted" ? photos(p) : [];
+  }
+  function addPhotos(ids) {
+    const f = state.forms.post;
+    if (!f || ui.publishing) return;
+    if (photoMode() === "read-error") {
+      closeModal();
+      ui.publishError = "图片无法读取，请重新选择";
+      render();
+      return;
+    }
+    f.images ||= [];
+    for (const id of ids)
+      if (
+        fixture(id) &&
+        f.images.length < 3 &&
+        !f.images.some((x) => x.id === id)
+      )
+        f.images.push({ id, upload: "selected" });
+    ui.publishError = null;
+    closeModal();
+    render();
+  }
   renderModal = () => {
-    if (state.modal?.type !== "circle-leave") return baseModal();
+    const m = state.modal,
+      host = $("#overlay");
+    if (m?.type === "circle-photo-gallery") {
+      const selected = m.selected || [],
+        existing = photos(state.forms.post),
+        available = fixtures.filter(
+          (x) => !existing.some((y) => y.id === x.id),
+        );
+      host.innerHTML = `<section class="dialog circle-photo-picker" role="dialog" aria-modal="true" aria-label="选择图片"><div class="close-row"><h2>选择图片</h2>${btn("close-modal", "取消", "text-btn")}</div><div class="circle-gallery-grid">${available.map((x) => `<button class="circle-gallery-tile" aria-pressed="${selected.includes(x.id)}" data-action="circle-gallery-toggle" data-id="${x.id}"><img src="${x.src}" alt="${x.alt}" width="960" height="640" draggable="false"/><span>${selected.includes(x.id) ? selected.indexOf(x.id) + 1 : I("plus")}</span></button>`).join("")}</div>${btn("circle-gallery-done", `添加${selected.length ? ` ${selected.length} 张` : ""}`, "button", !selected.length ? "disabled" : "")}</section>`;
+      return;
+    }
+    if (m?.type === "circle-camera") {
+      host.innerHTML = `<section class="dialog circle-camera" role="dialog" aria-modal="true" aria-label="拍照"><div class="close-row"><h2>${m.captured ? "照片预览" : "拍照"}</h2>${btn("close-modal", "取消", "text-btn")}</div><img src="${fixture(m.captureId).src}" alt="TEST 相机合成画面" width="960" height="640"/>${m.captured ? btn("circle-camera-use", "使用照片", "button") + btn("circle-camera-retake", "重新拍照", "button secondary") : btn("circle-camera-take", "拍照", "button")}</section>`;
+      return;
+    }
+    if (m?.type === "circle-photo-permission") {
+      host.innerHTML = `<section class="dialog" role="dialog" aria-modal="true" aria-label="图片权限"><h2>${m.camera ? "无法使用相机" : "无法访问相册"}</h2><p>可在系统设置中允许访问。</p>${btn(m.camera ? "circle-photo-gallery" : "circle-photo-camera", m.camera ? "从相册选择" : "拍照", "button")}${btn("close-modal", "返回编辑", "button secondary")}</section>`;
+      return;
+    }
+    if (m?.type === "circle-photo-viewer") {
+      const list = viewerItems(m);
+      m.index = Math.max(0, Math.min(m.index, list.length - 1));
+      const unavailable = !list.length,
+        failed = m.failed || photoMode() === "view-error";
+      host.innerHTML = `<section class="circle-photo-viewer" role="dialog" aria-modal="true" aria-label="查看图片"><div class="circle-viewer-head">${btn("close-modal", I("close"), "circle-viewer-control", 'aria-label="关闭图片"')}<span>${unavailable ? "图片不可查看" : `${m.index + 1} / ${list.length}`}</span><span></span></div><div class="circle-viewer-stage ${m.zoom ? "zoomed" : ""}">${unavailable ? "<p>图片暂不可查看</p>" : failed ? `<div class="circle-viewer-error" role="alert"><p>图片暂时无法加载</p>${btn("circle-viewer-retry", "重新加载", "circle-viewer-retry")}</div>` : `<button class="circle-full-image" data-action="circle-viewer-zoom" aria-label="${m.zoom ? "缩小图片" : "放大图片"}"><img src="${fixture(list[m.index].id).src}" alt="${fixture(list[m.index].id).alt}" width="960" height="640" data-circle-full="true" draggable="false"/></button>`}</div>${list.length > 1 ? `<div class="circle-viewer-nav">${btn("circle-viewer-prev", I("back"), "circle-viewer-control", `aria-label="上一张图片" ${m.index === 0 ? "disabled" : ""}`)}${btn("circle-viewer-next", I("chevron"), "circle-viewer-control", `aria-label="下一张图片" ${m.index === list.length - 1 ? "disabled" : ""}`)}</div>` : ""}</section>`;
+      return;
+    }
+    if (m?.type !== "circle-leave") return baseModal();
     $("#overlay").innerHTML =
       `<section class="dialog" role="dialog" aria-modal="true" aria-label="离开发布动态"><h2>离开发布动态？</h2>${btn("circle-keep-draft", "保留草稿并返回", "button")}${btn("circle-discard", "放弃草稿", "button secondary")}${btn("close-modal", "继续编辑", "text-btn wide-link")}</section>`;
   };
   actions = (a, b) => {
     const id = b?.dataset.id;
+    if (a === "circle-add-photo") {
+      if (ui.publishing || photos(state.forms.post).length >= 3) return;
+      modal("menu", {
+        title: "添加图片",
+        items: [
+          { label: "拍照", action: "circle-photo-camera", icon: "plus" },
+          { label: "从相册选择", action: "circle-photo-gallery", icon: "plus" },
+        ],
+      });
+      return;
+    }
+    if (a === "circle-photo-gallery" || a === "circle-photo-camera") {
+      if (
+        ui.publishing ||
+        !state.forms.post ||
+        photos(state.forms.post).length >= 3
+      )
+        return;
+      const camera = a === "circle-photo-camera";
+      if (photoMode() === (camera ? "camera-denied" : "gallery-denied"))
+        modal("circle-photo-permission", { camera });
+      else
+        modal(camera ? "circle-camera" : "circle-photo-gallery", {
+          selected: [],
+          captured: false,
+          captureId: fixtures.find(
+            (x) => !photos(state.forms.post).some((y) => y.id === x.id),
+          )?.id,
+        });
+      return;
+    }
+    if (a === "circle-gallery-toggle") {
+      const m = state.modal;
+      if (m?.type !== "circle-photo-gallery") return;
+      if (m.selected.includes(id))
+        m.selected = m.selected.filter((x) => x !== id);
+      else if (m.selected.length + photos(state.forms.post).length < 3)
+        m.selected.push(id);
+      else toast("最多添加3张图片");
+      renderModal();
+      return;
+    }
+    if (a === "circle-gallery-done") {
+      if (state.modal?.type === "circle-photo-gallery")
+        addPhotos(state.modal.selected);
+      return;
+    }
+    if (a === "circle-camera-take" || a === "circle-camera-retake") {
+      if (state.modal?.type === "circle-camera") {
+        state.modal.captured = a === "circle-camera-take";
+        renderModal();
+      }
+      return;
+    }
+    if (a === "circle-camera-use") {
+      if (state.modal?.type === "circle-camera" && state.modal.captured)
+        addPhotos([state.modal.captureId]);
+      return;
+    }
+    if (a === "circle-remove-photo") {
+      if (ui.publishing || !state.forms.post) return;
+      state.forms.post.images = photos(state.forms.post).filter(
+        (x) => x.id !== id,
+      );
+      ui.publishError = null;
+      render();
+      return;
+    }
+    if (a === "circle-view-photo" || a === "circle-preview-draft") {
+      modal("circle-photo-viewer", {
+        draft: a === "circle-preview-draft",
+        postId: id,
+        index: Number(b.dataset.index) || 0,
+        zoom: false,
+        failed: false,
+      });
+      return;
+    }
+    if (a === "circle-viewer-prev" || a === "circle-viewer-next") {
+      const m = state.modal;
+      if (m?.type !== "circle-photo-viewer") return;
+      m.index = Math.max(
+        0,
+        Math.min(
+          m.index + (a === "circle-viewer-next" ? 1 : -1),
+          viewerItems(m).length - 1,
+        ),
+      );
+      m.zoom = false;
+      m.failed = false;
+      renderModal();
+      return;
+    }
+    if (a === "circle-viewer-zoom") {
+      if (Date.now() < suppressPhotoClickUntil) return;
+      if (state.modal?.type === "circle-photo-viewer") {
+        state.modal.zoom = !state.modal.zoom;
+        renderModal();
+      }
+      return;
+    }
+    if (a === "circle-viewer-retry") {
+      if (state.modal?.type === "circle-photo-viewer") {
+        state.modal.failed = false;
+        renderModal();
+      }
+      return;
+    }
     if (a === "circle-publish") {
       modal("menu", {
         title: "发布",
@@ -281,7 +507,13 @@
         beginAuth(() => actions("new-post"));
         return;
       }
-      state.forms.post ||= { text: "", topic: "", region: "", job: "" };
+      state.forms.post ||= {
+        text: "",
+        topic: "",
+        region: "",
+        job: "",
+        images: [],
+      };
       ui.publishError = null;
       nav("postForm");
       return;
@@ -337,7 +569,7 @@
     }
     if (a === "back" && state.route.view === "postForm") {
       if (ui.publishing) return;
-      if (state.forms.post?.text.trim()) {
+      if (state.forms.post?.text.trim() || photos(state.forms.post).length) {
         modal("circle-leave");
         return;
       }
@@ -371,7 +603,13 @@
     const staying = ui.lastView === "circle" && state.route.view === "circle";
     if (staying)
       ui.feedScroll = $(".circle-scroll")?.scrollTop ?? ui.feedScroll;
+    const editorScroll =
+      state.route.view === "postForm"
+        ? $(".circle-editor>.page-scroll")?.scrollTop
+        : null;
     base.render();
+    if (editorScroll != null && state.route.view === "postForm")
+      $(".circle-editor>.page-scroll").scrollTop = editorScroll;
     if (state.route.view === "circle")
       $(".circle-scroll").scrollTop = staying
         ? ui.feedScroll
@@ -381,7 +619,7 @@
       if (ui.publishing)
         document
           .querySelectorAll(
-            '[data-submit="post"] input,[data-submit="post"] textarea,[data-submit="post"] select',
+            '[data-submit="post"] input,[data-submit="post"] textarea,[data-submit="post"] select,[data-submit="post"] button',
           )
           .forEach((n) => (n.disabled = true));
     }
@@ -397,6 +635,57 @@
     ui.scenario = e.target.value;
     render();
   });
+  let swipe = null,
+    suppressPhotoClickUntil = 0;
+  document.addEventListener("pointerdown", (e) => {
+    if (
+      state.modal?.type === "circle-photo-viewer" &&
+      e.target.closest(".circle-viewer-stage") &&
+      !state.modal.zoom
+    ) {
+      swipe = { x: e.clientX, y: e.clientY };
+    }
+  });
+  document.addEventListener("pointerup", (e) => {
+    if (!swipe) return;
+    const d = { x: e.clientX - swipe.x, y: e.clientY - swipe.y };
+    swipe = null;
+    if (
+      state.modal?.type === "circle-photo-viewer" &&
+      Math.abs(d.x) > 45 &&
+      Math.abs(d.x) > Math.abs(d.y)
+    ) {
+      suppressPhotoClickUntil = Date.now() + 250;
+      actions(d.x < 0 ? "circle-viewer-next" : "circle-viewer-prev");
+    }
+  });
+  document.addEventListener("pointercancel", () => {
+    swipe = null;
+  });
+  document.addEventListener("keydown", (e) => {
+    if (state.modal?.type !== "circle-photo-viewer") return;
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      actions(
+        e.key === "ArrowLeft" ? "circle-viewer-prev" : "circle-viewer-next",
+      );
+    }
+  });
+  document.addEventListener(
+    "error",
+    (e) => {
+      if (e.target?.dataset?.circleThumb)
+        e.target.parentElement.innerHTML = "<span>图片暂不可查看</span>";
+      if (
+        e.target?.dataset?.circleFull &&
+        state.modal?.type === "circle-photo-viewer"
+      ) {
+        state.modal.failed = true;
+        renderModal();
+      }
+    },
+    true,
+  );
   resetPrototype = () => {
     ++ui.generation;
     ui.expanded.clear();
@@ -412,11 +701,13 @@
     $("#circle-state").value = "normal";
     $("#circle-post-fail").checked = false;
     $("#circle-reply-fail").checked = false;
+    $("#circle-photo-state").value = "normal";
+    $("#circle-image-fail").checked = false;
     base.resetPrototype();
     seed();
     render();
   };
-  window.abasongCircle = { version: "3.2-circle", state: ui };
+  window.abasongCircle = { version: "3.2-circle-images", state: ui };
   if (new URLSearchParams(location.search).get("task") === "circle")
     nav("circle", {}, true);
   else render();

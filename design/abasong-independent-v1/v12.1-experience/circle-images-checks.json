@@ -1,0 +1,81 @@
+{
+  "prototype_version": "3.2-circle-images",
+  "executed_at": "2026-11-05T18:56:39.413Z",
+  "scope": "isolated synthetic browser photos; TEST SVG fixtures; no device camera, picker, uploads, services or real data",
+  "checks": [
+    {
+      "name": "单图限制高度、点击查看，不增加回复图片入口",
+      "status": "PASS"
+    },
+    {
+      "name": "相册最多三张并按选择顺序，不重复添加",
+      "status": "PASS"
+    },
+    {
+      "name": "取消相册不改变文字、字段和已选图片",
+      "status": "PASS"
+    },
+    {
+      "name": "移除中间图片后补选，顺序和其他输入保留",
+      "status": "PASS"
+    },
+    {
+      "name": "发布前大图预览与关闭，保留图片和编辑位置",
+      "status": "PASS"
+    },
+    {
+      "name": "拍照、重拍、取消不丢输入，确认后才添加",
+      "status": "PASS"
+    },
+    {
+      "name": "相册及相机不可用可返回或改用另一方式，不误清空",
+      "status": "PASS"
+    },
+    {
+      "name": "坏图读取失败保留原图片与正文，可重新选择",
+      "status": "PASS"
+    },
+    {
+      "name": "部分上传失败不发布，重试只处理失败图且成功仅一条",
+      "status": "PASS"
+    },
+    {
+      "name": "图片上传成功但发帖失败，重试保留并复用全部图片",
+      "status": "PASS"
+    },
+    {
+      "name": "三图网格顺序、大图切换缩放和关闭保持原位置",
+      "status": "PASS"
+    },
+    {
+      "name": "大图加载失败可重试，不影响帖子正文和图片顺序",
+      "status": "PASS"
+    },
+    {
+      "name": "动态删除或屏蔽后大图不保留可见内容",
+      "status": "PASS"
+    },
+    {
+      "name": "纯图片仍需文字；图片草稿可保留、放弃并在退出登录清除",
+      "status": "PASS"
+    },
+    {
+      "name": "上传中离开或重置，不产生迟到动态或残留上传状态",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430宽度：选图网格、发布和大图关闭均可见",
+      "status": "PASS"
+    },
+    {
+      "name": "缩略图损坏仍保留正文和回复，不显示假图片",
+      "status": "PASS"
+    }
+  ],
+  "passed": 17,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "human_participants": 0,
+  "native_acceptance": false
+}

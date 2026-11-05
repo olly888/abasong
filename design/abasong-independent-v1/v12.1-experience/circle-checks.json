@@ -1,6 +1,6 @@
 {
-  "prototype_version": "3.2-circle",
-  "executed_at": "2026-11-05T16:59:49.123Z",
+  "prototype_version": "3.2-circle-images",
+  "executed_at": "2026-11-05T18:50:33.762Z",
   "scope": "isolated synthetic circle browser checks; state injection only for reference/version fault; no business services",
   "checks": [
     {

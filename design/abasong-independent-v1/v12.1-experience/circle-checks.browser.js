@@ -22,7 +22,7 @@ async (page) => {
   };
   const fresh = async () => {
     await p.goto(
-      "http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-circle&task=circle&check=" +
+      "http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-images&task=circle&check=" +
         checks.length,
     );
     await p.waitForFunction(() => window.abasongCircle);
@@ -505,7 +505,7 @@ async (page) => {
     .locator("#device")
     .screenshot({ path: folder + "/circle-publish.png" });
   const report = {
-    prototype_version: "3.2-circle",
+    prototype_version: "3.2-circle-images",
     executed_at: new Date().toISOString(),
     scope:
       "isolated synthetic circle browser checks; state injection only for reference/version fault; no business services",

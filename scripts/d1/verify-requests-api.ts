@@ -1,3 +1,4 @@
+import { verifyPush } from "./verify-push";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { once } from "node:events";
@@ -1591,6 +1592,21 @@ async function main() {
           ),
       ),
     );
+    const workerUrl = localTarget(env.WORKER_DATABASE_URL);
+    workerUrl.pathname = `/${name}`;
+    await verifyPush({
+      db,
+      http: request,
+      auth,
+      other,
+      strangerToken: noRights,
+      owner,
+      reader,
+      stranger,
+      body,
+      workerUrl: workerUrl.href,
+      runtimeUrl: runtime.href,
+    });
     await db.query(
       "UPDATE abasong.users SET session_invalid_before=now() WHERE id=$1",
       [owner],
@@ -1636,7 +1652,8 @@ void main().catch((error: unknown) => {
       .filter(
         (line) =>
           line.trim().startsWith("at ") &&
-          line.includes("/scripts/d1/verify-requests-api.ts:"),
+          (line.includes("/scripts/d1/verify-requests-api.ts:") ||
+            line.includes("/scripts/d1/verify-meeting-push.ts:")),
       );
     for (const frame of frames ?? []) console.error(frame.trim());
   }

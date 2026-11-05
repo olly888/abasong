@@ -1,3 +1,4 @@
+import { preparePushLogout } from "../notifications/registration";
 import {
   createContext,
   useCallback,
@@ -225,6 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setResendAt(0);
     setState({ phase: 'signing-out', session: null, me: null, error: null });
     try {
+      await preparePushLogout();
       await supabase?.auth.signOut({ scope: 'local' });
       await sessionStorage.removeItem(AUTH_STORAGE_KEY);
       await sessionStorage.removeItem(`${AUTH_STORAGE_KEY}-code-verifier`);

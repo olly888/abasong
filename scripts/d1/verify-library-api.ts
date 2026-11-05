@@ -129,15 +129,38 @@ async function main() {
         "utf8",
       ),
     );
-    const verifyBackfill=await prepareContributionBackfill(db);
+    const verifyBackfill = await prepareContributionBackfill(db);
     await db.query(
       readFileSync("database/migrations/0008_contribution_sources.sql", "utf8"),
     );
     await verifyBackfill();
-    await db.query(readFileSync("database/migrations/0009_kms_envelopes.sql", "utf8"));
-    await db.query(readFileSync("database/migrations/0010_request_draft_pricing.sql", "utf8"));
-    await db.query(readFileSync("database/migrations/0011_messaging.sql", "utf8"));
-    await db.query(readFileSync("database/migrations/0012_message_source_regions.sql", "utf8"));
+    await db.query(
+      readFileSync("database/migrations/0009_kms_envelopes.sql", "utf8"),
+    );
+    await db.query(
+      readFileSync(
+        "database/migrations/0010_request_draft_pricing.sql",
+        "utf8",
+      ),
+    );
+    await db.query(
+      readFileSync("database/migrations/0011_messaging.sql", "utf8"),
+    );
+    await db.query(
+      readFileSync(
+        "database/migrations/0012_message_source_regions.sql",
+        "utf8",
+      ),
+    );
+    await db.query(
+      readFileSync("database/migrations/0013_meeting_push.sql", "utf8"),
+    );
+    await db.query(
+      readFileSync(
+        "database/migrations/0014_retire_meeting_sharing.sql",
+        "utf8",
+      ),
+    );
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,
@@ -193,13 +216,23 @@ async function main() {
       await pause(100);
     }
     // Actual HTTP readiness must not claim ready with the source migration missing.
-    const versionRow=(await db.query("DELETE FROM abasong.schema_version WHERE version='V12.0008' RETURNING version,applied_at")).rows[0];
-    assert.equal((await fetch(base+'/health/live')).status,200);
-    const notReady=await fetch(base+'/health/ready');assert.equal(notReady.status,503);
-    const readinessError=await notReady.json();assert(!JSON.stringify(readinessError).includes('schema_version'));assert(!JSON.stringify(readinessError).includes('postgres'));
-    await db.query('INSERT INTO abasong.schema_version(version,applied_at) VALUES($1,$2)',[versionRow.version,versionRow.applied_at]);
-    assert.equal((await fetch(base+'/health/ready')).status,200);
-    checks+=4;
+    const versionRow = (
+      await db.query(
+        "DELETE FROM abasong.schema_version WHERE version='V12.0008' RETURNING version,applied_at",
+      )
+    ).rows[0];
+    assert.equal((await fetch(base + "/health/live")).status, 200);
+    const notReady = await fetch(base + "/health/ready");
+    assert.equal(notReady.status, 503);
+    const readinessError = await notReady.json();
+    assert(!JSON.stringify(readinessError).includes("schema_version"));
+    assert(!JSON.stringify(readinessError).includes("postgres"));
+    await db.query(
+      "INSERT INTO abasong.schema_version(version,applied_at) VALUES($1,$2)",
+      [versionRow.version, versionRow.applied_at],
+    );
+    assert.equal((await fetch(base + "/health/ready")).status, 200);
+    checks += 4;
     const a = await token(actor),
       b = await token(other),
       root = "/v1/me/apartment-library";
@@ -1256,9 +1289,17 @@ async function main() {
     await req("DELETE", `${root}/${restored.id}`, a, 200);
     manual.finish(true);
     manual.dispose();
-    await verifyContributionManagement(db, req, token, base, sensitive.href, admin.href, issuer);
+    await verifyContributionManagement(
+      db,
+      req,
+      token,
+      base,
+      sensitive.href,
+      admin.href,
+      issuer,
+    );
     await verifyPilotAccess(db, admin.href, issuer, token, req, aid);
-    await verifyKmsServices(db,sensitive.href,issued);
+    await verifyKmsServices(db, sensitive.href, issued);
     console.log(
       `PASS: ${checks} real HTTP/database private-library, encryption, RLS, qualification, dedup and isolation checks; disposable local database only`,
     );
@@ -1279,8 +1320,13 @@ async function main() {
   }
 }
 main().catch((error: unknown) => {
-  if (error && typeof error === "object" && "code" in error &&
-      typeof error.code === "string" && /^[0-9A-Z]{5}$/.test(error.code))
+  if (
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    /^[0-9A-Z]{5}$/.test(error.code)
+  )
     console.error("Database verification SQLSTATE: " + error.code);
   if (error instanceof Error) {
     const location = error.stack

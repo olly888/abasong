@@ -1,3 +1,4 @@
+import { NotificationBridge } from "../notifications/NotificationBridge";
 import { useEffect } from "react";
 import { setToolsButtonVisible } from "expo-dev-client";
 import { Stack } from "expo-router";
@@ -9,6 +10,7 @@ export default function Layout() {
   }, []);
   return (
     <AuthProvider>
+      <NotificationBridge/>
       <View
         style={{
           flex: 1,

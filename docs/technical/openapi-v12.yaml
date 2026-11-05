@@ -4850,240 +4850,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ReadInput'
-  /v1/requests/{request_id}/meeting-shares:
-    post:
-      operationId: shareMeeting
-      summary: 仅发布者向已关联未屏蔽会话明确分享精确集合点
-      tags:
-      - requests
-      responses:
-        '200':
-          description: 成功；202 表示已接受任务，非最终完成
-          headers:
-            X-Request-ID:
-              schema: *id001
-              description: 追踪ID，不含个人数据
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ack'
-        '400':
-          description: 输入或跨字段约束错误
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: 认证失败
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: 权限不足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: 不存在或不可见
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: 版本/状态/幂等内容冲突
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: 业务条件不满足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: 限流
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: 依赖暂不可用
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      parameters:
-      - name: request_id
-        in: path
-        required: true
-        schema: *id001
-      - name: Idempotency-Key
-        in: header
-        required: true
-        schema: *id001
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MeetingShareInput'
-  /v1/requests/{request_id}/meeting-shares/{conversation_id}:
-    get:
-      operationId: getSharedMeeting
-      summary: 仅发布者或已获共享的该会话参与者
-      tags:
-      - requests
-      responses:
-        '200':
-          description: 成功；202 表示已接受任务，非最终完成
-          headers:
-            X-Request-ID:
-              schema: *id001
-              description: 追踪ID，不含个人数据
-            Cache-Control:
-              schema:
-                type: string
-                enum:
-                - no-store
-              description: 敏感响应不缓存
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MeetingDetails'
-        '400':
-          description: 输入或跨字段约束错误
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: 认证失败
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: 权限不足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: 不存在或不可见
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: 版本/状态/幂等内容冲突
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: 业务条件不满足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: 限流
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: 依赖暂不可用
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      parameters:
-      - name: request_id
-        in: path
-        required: true
-        schema: *id001
-      - name: conversation_id
-        in: path
-        required: true
-        schema: *id001
-      x-sensitive-response: true
-    delete:
-      operationId: revokeMeetingShare
-      summary: 仅发布者撤回集合点授权
-      tags:
-      - requests
-      responses:
-        '200':
-          description: 成功；202 表示已接受任务，非最终完成
-          headers:
-            X-Request-ID:
-              schema: *id001
-              description: 追踪ID，不含个人数据
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Ack'
-        '400':
-          description: 输入或跨字段约束错误
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: 认证失败
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: 权限不足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: 不存在或不可见
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: 版本/状态/幂等内容冲突
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '422':
-          description: 业务条件不满足
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: 限流
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '503':
-          description: 依赖暂不可用
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      parameters:
-      - name: request_id
-        in: path
-        required: true
-        schema: *id001
-      - name: conversation_id
-        in: path
-        required: true
-        schema: *id001
   /v1/me/contacts:
     get:
       operationId: listMyContacts
@@ -6405,6 +6171,78 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Preferences'
+  /v1/device-installations/revoke:
+    post:
+      operationId: revokeInstallation
+      summary: 仅持有安装凭据可幂等停用该设备，无账号读取/绑定能力
+      tags:
+      - device-installations
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ack'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstallationProof'
+      security: []
   /v1/me/devices:
     post:
       operationId: registerDevice
@@ -10845,37 +10683,6 @@ components:
           minimum: 0
       required:
       - last_read_sequence
-    MeetingShareInput:
-      type: object
-      additionalProperties: false
-      properties:
-        conversation_id:
-          type: string
-          format: uuid
-        details:
-          type: string
-          maxLength: 1000
-          minLength: 1
-      required:
-      - conversation_id
-      - details
-    MeetingDetails:
-      type: object
-      additionalProperties: false
-      properties:
-        request_id:
-          type: string
-          format: uuid
-        conversation_id:
-          type: string
-          format: uuid
-        details:
-          type: string
-          maxLength: 1000
-      required:
-      - request_id
-      - conversation_id
-      - details
     ContactInput:
       type: object
       additionalProperties: false
@@ -11002,6 +10809,26 @@ components:
       - object_id
       - read_at
       - created_at
+    InstallationProof:
+      type: object
+      additionalProperties: false
+      properties:
+        installation_id:
+          type: string
+          format: uuid
+        installation_secret:
+          type: string
+          maxLength: 64
+          minLength: 64
+          pattern: ^[a-f0-9]{64}$
+        binding_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+      - installation_id
+      - installation_secret
+      - binding_version
     DeviceInput:
       type: object
       additionalProperties: false
@@ -11009,6 +10836,11 @@ components:
         installation_id:
           type: string
           format: uuid
+        installation_secret:
+          type: string
+          maxLength: 64
+          minLength: 64
+          pattern: ^[a-f0-9]{64}$
         platform:
           type: string
           enum:
@@ -11021,6 +10853,7 @@ components:
           type: boolean
       required:
       - installation_id
+      - installation_secret
       - platform
       - enabled
     Device:
@@ -11040,11 +10873,16 @@ components:
           - android
         enabled:
           type: boolean
+        binding_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
       required:
       - id
       - installation_id
       - platform
       - enabled
+      - binding_version
     Preferences:
       type: object
       additionalProperties: false

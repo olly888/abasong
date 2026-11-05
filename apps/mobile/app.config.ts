@@ -20,6 +20,14 @@ export function validatePilotEnvironment(env: NodeJS.ProcessEnv) {
 export default ({ config }: ConfigContext): ExpoConfig => {
   const base = config as ExpoConfig;
   const profile = process.env.ABASONG_BUILD_PROFILE;
+  if (process.env.EXPO_PUBLIC_EXPO_PROJECT_ID) {
+    if (!/^[a-f0-9-]{36}$/i.test(process.env.EXPO_PUBLIC_EXPO_PROJECT_ID))
+      throw new Error("Invalid Expo push project");
+    base.extra = {
+      ...base.extra,
+      eas: { projectId: process.env.EXPO_PUBLIC_EXPO_PROJECT_ID },
+    };
+  }
   // Prebuild merges existing native plists. Explicitly restore the development
   // app's local Metro access after a strict field/pilot build in this directory.
   // Standalone profiles below keep HTTPS-only transport and separate identities.
@@ -67,6 +75,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...base,
     scheme: "abasong-field",
+    plugins: base.plugins?.filter(
+      (p) => (Array.isArray(p) ? p[0] : p) !== "expo-notifications",
+    ),
     ios: {
       ...base.ios,
       bundleIdentifier: "com.abasong.fieldreview",

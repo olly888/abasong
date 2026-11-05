@@ -11,7 +11,7 @@
 - H01：门牌28px加粗、街道20px常规单行，完整地址展开；顶部同源近似距离/粗略位置/过期状态。独立滑卡、邻卡边缘、门牌/建筑联动、展开收起、反馈、无码贡献及读取失败恢复。
 - H02/H03：与公寓共用独立外框和横滑轨道，一需求/一司机一卡；滑卡同步配送区/声明服务区，不改筛选、不自动报名/联系。默认全部区域、点区筛选、当前结果、日期/经验筛选、列表及详情返回、模式相机隔离。
 - P03/D01：仓库地址联想示例/手填、取件与派送分开、预览发布；地图查看/缩放、复制、Google Maps/Apple Maps导航选择及取消返回。
-- U03：一次时段、今天/明天、1–5区域、可选件数及关闭。复用原有报名、文字会话、截图贡献和我的入口，未逐页升级全部39节点。
+- U03：一次时段、今天/明天、1–5区域、可选件数及关闭。复用原有报名、文字会话、截图贡献和我的入口，未逐页升级全部38活动节点。
 
 不新增仓库目录、预约候补、评分优先、收入预测、自动派单、结算或独立集合点。首轮区域点方案；区域面对照未制作，不阻挡本轮体验。
 
@@ -47,7 +47,7 @@ Google使用[官方Maps URLs](https://developers.google.com/maps/documentation/u
 
 ## 司机圈增量（r3-circle）
 
-[直接体验C01–03](index.html?v=r3-images&task=circle)。最新文字信息流；可选配送地区/标签；发布菜单复用临时需求；同ID引用当前状态；回复失败保留；作者→资料/私聊/常联系；删除/屏蔽和现有消息中心通知。自然高度，不使用地图192px卡壳或横滑。所有内容/发布/通知仍为内存合成，无实际发送。
+[直接体验C01–03](index.html?v=r3-images&task=circle)。最新文字信息流；可选配送地区/标签；发布菜单复用临时需求；同ID引用当前状态；回复失败保留；作者→资料/私聊；删除/屏蔽和现有消息中心通知。自然高度，不使用地图192px卡壳或横滑。所有内容/发布/通知仍为内存合成，无实际发送。
 
 [19项司机圈检查](circle-checks.json)与[可复跑函数](circle-checks.browser.js)独立记录；既有34项地图、10项核心检查已对增量重跑。评审入口增加第6项，不增加产品内导航。截图：[信息流](evidence/circle-home.png)、[回复](evidence/circle-detail.png)、[发布](evidence/circle-publish.png)。浏览器宽度320/390/430通过；系统键盘/手势/200%字号/读屏及原生、服务权限仍待B5，不伪装为真人设计师签审。
 
@@ -59,10 +59,10 @@ Google使用[官方Maps URLs](https://developers.google.com/maps/documentation/u
 
 [17项报告](circle-images-checks.json)、[可复跑函数](circle-images-checks.browser.js)；[发布](evidence/circle-images-editor.png)、[信息流](evidence/circle-images-feed.png)、[大图](evidence/circle-images-viewer.png)、[部分失败](evidence/circle-images-retry.png)。外壳可切权限、坏图、加载和上传失败；这些不是产品菜单。320/390/430默认浏览器通过，系统权限/相册/相机/键盘/真实上传/读屏/200%字号仍待原生阶段；真人0/7不变。
 
-## 我的与团队增量（2026-11-05，r3-account）
+## 首版简化交付（r3-simple，2026-11-05）
 
-[直接体验我的](index.html?v=r3-account&task=me)。本人资料/双用途、个人私有联系方式、可编辑DSP团队、多合作快递/区域、业务联系默认off/主动开放、常联系私人备注与移除、发布身份/历史来源已接入合成原型。会话“更多→我的联系方式”仅展示/复制，不自动发送；不含收费或成员系统。新增TEST号码均为虚构演示，不从Auth取号，不调用实际服务/拨号。
+[我的入口](index.html?v=r3-simple&task=me)：个人资料→紧凑接活开关→蓝色共享门禁码→同组公寓/发布/报名→适用时团队→设置。常联系菜单/加入/备注整套退役，旧路由回我的、旧操作不写关系；先前同行截图和24项报告仅历史。首次文字联系和自愿提供联系方式保留。
 
-[24项检查](account-checks.json)PASS，原[34地图](browser-checks.json)/[10核心](core-checks.json)/[19司机圈](circle-checks.json)/[17图片](circle-images-checks.json)回归PASS，共104项合成，0脚本异常/外部请求。包括默认与撤销可见性、发布源快照、首次建团队回草稿、备注/资料失败保留、阻止迟到写入、移出不删聊天、屏蔽/注销、复制失败和320/390/430布局。修正聊天菜单不可达与资料折叠组重绘、返回草稿判断问题。
+[12项简化检查](simplification-checks.json)、[20项保留账户检查](account-checks.json)和原34地图/10核心/19司机圈/17图片回归共112项合成通过。新增覆盖开关取消/保存失败/未来/到期/关闭恢复、直接B02/地址联想/更换/无候选核对/失败回程、不造新地址坐标、屏蔽恢复、城市+m和320/390/430布局。修复候选点击前blur重绘吞点击，以及新用词下原型门码提醒的匹配；这只是演示检查，不是完整内容安全实现。
 
-[我的截图](evidence/account-my.png)、[个人资料](evidence/account-profile.png)、[团队资料](evidence/account-team.png)、[常联系](evidence/account-contacts.png)、[业务联系方式TEST](evidence/account-business-contact.png)为独立Chromium截图；外壳故障开关仅供检查，不在产品页面。真人0/7，资料跟进7行not_run，不计新参与者。系统键盘/返回、200%字号、读屏、真实电话/服务端授权、iOS/Android尚未验；实际App/接口/数据库未改，现行设计仍V3.1，原型体验后再B5实现。
+[我的](evidence/simple-my.png)、[公寓卡](evidence/simple-apartment.png)、[接活设置](evidence/simple-availability.png)、[地址候选](evidence/simple-address-candidates.png)、[手填](evidence/simple-manual.png)为TEST浏览器截图。Mapbox/GPS/OCR/SMS/API/拨号/业务库没有被调用；实际App/合同/迁移未改，双端原生和真人0/7未验。历史报告按原时点范围解释，不以旧常联系通过当当前功能。

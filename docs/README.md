@@ -1,6 +1,6 @@
 # Abasong 研发文档入口
 
-我的与团队已批准目标：[规则](product/Abasong_V3.2_我的与团队资料补充.md)、[原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-account&task=me)、[24项合成报告](../design/abasong-independent-v1/v12.1-experience/account-checks.json)。统一账号、联系方式自愿，首版无收费/成员管理；实际App/服务待B5。原评审保留历史语境。
+我的与团队已批准目标：[规则](product/Abasong_V3.2_我的与团队资料补充.md)、[原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-simple&task=me)、[20项账户合成报告](../design/abasong-independent-v1/v12.1-experience/account-checks.json)。统一账号、接活开关上移、联系方式自愿；首版无常联系/收费/成员管理；实际App/服务待B5。原评审保留历史语境。
 
 司机圈新增已批准目标：[首版图片发布](product/Abasong_V3.2_司机圈图片发布补充.md)、[定位与最小社区](product/Abasong_V3.2_司机圈定位与最小社区补充.md)、[C01–03原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-images&task=circle)。原生仍未开放，D15/D16/D17排B5；合成原型不是业务上线。
 
@@ -19,7 +19,7 @@
 ## 产品与原型
 
 - [产品体验升级与需求收敛](product/Abasong_V12.1_产品体验升级与需求收敛方案.md)：目标优先级、日期/区域/数量含义、UX01–10。
-- [页面功能与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[现行39节点目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
+- [页面功能与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[当前38活动节点目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
 - [V3.2新版原型](../design/abasong-independent-v1/v12.1-experience/index.html)、[说明](../design/abasong-independent-v1/v12.1-experience/README.md)、[R2a实际检查](../design/abasong-independent-v1/v12.1-experience/验收记录.md)：核心地图/滑卡/找活找人/仓库流程可体验，34项浏览器检查通过，待用户确认；App未改。
 - [旧版参考v12.1-import](../design/abasong-independent-v1/v12.1-import/index.html)、[说明](../design/abasong-independent-v1/v12.1-import/README.md)、[历史验收](../design/abasong-independent-v1/v12.1-import/验收记录.md)：合成交互，不能证明真实接口与权限。
 - [新版原型制作与验收方案](product/Abasong_V12.1_原型升级制作与验收方案.md)：R2a核心已制作待确认；R2b/R2c未覆盖状态继续单列。

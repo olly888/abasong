@@ -100,11 +100,11 @@ async (page) => {
       "contributor",
     );
     assert(
-      !(await p.locator("#app").innerText()).includes("门禁密码"),
+      !(await p.locator("#app").innerText()).includes("门禁码"),
       "no extra caption",
     );
   });
-  await run("鼠标横拖切公寓，地图/密码同步，展开收起保持选择", async () => {
+  await run("鼠标横拖切公寓，地图/门禁码同步，展开收起保持选择", async () => {
     const box = await p.locator(".ex-carousel").boundingBox();
     await p.mouse.move(box.x + box.width - 75, box.y + 80);
     await p.mouse.down();
@@ -134,7 +134,7 @@ async (page) => {
     await p.waitForTimeout(170);
     assert(
       (await p.locator(".ex-apartment-card:not([inert])").innerText()).includes(
-        "暂无共享密码",
+        "暂无共享门禁码",
       ),
       "no code",
     );
@@ -164,7 +164,7 @@ async (page) => {
     await p.waitForTimeout(200);
     assert(
       (await p.locator(".ex-apartment-card:not([inert])").innerText()).includes(
-        "密码暂时无法加载",
+        "门禁码暂时无法加载",
       ),
       "error",
     );
@@ -471,7 +471,7 @@ async (page) => {
     await map.focus();
     for (let i = 0; i < 4; i++) await p.keyboard.press("+");
     assert(
-      (await p.locator(".ex-scale span").innerText()) === "50 ft",
+      (await p.locator(".ex-scale span").innerText()) === "20 m",
       "scale changed",
     );
     assert(
@@ -488,7 +488,7 @@ async (page) => {
       "recommendation restored",
     );
   });
-  await run("未登录或无查看资格，展开不展示合成密码", async () => {
+  await run("未登录或无查看资格，展开不展示合成门禁码", async () => {
     for (const scenario of ["guest", "unqualified"]) {
       await p.selectOption("#scenario", scenario);
       await p.waitForTimeout(150);
@@ -596,13 +596,13 @@ async (page) => {
     await p.locator('.ex-place-map [data-ex-map="place"]').focus();
     for (let i = 0; i < 4; i++) await p.keyboard.press("+");
     assert(
-      (await p.locator(".ex-place-scale").innerText()).includes("50 ft"),
+      (await p.locator(".ex-place-scale").innerText()).includes("20 m"),
       "place scale",
     );
     await p.locator('.ex-place-map [data-action="ex-navigate"]').click();
     await p.locator('[data-action="ex-nav-cancel"]').first().click();
     assert(
-      (await p.locator(".ex-place-scale").innerText()).includes("50 ft"),
+      (await p.locator(".ex-place-scale").innerText()).includes("20 m"),
       "place camera retained",
     );
     assert(
@@ -643,13 +643,13 @@ async (page) => {
     assert(
       (await p
         .locator(".ex-apartment-card:not([inert]) .ex-distance")
-        .innerText()) === "约40 ft · 至边界",
+        .innerText()) === "约 10 m",
       "discovery-boundary distance",
     );
     await p.locator(".ex-apartment-card:not([inert])").click();
     assert(
       (await p.locator(".ex-expanded").getAttribute("aria-label")) ===
-        "公寓密码详情",
+        "门禁码详情",
       "valid expanded markup",
     );
     assert(
@@ -660,7 +660,7 @@ async (page) => {
     );
   });
   await run(
-    "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与密码",
+    "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与门禁码",
     async () => {
       await p.selectOption("#distance-quality", "approximate");
       assert(
@@ -685,17 +685,15 @@ async (page) => {
   await run("三模式共用192px外框与12px间距，找人不是精确司机定位", async () => {
     for (const kind of ["apartments", "jobs", "people"]) {
       if (kind !== "apartments") await mode(kind);
-      const frame = await p
-        .locator(".ex-carousel")
-        .evaluate((n) => ({
-          gap: getComputedStyle(n).gap,
-          items: [...n.children].map((c) => ({
-            h: c.getBoundingClientRect().height,
-            r: getComputedStyle(c).borderRadius,
-            w: c.getBoundingClientRect().width,
-            overflow: c.scrollHeight > c.clientHeight,
-          })),
-        }));
+      const frame = await p.locator(".ex-carousel").evaluate((n) => ({
+        gap: getComputedStyle(n).gap,
+        items: [...n.children].map((c) => ({
+          h: c.getBoundingClientRect().height,
+          r: getComputedStyle(c).borderRadius,
+          w: c.getBoundingClientRect().width,
+          overflow: c.scrollHeight > c.clientHeight,
+        })),
+      }));
       assert(
         frame.gap === "12px" &&
           frame.items.every(
@@ -852,16 +850,14 @@ async (page) => {
       await p.setViewportSize({ width, height: 844 });
       for (const kind of ["apartments", "jobs", "people"]) {
         await mode(kind);
-        const frame = await p
-          .locator(".ex-carousel")
-          .evaluate((n) => ({
-            h: [...n.children].map((c) =>
-              Math.round(c.getBoundingClientRect().height),
-            ),
-            overflow: [...n.children].some(
-              (c) => c.scrollHeight > c.clientHeight,
-            ),
-          }));
+        const frame = await p.locator(".ex-carousel").evaluate((n) => ({
+          h: [...n.children].map((c) =>
+            Math.round(c.getBoundingClientRect().height),
+          ),
+          overflow: [...n.children].some(
+            (c) => c.scrollHeight > c.clientHeight,
+          ),
+        }));
         assert(
           frame.h.every((h) => h === frame.h[0] && h >= 192) && !frame.overflow,
           "equal adaptive frames " + width + " " + kind,
@@ -883,7 +879,7 @@ async (page) => {
                   d.right > h.left &&
                   d.top < h.bottom &&
                   d.bottom > h.top) ||
-                d.bottom > a.top
+                (d.top < a.bottom && d.bottom > a.top)
               );
             });
           assert(!overlap, "distance overlap " + width);
@@ -913,7 +909,7 @@ async (page) => {
       );
     }
   });
-  await run("快速切公寓不串密码，调整屏宽保持选中对象", async () => {
+  await run("快速切公寓不串门禁码，调整屏宽保持选中对象", async () => {
     await p.locator(".ex-map-card:not([inert])").focus();
     await p.keyboard.press("ArrowRight");
     await p.keyboard.press("ArrowRight");

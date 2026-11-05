@@ -1,6 +1,6 @@
 {
   "prototype_version": "3.2-circle-images",
-  "executed_at": "2026-11-05T19:47:16.625Z",
+  "executed_at": "2026-11-05T20:56:29.105Z",
   "scope": "isolated synthetic circle browser checks; state injection only for reference/version fault; no business services",
   "checks": [
     {
@@ -16,7 +16,7 @@
       "status": "PASS"
     },
     {
-      "name": "作者进入最小资料、复用私聊与常联系",
+      "name": "作者进入个人资料与既有私聊，无常联系功能",
       "status": "PASS"
     },
     {

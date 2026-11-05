@@ -121,7 +121,7 @@ async (page) => {
       "unknown coordinates not nearby",
     );
   });
-  await run("纠正本人来源：同码他人资料保留，旧来源不再展示密码", async () => {
+  await run("纠正本人来源：同码他人资料保留，旧来源不再展示门禁码", async () => {
     await fresh("correction");
     await p
       .locator('[data-action="lib-correct"][data-id="library-example"]')
@@ -246,7 +246,7 @@ async (page) => {
     await p.locator('[data-action="lib-contribute"]').click();
     await p.locator('[data-action="lib-contribute-screenshots"]').click();
     assert(
-      (await p.locator("#app").innerText()).includes("添加公寓地址和密码截图"),
+      (await p.locator("#app").innerText()).includes("添加公寓地址和门禁码截图"),
       "fresh picker",
     );
     assert(

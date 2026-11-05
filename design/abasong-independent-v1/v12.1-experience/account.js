@@ -1,5 +1,5 @@
 "use strict";
-// Synthetic account/contacts/team prototype. No Auth phone, services, billing or real contact calls.
+// Synthetic account/team prototype. No Auth phone, services, billing or real contact calls.
 (() => {
   const base = {
     render,
@@ -19,6 +19,8 @@
     lastLogged: state.logged,
     contactError: null,
     teamPublishIntent: null,
+    availabilityBusy: false,
+    availabilityError: null,
   };
   let account;
   chatPage = () => {
@@ -168,10 +170,13 @@
     if (!state.logged)
       return `<div class="root-content"><div class="page-scroll account-scroll">${rootHeader("我的")}<div class="profile-hero">${I("user")}<h2>欢迎使用 Abasong</h2></div>${btn("login", "登录", "button")}</div></div>${bottomNav("me")}`;
     const av = model.availability,
-      live = effectiveAvailability(),
-      show = account.delivery || live;
-    return `<div class="root-content"><div class="page-scroll account-scroll">${rootHeader("我的")}<button class="account-identity" data-action="edit-profile" aria-label="编辑个人资料">${avatar("me")}<span><strong>${esc(model.profile.name)}</strong><small>个人资料与联系方式</small></span>${I("chevron")}</button><div class="account-contribution">${btn("lib-contribute", I("plus") + "贡献公寓密码", "button")}</div><section class="account-group">${item("lib-list", "我的公寓", "我保存的 · 我共享的")}</section>${show ? `<button class="account-availability" data-action="availability"><span><b>${live ? "已设置可接活时段" : "可接临时支援"}</b><small>${live ? `${esc(av.regions.join(" / "))} · ${av.date === window.abasongExperience.demoDay ? "今天" : esc(av.date || "")} ${time12(av.start)}–${av.endDate && av.endDate !== av.date ? esc(av.endDate) + " " : ""}${time12(av.end)}` : "按自己的时间设置"}</small></span>${I("chevron")}</button>` : ""}<section class="account-group">${item("my-posts", "我的发布")}${item("my-applications", "我的报名")}</section><section class="account-group">${item("contacts", "常联系")}${account.teamIntent || own()?.name ? item("organization", "我的团队", own()?.name || "添加团队资料") : ""}</section><section class="account-group">${item("settings", "设置")}</section></div></div>${bottomNav("me")}`;
+      live = effectiveAvailability();
+    const summary = live
+      ? `${av.date === window.abasongExperience.demoDay ? "今天" : av.date === "2026-11-05" ? "明天" : esc(av.date || "")} ${time12(av.start)}–${av.endDate && av.endDate !== av.date ? esc(av.endDate) + " " : ""}${time12(av.end)} · ${esc(av.regions.join(" / "))}`
+      : "暂不接活";
+    return `<div class="root-content"><div class="page-scroll account-scroll">${rootHeader("我的")}<button class="account-identity" data-action="edit-profile" aria-label="编辑个人资料">${avatar("me")}<span><strong>${esc(model.profile.name)}</strong><small>个人资料与联系方式</small></span>${I("chevron")}</button><section class="account-availability-row"><div><b>接活状态</b>${live ? `<button class="account-availability-summary" data-action="availability" aria-label="修改接活时段">${summary}</button>` : `<small>${summary}</small>`}</div><button class="switch ${live ? "on" : ""}" role="switch" aria-label="接活状态" aria-checked="${live}" aria-busy="${!!ui.availabilityBusy}" data-action="account-toggle-availability" ${ui.availabilityBusy ? "disabled" : ""}></button></section>${ui.availabilityError ? `<div class="account-availability-error" role="alert">${esc(ui.availabilityError)}</div>` : ""}<div class="account-contribution">${btn("lib-contribute", I("plus") + "共享门禁码", "button")}</div><section class="account-group account-main-tools">${item("lib-list", "我的公寓", "我保存的 · 我共享的")}${item("my-posts", "我的发布")}${item("my-applications", "我的报名")}</section>${account.teamIntent || own()?.name ? `<section class="account-group">${item("organization", "我的团队", own()?.name || "添加团队资料")}</section>` : ""}<section class="account-group">${item("settings", "设置")}</section></div></div>${bottomNav("me")}`;
   };
+
   profilePage = () => {
     const f = (state.forms.accountProfile ||= profileDraft());
     return formPage(
@@ -192,32 +197,6 @@
       { disabled: ui.busy },
     );
   };
-  contactsPage = () => {
-    if (!state.logged)
-      return page(
-        "常联系",
-        `${empty("登录后查看常联系")}${btn("login", "登录", "button")}`,
-      );
-    if ($("#account-contacts-error").checked)
-      return page(
-        "常联系",
-        `<div class="account-status" role="alert"><p>常联系暂时无法加载</p>${btn("account-contacts-retry", "重新加载", "button secondary")}</div>`,
-      );
-    return page(
-      "常联系",
-      model.contacts.length
-        ? `<div class="account-contacts">${model.contacts
-            .map((c) => {
-              const closed = account.closed.includes(c.id),
-                b = blocked(c.id),
-                d = getDriver(c.id),
-                t = declaration(d);
-              return `<article class="account-contact" data-contact-id="${c.id}"><button class="account-contact-person-link" data-action="driver" data-id="${c.id}" ${closed ? "disabled" : ""}>${closed ? '<span class="avatar">' + I("user") + "</span>" : avatar(c.id)}<span><b>${closed ? "账号已注销" : esc(nameOf(c.id))}</b>${!closed && d?.carrier ? `<small>${esc(d.carrier)} · 自填经验</small>` : ""}</span>${closed ? "" : I("chevron")}</button>${b ? `<p class="account-caption">${closed ? "账号已注销" : "已屏蔽"}</p>` : t ? `<p class="account-caption">${esc(t)}</p>` : ""}${c.note ? `<p class="account-private-note">${esc(c.note)}</p>` : ""}<div class="account-contact-actions">${btn("contact", b ? "无法联系" : "联系", "button", `data-person="${c.id}" ${b ? "disabled" : ""}`)}${btn("edit-note", "私人备注", "text-btn", `data-id="${c.id}"`)}${btn("remove-contact", "移出", "text-btn", `data-id="${c.id}"`)}</div></article>`;
-            })
-            .join("")}</div>`
-        : `<div class="account-status"><h2>还没有常联系</h2><p>与同行联系后，可加入常联系。</p>${btn("inbox", "查看消息", "button secondary")}</div>`,
-    );
-  };
   driverPage = (id) => {
     const d = getDriver(id);
     if (!d || account.closed.includes(id))
@@ -226,11 +205,10 @@
         id === "me" ? account : account.peers[id] || { delivery: true },
       t = teamFor(id),
       b = blocked(id),
-      saved = model.contacts.some((x) => x.id === id),
       time = declaration(d);
     return page(
       "个人资料",
-      `<div class="profile-hero">${avatar(id)}<h2>${esc(nameOf(id))}</h2>${peer.delivery && d.vehicle ? `<p class="account-caption">${esc(d.vehicle)}</p>` : ""}</div>${peer.delivery ? `${time ? `<div class="available-card"><b>${esc(time)}</b></div>` : ""}${row("配送过的快递公司", d.carrier || "未填写")}${row("熟悉区域", d.region || model.profile.regions || "未填写")}` : ""}${d.bio ? `<p class="account-bio">${esc(d.bio)}</p>` : ""}${t?.name ? `<section class="account-team-summary"><h3>${esc(t.name)}</h3>${row("联系人", nameOf(id))}${t.carriers.length ? row("合作快递公司", t.carriers.join("、")) : ""}${t.regions.length ? row("主要配送区域", t.regions.join(" / ")) : ""}${contactButton(id)}</section>` : ""}<div class="button-row">${id === "me" ? btn("edit-profile", "编辑个人资料", "button") : btn("contact", b ? "已屏蔽" : "联系", "button", `data-person="${id}" ${b ? "disabled" : ""}`)}</div>${id !== "me" ? btn("save-contact", saved ? "已在常联系" : "加入常联系", "text-btn wide-link", `data-person="${id}" ${b ? "disabled" : ""}`) : ""}`,
+      `<div class="profile-hero">${avatar(id)}<h2>${esc(nameOf(id))}</h2>${peer.delivery && d.vehicle ? `<p class="account-caption">${esc(d.vehicle)}</p>` : ""}</div>${peer.delivery ? `${time ? `<div class="available-card"><b>${esc(time)}</b></div>` : ""}${row("配送过的快递公司", d.carrier || "未填写")}${row("熟悉区域", d.region || model.profile.regions || "未填写")}` : ""}${d.bio ? `<p class="account-bio">${esc(d.bio)}</p>` : ""}${t?.name ? `<section class="account-team-summary"><h3>${esc(t.name)}</h3>${row("联系人", nameOf(id))}${t.carriers.length ? row("合作快递公司", t.carriers.join("、")) : ""}${t.regions.length ? row("主要配送区域", t.regions.join(" / ")) : ""}${contactButton(id)}</section>` : ""}<div class="button-row">${id === "me" ? btn("edit-profile", "编辑个人资料", "button") : btn("contact", b ? "已屏蔽" : "联系", "button", `data-person="${id}" ${b ? "disabled" : ""}`)}</div>`,
       id !== "me"
         ? ib("person-more", "more", "更多操作", `data-id="${id}"`)
         : "",
@@ -344,16 +322,13 @@
         `<section class="dialog account-contact-dialog" role="dialog" aria-modal="true" aria-label="联系方式"><div class="close-row"><h2>${esc(title)}</h2>${ib("close-modal", "close", "关闭")}</div>${c && (c.phone || c.wechat) ? `${c.phone ? `<div class="account-contact-value"><span>电话</span><b>${esc(c.phone)}</b>${btn("account-copy", "复制号码", "text-btn", 'data-id="phone"')}</div>` : ""}${c.wechat ? `<div class="account-contact-value"><span>微信号</span><b>${esc(c.wechat)}</b>${btn("account-copy", "复制微信号", "text-btn", 'data-id="wechat"')}</div>` : ""}${ui.contactError ? `<p class="form-error" role="alert">${esc(ui.contactError)}</p>` : ""}` : m.self ? `<p>尚未填写联系方式</p>${btn("edit-profile", "去填写", "button")}` : "<p>联系方式暂不可查看</p>"}</section>`;
       return;
     }
-    if (m?.type === "note") {
-      const c = model.contacts.find((x) => x.id === m.id);
-      if (!c) {
-        closeModal();
-        return;
-      }
-      $("#overlay").innerHTML =
-        `<section class="dialog" role="dialog" aria-modal="true" aria-label="私人备注"><div class="close-row"><h2>私人备注</h2>${ib("close-modal", "close", "关闭")}</div><form data-submit="account-note">${m.error ? `<p class="form-error" role="alert">${esc(m.error)}</p>` : ""}<label class="field"><span class="field-label">仅自己可见</span><textarea name="note" maxlength="300">${esc(m.draft ?? c.note)}</textarea></label><button type="submit" class="button" ${ui.busy ? "disabled" : ""}>${ui.busy ? "保存中" : "保存备注"}</button></form></section>`;
-      return;
-    }
+    if (m?.type === "menu")
+      m.items = m.items.filter(
+        (x) =>
+          !["save-contact", "contacts", "edit-note", "remove-contact"].includes(
+            x.action,
+          ),
+      );
     originalModal();
   };
   actions = (a, b) => {
@@ -419,24 +394,6 @@
         });
       return;
     }
-    if (a === "account-contacts-retry") {
-      $("#account-contacts-error").checked = false;
-      render();
-      return;
-    }
-    if (a === "save-contact" && (!state.logged || blocked(pid))) {
-      toast(state.logged ? "无法加入常联系" : "请先登录");
-      return;
-    }
-    if (a === "remove-contact") {
-      confirmAction("移出常联系？", "聊天记录会保留。", () => {
-        model.contacts = model.contacts.filter((x) => x.id !== id);
-        closeModal();
-        render();
-        toast("已移出常联系");
-      });
-      return;
-    }
     if (
       a === "back" &&
       ["profile", "organization"].includes(state.route.view)
@@ -487,6 +444,42 @@
       ui.teamPublishIntent = null;
       closeModal();
       back();
+      return;
+    }
+    if (
+      [
+        "contacts",
+        "save-contact",
+        "edit-note",
+        "remove-contact",
+        "account-contacts-retry",
+      ].includes(a)
+    )
+      return;
+    if (a === "account-toggle-availability") {
+      if (!state.logged || ui.availabilityBusy) return;
+      ui.availabilityError = null;
+      if (!effectiveAvailability()) {
+        base.actions("availability", b);
+        state.forms.availability.enabled = true;
+        state.forms.availability.fromToggle = true;
+        render();
+        return;
+      }
+      const g = ui.generation,
+        failed = fault();
+      ui.availabilityBusy = true;
+      render();
+      setTimeout(() => {
+        if (g !== ui.generation || !state.logged) return;
+        ui.availabilityBusy = false;
+        if (failed) ui.availabilityError = "未能关闭接活状态，请重试";
+        else {
+          model.availability.enabled = false;
+          toast("已停止接活");
+        }
+        render();
+      }, 180);
       return;
     }
     base.actions(a, b);
@@ -581,41 +574,21 @@
       });
       return;
     }
-    if (kind === "account-note") {
-      const m = state.modal;
-      if (!state.logged || ui.busy || m?.type !== "note") return;
-      const note = clean(new FormData(form).get("note"));
-      if (note.length > 300) return;
-      m.draft = note;
-      const g = ui.generation,
-        failed = fault();
-      ui.busy = true;
-      renderModal();
-      setTimeout(() => {
-        if (g !== ui.generation) return;
-        ui.busy = false;
-        if (state.modal !== m || !state.logged) return;
-        if (failed) {
-          m.error = "保存未成功，备注已保留";
-          renderModal();
-          return;
-        }
-        const c = model.contacts.find((x) => x.id === m.id);
-        if (c) c.note = note;
-        closeModal();
-        render();
-        toast("备注已保存");
-      }, 260);
-      return;
-    }
     base.submitForm(kind, form);
   };
   render = () => {
+    if (state.route.view === "contacts") {
+      state.route = { view: "me", args: {} };
+      state.stack = [];
+    }
+
     if (state.route.view === "profile" && state.forms.accountProfile) {
       const panel = $("[data-account-contact-settings]");
       if (panel) state.forms.accountProfile.contactOpen = panel.open;
     }
     if (ui.lastLogged && !state.logged) {
+      ui.availabilityBusy = false;
+      ui.availabilityError = null;
       ui.generation++;
       ui.busy = false;
       state.forms.accountProfile = null;
@@ -682,19 +655,21 @@
     account.closed = e.target.value === "deleted" ? ["d3"] : [];
     render();
   });
-  $("#account-contacts-error").addEventListener("change", () => render());
   resetPrototype = () => {
     ui.generation++;
     ui.busy = false;
     ui.contactError = null;
     ui.teamPublishIntent = null;
+    ui.availabilityBusy = false;
+    ui.availabilityError = null;
     $("#account-save-fail").checked = false;
-    $("#account-contacts-error").checked = false;
     $("#account-peer-state").value = "private";
     base.resetPrototype();
     seed();
     render();
   };
+  $("#inspect-page option[value=contacts]")?.remove();
+  delete screens.contacts;
   screens.profile = ["U02", "个人资料"];
   screens.organization = ["U10", "团队资料（DSP）"];
   for (const v of ["profile", "organization"]) {

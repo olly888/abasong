@@ -112,7 +112,7 @@ async (page) => {
       "same feed scroll",
     );
   });
-  await run("作者进入最小资料、复用私聊与常联系", async () => {
+  await run("作者进入个人资料与既有私聊，无常联系功能", async () => {
     await p
       .locator('[data-post-id="p1"] [data-action="circle-author"]')
       .click();
@@ -124,10 +124,9 @@ async (page) => {
       "same author chat",
     );
     await back();
-    await p.locator('[data-action="save-contact"]').first().click();
     assert(
-      await p.evaluate(() => model.contacts.some((c) => c.id === "d2")),
-      "peer saved after conversation",
+      (await p.locator('[data-action="save-contact"]').count()) === 0,
+      "no contact list/save feature",
     );
   });
   await run("发布菜单分动态与临时需求，后者使用统一发布流程", async () => {
@@ -219,7 +218,7 @@ async (page) => {
       (await p.locator(".circle-error").innerText()) === "请输入动态内容",
       "empty validation",
     );
-    await p.locator('[name="text"]').fill("TEST 门禁密码：#0123");
+    await p.locator('[name="text"]').fill("TEST 门禁码：#0123");
     await publish();
     assert(
       (await p.locator(".circle-error").innerText()).includes("贡献入口"),

@@ -474,16 +474,33 @@ body {
   letter-spacing: -0.7px;
   color: #101114;
 }
-.ex-distance {
-  position: absolute;
-  top: 6px;
-  right: 14px;
+.ex-card-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: -6px 0 8px;
+  font-size: 13px;
+  line-height: 20px;
   color: #686c73;
-  font-size: 12px;
+}
+.ex-card-city {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ex-distance {
+  flex-shrink: 0;
+  color: #686c73;
+  font-size: 13px;
   font-weight: 400;
   line-height: 20px;
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+}
+.ex-card-city + .ex-distance:before {
+  content: "·";
+  margin-right: 8px;
 }
 .ex-distance.muted {
   color: #73777e;

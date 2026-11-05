@@ -1,6 +1,6 @@
 {
   "prototype_version": "3.2-account",
-  "executed_at": "2026-11-05T20:00:07.950Z",
+  "executed_at": "2026-11-05T20:49:18.130Z",
   "scope": "isolated synthetic UI; TEST fixtures only; no Auth phone, services, roles, subscriptions or real contact; clipboard stubbed",
   "checks": [
     {
@@ -64,22 +64,6 @@
       "status": "PASS"
     },
     {
-      "name": "常联系备注保存失败保留，重试只改本人备注",
-      "status": "PASS"
-    },
-    {
-      "name": "移出常联系有确认且不删除会话，也不要求互加好友",
-      "status": "PASS"
-    },
-    {
-      "name": "列表空/失败分开，重新加载恢复原联系人",
-      "status": "PASS"
-    },
-    {
-      "name": "已屏蔽联系人保留本人备注，不能新联系或由保存解锁",
-      "status": "PASS"
-    },
-    {
       "name": "对方关闭展示或注销，大图层式联系方式不残留旧号码",
       "status": "PASS"
     },
@@ -100,7 +84,7 @@
       "status": "PASS"
     }
   ],
-  "passed": 24,
+  "passed": 20,
   "failed": 0,
   "console_errors": [],
   "external_request_hosts": [],

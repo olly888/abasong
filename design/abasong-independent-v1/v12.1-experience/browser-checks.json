@@ -1,6 +1,6 @@
 {
   "prototype_version": "3.2-r3-core",
-  "executed_at": "2026-11-05T19:48:09.945Z",
+  "executed_at": "2026-11-05T20:55:17.082Z",
   "scope": "isolated Chromium prototype; synthetic business data; external navigation not opened; clipboard stubbed",
   "checks": [
     {
@@ -8,7 +8,7 @@
       "status": "PASS"
     },
     {
-      "name": "鼠标横拖切公寓，地图/密码同步，展开收起保持选择",
+      "name": "鼠标横拖切公寓，地图/门禁码同步，展开收起保持选择",
       "status": "PASS"
     },
     {
@@ -76,7 +76,7 @@
       "status": "PASS"
     },
     {
-      "name": "未登录或无查看资格，展开不展示合成密码",
+      "name": "未登录或无查看资格，展开不展示合成门禁码",
       "status": "PASS"
     },
     {
@@ -104,7 +104,7 @@
       "status": "PASS"
     },
     {
-      "name": "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与密码",
+      "name": "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与门禁码",
       "status": "PASS"
     },
     {
@@ -136,7 +136,7 @@
       "status": "PASS"
     },
     {
-      "name": "快速切公寓不串密码，调整屏宽保持选中对象",
+      "name": "快速切公寓不串门禁码，调整屏宽保持选中对象",
       "status": "PASS"
     }
   ],

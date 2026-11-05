@@ -381,40 +381,44 @@
     if (quality === "stale" || d.quality === "stale") return "";
     if (quality === "approximate" || d.quality === "approximate")
       return '<span class="ex-distance muted">位置较粗略</span>';
-    const feet = d.meters * 3.28084;
     const value =
-      feet < 1000
-        ? `${Math.max(10, Math.round(feet / 10) * 10)} ft`
-        : `${(feet / 5280).toFixed(1)} mi`;
-    const label = d.basis === "boundary" ? "至边界" : "直线";
-    return `<span class="ex-distance" aria-label="距公寓${label}约${value}">约${value} · ${label}</span>`;
+      d.meters < 10
+        ? "10 m内"
+        : d.meters < 1000
+          ? `约 ${Math.round(d.meters / 5) * 5} m`
+          : `约 ${(d.meters / 1000).toFixed(1)} km`;
+    return `<span class="ex-distance" aria-label="距公寓${value}">${value}</span>`;
   }
+
   function cardBody(a, active) {
-    const head = `${distanceBadge(a)}<h2>${addressHTML(a.address)}</h2>`;
+    const city = a.city || a.address.split(",")[1]?.trim() || "";
+    const head = `<h2>${addressHTML(a.address)}</h2><div class="ex-card-location">${city ? `<span class="ex-card-city">${esc(city)}</span>` : ""}${distanceBadge(a)}</div>`;
     if (!active) return head + '<div class="ex-card-placeholder"></div>';
     if (!state.logged || !state.qualified)
       return (
         head +
-        `<p class="ex-card-state">${state.logged ? "暂未开通资料查看资格" : "登录后查看密码"}</p>${!state.logged ? btn("login-access", "登录", "text-btn") : ""}`
+        `<p class="ex-card-state">${state.logged ? "暂未开通资料查看资格" : "登录后查看门禁码"}</p>${!state.logged ? btn("login-access", "登录", "text-btn") : ""}`
       );
     if (ex.code.status === "loading" || ex.code.id !== a.id)
-      return head + '<div class="ex-skeleton" aria-label="正在读取密码"></div>';
+      return (
+        head + '<div class="ex-skeleton" aria-label="正在读取门禁码"></div>'
+      );
     if (ex.code.status === "error")
       return (
         head +
-        `<p class="ex-card-state">密码暂时无法加载</p>${btn("ex-retry-code", "重新读取", "text-btn")}`
+        `<p class="ex-card-state">门禁码暂时无法加载</p>${btn("ex-retry-code", "重新读取", "text-btn")}`
       );
     const codes = state.scenario === "empty" ? [] : rankCodes(a);
     if (!codes.length)
       return (
         head +
-        `<p class="ex-card-state">暂无共享密码</p>${btn("add-code", I("plus") + "添加密码", "ex-inline-add")}`
+        `<p class="ex-card-state">暂无共享门禁码</p>${btn("add-code", I("plus") + "添加门禁码", "ex-inline-add")}`
       );
     return `${head}<div class="ex-code">${esc(codes[0].value)}</div><div class="ex-code-meta">${esc(contributionLabel(codes[0]))}</div><span class="ex-card-chevron" aria-hidden="true">${I("up")}</span>`;
   }
   function apartmentSurface() {
     if (state.temporaryDestination)
-      return `<section class="ex-floating ex-address-card"><h2>${addressHTML(state.temporaryDestination.address)}</h2><p class="meta">暂未匹配到公寓资料</p>${btn("add-unknown-code", "添加密码", "button secondary")}</section>`;
+      return `<section class="ex-floating ex-address-card"><h2>${addressHTML(state.temporaryDestination.address)}</h2><p class="meta">暂未匹配到公寓资料</p>${btn("add-unknown-code", "添加门禁码", "button secondary")}</section>`;
     if (
       [
         "street",
@@ -424,15 +428,15 @@
         "unknown",
       ].includes(state.scenario)
     )
-      return `<div class="ex-quiet">${btn("lib-contribute", I("plus") + "贡献公寓密码", "ex-contribute")}</div>`;
+      return `<div class="ex-quiet">${btn("lib-contribute", I("plus") + "共享门禁码", "ex-contribute")}</div>`;
     if (state.scenario === "denied")
       return `<section class="ex-floating ex-address-card"><p>暂时无法获取位置</p>${btn("locate", "重试定位", "button secondary")}</section>`;
     const a = getApt(),
       codes = state.scenario === "empty" ? [] : rankCodes(a);
     if (state.expanded && (!state.logged || !state.qualified))
-      return `<section class="home-sheet ex-expanded ex-no-access" aria-label="公寓资料"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll"><div class="apartment-heading"><h2>${addressHTML(a.address, true)}</h2>${ib("collapse", "down", "收起密码记录")}</div><p>${state.logged ? "暂未开通资料查看资格" : "登录后查看密码"}</p>${state.logged ? "" : btn("login-access", "登录", "button")}</div></section>`;
+      return `<section class="home-sheet ex-expanded ex-no-access" aria-label="公寓资料"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll"><div class="apartment-heading"><h2>${addressHTML(a.address, true)}</h2>${ib("collapse", "down", "收起门禁码记录")}</div><p>${state.logged ? "暂未开通资料查看资格" : "登录后查看门禁码"}</p>${state.logged ? "" : btn("login-access", "登录", "button")}</div></section>`;
     if (state.expanded)
-      return `<section class="home-sheet ex-expanded" aria-label="公寓密码详情"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll" id="sheet-scroll"><div class="apartment-heading"><div class="address-heading"><h2>${addressHTML(a.address, true)}</h2><div class="address">${esc(a.address.split(",").slice(1).join(","))}</div><div class="address">${esc(a.name)}</div></div>${ib("collapse", "down", "收起密码记录")}</div>${btn("add-code", I("plus") + "添加密码", "button secondary")}${ex.code.status === "loading" || ex.code.id !== a.id ? '<div class="ex-skeleton" aria-label="正在读取密码"></div>' : ex.code.status === "error" ? `<div class="ex-error">密码暂时无法加载${btn("ex-retry-code", "重新读取", "text-btn")}</div>` : codes.map((c) => `<article class="code-record" data-record="${c.id}"><div class="ex-code">${esc(c.value)}</div><div class="scope">${esc(c.scope || "大门")}</div><div class="caption">${esc(contributionLabel(c))}</div><div class="feedback-row">${btn("vote", I("thumb") + "有用", "feedback-btn", `data-id="${c.id}" data-vote="useful" aria-pressed="${c.vote === "useful"}"`)}${btn("vote", "不能用", "feedback-btn", `data-id="${c.id}" data-vote="not_useful" aria-pressed="${c.vote === "not_useful"}"`)}</div></article>`).join("") || '<p class="ex-card-state">暂无共享密码</p>'}</div></section>`;
+      return `<section class="home-sheet ex-expanded" aria-label="门禁码详情"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll" id="sheet-scroll"><div class="apartment-heading"><div class="address-heading"><h2>${addressHTML(a.address, true)}</h2><div class="address">${esc(a.address.split(",").slice(1).join(","))}</div><div class="address">${esc(a.name)}</div></div>${ib("collapse", "down", "收起门禁码记录")}</div>${btn("add-code", I("plus") + "添加门禁码", "button secondary")}${ex.code.status === "loading" || ex.code.id !== a.id ? '<div class="ex-skeleton" aria-label="正在读取门禁码"></div>' : ex.code.status === "error" ? `<div class="ex-error">门禁码暂时无法加载${btn("ex-retry-code", "重新读取", "text-btn")}</div>` : codes.map((c) => `<article class="code-record" data-record="${c.id}"><div class="ex-code">${esc(c.value)}</div><div class="scope">${esc(c.scope || "大门")}</div><div class="caption">${esc(contributionLabel(c))}</div><div class="feedback-row">${btn("vote", I("thumb") + "有用", "feedback-btn", `data-id="${c.id}" data-vote="useful" aria-pressed="${c.vote === "useful"}"`)}${btn("vote", "不能用", "feedback-btn", `data-id="${c.id}" data-vote="not_useful" aria-pressed="${c.vote === "not_useful"}"`)}</div></article>`).join("") || '<p class="ex-card-state">暂无共享门禁码</p>'}</div></section>`;
     return mapCardCarousel(
       "apartments",
       model.apartments.filter((p) => p.nearby !== false || p.id === a.id),
@@ -474,7 +478,7 @@
   home = () => {
     const support = isSupport();
     if (state.homeList && support) return mapList();
-    return `<div class="root-content"><div class="home ex-home ${state.homeView} ${state.expanded ? "ex-is-expanded" : ""}">${mapLayer()}${homeToolbar()}<div class="ex-scale"><span>${support ? "0.5 mi" : camera().zoom > 1.5 ? "50 ft" : "100 ft"}</span><i></i></div>${state.homeView === "people" ? btn("availability", I("plus") + "我能接活", "ex-availability") : ""}<div class="map-tools ex-map-tools">${ib("locate", "locate", "回到当前位置")}<button class="fab" data-action="publish">${I("plus")}发需求</button></div>${support ? supportSurface() : apartmentSurface()}</div></div>${bottomNav("home")}`;
+    return `<div class="root-content"><div class="home ex-home ${state.homeView} ${state.expanded ? "ex-is-expanded" : ""}">${mapLayer()}${homeToolbar()}<div class="ex-scale"><span>${support ? "1 km" : camera().zoom > 1.5 ? "20 m" : "50 m"}</span><i></i></div>${state.homeView === "people" ? btn("availability", I("plus") + "我能接活", "ex-availability") : ""}<div class="map-tools ex-map-tools">${ib("locate", "locate", "回到当前位置")}<button class="fab" data-action="publish">${I("plus")}发需求</button></div>${support ? supportSurface() : apartmentSurface()}</div></div>${bottomNav("home")}`;
   };
   mapList = () => {
     const people = state.homeView === "people",
@@ -582,7 +586,7 @@
   function placeMap(m) {
     const p = pickupSource(m),
       fail = $("#pickup-map-fail").checked || !p?.id;
-    return `<section class="ex-place-map" role="dialog" aria-modal="true" aria-label="取件位置"><div class="ex-place-canvas ex-map" data-ex-map="place"><div class="ex-map-world ex-place-world" style="transform:translate(${ex.placeCamera.x}px,${ex.placeCamera.y}px) scale(${ex.placeCamera.zoom})">${fail ? "" : mapArtwork("warehouse", p)}${fail ? "" : `<div class="ex-warehouse-marker">${I("warehouse")}</div>`}</div></div><div class="ex-place-top">${ib("close-modal", "close", "关闭取件地图")}<b>取件位置</b></div>${fail ? `<div class="ex-map-failure"><p>暂时无法显示位置</p>${btn("ex-retry-place", "重新加载", "button secondary")}</div>` : `<div class="ex-place-scale">${ex.placeCamera.zoom > 1.5 ? "50 ft" : "100 ft"} ━━━</div>`}<div class="ex-place-card">${p?.label ? `<h2>${esc(p.label)}</h2>` : ""}<p>${esc(p?.address || "具体取件地点请联系确认")}</p><div class="button-row">${btn("ex-copy-address", I("copy"), "button secondary ex-copy-square", `aria-label="复制地址" ${m.form ? 'data-form="true"' : `data-id="${m.id}"`}`)}${btn("ex-navigate", I("send") + "导航", "button", m.form ? 'data-form="true"' : `data-id="${m.id}"`)}</div></div></section>`;
+    return `<section class="ex-place-map" role="dialog" aria-modal="true" aria-label="取件位置"><div class="ex-place-canvas ex-map" data-ex-map="place"><div class="ex-map-world ex-place-world" style="transform:translate(${ex.placeCamera.x}px,${ex.placeCamera.y}px) scale(${ex.placeCamera.zoom})">${fail ? "" : mapArtwork("warehouse", p)}${fail ? "" : `<div class="ex-warehouse-marker">${I("warehouse")}</div>`}</div></div><div class="ex-place-top">${ib("close-modal", "close", "关闭取件地图")}<b>取件位置</b></div>${fail ? `<div class="ex-map-failure"><p>暂时无法显示位置</p>${btn("ex-retry-place", "重新加载", "button secondary")}</div>` : `<div class="ex-place-scale">${ex.placeCamera.zoom > 1.5 ? "20 m" : "50 m"} ━━━</div>`}<div class="ex-place-card">${p?.label ? `<h2>${esc(p.label)}</h2>` : ""}<p>${esc(p?.address || "具体取件地点请联系确认")}</p><div class="button-row">${btn("ex-copy-address", I("copy"), "button secondary ex-copy-square", `aria-label="复制地址" ${m.form ? 'data-form="true"' : `data-id="${m.id}"`}`)}${btn("ex-navigate", I("send") + "导航", "button", m.form ? 'data-form="true"' : `data-id="${m.id}"`)}</div></div></section>`;
   }
   function remember() {
     if (isSupport()) {
@@ -624,7 +628,7 @@
     if (m?.type === "request-preview") {
       const f = state.forms.request;
       $("#overlay").innerHTML =
-        `<section class="dialog ex-preview" role="dialog" aria-modal="true" aria-label="核对本次支援"><h2>核对本次支援</h2>${row("派送区域", f.region)}${row("取件地区", f.pickup)}${f.pickupKind === "warehouse" ? `<div class="ex-preview-address"><b>取件仓库</b><p>${esc(f.pickupName || "")}</p><p>${esc(f.pickupAddress)}</p><span class="caption">将向登录司机展示</span></div>` : row("取件方式", "途中交接，联系确认")}${row("开始取件", dayLabel(f.date) + " " + time12(f.start))}${f.pickupEnd ? row("最迟取件", time12(f.pickupEnd)) : ""}${row("包裹数量", f.qty + " 件")}${row("报价", f.unit === "negotiable" ? "联系议价" : "$" + f.price + " / " + (f.unit === "per_route" ? "线路" : "件"))}${btn("commit-request", state.editing ? "保存变更" : "发布需求", "button")}${btn("close-modal", "继续编辑", "button secondary")}</section>`;
+        `<section class="dialog ex-preview" role="dialog" aria-modal="true" aria-label="核对本次配送"><h2>核对本次配送</h2>${row("派送区域", f.region)}${row("取件地区", f.pickup)}${f.pickupKind === "warehouse" ? `<div class="ex-preview-address"><b>取件仓库</b><p>${esc(f.pickupName || "")}</p><p>${esc(f.pickupAddress)}</p><span class="caption">将向登录司机展示</span></div>` : row("取件方式", "途中交接，联系确认")}${row("开始取件", dayLabel(f.date) + " " + time12(f.start))}${f.pickupEnd ? row("最迟取件", time12(f.pickupEnd)) : ""}${row("包裹数量", f.qty + " 件")}${row("报价", f.unit === "negotiable" ? "联系议价" : "$" + f.price + " / " + (f.unit === "per_route" ? "线路" : "件"))}${btn("commit-request", state.editing ? "保存变更" : "发布需求", "button")}${btn("close-modal", "继续编辑", "button secondary")}</section>`;
       return;
     }
     base.renderModal();
@@ -866,15 +870,15 @@
       scale.textContent =
         surface.dataset.exMap === "place"
           ? c.zoom > 1.5
-            ? "50 ft ━━━"
-            : "100 ft ━━━"
+            ? "20 m ━━━"
+            : "50 m ━━━"
           : isSupport()
             ? c.zoom > 1.5
-              ? "0.25 mi"
-              : "0.5 mi"
+              ? "500 m"
+              : "1 km"
             : c.zoom > 1.5
-              ? "50 ft"
-              : "100 ft";
+              ? "20 m"
+              : "50 m";
   }
   function bindMap(surface = $("[data-ex-map]")) {
     const current = () =>

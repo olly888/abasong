@@ -87,29 +87,83 @@
   color: #686c73;
   margin-top: 3px;
 }
-.account-availability {
+.account-availability-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  text-align: left;
-  width: 100%;
-  min-height: 74px;
-  background: #edf4ff;
-  border: 1px solid #d5e4fc;
-  border-radius: 16px;
-  padding: 14px 16px;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 0 0 2px;
+  min-height: 64px;
 }
-.account-availability b {
-  display: block;
-  font-size: 15px;
+.account-availability-row > div {
+  min-width: 0;
+  flex: 1;
 }
-.account-availability small {
+.account-availability-row b {
   display: block;
-  color: #686c73;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+.account-availability-row small,
+.account-availability-summary {
+  display: block;
   font-size: 13px;
   line-height: 20px;
-  margin-top: 4px;
+  color: #686c73;
+  margin: 3px 0 0;
+}
+.account-availability-summary {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  min-height: 32px;
+  overflow-wrap: anywhere;
+}
+.account-availability-row > .switch {
+  flex-shrink: 0;
+  width: 56px;
+  height: 48px;
+  min-width: 56px;
+  min-height: 48px;
+  background: none;
+  position: relative;
+}
+.account-availability-row > .switch.on {
+  background: none;
+}
+.account-availability-row > .switch:before {
+  content: "";
+  position: absolute;
+  width: 48px;
+  height: 28px;
+  left: 4px;
+  top: 10px;
+  border-radius: 20px;
+  background: #b8bec8;
+}
+.account-availability-row > .switch.on:before {
+  background: #1467d8;
+}
+.account-availability-row > .switch:after {
+  width: 22px;
+  height: 22px;
+  left: 7px;
+  top: 13px;
+}
+.account-availability-row > .switch.on:after {
+  left: 27px;
+}
+.account-availability-row > .switch:focus-visible {
+  outline: 3px solid #1467d8;
+  outline-offset: 6px;
+}
+.account-availability-error {
+  color: #b42318;
+  font-size: 13px;
+  margin: -8px 0 16px;
 }
 .account-form-section {
   margin: 24px 0;
@@ -353,4 +407,54 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.code-address-summary {
+  margin: 0 0 20px;
+  border-bottom: 1px solid #edf0f3;
+  padding-bottom: 12px;
+}
+.code-address-summary > .field-label,
+.code-address-summary > small {
+  display: block;
+  margin: 6px 0;
+}
+.code-address-summary > small {
+  font-size: 13px;
+  color: #686c73;
+  line-height: 20px;
+}
+.code-address-summary .address-primary {
+  font-size: 18px;
+  line-height: 28px;
+  overflow-wrap: anywhere;
+}
+.code-address-options {
+  border: 1px solid #e5e8ed;
+  border-radius: 12px;
+  margin: -10px 0 20px;
+  overflow: hidden;
+}
+.code-address-options > button {
+  background: #fff;
+  text-align: left;
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #edf0f3;
+}
+.code-address-options > button:last-child {
+  border-bottom: 0;
+}
+.code-address-options small {
+  display: block;
+  color: #686c73;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.code-address-options > button:focus-visible {
+  outline: 3px solid #1467d8;
+  outline-offset: -3px;
 }

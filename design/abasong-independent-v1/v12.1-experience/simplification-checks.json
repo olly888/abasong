@@ -1,0 +1,61 @@
+{
+  "prototype_version": "3.2-simple",
+  "executed_at": "2026-11-05T20:54:19.905Z",
+  "scope": "isolated Chromium synthetic UI; no real Mapbox/OCR/Auth/GPS/contact service",
+  "checks": [
+    {
+      "name": "我的：资料→接活开关→共享；公寓/发布/报名同组，48px开关热区",
+      "status": "PASS"
+    },
+    {
+      "name": "开启只进入本次设置；取消不提前开启；保存未来时段后明确显示明天",
+      "status": "PASS"
+    },
+    {
+      "name": "接活保存失败保留表单和关闭状态；重试成功；关闭失败保持开启后可重试",
+      "status": "PASS"
+    },
+    {
+      "name": "时段到期显示关闭；退出账号时迟到关闭操作不写入",
+      "status": "PASS"
+    },
+    {
+      "name": "常联系首版完整退役：资料/会话无入口，旧路由回我的，旧操作不改关系",
+      "status": "PASS"
+    },
+    {
+      "name": "通用手填直接同一添加表单，无公寓目录/重复截图按钮；未确认地址不共享",
+      "status": "PASS"
+    },
+    {
+      "name": "地址候选选择后保留输入，符号/前导零直接共享并回到正确公寓",
+      "status": "PASS"
+    },
+    {
+      "name": "首页卡添加复用相同字段；更换地址清来源确认，失败保留正确目标/密码",
+      "status": "PASS"
+    },
+    {
+      "name": "未收录地址可在同一表单手动核对；保存不伪造附近坐标或距离",
+      "status": "PASS"
+    },
+    {
+      "name": "屏蔽保留但下沉：无记录无空菜单，屏蔽后设置可解除，不恢复常联系",
+      "status": "PASS"
+    },
+    {
+      "name": "城市/米制距离复用辅助行，门牌街道单行；过期不留距离数值",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430：我的分组、开关、地址联想及保存操作不溢出",
+      "status": "PASS"
+    }
+  ],
+  "passed": 12,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "human_participants": 0,
+  "native_acceptance": false
+}

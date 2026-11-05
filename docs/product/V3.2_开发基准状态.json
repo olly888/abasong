@@ -1,9 +1,9 @@
 {
-  "version": "V3.2-R3-account",
+  "version": "V3.2-R3-simple",
   "date": "2026-11-05",
-  "code_audit_base": "1c472120c19c0f244a8986f654bee26027102585",
+  "code_audit_base": "99a76da38708f796fe64e2d6ce7363138fa36916",
   "app_design": "V3.1",
-  "prototype": "3.2-r3-account",
+  "prototype": "3.2-r3-simple",
   "scope": "documents_and_independent_prototype_only",
   "app_changed": false,
   "gates": {
@@ -15,7 +15,7 @@
     "implementation": "queued_not_started",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
-    "my_account": "synthetic_only_native_and_service_pending_B5"
+    "my_account": "simplified_synthetic_only_native_service_pending"
   },
   "human_testing": {
     "drivers_required": 5,
@@ -113,7 +113,8 @@
     "native_acceptance": false,
     "circle_tasks": 19,
     "circle_image_tasks": 17,
-    "account_tasks": 24
+    "account_tasks": 20,
+    "simplification_tasks": 12
   },
   "circle_requirements": "Abasong_V3.2_司机圈定位与最小社区补充.md",
   "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
@@ -142,5 +143,12 @@
     "results": "not_run",
     "template": "../usability/V3.2_我的团队任务记录模板.csv",
     "blocks_core_R4_preparation": false
-  }
+  },
+  "cancelled_difference_ids": [
+    "D19"
+  ],
+  "retired_page_ids": [
+    "U08"
+  ],
+  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json"
 }

@@ -1,6 +1,6 @@
 {
   "prototype_version": "3.2-r3-core",
-  "executed_at": "2026-11-05T19:47:43.791Z",
+  "executed_at": "2026-11-05T20:54:51.606Z",
   "scope": "isolated Chromium synthetic core flow checks; not human/native/field acceptance",
   "checks": [
     {
@@ -12,7 +12,7 @@
       "status": "PASS"
     },
     {
-      "name": "纠正本人来源：同码他人资料保留，旧来源不再展示密码",
+      "name": "纠正本人来源：同码他人资料保留，旧来源不再展示门禁码",
       "status": "PASS"
     },
     {

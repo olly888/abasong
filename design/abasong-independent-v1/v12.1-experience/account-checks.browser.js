@@ -22,7 +22,7 @@ async (page) => {
   });
   const fresh = async () => {
     await p.goto(
-      "http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-account&task=me&case=" +
+      "http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-simple&task=me&case=" +
         checks.length,
     );
     await p.waitForFunction(() => window.abasongAccount);
@@ -86,7 +86,7 @@ async (page) => {
     async () => {
       const text = await p.locator("#app").innerText();
       assert(
-        text.indexOf("贡献公寓密码") < text.indexOf("我的公寓") &&
+        text.indexOf("共享门禁码") < text.indexOf("我的公寓") &&
           text.indexOf("我的公寓") < text.indexOf("我的发布"),
         "core priorities",
       );
@@ -248,8 +248,10 @@ async (page) => {
     await input("phone", "+1 202-555-0108");
     await input("wechat", "abasong_test_self");
     await submit();
-    await p.locator('[data-action="contacts"]').click();
-    await p.locator('[data-action="contact"]').click();
+    await p.evaluate(() => {
+      const c = getChat("d1");
+      nav("chat", { id: c.id });
+    });
     await p.locator('[data-action="chat-more"]').click();
     await p.locator('[data-action="account-my-contact"]').click();
     await clipboard();
@@ -464,76 +466,6 @@ async (page) => {
       );
     },
   );
-  await run("常联系备注保存失败保留，重试只改本人备注", async () => {
-    await p.locator('[data-action="contacts"]').click();
-    await p.locator('[data-action="edit-note"]').click();
-    await p.locator('[name="note"]').fill("TEST 私人备注");
-    await p.locator("#account-save-fail").check();
-    await p.locator('#overlay [type="submit"]').click();
-    await p.waitForTimeout(320);
-    assert(
-      (await p.locator('[name="note"]').inputValue()) === "TEST 私人备注",
-      "kept note",
-    );
-    assert(
-      await p.evaluate(() => model.contacts[0].note !== "TEST 私人备注"),
-      "no fake success",
-    );
-    await p.locator('#overlay [type="submit"]').click();
-    await p.waitForTimeout(320);
-    assert(
-      (await p.locator(".account-private-note").innerText()) ===
-        "TEST 私人备注",
-      "private note saved",
-    );
-  });
-  await run("移出常联系有确认且不删除会话，也不要求互加好友", async () => {
-    await p.locator('[data-action="contacts"]').click();
-    const n = await p.evaluate(() => model.chats.length);
-    await p.locator('[data-action="remove-contact"]').click();
-    await p.locator('[data-action="confirm-modal"]').click();
-    assert(
-      (await p.locator("#app").innerText()).includes("还没有常联系"),
-      "removed",
-    );
-    assert(
-      (await p.evaluate(() => model.chats.length)) === n,
-      "history retained",
-    );
-  });
-  await run("列表空/失败分开，重新加载恢复原联系人", async () => {
-    await p.locator('[data-action="contacts"]').click();
-    await p.locator("#account-contacts-error").check();
-    assert(
-      (await p.locator("#app").innerText()).includes("常联系暂时无法加载"),
-      "failure not empty",
-    );
-    await p.locator('[data-action="account-contacts-retry"]').click();
-    assert(
-      (await p.locator('[data-contact-id="d1"]').count()) === 1,
-      "same contact recovered",
-    );
-  });
-  await run("已屏蔽联系人保留本人备注，不能新联系或由保存解锁", async () => {
-    await p.evaluate(() => {
-      model.blocks.push("d1");
-      nav("contacts");
-    });
-    assert(
-      (await p.locator("#app").innerText()).includes("已屏蔽"),
-      "blocked marker",
-    );
-    assert(
-      await p
-        .locator('[data-contact-id="d1"] [data-action="contact"]')
-        .isDisabled(),
-      "contact disabled",
-    );
-    assert(
-      (await p.locator(".account-private-note").count()) === 1,
-      "private note retained",
-    );
-  });
   await run("对方关闭展示或注销，大图层式联系方式不残留旧号码", async () => {
     await openPeer();
     await p.locator("#account-peer-state").selectOption("open");
@@ -615,8 +547,10 @@ async (page) => {
       render();
     });
     assert(
-      (await p.locator('[data-action="availability"]').count()) === 0,
-      "expired declaration does not keep DSP-only menu visible",
+      (await p
+        .locator('[data-action="account-toggle-availability"]')
+        .getAttribute("aria-checked")) === "false",
+      "expired declaration shows off, not available",
     );
   });
   await run("账号退出丢弃未保存资料，迟到保存不覆盖其他界面", async () => {
@@ -680,10 +614,6 @@ async (page) => {
   await p.locator(".page-scroll").evaluate((n) => (n.scrollTop = 0));
   await p.locator("#device").screenshot({ path: folder + "/account-team.png" });
   await back();
-  await p.locator('[data-action="contacts"]').click();
-  await p
-    .locator("#device")
-    .screenshot({ path: folder + "/account-contacts.png" });
   await fresh();
   await openPeer();
   await p.locator("#account-peer-state").selectOption("open");

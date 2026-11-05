@@ -26,7 +26,7 @@
   function photoEditor(f) {
     const list = photos(f),
       disabled = ui.publishing ? "disabled" : "";
-    return `<section class="circle-photo-editor" aria-label="添加图片"><div class="circle-photo-heading"><span>图片 <small>选填</small></span><span>${list.length}/3</span></div><div class="circle-photo-thumbs">${list.map((x, i) => `<div class="circle-photo-thumb" data-photo-id="${x.id}"><button class="circle-photo-preview" data-action="circle-preview-draft" data-index="${i}" aria-label="预览第${i + 1}张图片" ${disabled}><img src="${fixture(x.id).src}" alt="${fixture(x.id).alt}" width="960" height="640" draggable="false" /></button><button class="circle-photo-remove" data-action="circle-remove-photo" data-id="${x.id}" aria-label="移除第${i + 1}张图片" ${disabled}>${I("close")}</button>${x.upload === "uploading" ? '<span class="circle-photo-progress" role="status">上传中</span>' : x.upload === "failed" ? '<span class="circle-photo-progress failed">上传失败</span>' : ""}</div>`).join("")}${list.length < 3 ? `<button class="circle-photo-add" data-action="circle-add-photo" aria-label="添加图片" ${disabled}>${I("plus")}<span>添加图片</span></button>` : ""}</div><p class="circle-photo-note">不要上传面单、住户信息或门禁密码。</p></section>`;
+    return `<section class="circle-photo-editor" aria-label="添加图片"><div class="circle-photo-heading"><span>图片 <small>选填</small></span><span>${list.length}/3</span></div><div class="circle-photo-thumbs">${list.map((x, i) => `<div class="circle-photo-thumb" data-photo-id="${x.id}"><button class="circle-photo-preview" data-action="circle-preview-draft" data-index="${i}" aria-label="预览第${i + 1}张图片" ${disabled}><img src="${fixture(x.id).src}" alt="${fixture(x.id).alt}" width="960" height="640" draggable="false" /></button><button class="circle-photo-remove" data-action="circle-remove-photo" data-id="${x.id}" aria-label="移除第${i + 1}张图片" ${disabled}>${I("close")}</button>${x.upload === "uploading" ? '<span class="circle-photo-progress" role="status">上传中</span>' : x.upload === "failed" ? '<span class="circle-photo-progress failed">上传失败</span>' : ""}</div>`).join("")}${list.length < 3 ? `<button class="circle-photo-add" data-action="circle-add-photo" aria-label="添加图片" ${disabled}>${I("plus")}<span>添加图片</span></button>` : ""}</div><p class="circle-photo-note">不要上传面单、住户信息或门禁码。</p></section>`;
   }
   const topics = ["配送提问", "经验分享", "路上见闻"];
   const ui = {
@@ -167,7 +167,7 @@
     return `<div class="root-content circle-editor"><div class="page-scroll">${header("发布动态")}<form data-submit="post" novalidate>${ui.publishError ? `<p class="circle-error" role="alert">${esc(ui.publishError)}</p>` : ""}${field("post", "text", "内容", "textarea", { placeholder: "分享配送经验、提问或路上见闻", max: 2000 })}${photoEditor(f)}<div class="circle-editor-options">${field("post", "topic", "内容标签", "text", { optional: true, choices: [["", "不选择"], ...topics] })}${field("post", "region", "配送区域", "text", { optional: true, choices: [["", "不选择"], ...areas] })}${field("post", "job", "关联我的支援需求", "text", { optional: true, choices: [["", "不关联"], ...model.jobs.filter((j) => j.owner === "me" && j.status !== "draft" && !j.discarded).map((j) => [j.id, `${j.region} · ${statusLabel(j.status)}`])] })}</div></form></div><div class="circle-editor-actions"><button class="button" type="submit" form="circle-post-form" ${ui.publishing ? "disabled" : ""}>${ui.publishing ? "发布中" : ui.publishError ? "重新发布" : "发布"}</button></div></div>`;
   };
   const sensitive = (text) =>
-    /(?:(?:门禁|大门|进门|公寓|行人门|侧门).{0,8}(?:密码|门码)|gate\s*code|access\s*code)\s*[:：]?\s*[#*\d]{4,}/i.test(
+    /(?:门禁码|门禁密码|(?:门禁|大门|进门|公寓|行人门|侧门).{0,8}(?:密码|门禁码|门码)|gate\s*code|access\s*code)\s*[:：]?\s*[#*\d]{4,}/i.test(
       text,
     );
   const failOnce = (id) => {
@@ -195,7 +195,7 @@
       return;
     }
     if (sensitive(text)) {
-      ui.publishError = "公寓密码请通过贡献入口共享";
+      ui.publishError = "门禁码请通过贡献入口共享";
       render();
       return;
     }
@@ -299,7 +299,7 @@
     if (!visible(p) || ui.busy.has(id) || !text) return;
     ui.drafts[id] = text;
     if (sensitive(text)) {
-      ui.errors[id] = "公寓密码请通过贡献入口共享";
+      ui.errors[id] = "门禁码请通过贡献入口共享";
       render();
       return;
     }
@@ -496,7 +496,7 @@
         title: "发布",
         items: [
           { label: "发动态", action: "new-post", icon: "edit" },
-          { label: "发临时需求", action: "publish", icon: "box" },
+          { label: "发配送需求", action: "publish", icon: "box" },
         ],
       });
       return;

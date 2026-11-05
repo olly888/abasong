@@ -1,10 +1,10 @@
 {
-  "version": "1.6",
+  "version": "1.7",
   "date": "2026-11-05",
   "status": "planned",
   "current_design": "V3.1",
   "target_design": "V3.2-proposal",
-  "prototype_status": "r3_account_synthetic_pending_user_review",
+  "prototype_status": "r3_simple_synthetic_pending_user_review",
   "app_changed": false,
   "items": [
     {
@@ -47,7 +47,9 @@
         "C17",
         "C85",
         "C86",
-        "C87"
+        "C87",
+        "C144",
+        "C145"
       ],
       "batch": "R2b",
       "acceptance": [
@@ -278,7 +280,8 @@
         "C81",
         "C82",
         "C83",
-        "C84"
+        "C84",
+        "C142"
       ],
       "batch": "R2a",
       "acceptance": [
@@ -368,39 +371,38 @@
         "C125",
         "C136",
         "C138",
-        "C139"
+        "C139",
+        "C140",
+        "C141"
       ],
       "batch": "B5-prototype",
       "acceptance": [
         "UX13"
       ],
-      "implementation_dependency": "D18_own_profile_purpose_not_grant",
+      "implementation_dependency": "D18_profile_purpose_and_availability_switch_not_grant",
       "prototype_status": "account_implemented_synthetic_native_service_pending"
     },
     {
       "id": "UP16",
       "pages": [
-        "U08",
         "M02",
-        "D02"
+        "D02",
+        "U11"
       ],
       "copy_ids": [
         "C128",
         "C129",
         "C130",
         "C131",
-        "C132",
-        "C133",
-        "C134",
         "C135",
-        "C136"
+        "C143"
       ],
       "batch": "B5-prototype",
       "acceptance": [
         "UX14"
       ],
-      "implementation_dependency": "D19_private_contacts_owner_and_chat",
-      "prototype_status": "account_implemented_synthetic_native_service_pending"
+      "implementation_dependency": "D19_cancelled_keep_existing_chat_and_block_recovery",
+      "prototype_status": "saved_contact_list_cancelled_first_release"
     },
     {
       "id": "UP17",
@@ -437,5 +439,6 @@
   "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json",
   "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
   "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json",
-  "account_report": "../../design/abasong-independent-v1/v12.1-experience/account-checks.json"
+  "account_report": "../../design/abasong-independent-v1/v12.1-experience/account-checks.json",
+  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json"
 }

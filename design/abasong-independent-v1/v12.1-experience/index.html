@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%231467d8%27/%3E%3Ctext x=%277%27 y=%2725%27 fill=%27white%27 font-size=%2728%27 font-family=%27Arial%27%3Ea%3C/text%3E%3C/svg%3E"
+    />
+    <title>Abasong · V3.2 交互原型</title>
+    <link rel="stylesheet" href="../v12.1-import/tokens.css" />
+    <link rel="stylesheet" href="prototype.css" />
+    <link rel="stylesheet" href="foundation.css" />
+    <link rel="stylesheet" href="imports.css" />
+    <link rel="stylesheet" href="library.css" />
+    <link rel="stylesheet" href="experience.css?v=r2a1" />
+  </head>
+  <body>
+    <div class="studio">
+      <aside class="lab left">
+        <div class="studio-brand">
+          <span class="brand-symbol">a</span>abasong
+        </div>
+        <p class="version">V12.1 · V3.2 体验提案</p>
+        <h1>让每一次<br />配送，更顺利。</h1>
+        <div class="flow-links">
+          <button data-ex-flow="apartments">
+            01 <span>公寓查码与贡献</span>
+          </button>
+          <button data-ex-flow="jobs">02 <span>找活与仓库取件</span></button>
+          <button data-ex-flow="people">
+            03 <span>找人及可接活声明</span>
+          </button>
+          <button data-ex-flow="publish">04 <span>发布临时需求</span></button>
+        </div>
+        <div class="lab-control">
+          <label for="scenario">公寓场景</label
+          ><select id="scenario">
+            <option value="normal">附近三处公寓</option>
+            <option value="empty">当前公寓暂无密码</option>
+            <option value="offline">密码读取失败</option>
+            <option value="street">附近没有公寓</option>
+            <option value="denied">位置未开启</option>
+            <option value="unqualified">没有查看资格</option>
+            <option value="guest">尚未登录</option>
+            <option value="contribution-save-error">贡献保存失败</option>
+          </select>
+        </div>
+        <div class="lab-control">
+          <label for="support-scenario">找活／找人场景</label
+          ><select id="support-scenario">
+            <option value="ready">正常结果</option>
+            <option value="empty">无符合条件的结果</option>
+            <option value="error">读取失败</option>
+            <option value="slow">慢响应 · 2秒</option>
+          </select>
+        </div>
+        <label class="lab-check"
+          ><input
+            type="checkbox"
+            id="pickup-map-fail"
+          />取件地图暂时不可用</label
+        >
+        <label class="lab-check"
+          ><input type="checkbox" id="send-fail" />下一条合成消息发送失败</label
+        >
+        <label class="lab-check"
+          ><input type="checkbox" id="change-price" />报名时条件发生变化</label
+        >
+        <button class="reset" data-ex-flow="reset">重置本次体验</button>
+      </aside>
+      <main class="device" id="device" aria-label="Abasong 手机原型">
+        <div class="statusbar">
+          <b>2:20</b>
+          <div class="device-island"></div>
+          <span aria-hidden="true">▮▮▮ &nbsp; ▰</span>
+        </div>
+        <div id="app"></div>
+        <div id="overlay"></div>
+        <div id="toast" role="status" aria-live="polite"></div>
+      </main>
+      <aside class="lab right">
+        <div class="review-label">当前页面</div>
+        <h2 id="screen-title">首页 · 公寓</h2>
+        <p id="screen-id" class="version">H01</p>
+        <div class="review-rule"></div>
+        <h3>本轮先体验</h3>
+        <p>
+          横滑公寓卡 → 展开／收起 →
+          贡献密码。切换找活或找人，选区域、日期，再查看列表与详情。
+        </p>
+        <p>
+          需求详情点取件地址，查看地图、复制或选择导航；关闭地图及返回时保留原来的上下文。
+        </p>
+        <div class="review-rule"></div>
+        <h3>原型范围</h3>
+        <p class="prototype-note">
+          示意地图与合成业务资料，不调用定位、Mapbox、OCR、短信或消息服务。密码均为虚构。城市和商业地址仅作地点示例，不表示实际仓库、承运商或用工关系。导航按钮由你点击后才打开外部地图。
+        </p>
+        <p class="prototype-note">
+          演示时间固定为2026年11月4日2:20
+          PM（洛杉矶），用于核对今天、明天与到期。地图尺度为交互示意。真实覆盖、原生操作与现场待后续验收。
+        </p>
+        <div class="review-rule"></div>
+        <label for="inspect-page" class="review-label">页面目录</label
+        ><select id="inspect-page" aria-label="页面目录">
+          <option value="">选择页面检查</option>
+        </select>
+        <div hidden>
+          <button data-import-lab="mixed">混合截图</button
+          ><input type="checkbox" id="import-submit-fail" /><input
+            type="checkbox"
+            id="import-ocr-fail"
+          />
+        </div>
+      </aside>
+    </div>
+    <script src="app.js?v=r2a1"></script>
+    <script src="imports.js?v=r2a1"></script>
+    <script src="library.js?v=r2a1"></script>
+    <script src="photo-search.js?v=r2a1"></script>
+    <script src="experience.js?v=r2a1"></script>
+  </body>
+</html>

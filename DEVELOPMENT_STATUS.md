@@ -1,5 +1,17 @@
 # Abasong development status
 
+## Current action — V3.2 R2a interactive prototype (2026-11-05)
+
+Owner explicitly authorized the next independent prototype before actual App changes. Branch codex/v32-experience-prototype from6e5d025/PR77. [New prototype](design/abasong-independent-v1/v12.1-experience/index.html), [scope and checks](design/abasong-independent-v1/v12.1-experience/验收记录.md). Core home/apartment carousel/building numbers, regional work/driver discovery, true region/date/experience filters, map/list/detail context and separate cameras; warehouse publish/address suggestions/manual input/preview, map pan/zoom, clipboard and navigation chooser/return; en-route handoff remains coarse contact. Existing contribution/screenshots/messages/my flows retained; selected U03 one-window date shortcuts included. R2b/R2c full states and all39-node parity are not certified.
+
+24 isolated Chromium user-flow checks PASS, zero script errors and zero external requests; 320/390/430 default-size layout plus LA DST boundary tests. Clipboard stubbed and navigation URLs inspected, not opened; no user clipboard read or overwritten during tests. Six review screenshots; public commercial addresses only as location examples, synthetic business/people/passwords, schematic map. No Mapbox token, GPS, OCR, SMS or business API call. Fixed detached-carousel delayed callbacks stealing selection, premature drag-cooldown click blocking, stale scene reads and qualification-expanded exposure. Home and warehouse map views are isolated; same-city warehouse destinations remain distinct.
+
+App/components remain V3.1. Only independent design HTML/CSS/JS/assets and canonical status/planning documents changed; old prototype untouched. No apps/packages/contracts/DDL/dependencies/cloud/grants or real messages/submissions. Shared generated V3.1 token stylesheet read-only, no second token source. External Apple/Google address links checked against official docs; actual navigation compatibility, physical devices and all B6 gates remain pending. Next user prototype experience/R3 corrections, then R4 actual code only after confirmation; no repeated old Android test request.
+
+Final local checks: 40 prototype/documentation files, 329 Markdown/HTML asset references, six JS syntax checks, UP01–11 page/copy mappings and scope assertions PASS; previous prototype and apps/packages/contracts/migrations untouched. Staged redacted security scan and exact commit/PR recorded with this delivery. New preview opened visibly at http://127.0.0.1:8765/v12.1-experience/index.html?v=r2a1. Browser results do not replace native compilation or real-service acceptance; no whole-repo App build rerun for this prototype-only batch.
+
+## Previous prototype preparation and acceptance records
+
 ## Acceptance update — B4 Android experience filter (2026-11-04)
 
 Owner replied to the earlier GOFO experience-filter task: confirmed. Record user-operated Android TEST acceptance: after 查看结果 only TEST小林 appears; switching to list retains that same sole result. Close the B4 final manual filter/map-list consistency item previously pending below. [Updated B4 evidence](docs/technical/D2_可用司机与地图找活找人实现.md). This is owner-confirmed simulator memory data, not new automated clicks, real accounts, messages, physical-device or field evidence. No App/data/grants/cloud changes or test rerun. Canonical architecture and master B4 status synchronized; prior pending notes below are historical. Current next work stays R2a prototype including warehouse pickup, then R3/R4 before B5; B6 gates unchanged.

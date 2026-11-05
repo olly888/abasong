@@ -37,3 +37,5 @@ B04,截图导入,全屏二级页；三导航外,01-公寓闭环,14,getImportPoli
 B05,识别结果确认,二级页；行内编辑和候选面板复用,01-公寓闭环,21,"listImportCandidates,editImportCandidate,confirmImportCandidate,confirmImportSelection,editImportBatchMode,deleteImportDraft",已制作本地合成交互·待用户评审；非真实OCR
 B06,导入进度与结果,二级页；同批次状态与结果,01-公寓闭环,12,"getImportBatch,listImportSources,commitImportCandidates,cancelImportBatch,createImportBatch,registerImportLocalSource,submitImportDeviceExtraction",已制作本地合成交互·待用户评审；非真实OCR
 U09,公寓详情与我的记录,二级页；私存与共享两个分区,01-公寓闭环,8,"getMyApartmentEntry,patchMyApartmentEntry,deleteMyApartmentEntry,createMyPrivateRecord,patchMyPrivateRecord,deleteMyPrivateRecord,shareMyPrivateRecord,readAccessRecords",已制作本地合成交互·待用户评审；非真实OCR
+U15,邀请司机,我的二级页,R3-invitation,11,,synthetic_prototype_pending_user_confirmation_native_B5_B6
+X02,接收产品邀请,浏览器公开介绍原型；非登录墙,R3-invitation,9,,synthetic_prototype_pending_user_confirmation_native_B5_B6

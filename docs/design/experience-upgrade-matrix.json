@@ -1,5 +1,5 @@
 {
-  "version": "1.8",
+  "version": "1.9",
   "date": "2026-11-05",
   "status": "planned",
   "current_design": "V3.1",
@@ -456,7 +456,7 @@
         "UX16"
       ],
       "implementation_dependency": "D21_generic_share_qr_landing_valid_distribution_links_no_grant",
-      "prototype_status": "proposal_only_not_implemented"
+      "prototype_status": "synthetic_20_pass_pending_user_confirmation_native_distribution_pending"
     }
   ],
   "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/index.html",

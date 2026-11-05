@@ -1,5 +1,7 @@
 # D0 依赖与运行时基线
 
+2026-11-04体验升级方案：保留现有RN/Expo/Mapbox、NestJS/PostGIS、KMS/outbox及令牌生成链。本轮仅文档，无安装/版本/锁文件变更；不引入H3、Redis、Kafka、微服务或新地图SDK。区域几何、全量发现、私人偏好和机会通知为后续明确增量，不因方案存在自动部署或开通付费。见[架构增量](docs/technical/V12.1_地图协作架构增量方案.md)。
+
 2026-11-04 B4：无新npm依赖/原生模块/字体/SDK/DDL，单一pnpm及Pods锁不变。复用现有Mapbox PointAnnotation、系统DateTimePicker/Switch、RN列表和Nest/pg/Zod。D0仍14迁移/53表；复用availability/availability_regions及公开Region display_point，不上传司机GPS。原生实际渲染现有开发壳＋新JS，不声称本批重编译二进制。
 
 2026-11-02真实Mapbox联测：无新依赖、原生模块或DDL。复用Node24/pg/tsx、已编译生产服务及客户端纯合并函数；显式ABASONG_VERIFY_LIVE_MAPBOX=1才在受保护一次性库调用真实供应商，最多27临时请求，默认/CI不调用。仅整数米档稳定排序变更；三端JS导出与实际模拟器观察不作为新二进制或现场验收。

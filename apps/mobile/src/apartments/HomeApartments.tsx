@@ -1,4 +1,9 @@
 import { NearbyCarousel } from "./NearbyCarousel";
+import { CollaborationHome } from "../drivers/CollaborationHome";
+import {
+  createDiscoveryMemory,
+  type DiscoveryMemory,
+} from "../drivers/discovery-model";
 import { compactCardHeight, cardHandleHeight } from "./card-layout";
 import {
   distanceM,
@@ -61,14 +66,29 @@ export function HomeApartments({
   destinationKey,
   mode = "公寓",
   list = false,
+  filtersOpen = false,
+  onCloseFilters = () => {},
+  onToggleList = () => {},
 }: {
   toolbar: ReactNode;
   apartmentId?: string;
   destinationKey?: string;
   mode?: HomeMode;
   list?: boolean;
+  filtersOpen?: boolean;
+  onCloseFilters?: () => void;
+  onToggleList?: () => void;
 }) {
   const auth = useAuth();
+  const discovery = useRef({
+    owner: auth.session?.user.id,
+    memory: createDiscoveryMemory(),
+  });
+  if (discovery.current.owner !== auth.session?.user.id)
+    discovery.current = {
+      owner: auth.session?.user.id,
+      memory: createDiscoveryMemory(),
+    };
   const [focused, setFocused] = useState(false),
     [active, setActive] = useState(AppState.currentState !== "background"),
     [obscured, setObscured] = useState(AppState.currentState !== "active");
@@ -129,6 +149,10 @@ export function HomeApartments({
           destinationKey={destinationKey}
           mode={mode}
           list={list}
+          discoveryMemory={discovery.current.memory}
+          filtersOpen={filtersOpen}
+          onCloseFilters={onCloseFilters}
+          onToggleList={onToggleList}
         />
       </View>
       {obscured ? (
@@ -150,12 +174,20 @@ export function HomeApartmentContent({
   mode = "公寓",
   list = false,
   testData,
+  discoveryMemory,
+  filtersOpen = false,
+  onCloseFilters = () => {},
+  onToggleList = () => {},
 }: {
   toolbar: ReactNode;
   apartmentId?: string;
   destinationKey?: string;
   mode?: HomeMode;
   list?: boolean;
+  discoveryMemory?: DiscoveryMemory;
+  filtersOpen?: boolean;
+  onCloseFilters?: () => void;
+  onToggleList?: () => void;
   testData?: {
     read: (
       path: string,
@@ -167,6 +199,10 @@ export function HomeApartmentContent({
   };
 }) {
   const collapsedHeight = compactCardHeight(useWindowDimensions().fontScale);
+  const fallbackMemory = useRef(createDiscoveryMemory());
+  const modeRef = useRef(mode),
+    previousMode = useRef(mode);
+  modeRef.current = mode;
   const auth = useAuth(),
     session = auth.session!;
   const ownerId =
@@ -237,12 +273,12 @@ export function HomeApartmentContent({
   const alive = () => !control.current.signal.aborted;
   useEffect(() => {
     control.current = new AbortController();
-    if (initialDestination.current) {
+    if (modeRef.current === "公寓" && initialDestination.current) {
       setCameraTarget(initialDestination.current.point);
       setCameraZoom(18);
       setCameraRevision((v) => v + 1);
       setCandidates(initialDestination.current.apartments);
-    } else if (apartmentId)
+    } else if (modeRef.current === "公寓" && apartmentId)
       void request<S["Apartment"]>(
         "/v1/apartments/" + encodeURIComponent(apartmentId),
       )
@@ -264,7 +300,7 @@ export function HomeApartmentContent({
     };
   }, []);
   function updateNearby(items: S["NearbyCandidate"][]) {
-    if (manualLocked.current) return;
+    if (modeRef.current !== "公寓" || manualLocked.current) return;
     setNearbyItems(items);
     setCandidates(items.flatMap((c) => (c.apartment ? [c.apartment] : [])));
     setLookupState(
@@ -290,6 +326,7 @@ export function HomeApartmentContent({
     (fix: ForegroundFix, lookup: S["NearbyDiscovery"]) => void
   >(() => {});
   onLookup.current = (fix, lookup) => {
+    if (modeRef.current !== "公寓") return;
     if (Date.parse(lookup.expires_at) <= Date.now()) return;
     catalogRef.current = {
       items: lookup.items,
@@ -593,6 +630,7 @@ export function HomeApartmentContent({
             setCameraTarget(p);
             setCameraRevision((v) => v + 1);
           }
+          if (modeRef.current !== "公寓") return;
           if (
             accuracy === null ||
             !Number.isFinite(accuracy) ||
@@ -873,12 +911,44 @@ export function HomeApartmentContent({
       void chooseNearby(nearbyItems[(n + 1) % nearbyItems.length]!);
     else router.push("/apartments");
   };
+  useEffect(() => {
+    if (previousMode.current === mode) return;
+    previousMode.current = mode;
+    generation.current++;
+    setRecords([]);
+    setMapContext(null);
+    if (mode === "公寓") {
+      if (selectionRef.current) void select(selectionRef.current, "retry");
+      else void locate(false, false);
+    }
+  }, [mode]);
   const hideMap = (list && mode !== "公寓") || (expanded && mode === "公寓");
   const selectedNearby = nearbyItems.find((c) =>
     selected
       ? c.apartment?.id === selected.id
       : c.key === providerSelected?.key,
   );
+  if (mode !== "公寓")
+    return (
+      <CollaborationHome
+        mode={mode}
+        list={list}
+        toolbar={toolbar}
+        memory={discoveryMemory ?? fallbackMemory.current}
+        filtersOpen={filtersOpen}
+        onCloseFilters={onCloseFilters}
+        onToggleList={onToggleList}
+        point={point}
+        cameraPoint={cameraTarget}
+        cameraRevision={cameraRevision}
+        onLocate={returnToPosition}
+        locating={locating}
+        locationNotice={locationNotice}
+        onLocationRetry={() =>
+          void (blocked ? openLocationSettings() : locate(true))
+        }
+      />
+    );
   return (
     <View style={styles.root}>
       <View

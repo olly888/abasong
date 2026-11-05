@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { components } from "@abasong/contracts";
+import type { AreaMarker } from "../drivers/discovery-model";
 type S = components["schemas"];
 export type HomeMapProps = {
   point?: S["Point"];
@@ -20,6 +21,9 @@ export type HomeMapProps = {
   bottomInset?: number;
   topInset?: number;
   overlay?: ReactNode;
+  areaMarkers?: AreaMarker[];
+  selectedAreaIds?: string[];
+  onAreaSelect?: (id: string) => void;
   /** Development-only synthetic native SDK acceptance, never a product input. */
   testMapStyle?: string;
   onTestBuildingResult?: (key: string, count: number) => void;

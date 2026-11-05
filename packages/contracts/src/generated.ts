@@ -721,7 +721,7 @@ export interface paths {
         };
         /** 本人可用声明；不存在返回404 */
         get: operations["getMyAvailability"];
-        /** 首建expected_version=0，更新校验版本；后台到期 */
+        /** 首建expected_version=0，更新校验版本；启用必填7天内开始、最长24小时的时段与1–5个区域；关闭只需版本和enabled=false；按服务端时间自然到期 */
         put: operations["setMyAvailability"];
         post?: never;
         delete?: never;
@@ -737,7 +737,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 仅主动开放且时段有效的区域司机 */
+        /** 仅主动开放、未到期的当前或未来7天内区域声明；非在线状态；无精确GPS */
         get: operations["listAvailableDrivers"];
         put?: never;
         post?: never;
@@ -2033,13 +2033,13 @@ export interface components {
             expected_version: number;
             enabled: boolean;
             /** Format: date-time */
-            starts_at: string;
+            starts_at?: string;
             /** Format: date-time */
-            ends_at: string;
-            region_ids: string[];
-            capacity_parcels?: number;
+            ends_at?: string;
+            region_ids?: string[];
+            capacity_parcels?: number | null;
             /** Format: date-time */
-            latest_finish_at?: string;
+            latest_finish_at?: string | null;
         };
         Availability: {
             /** Format: uuid */
@@ -6257,8 +6257,9 @@ export interface operations {
                 limit?: number;
                 region_id?: string;
                 query?: string;
-                kind?: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
                 carrier?: string;
+                day?: string;
+                kind?: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
             };
             header?: never;
             path?: never;
@@ -8035,6 +8036,7 @@ export interface operations {
                 limit?: number;
                 region_id?: string;
                 carrier?: string;
+                day?: string;
             };
             header?: never;
             path?: never;

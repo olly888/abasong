@@ -1,3 +1,4 @@
+import { verifyDrivers } from "./verify-drivers";
 import { verifyPush } from "./verify-push";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
@@ -1606,6 +1607,18 @@ async function main() {
       body,
       workerUrl: workerUrl.href,
       runtimeUrl: runtime.href,
+    });
+    await verifyDrivers({
+      db,
+      http: request,
+      auth,
+      other,
+      owner,
+      reader,
+      stranger,
+      strangerToken: noRights,
+      region,
+      pickup,
     });
     await db.query(
       "UPDATE abasong.users SET session_invalid_before=now() WHERE id=$1",

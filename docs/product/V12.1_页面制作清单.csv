@@ -3,8 +3,8 @@ A02,手机号登录,全屏二级页；保留来源意图,01-公寓闭环,5,,原�
 A03,验证码与恢复,二级页，同一认证流程,01-公寓闭环,5,bootstrapMe,原型已认可·作为开发基线（状态部分覆盖）
 A04,首次最小资料,二级页，仅新账号,01-公寓闭环,4,"bootstrapMe,patchMyProfile",原型已认可·作为开发基线（状态部分覆盖）
 H01,首页·公寓,首页根状态，公寓卡收起/展开,01-公寓闭环,33,"resolveApartment,getApartment,getApartmentMapContext,readAccessRecords,feedbackAccess,discoverNearbyApartments,discoverMapboxApartments",原节点基线已认可；截图扩展已制作待评审
-H02,首页·找活,与H01同一路由的地图状态,02-找人找活,6,"listRequests,listRegions",原型已认可·作为开发基线（状态部分覆盖）
-H03,首页·找人,与H01同一路由的地图状态,02-找人找活,6,"listAvailableDrivers,listRegions",原型已认可·作为开发基线（状态部分覆盖）
+H02,首页·找活,与H01同一路由的地图状态,02-找人找活,9,"listRequests,listRegions",B4本地实现；原生TEST与真实业务/物理设备分列，见专项报告
+H03,首页·找人,与H01同一路由的地图状态,02-找人找活,9,"listAvailableDrivers,listRegions",B4本地实现；原生TEST与真实业务/物理设备分列，见专项报告
 S01,搜索与筛选,二级搜索页，依来源切内容,01-公寓闭环,18,"searchApartments,suggestAddresses,retrieveAddress,listRequests,listAvailableDrivers",原型已认可·作为开发基线（状态部分覆盖）
 L01,选择正确公寓,地图底部选择面板,01-公寓闭环,4,"retrieveAddress,getApartment",原型已认可·作为开发基线（状态部分覆盖）
 B02,贡献密码/进入方式,编辑面板，可随键盘展开,01-公寓闭环,13,"contributeAccess,proposeApartment,getMyContribution,correctMyContribution,contributeAtConfirmedAddress",原节点基线已认可；截图扩展已制作待评审
@@ -15,7 +15,7 @@ D01,需求详情,二级页；本人/他人不同动作,02-找人找活,8,"getReq
 P08,报名/我能帮忙,详情内报名面板,02-找人找活,8,"applyToRequest,createConversation",原型已认可·作为开发基线（状态部分覆盖）
 P09,管理我的需求,D01管理模式，合并旧P07成功回执,02-找人找活,7,"getRequest,updateRequestGap,closeRequest,reopenRequest,discardDraft",原型已认可·作为开发基线（状态部分覆盖）
 P10,报名司机列表,本人需求内列表,02-找人找活,5,"listRequestApplications,markApplicationContacted",原型已认可·作为开发基线（状态部分覆盖）
-D02,司机档案,二级页，非DSP工作台,02-找人找活,6,"getDriver,createConversation,saveContact",原型已认可·作为开发基线（状态部分覆盖）
+D02,司机档案,二级页，非DSP工作台,02-找人找活,6,"getDriver,createConversation,saveContact",B4本地实现；原生TEST与真实业务/物理设备分列，见专项报告
 M01,消息中心,二级列表，顶部分对话/通知,03-消息与常联系,6,"listConversations,listNotifications,getInboxSummary,readNotification",原型已认可·作为开发基线（状态部分覆盖）
 M02,一对一会话,二级会话页，键盘避让,03-消息与常联系,9,"listMessages,sendMessage,readConversation,shareMeeting,getSharedMeeting,revokeMeetingShare",原型已认可·作为开发基线（状态部分覆盖）
 C01,司机圈,底部导航根页,04-社区与我的,5,listPosts,原型已认可·作为开发基线（状态部分覆盖）
@@ -23,7 +23,7 @@ C02,动态与回复,二级详情,04-社区与我的,5,"getPost,listComments,crea
 C03,发布互助文字,二级编辑页,04-社区与我的,4,"createPost,listMyRequests",原型已认可·作为开发基线（状态部分覆盖）
 U01,我的,底部导航根页,04-社区与我的,5,"getMe,getMyAvailability",原节点基线已认可；截图扩展已制作待评审
 U02,资料与经验,二级编辑页,04-社区与我的,4,"patchMyProfile,getMe",原型已认可·作为开发基线（状态部分覆盖）
-U03,可接活设置,二级编辑页,02-找人找活,6,"getMyAvailability,setMyAvailability,listRegions",原型已认可·作为开发基线（状态部分覆盖）
+U03,可接活设置,二级编辑页,02-找人找活,10,"getMyAvailability,setMyAvailability,listRegions",B4本地实现；原生TEST与真实业务/物理设备分列，见专项报告
 U04,我的发布,二级列表，需求/动态分段,04-社区与我的,6,"listMyRequests,listMyPosts",原型已认可·作为开发基线（状态部分覆盖）
 U05,我的报名,二级列表,04-社区与我的,5,"listMyApplications,withdrawApplication",原型已认可·作为开发基线（状态部分覆盖）
 U06,我的公寓,二级页；我保存的/我共享的分栏,01-公寓闭环,12,"listMyApartmentLibrary,getMyApartmentEntry,createMyApartmentEntry,createMyPrivateRecord,listMyContributions,readAccessRecords",原节点基线已认可；截图扩展已制作待评审

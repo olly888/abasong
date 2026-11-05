@@ -62,6 +62,11 @@ export default function Profile() {
               onPress={openContributionMenu}
             />
             <ListRow
+              title="可接活设置"
+              icon="people"
+              onPress={() => router.push("/account/availability")}
+            />
+            <ListRow
               title="我的公寓"
               icon="bookmark"
               onPress={() => router.push("/apartments/library")}

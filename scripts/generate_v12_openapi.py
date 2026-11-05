@@ -82,7 +82,7 @@ S['RequestVersion']['properties'].update(snapshot_fields)
 S['RequestVersion']['required'].extend(snapshot_fields)
 obj('ApplyInput',{'expected_arrival_at':dt,'capacity_parcels':integer(1),'observed_request_version':integer(1)},['expected_arrival_at','observed_request_version'])
 out('Application',{'id':uid,'request_id':uid,'applicant_id':uid,'status':enum('applied','withdrawn'),'expected_arrival_at':dt,'capacity_parcels':{'type':'integer','nullable':True},'observed_request_version':integer(1),'contacted_at':nullable_dt,'conversation_id':uid})
-obj('AvailabilityInput',{'expected_version':integer(0),'enabled':boolean,'starts_at':dt,'ends_at':dt,'region_ids':arr(uid),'capacity_parcels':integer(1),'latest_finish_at':dt},['expected_version','enabled','starts_at','ends_at','region_ids'])
+obj('AvailabilityInput',{'expected_version':integer(0,maximum=2147483646),'enabled':boolean,'starts_at':dt,'ends_at':dt,'region_ids':{**arr(uid),'minItems':1,'maxItems':5,'uniqueItems':True},'capacity_parcels':{'type':'integer','minimum':1,'maximum':10000,'nullable':True},'latest_finish_at':nullable_dt},['expected_version','enabled'])
 out('Availability',{'user_id':uid,'version':integer(1),'enabled':boolean,'currently_available':boolean,'starts_at':dt,'ends_at':dt,'region_ids':arr(uid),'capacity_parcels':{'type':'integer','nullable':True},'latest_finish_at':nullable_dt})
 out('Driver',{'profile':ref('Profile'),'availability':ref('Availability'),'regions':arr(ref('Region'))})
 S['Driver']['properties']['availability']={'allOf':[ref('Availability')],'nullable':True}
@@ -207,7 +207,7 @@ op('/v1/me/apartment-library/{entry_id}/records','post','createMyPrivateRecord',
 op('/v1/me/private-access-records/{private_record_id}','patch','patchMyPrivateRecord','本人修改不覆盖共享；旧版本409','PrivateRecord','PrivateRecordPatch',idem=True,sensitive=True)
 op('/v1/me/private-access-records/{private_record_id}','delete','deleteMyPrivateRecord','仅删除本人私存')
 op('/v1/me/private-access-records/{private_record_id}/share','post','shareMyPrivateRecord','owner和当前贡献能力；只共享码/门别，私人备注不共享','ContributionResult','PrivateShareInput',code=201,cap=['access.contribute'],idem=True)
-op('/v1/requests','get','listRequests','仅开放且未到期的可见需求','RequestPage',list_query=True,queries=[query('region_id',uid),query('query',string(200)),query('kind',enum('partial_route','whole_route','extra_drivers','vehicle_help','other_help'))])
+op('/v1/requests','get','listRequests','仅开放且未到期的可见需求','RequestPage',list_query=True,queries=[query('region_id',uid),query('query',string(200)),query('carrier',string(80)),query('day',{'type':'string','format':'date'}),query('kind',enum('partial_route','whole_route','extra_drivers','vehicle_help','other_help'))])
 op('/v1/requests','post','createDraft','创建本人需求草稿','Request','RequestDraftInput',code=201,cap=['request.publish'],idem=True)
 op('/v1/requests/{request_id}','get','getRequest','草稿仅本人；终态保留供查看','Request')
 op('/v1/requests/{request_id}','patch','updateRequest','本人更新条件与版本；关键变动通知','Request','RequestPatch',cap=['request.publish'])
@@ -224,8 +224,8 @@ op('/v1/applications/{application_id}/contacted','put','markApplicationContacted
 op('/v1/me/requests','get','listMyRequests','本人草稿与发布记录','RequestPage',list_query=True)
 op('/v1/me/applications','get','listMyApplications','本人报名与当前需求状态','ApplicationPage',list_query=True,queries=[query('request_id',uid)])
 op('/v1/me/availability','get','getMyAvailability','本人可用声明；不存在返回404','Availability')
-op('/v1/me/availability','put','setMyAvailability','首建expected_version=0，更新校验版本；后台到期','Availability','AvailabilityInput')
-op('/v1/drivers','get','listAvailableDrivers','仅主动开放且时段有效的区域司机','DriverPage',list_query=True,queries=[query('region_id',uid),query('carrier',string(80))])
+op('/v1/me/availability','put','setMyAvailability','首建expected_version=0，更新校验版本；启用必填7天内开始、最长24小时的时段与1–5个区域；关闭只需版本和enabled=false；按服务端时间自然到期','Availability','AvailabilityInput')
+op('/v1/drivers','get','listAvailableDrivers','仅主动开放、未到期的当前或未来7天内区域声明；非在线状态；无精确GPS','DriverPage',list_query=True,queries=[query('region_id',uid),query('carrier',string(80)),query('day',{'type':'string','format':'date'})])
 op('/v1/drivers/{user_id}','get','getDriver','最小公开司机资料及区域，不含手机号/轨迹','Driver')
 op('/v1/conversations','get','listConversations','仅本人参与的会话','ConversationPage',list_query=True)
 op('/v1/conversations/{conversation_id}','get','getConversation','仅参与者；读取元数据与双方已读水位','Conversation')
@@ -268,7 +268,6 @@ op('/v1/ops/access-records/{record_id}/reveal','post','revealForReview','仅必�
 from import_contracts import add_import_contracts
 add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
                      nullable_id, boolean, page, op, paths)
-paths['/v1/requests']['get']['parameters'].append(query('carrier',string(80)))
 # OpenAPI 3.0 nullable does not override a referenced non-nullable object in allOf.
 # Explicit null branch keeps ended shares and undeclared driver availability valid.
 def normalize_nullable_refs(node):

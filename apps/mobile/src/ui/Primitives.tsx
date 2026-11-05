@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Pressable, Text, View, StyleSheet, TextInput } from "react-native";
 import { tokens } from "@abasong/ui";
 import { Icon, type IconName } from "./Icon";
@@ -31,13 +31,24 @@ export function ListRow({
       </View>
       <View style={{ flex: 1, gap: 4 }}>
         {typeof title === "string" ? (
-          <Text style={styles.title}>{title}</Text>
+          <Text
+            style={[
+              styles.title,
+              disabled && { color: tokens.color.disabledText },
+            ]}
+          >
+            {title}
+          </Text>
         ) : (
           title
         )}
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      <Icon name="chevron" color={tokens.color.textMuted} size={20} />
+      <Icon
+        name="chevron"
+        color={disabled ? tokens.color.disabledText : tokens.color.textMuted}
+        size={20}
+      />
     </Pressable>
   );
 }
@@ -69,7 +80,13 @@ export function IconButton({
     >
       <Icon
         name={name}
-        color={selected ? tokens.color.brandPrimary : tokens.color.ink}
+        color={
+          disabled
+            ? tokens.color.disabledText
+            : selected
+              ? tokens.color.brandPrimary
+              : tokens.color.ink
+        }
       />
     </Pressable>
   );
@@ -102,7 +119,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
+    borderRadius: tokens.radius.control.value,
   },
 });
 
@@ -121,16 +138,19 @@ export function SearchBox({
   onCamera?: () => void;
   editable?: boolean;
 }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View
       style={{
         flexDirection: "row",
         alignItems: "center",
         minHeight: 52,
-        borderRadius: 12,
+        borderRadius: tokens.radius.control.value,
         backgroundColor: tokens.color.canvas,
         borderWidth: 1,
-        borderColor: tokens.color.border,
+        borderColor: focused
+          ? tokens.color.brandPrimary
+          : tokens.color.controlBorder,
       }}
     >
       <Pressable
@@ -149,6 +169,9 @@ export function SearchBox({
       </Pressable>
       <TextInput
         accessibilityLabel="搜索公寓或地址"
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        underlineColorAndroid="transparent"
         placeholder="搜索公寓或地址"
         placeholderTextColor={tokens.color.textMuted}
         value={value}

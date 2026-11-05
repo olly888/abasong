@@ -1,3 +1,4 @@
+import { StatusPanel } from "../../ui/Feedback";
 import { SharedContributions } from "../../apartments/SharedContributions";
 import { AddressLine } from "../../apartments/AddressLine";
 import { openContributionMenu } from "../../apartments/contribution-entry";
@@ -7,7 +8,6 @@ import { useFocusEffect, useLocalSearchParams, router } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { IconButton } from "../../ui/Primitives";
-import { Icon } from "../../ui/Icon";
 import { tokens } from "@abasong/ui";
 import {
   ActionButton,
@@ -403,11 +403,19 @@ function LibraryContent() {
       <FormError message={tab === "saved" ? error : null} />
       {tab === "saved" ? (
         <>
-          {items.length === 0 && !busy ? (
-            <View style={styles.empty}>
-              <Icon name="bookmark" size={32} color={tokens.color.textMuted} />
-              <Text style={styles.label}>还没有保存的公寓</Text>
-            </View>
+          {items.length === 0 && !busy && !error ? (
+            <StatusPanel state="empty" title="还没有保存的公寓" />
+          ) : null}
+          {busy && !items.length ? (
+            <StatusPanel state="loading" title="正在加载公寓" />
+          ) : null}
+          {error ? (
+            <ActionButton
+              label="重新加载"
+              variant="secondary"
+              disabled={busy}
+              onPress={() => void load()}
+            />
           ) : null}
           {items.map((d) => (
             <Pressable
@@ -442,7 +450,7 @@ function LibraryContent() {
                 <>
                   <Text style={styles.muted}>
                     {!auth.me?.capabilities.includes("access.read")
-                      ? "共享资料查看资格待审核"
+                      ? "暂未开通资料查看资格"
                       : (d.sharedError ?? "暂无共享密码")}
                   </Text>
                   <ActionButton

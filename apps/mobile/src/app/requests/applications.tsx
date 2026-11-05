@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from "react";
-import { Alert, Text, View, ActivityIndicator } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { useAuth } from "../../auth/AuthProvider";
 import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
+import { StatusPanel } from "../../ui/Feedback";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate, requestStyles as s } from "../../requests/RequestUi";
 import { requestTime, kindLabels } from "../../requests/presentation";
@@ -100,9 +101,11 @@ function List() {
           onPress={() => void load()}
         />
       ) : null}
-      {busy ? <ActivityIndicator /> : null}
+      {busy && !items.length ? (
+        <StatusPanel state="loading" title="正在加载报名" />
+      ) : null}
       {!busy && !error && !items.length ? (
-        <Text style={s.secondary}>暂无报名</Text>
+        <StatusPanel state="empty" title="暂无报名" />
       ) : null}
       {items.map((item) => (
         <View key={item.id} style={s.card}>

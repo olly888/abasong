@@ -45,7 +45,7 @@ jobs:
           ./scripts/dev contracts:generate
           ./scripts/dev tokens:generate
           ./scripts/dev cloud:templates
-          git diff --exit-code -- packages/contracts/src/generated.ts packages/ui/src/index.ts deploy/pilot-dev
+          git diff --exit-code -- packages/contracts/src/generated.ts packages/ui/src/index.ts docs/design/tokens-v3.css design/abasong-independent-v1/v12.1/tokens.css design/abasong-independent-v1/v12.1-import/tokens.css deploy/pilot-dev
       - run: ./scripts/dev env:init
       - run: ./scripts/dev db:up
       - run: ./scripts/dev db:verify

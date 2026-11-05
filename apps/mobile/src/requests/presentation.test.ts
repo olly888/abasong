@@ -4,6 +4,7 @@ import {
   localDateTime,
   centsInput,
   requestPrice,
+  requestTime,
 } from "./presentation";
 it("preserves exact cents and distinguishes negotiable from missing or zero prices", () => {
   expect(centsInput("1.85")).toBe(185);
@@ -18,6 +19,12 @@ it("preserves exact cents and distinguishes negotiable from missing or zero pric
   );
   for (const v of ["", "-1", "1.851", "1e3", "NaN"])
     expect(() => centsInput(v)).toThrow();
+});
+it("shows an explicit US 12-hour delivery time across midnight and DST", () => {
+  expect(requestTime("2026-11-04T23:00:00Z")).toBe("11/4 3:00 PM");
+  expect(requestTime("2026-07-04T07:05:00Z")).toBe("7/4 12:05 AM");
+  expect(requestTime("2026-07-04T19:05:00Z")).toBe("7/4 12:05 PM");
+  expect(requestTime(null)).toBe("时间未填写");
 });
 it("uses Los Angeles time independent of device timezone, with explicit DST gaps and repeats", () => {
   expect(laInstant("2026-11-03", "15:00")).toBe("2026-11-03T23:00:00.000Z");

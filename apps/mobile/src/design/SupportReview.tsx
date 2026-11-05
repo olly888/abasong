@@ -6,12 +6,14 @@ import { AuthPage, ActionButton } from "../auth/AuthControls";
 import { ApplicationFields } from "../requests/ApplicationFields";
 import { SupportFormFields } from "../requests/SupportForm";
 import { RequestSheet } from "../requests/RequestUi";
+import { useLocalSearchParams } from "expo-router";
 import {
   defaultSupportFields,
   changeSupportField,
   type SupportFields,
 } from "../requests/support-fields";
 import { type DeliveryRequest } from "../requests/presentation";
+import { kindLabels } from "../requests/presentation";
 type S = components["schemas"];
 const region: S["Region"] = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -60,13 +62,18 @@ const request: DeliveryRequest = {
 };
 // Reuses actual production form components. Never posts or grants capabilities.
 export default function SupportReview() {
+  const params = useLocalSearchParams<{ kind?: string; apply?: string }>();
+  const kind =
+    params.kind && Object.hasOwn(kindLabels, params.kind)
+      ? (params.kind as DeliveryRequest["kind"])
+      : "partial_route";
   const [form, setForm] = useState(() => ({
       ...defaultSupportFields(),
       region: region.id,
       pickup: region.id,
       carrier: "SwiftX",
     })),
-    [applying, setApplying] = useState(false),
+    [applying, setApplying] = useState(params.apply === "1"),
     [date, setDate] = useState(form.date),
     [time, setTime] = useState(form.start),
     [capacity, setCapacity] = useState(""),
@@ -77,7 +84,7 @@ export default function SupportReview() {
     <View style={{ flex: 1 }}>
       <AuthPage
         compact
-        title="部分包裹代跑"
+        title={kindLabels[kind]}
         headerRight={
           <Pressable
             accessibilityRole="button"
@@ -106,7 +113,7 @@ export default function SupportReview() {
           TEST · UI样板 · 不提交{notice ? ` · ${notice}` : ""}
         </Text>
         <SupportFormFields
-          kind="partial_route"
+          kind={kind}
           form={form}
           regions={[
             region,

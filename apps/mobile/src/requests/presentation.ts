@@ -88,14 +88,20 @@ export function centsInput(value: string) {
   return v;
 }
 export function requestTime(iso: string | null) {
-  return iso
-    ? new Intl.DateTimeFormat("zh-CN", {
-        timeZone: "America/Los_Angeles",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }).format(new Date(iso))
-    : "时间未填写";
+  if (!iso) return "时间未填写";
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+      .formatToParts(new Date(iso))
+      .map((part) => [part.type, part.value]),
+  );
+  // Compose only locale-independent separators. Native ICU implementations may
+  // otherwise return different punctuation or Chinese AM/PM markers.
+  return `${p.month}/${p.day} ${p.hour}:${p.minute} ${p.dayPeriod}`;
 }

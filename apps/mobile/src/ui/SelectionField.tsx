@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 import { Icon } from "./Icon";
-import { ActionButton } from "../auth/AuthControls";
+import { ActionButton } from "./Controls";
 export function SelectionField<T extends string>({
   label,
   value,
@@ -81,10 +81,11 @@ export function SelectionField<T extends string>({
           flexDirection: "row",
           alignItems: "center",
           gap: 12,
-          backgroundColor: pressed
-            ? tokens.color.surfaceMuted
-            : tokens.color.surface,
-          opacity: disabled ? 0.5 : 1,
+          backgroundColor: disabled
+            ? tokens.color.disabledSurface
+            : pressed
+              ? tokens.color.surfaceMuted
+              : tokens.color.surface,
         })}
       >
         <Text
@@ -92,7 +93,11 @@ export function SelectionField<T extends string>({
             flex: 1,
             fontSize: 16,
             lineHeight: 24,
-            color: selected ? tokens.color.ink : tokens.color.textSecondary,
+            color: disabled
+              ? tokens.color.disabledText
+              : selected
+                ? tokens.color.ink
+                : tokens.color.textSecondary,
           }}
         >
           {selected?.[1] ?? placeholder}
@@ -109,7 +114,7 @@ export function SelectionField<T extends string>({
           style={{
             flex: 1,
             justifyContent: "flex-end",
-            backgroundColor: "rgba(0,0,0,.3)",
+            backgroundColor: tokens.color.overlay,
           }}
         >
           <SafeAreaView

@@ -1,5 +1,5 @@
 {
-  "$description": "Abasong V3 prototype baseline, approved blue direction. Temporary delivery support only.",
+  "$description": "Abasong V3.1 current design tokens; sole editable token source. Native dimensions are logical points/dp, web uses CSS px.",
   "color": {
     "ink": {
       "$type": "color",
@@ -116,6 +116,22 @@
     "onBrand": {
       "$type": "color",
       "$value": "#FFFFFF"
+    },
+    "dangerPressed": {
+      "$type": "color",
+      "$value": "#8F2C2A"
+    },
+    "disabledSurface": {
+      "$type": "color",
+      "$value": "#F0F0F0"
+    },
+    "disabledText": {
+      "$type": "color",
+      "$value": "#686C73"
+    },
+    "overlay": {
+      "$type": "color",
+      "$value": "rgba(16,17,20,0.32)"
     }
   },
   "space": {
@@ -313,6 +329,34 @@
         "value": 40,
         "unit": "px"
       }
+    },
+    "metadata": {
+      "$type": "dimension",
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      }
+    },
+    "pageHeader": {
+      "$type": "dimension",
+      "$value": {
+        "value": 19,
+        "unit": "px"
+      }
+    },
+    "subheading": {
+      "$type": "dimension",
+      "$value": {
+        "value": 22,
+        "unit": "px"
+      }
+    },
+    "hero": {
+      "$type": "dimension",
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      }
     }
   },
   "fontWeight": {
@@ -388,6 +432,115 @@
     "actionPrimaryPressed": {
       "$type": "color",
       "$value": "{color.brandPressed}"
+    }
+  },
+  "layout": {
+    "pageInset": {
+      "$type": "dimension",
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      }
+    },
+    "compactInset": {
+      "$type": "dimension",
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      }
+    },
+    "header": {
+      "$type": "dimension",
+      "$value": {
+        "value": 64,
+        "unit": "px"
+      }
+    },
+    "sectionGap": {
+      "$type": "dimension",
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      }
+    },
+    "fieldGap": {
+      "$type": "dimension",
+      "$value": {
+        "value": 8,
+        "unit": "px"
+      }
+    },
+    "cardGap": {
+      "$type": "dimension",
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      }
+    },
+    "apartmentCollapsed": {
+      "$type": "dimension",
+      "$value": {
+        "value": 192,
+        "unit": "px"
+      }
+    },
+    "apartmentPeekInset": {
+      "$type": "dimension",
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      }
+    }
+  },
+  "lineHeight": {
+    "metadata": {
+      "$type": "dimension",
+      "$value": {
+        "value": 18,
+        "unit": "px"
+      }
+    },
+    "caption": {
+      "$type": "dimension",
+      "$value": {
+        "value": 22,
+        "unit": "px"
+      }
+    },
+    "body": {
+      "$type": "dimension",
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      }
+    },
+    "title": {
+      "$type": "dimension",
+      "$value": {
+        "value": 28,
+        "unit": "px"
+      }
+    },
+    "heading": {
+      "$type": "dimension",
+      "$value": {
+        "value": 36,
+        "unit": "px"
+      }
+    },
+    "hero": {
+      "$type": "dimension",
+      "$value": {
+        "value": 40,
+        "unit": "px"
+      }
+    },
+    "code": {
+      "$type": "dimension",
+      "$value": {
+        "value": 48,
+        "unit": "px"
+      }
     }
   }
 }

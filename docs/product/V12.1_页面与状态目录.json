@@ -1,7 +1,7 @@
 {
   "version": "V12.1",
   "date": "2026-11-05",
-  "note": "当前38个目标节点，U08退役且保留历史编号；状态要求不代表全部已验。共354项状态要求。",
+  "note": "当前38个目标节点，U08退役且保留历史编号；状态要求不代表全部已验。共354项状态要求。另U15/X02仅预留方案，未计入活动节点/状态。",
   "pages": [
     {
       "id": "A02",
@@ -2363,6 +2363,24 @@
       "date": "2026-11-05",
       "reason": "建立联系后自行转微信/电话，首版不维护第二份名单",
       "history": "../archive/my-simple-20261105/页面目录_39节点.json"
+    }
+  ],
+  "planned_extensions": [
+    {
+      "id": "U15",
+      "name": "邀请司机",
+      "surface": "我的次级页",
+      "entry": "U01拟新增邀请司机菜单",
+      "status": "proposal_only_not_in_active_prototype",
+      "source": "Abasong_V3.2_邀请司机功能方案.md"
+    },
+    {
+      "id": "X02",
+      "name": "接收产品邀请",
+      "surface": "外部公开介绍/分发页",
+      "entry": "通用邀请链接或二维码",
+      "status": "proposal_only_not_deployed",
+      "source": "Abasong_V3.2_邀请司机功能方案.md"
     }
   ]
 }

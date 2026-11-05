@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlsplit,unquote
 import csv,json,re,subprocess
-root=Path(__file__).resolve().parents[3];base='99a76da38708f796fe64e2d6ce7363138fa36916';checks=[]
+root=Path(__file__).resolve().parents[3];base='9ebf2a663e04a8ddaf23670d94db57d6a8409d61';checks=[]
 def ok(test,label):
  if not test:raise AssertionError(label)
  checks.append(label)
@@ -10,6 +10,8 @@ changed=set(cmd(['git','diff',base,'--name-only']).splitlines())|set(cmd(['git',
 allowed=lambda p:p in ['产品基线.md','DEVELOPMENT_STATUS.md','Abasong_PRD_V12_首版产品需求.md'] or p.startswith('docs/') or p.startswith('design/abasong-independent-v1/v12.1-experience/')
 ok(all(allowed(p) for p in changed),'all changes limited to approved docs and independent prototype')
 ok(not cmd(['git','diff',base,'--','apps','packages','database','scripts','deploy','pnpm-lock.yaml','dependency-lock.md','design/abasong-independent-v1/v12.1-import','design/abasong-independent-v1/tokens-v3.json']).strip(),'native/services/contracts/old prototype/tokens unchanged')
+ok(not cmd(['git','diff',base,'--','*.js','*.css','*.html','docs/technical/openapi-v12.yaml']).strip(),'invitation batch does not change prototype UI or OpenAPI')
+ok(all(not p.endswith(('.js','.css','.html')) for p in changed),'no new prototype UI files')
 links=0
 for name in sorted(changed):
  p=root/name
@@ -32,8 +34,8 @@ state=json.loads((root/'docs/product/V3.2_开发基准状态.json').read_text())
 ok(state['development_ready'] is False and state['b5_ready'] is False and state['app_changed'] is False,'unpassed gates honest')
 ok(state['human_testing']['completed']==0 and state['human_testing']['template_rows']==38,'core human testing remains 0/7 and38rows')
 diffs=list(csv.DictReader((root/'docs/technical/V3.2_代码差异清单.csv').open()))
-ok([d['id'] for d in diffs]==state['difference_ids']==[f'D{i:02}' for i in range(1,21)],'D01–D20 trace')
-ok(state['requirement_ids']==[f'G{i:02}' for i in range(1,21)],'G01–G20 trace')
+ok([d['id'] for d in diffs]==state['difference_ids']==[f'D{i:02}' for i in range(1,22)],'D01–D21 trace')
+ok(state['requirement_ids']==[f'G{i:02}' for i in range(1,22)],'G01–G21 trace')
 for d in diffs:
  for ref in d['code_paths'].split(';'):ok((root/ref).is_file(),'actual difference source '+ref)
 for name,count in [('V3.2_可用性记录模板.csv',38),('V3.2_司机圈任务记录模板.csv',10),('V3.2_我的团队任务记录模板.csv',7)]:
@@ -49,8 +51,8 @@ for name,total in [('browser-checks.json',34),('core-checks.json',10),('circle-c
 for p in proto.glob('*.js'):subprocess.run(['./scripts/dev','exec','node','--check',str(p)],cwd=root,check=True,stdout=subprocess.DEVNULL)
 ok(len(list(proto.glob('*.js')))==13,'thirteen JS syntax checks')
 old=cmd(['git','show',base+':DEVELOPMENT_STATUS.md'])
-ok((root/'docs/archive/my-simple-20261105/工程状态_99a76da快照.md').read_text()==old,'prior current status fully preserved')
-for ident,ux in [('UP15','UX13'),('UP16','UX14'),('UP17','UX15')]:
+ok((root/'docs/archive/invitation-plan-20261105/工程状态_9ebf2a6快照.md').read_text()==old,'prior current status fully preserved')
+for ident,ux in [('UP15','UX13'),('UP16','UX14'),('UP17','UX15'),('UP18','UX16')]:
  u=next(x for x in matrix['items'] if x['id']==ident)
  ok(ux in u['acceptance'] and all(c in copy for c in u['copy_ids']),ident+' copy and UX trace')
 spec=(root/'docs/product/Abasong_V12.1_页面功能信息与交互规格.md').read_text()
@@ -64,4 +66,11 @@ ok(state['synthetic_checks']['account_tasks']==20 and state['scope']=='documents
 ok('U08' not in pages and [p['id'] for p in catalog['retired_pages']]==['U08'],'U08 retired, IDs not renumbered')
 ok(next(d for d in diffs if d['id']=='D19')['status']=='cancelled_scope' and state['cancelled_difference_ids']==['D19'],'D19 cancelled, not queued implementation')
 ok(not any(a['target']=='U08' for p in pages.values() for a in p['actions']),'no active links to retired U08')
-print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':13,'pages':38,'state_requirements':354,'difference_rows':20,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))
+planned=catalog['planned_extensions'];invitation=state['invitation_proposal']
+ok([p['id'] for p in planned]==['U15','X02'] and all(p['id'] not in pages for p in planned),'invitation page IDs reserved, not active')
+ok(all(p['status'].startswith('proposal_only') for p in planned),'invitation pages not prototyped or deployed')
+ok(invitation['status']=='documented_not_prototyped' and not invitation['app_changed'] and not invitation['prototype_changed'] and not invitation['invite_sent'] and invitation['tests_executed']==0,'invitation implementation and acceptance not claimed')
+ok(next(d for d in diffs if d['id']=='D21')['status']=='proposal_only_not_prototyped','D21 remains a proposal')
+ok(next(u for u in matrix['items'] if u['id']=='UP18')['prototype_status']=='proposal_only_not_implemented','UP18 not falsely implemented')
+ok((root/'docs/product'/invitation['requirements']).is_file(),'invitation specification exists')
+print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':13,'pages':38,'state_requirements':354,'difference_rows':21,'planned_invitation_pages':['U15','X02'],'invitation_functional_tests':0,'prototype_ui_changed':False,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))

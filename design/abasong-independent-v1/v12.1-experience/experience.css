@@ -424,10 +424,10 @@ body {
 .ex-carousel::-webkit-scrollbar {
   display: none;
 }
-.ex-apartment-card {
+.ex-map-card {
   flex: 0 0 calc(100% - 0px);
   width: calc(100% - 0px);
-  height: 192px;
+  min-height: 192px;
   scroll-snap-align: center;
   background: #fff;
   border-radius: 24px;
@@ -439,12 +439,12 @@ body {
   cursor: pointer;
   user-select: none;
 }
-.ex-apartment-card[inert] {
+.ex-map-card[inert] {
   opacity: 1;
   pointer-events: none;
 }
-.ex-apartment-card .card-handle {
-  width: 30px;
+.ex-map-card .card-handle {
+  width: 20px;
   height: 4px;
   background: #dce0e5;
   border-radius: 4px;
@@ -453,12 +453,14 @@ body {
 .ex-apartment-card h2 {
   margin: 0 0 10px;
   line-height: 32px;
-  font-weight: 600;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
 }
 .ex-apartment-card .address-primary {
-  font-size: 19px;
+  font-size: 20px;
+  font-weight: 400;
+  color: #53565b;
   line-height: 32px;
   letter-spacing: -0.25px;
   white-space: nowrap;
@@ -470,6 +472,54 @@ body {
   font-size: 28px;
   font-weight: 750;
   letter-spacing: -0.7px;
+  color: #101114;
+}
+.ex-distance {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  color: #686c73;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.ex-distance.muted {
+  color: #73777e;
+}
+.ex-single-card {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.ex-support-card {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ex-support-card .card-handle {
+  flex-shrink: 0;
+}
+.ex-support-card .ex-job-card,
+.ex-support-card .ex-driver-card {
+  padding: 0 18px 16px;
+  flex: 1;
+  gap: 6px;
+  background: transparent;
+}
+.ex-support-card .ex-driver-card {
+  justify-content: center;
+  gap: 10px;
+}
+.ex-support-card .ex-job-title h3 {
+  min-width: 0;
+}
+.ex-support-card .ex-job-card > .meta {
+  line-height: 18px;
+}
+.ex-region[data-filter-selected="true"] {
+  outline: 2px solid #1467d8;
+  outline-offset: 3px;
 }
 .ex-code {
   font-size: 40px;
@@ -1205,8 +1255,9 @@ body {
   .device-island {
     display: none;
   }
-  .ex-apartment-card {
-    height: 192px;
+  .ex-map-card {
+    height: auto;
+    min-height: 192px;
   }
   .ex-map-tools .fab {
     font-size: 14px;

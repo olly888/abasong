@@ -98,6 +98,14 @@
     return `${dayLabel(d.startDay || TODAY)} ${time12(d.startTime || "15:00")}–${d.endDay && d.endDay !== (d.startDay || TODAY) ? dayLabel(d.endDay) + " " : ""}${time12(d.endTime || "18:30")} 可接活`;
   }
   function seed() {
+    // Synthetic distances share the discovery origin; these are not live GPS readings.
+    model.apartments.forEach((a, i) => {
+      a.distance = {
+        meters: [12, 37, 55][i],
+        basis: "boundary",
+        quality: "fresh",
+      };
+    });
     Object.assign(model.apartments[0].codes[0], { value: "*0128#", time: 10 });
     Object.assign(model.apartments[0].codes[1], { value: "#105682", time: 12 });
     model.apartments[1].codes[0].value = "07412*";
@@ -303,6 +311,12 @@
         .join("");
     if (ex.status[state.homeView] !== "ready") return "";
     const rs = results(),
+      selected = selectedResult(),
+      selectedRegions = selected
+        ? state.homeView === "jobs"
+          ? [selected.region]
+          : regionsOf(selected)
+        : [],
       counts = new Map();
     for (const r of rs)
       for (const region of state.homeView === "jobs"
@@ -317,7 +331,7 @@
     return [...counts]
       .map(([region, ids]) => {
         const [x, y] = regionPositions[region] || [50, 50];
-        return `<button class="ex-region ${supportFilter().region === region ? "selected" : ""}" style="left:${x}%;top:${y}%" data-action="ex-region" data-id="${esc(region)}" aria-label="${esc(region)}，当前结果${ids.size}${state.homeView === "jobs" ? "条需求" : "位司机"}"><span>${esc(region)}</span><b>${ids.size}</b></button>`;
+        return `<button class="ex-region ${selectedRegions.includes(region) ? "selected" : ""}" data-object-selected="${selectedRegions.includes(region)}" data-filter-selected="${supportFilter().region === region}" style="left:${x}%;top:${y}%" data-action="ex-region" data-id="${esc(region)}" aria-label="${esc(region)}，当前结果${ids.size}${state.homeView === "jobs" ? "条需求" : "位司机"}${selectedRegions.includes(region) ? "，当前卡片服务区域" : ""}"><span>${esc(region)}</span><b>${ids.size}</b></button>`;
       })
       .join("");
   }
@@ -359,8 +373,24 @@
             : "当前结果 · 0";
     return `<div class="ex-query"><button data-action="search">${esc(f.region || "全部区域")}${I("down")}</button>${f.day ? `<span class="ex-filter-chip">${dayLabel(f.day)}</span>` : ""}${f.text ? `<span class="ex-filter-chip">${esc(f.text)}</span>` : ""}<span class="ex-result-count" aria-live="polite">${count}</span>${f.region || f.day || f.text || f.kind ? ib("clear-support-filters", "close", "清除筛选") : ""}</div>`;
   }
+  function distanceBadge(a) {
+    const d = a.distance,
+      quality = $("#distance-quality")?.value || "fresh";
+    if (state.scenario === "denied" || !d || !Number.isFinite(d.meters))
+      return "";
+    if (quality === "stale" || d.quality === "stale") return "";
+    if (quality === "approximate" || d.quality === "approximate")
+      return '<span class="ex-distance muted">位置较粗略</span>';
+    const feet = d.meters * 3.28084;
+    const value =
+      feet < 1000
+        ? `${Math.max(10, Math.round(feet / 10) * 10)} ft`
+        : `${(feet / 5280).toFixed(1)} mi`;
+    const label = d.basis === "boundary" ? "至边界" : "直线";
+    return `<span class="ex-distance" aria-label="距公寓${label}约${value}">约${value} · ${label}</span>`;
+  }
   function cardBody(a, active) {
-    const head = `<h2>${addressHTML(a.address)}</h2>`;
+    const head = `${distanceBadge(a)}<h2>${addressHTML(a.address)}</h2>`;
     if (!active) return head + '<div class="ex-card-placeholder"></div>';
     if (!state.logged || !state.qualified)
       return (
@@ -402,8 +432,24 @@
     if (state.expanded && (!state.logged || !state.qualified))
       return `<section class="home-sheet ex-expanded ex-no-access" aria-label="公寓资料"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll"><div class="apartment-heading"><h2>${addressHTML(a.address, true)}</h2>${ib("collapse", "down", "收起密码记录")}</div><p>${state.logged ? "暂未开通资料查看资格" : "登录后查看密码"}</p>${state.logged ? "" : btn("login-access", "登录", "button")}</div></section>`;
     if (state.expanded)
-      return `<section class="home-sheet ex-expanded aria-label="公寓密码详情"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll" id="sheet-scroll"><div class="apartment-heading"><div class="address-heading"><h2>${addressHTML(a.address, true)}</h2><div class="address">${esc(a.address.split(",").slice(1).join(","))}</div><div class="address">${esc(a.name)}</div></div>${ib("collapse", "down", "收起密码记录")}</div>${btn("add-code", I("plus") + "添加密码", "button secondary")}${ex.code.status === "loading" || ex.code.id !== a.id ? '<div class="ex-skeleton" aria-label="正在读取密码"></div>' : ex.code.status === "error" ? `<div class="ex-error">密码暂时无法加载${btn("ex-retry-code", "重新读取", "text-btn")}</div>` : codes.map((c) => `<article class="code-record" data-record="${c.id}"><div class="ex-code">${esc(c.value)}</div><div class="scope">${esc(c.scope || "大门")}</div><div class="caption">${esc(contributionLabel(c))}</div><div class="feedback-row">${btn("vote", I("thumb") + "有用", "feedback-btn", `data-id="${c.id}" data-vote="useful" aria-pressed="${c.vote === "useful"}"`)}${btn("vote", "不能用", "feedback-btn", `data-id="${c.id}" data-vote="not_useful" aria-pressed="${c.vote === "not_useful"}"`)}</div></article>`).join("") || '<p class="ex-card-state">暂无共享密码</p>'}</div></section>`;
-    return `<section class="ex-carousel" aria-label="附近公寓卡片，可左右滑动" data-active-apt="${a.id}">${model.apartments.map((p) => `<article class="ex-apartment-card" data-apt="${p.id}" ${p.id === a.id ? 'role="button" tabindex="0" data-action="ex-expand" aria-label="展开 ' + esc(p.address) + '"' : 'aria-hidden="true" inert'}><div class="card-handle" aria-hidden="true"></div>${cardBody(p, p.id === a.id)}</article>`).join("")}</section>`;
+      return `<section class="home-sheet ex-expanded" aria-label="公寓密码详情"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll" id="sheet-scroll"><div class="apartment-heading"><div class="address-heading"><h2>${addressHTML(a.address, true)}</h2><div class="address">${esc(a.address.split(",").slice(1).join(","))}</div><div class="address">${esc(a.name)}</div></div>${ib("collapse", "down", "收起密码记录")}</div>${btn("add-code", I("plus") + "添加密码", "button secondary")}${ex.code.status === "loading" || ex.code.id !== a.id ? '<div class="ex-skeleton" aria-label="正在读取密码"></div>' : ex.code.status === "error" ? `<div class="ex-error">密码暂时无法加载${btn("ex-retry-code", "重新读取", "text-btn")}</div>` : codes.map((c) => `<article class="code-record" data-record="${c.id}"><div class="ex-code">${esc(c.value)}</div><div class="scope">${esc(c.scope || "大门")}</div><div class="caption">${esc(contributionLabel(c))}</div><div class="feedback-row">${btn("vote", I("thumb") + "有用", "feedback-btn", `data-id="${c.id}" data-vote="useful" aria-pressed="${c.vote === "useful"}"`)}${btn("vote", "不能用", "feedback-btn", `data-id="${c.id}" data-vote="not_useful" aria-pressed="${c.vote === "not_useful"}"`)}</div></article>`).join("") || '<p class="ex-card-state">暂无共享密码</p>'}</div></section>`;
+    return mapCardCarousel("apartments", model.apartments, a.id);
+  }
+  function mapCardCarousel(kind, items, selectedId) {
+    const name = { apartments: "公寓", jobs: "需求", people: "司机" }[kind];
+    return `<section class="ex-carousel ${items.length === 1 ? "ex-single-card" : ""}" data-card-kind="${kind}" data-active-id="${selectedId}" ${kind === "apartments" ? `data-active-apt="${selectedId}"` : ""} aria-label="${name}卡片，可左右滑动">${items
+      .map((item) => {
+        const active = item.id === selectedId;
+        const body =
+          kind === "apartments"
+            ? cardBody(item, active)
+            : (kind === "jobs" ? jobCard(item) : driverCard(item))
+                .replace(/^<button /, "<div ")
+                .replace(/ data-action="(?:job|driver)" data-id="[^"]+"/, "")
+                .replace(/<\/button>$/, "</div>");
+        return `<article class="ex-map-card ${kind === "apartments" ? "ex-apartment-card" : "ex-support-card"}" data-card-id="${item.id}" ${kind === "apartments" ? `data-apt="${item.id}"` : ""} ${active ? `tabindex="0" role="button" data-action="ex-open-card" data-id="${item.id}" aria-label="${kind === "apartments" ? "展开 " + esc(item.address) : "查看" + (kind === "jobs" ? esc(item.region) + "需求" : esc(item.name) + "的可接活声明")}"` : 'aria-hidden="true" inert'}><div class="card-handle" aria-hidden="true"></div>${body}</article>`;
+      })
+      .join("")}</section>`;
   }
   jobCard = (j) =>
     `<button class="support-job-card ex-job-card" data-action="job" data-id="${j.id}"><span class="top-inline"><span class="ex-tag">${kindLabel(j.kind)}</span><span class="caption">${dayLabel(j.date)} ${time12(j.start)}</span></span><div class="top-inline ex-job-title"><h3>${esc(j.region)}</h3><b class="quote">${money(j)}</b></div><span class="ex-job-facts">${j.remaining} 件${j.remainingDrivers ? ` · 需${j.remainingDrivers}人` : ""}${j.min ? ` · 最低${j.min}件` : ""}</span><span class="meta">${I("warehouse")}取件 ${esc(j.pickup || "联系确认")}<span class="ex-dot-separator">·</span>派送 ${esc(j.region)}</span><span class="meta">${esc(j.carrier)} · ${esc(j.publisher)}${j.partial ? " · 可拆分" : ""}</span></button>`;
@@ -419,7 +465,7 @@
     const r = st === "empty" ? null : selectedResult();
     if (!r)
       return `<section class="ex-floating ex-result-status"><h3>${people ? "暂无符合条件的可接活声明" : "该区域暂无符合条件的需求"}</h3>${btn("search", "调整筛选", "button secondary")}</section>`;
-    return `<section class="ex-floating ex-support-surface">${people ? driverCard(r) : jobCard(r)}</section>`;
+    return mapCardCarousel(state.homeView, results(), r.id);
   }
   home = () => {
     const support = isSupport();
@@ -481,16 +527,14 @@
   requestForm = () => {
     const f = state.forms.request;
     f.pickupKind ??= "warehouse";
-    return base
-      .requestForm()
-      .replace(
-        field("request", "pickup", "取件区域", "text", {
-          choices: [["", "请选择"], ...areas],
-        }),
-        field("request", "pickup", "取件区域", "text", {
-          choices: [["", "请选择"], ...areas],
-        }) + pickupFields(f),
-      );
+    return base.requestForm().replace(
+      field("request", "pickup", "取件区域", "text", {
+        choices: [["", "请选择"], ...areas],
+      }),
+      field("request", "pickup", "取件区域", "text", {
+        choices: [["", "请选择"], ...areas],
+      }) + pickupFields(f),
+    );
   };
   jobFromForm = (f, existing) => ({
     ...base.jobFromForm(f, existing),
@@ -550,8 +594,12 @@
   renderModal = function () {
     const m = state.modal;
     if (m?.type === "ex-place") {
-      const p = pickupSource(m), key = `${m.form ? "form" : m.id}:${p?.address}`;
-      if(ex.placeKey!==key){ex.placeCamera={x:0,y:0,zoom:1};ex.placeKey=key;}
+      const p = pickupSource(m),
+        key = `${m.form ? "form" : m.id}:${p?.address}`;
+      if (ex.placeKey !== key) {
+        ex.placeCamera = { x: 0, y: 0, zoom: 1 };
+        ex.placeKey = key;
+      }
       $("#overlay").innerHTML = placeMap(m);
       bindMap($('.ex-place-map [data-ex-map="place"]'));
       return;
@@ -647,6 +695,15 @@
         setApt(id);
         if (state.route.view !== "home") nav("home", {}, true);
         return;
+      case "ex-open-card":
+        if (ex.dragEnded && performance.now() - ex.dragEnded < 350) return;
+        if (state.homeView !== "apartments") {
+          state[state.homeView === "jobs" ? "selectedJob" : "selectedDriver"] =
+            id;
+          base.actions(state.homeView === "jobs" ? "job" : "driver", b);
+          return;
+        }
+      // Apartment details stay on the same selected card.
       case "ex-expand":
         if (ex.dragEnded && performance.now() - ex.dragEnded < 350) return;
         ex.reading = true;
@@ -745,6 +802,8 @@
       default:
         break;
     }
+    if (a === "job" && id) state.selectedJob = id;
+    if (a === "driver" && id) state.selectedDriver = id;
     base.actions(a, b);
   };
   submitForm = function (type, form) {
@@ -795,18 +854,27 @@
     const c = surface.dataset.exMap === "place" ? ex.placeCamera : camera();
     surface.querySelector(".ex-map-world").style.transform =
       `translate(${c.x}px,${c.y}px) scale(${c.zoom})`;
-    const scale = surface.dataset.exMap === "place" ? $(".ex-place-scale") : $(".ex-scale span");
+    const scale =
+      surface.dataset.exMap === "place"
+        ? $(".ex-place-scale")
+        : $(".ex-scale span");
     if (scale)
-      scale.textContent = surface.dataset.exMap === "place" ? (c.zoom > 1.5 ? "50 ft ━━━" : "100 ft ━━━") : isSupport()
-        ? c.zoom > 1.5
-          ? "0.25 mi"
-          : "0.5 mi"
-        : c.zoom > 1.5
-          ? "50 ft"
-          : "100 ft";
+      scale.textContent =
+        surface.dataset.exMap === "place"
+          ? c.zoom > 1.5
+            ? "50 ft ━━━"
+            : "100 ft ━━━"
+          : isSupport()
+            ? c.zoom > 1.5
+              ? "0.25 mi"
+              : "0.5 mi"
+            : c.zoom > 1.5
+              ? "50 ft"
+              : "100 ft";
   }
   function bindMap(surface = $("[data-ex-map]")) {
-    const current = () => surface.dataset.exMap === "place" ? ex.placeCamera : camera();
+    const current = () =>
+      surface.dataset.exMap === "place" ? ex.placeCamera : camera();
     if (!surface) return;
     let start = null,
       pinch = null;
@@ -874,25 +942,55 @@
     });
   }
   function bindCarousel() {
+    ex.carouselResize?.disconnect();
     const track = $(".ex-carousel");
     if (!track) return;
     const gap = 12,
+      kind = track.dataset.cardKind,
+      key = {
+        apartments: "apt",
+        jobs: "selectedJob",
+        people: "selectedDriver",
+      }[kind],
       cards = [...track.children],
       index = Math.max(
         0,
-        cards.findIndex((c) => c.dataset.apt === state.apt),
+        cards.findIndex((c) => c.dataset.cardId === state[key]),
       );
-    const step = cards[0].getBoundingClientRect().width + gap;
-    track.scrollLeft = index * step;
+    const step = () => cards[0].getBoundingClientRect().width + gap;
+    track.scrollLeft = index * step();
+    ex.carouselResize = new ResizeObserver(() => {
+      if (!track.isConnected || $(".ex-carousel") !== track) return;
+      track.scrollLeft =
+        Math.max(
+          0,
+          cards.findIndex((c) => c.dataset.cardId === state[key]),
+        ) * step();
+      alignTools();
+    });
+    ex.carouselResize.observe(track);
     let timer,
       dragging = null;
+    const select = (id) => {
+      if (kind === "apartments") setApt(id);
+      else {
+        state[key] = id;
+        render();
+      }
+    };
     const settle = () => {
-      if (!track.isConnected || $(".ex-carousel") !== track) return;
+      if (
+        !track.isConnected ||
+        $(".ex-carousel") !== track ||
+        state.homeView !== kind
+      )
+        return;
       const n = Math.max(
         0,
-        Math.min(cards.length - 1, Math.round(track.scrollLeft / step)),
+        Math.min(cards.length - 1, Math.round(track.scrollLeft / step())),
       );
-      if (cards[n]?.dataset.apt !== state.apt) setApt(cards[n].dataset.apt);
+      if (cards[n]?.dataset.cardId !== state[key])
+        select(cards[n].dataset.cardId);
     };
     track.addEventListener(
       "scroll",
@@ -903,14 +1001,19 @@
       { passive: true },
     );
     track.addEventListener("keydown", (e) => {
+      if (["Enter", " "].includes(e.key) && e.target.matches(".ex-map-card")) {
+        e.preventDefault();
+        actions("ex-open-card", e.target);
+        return;
+      }
       if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return;
       e.preventDefault();
       const next = Math.min(
         cards.length - 1,
         Math.max(0, index + (e.key === "ArrowRight" ? 1 : -1)),
       );
-      setApt(cards[next].dataset.apt);
-      $(".ex-apartment-card[tabindex]")?.focus();
+      select(cards[next].dataset.cardId);
+      $(".ex-map-card[tabindex]")?.focus();
     });
     track.addEventListener("pointerdown", (e) => {
       if (e.pointerType !== "mouse" || e.target.closest("button")) return;
@@ -1014,6 +1117,7 @@
     readCode(state.apt);
     render();
   });
+  $("#distance-quality").addEventListener("change", () => render());
   $("#support-scenario").addEventListener("change", () => {
     if (isSupport()) querySupport();
   });
@@ -1040,6 +1144,7 @@
     }),
   );
   resetPrototype = function () {
+    $("#distance-quality").value = "fresh";
     ++ex.readGeneration;
     for (const m of ["jobs", "people"]) {
       ++ex.generation[m];
@@ -1061,7 +1166,7 @@
   readCode("a1");
   render();
   window.abasongExperience = {
-    version: "3.2-r2a",
+    version: "3.2-r2a2",
     demoDay: TODAY,
     state: ex,
     warehouses,

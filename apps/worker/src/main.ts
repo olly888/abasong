@@ -1,3 +1,5 @@
+import { PushDispatcher } from "./push-dispatcher.js";
+import { ExpoPushProvider } from "./push-provider.js";
 import { Pool } from "pg";
 import {
   assertRuntimeEnvironment,
@@ -21,9 +23,19 @@ async function main() {
   const interval = Number(process.env.WORKER_POLL_MS ?? 5000);
   if (!Number.isFinite(interval) || interval < 1000 || interval > 60000)
     throw new Error("Invalid worker poll interval");
+  const mode = process.env.PUSH_PROVIDER ?? "disabled";
+  if (!["disabled", "expo"].includes(mode))
+    throw new Error("Invalid push provider configuration");
+  const dispatcher =
+    mode === "expo"
+      ? new PushDispatcher(
+          pool,
+          new ExpoPushProvider(process.env.EXPO_PUSH_ACCESS_TOKEN),
+        )
+      : null;
   const path = heartbeatPath();
   let lastHealthy: boolean | undefined;
-  // D0 connectivity + bounded import-draft expiry only. No recognition job/outbox acknowledgment.
+  // Disabled by default. Only explicit expo mode consumes supported push events.
   async function probe() {
     let healthy = false;
     try {
@@ -33,6 +45,7 @@ async function main() {
       );
       if (installed.rows[0]?.installed)
         await pool.query("SELECT abasong.purge_expired_import_drafts(100)");
+      if (dispatcher) await dispatcher.tick();
       healthy = true;
     } catch {
       // Do not emit raw database errors.

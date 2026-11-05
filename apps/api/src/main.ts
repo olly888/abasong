@@ -1,3 +1,8 @@
+import { DevicesService } from "./requests/devices.service";
+import {
+  DevicesController,
+  InstallationRevocationController,
+} from "./requests/devices.controller";
 import { assertSchemaReady } from "./database/schema-readiness";
 import { createEnvelope, ENVELOPE_CRYPTO } from "./encryption/provider";
 import { assertRuntimeEnvironment } from "@abasong/runtime";
@@ -65,6 +70,8 @@ class HealthController {
     NearbyController,
     RequestsController,
     CollaborationController,
+    DevicesController,
+    InstallationRevocationController,
   ],
   providers: [
     { provide: ENVELOPE_CRYPTO, useFactory: createEnvelope },
@@ -80,6 +87,7 @@ class HealthController {
     RequestsService,
     CollaborationService,
     MessagingService,
+    DevicesService,
     {
       provide: MapboxNearbyProvider,
       useFactory: () => new MapboxNearbyProvider(),

@@ -33,6 +33,14 @@
           "cameraPermission": "拍摄面单，在手机上识别收件地址以查找公寓。",
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#1467D8",
+          "defaultChannel": "collaboration",
+          "enableBackgroundRemoteNotifications": false
+        }
       ]
     ],
     "experiments": {

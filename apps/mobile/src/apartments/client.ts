@@ -7,6 +7,7 @@ const base =
   (Platform.OS === "android"
     ? "http://10.0.2.2:3001"
     : "http://127.0.0.1:3001");
+export const apiBase = base;
 async function boundedRefresh<T>(
   run: () => Promise<T>,
   signal?: AbortSignal,

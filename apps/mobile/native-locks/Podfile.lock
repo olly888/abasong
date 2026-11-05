@@ -126,6 +126,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - ExpoApplication (58.1.2):
+    - ExpoModulesCore
   - ExpoAsset (58.0.19):
     - ExpoModulesCore
   - ExpoCrypto (58.0.7):
@@ -184,6 +186,8 @@ PODS:
     - ExpoModulesJSI
     - ExpoModulesWorklets
     - RNWorklets
+  - ExpoNotifications (58.1.8):
+    - ExpoModulesCore
   - ExpoRouter (58.0.28):
     - ExpoModulesCore
     - RNScreens
@@ -2357,6 +2361,7 @@ DEPENDENCIES:
   - "expo-dev-launcher (from `../../../node_modules/.pnpm/expo-dev-launcher@58.0.17_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0_36ce8ac8a858f8084ee615cd445c601a/node_modules/expo-dev-launcher`)"
   - "expo-dev-menu (from `../../../node_modules/.pnpm/expo-dev-menu@58.0.12_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._eb7beae99f123e52ba350a1315beccc9/node_modules/expo-dev-menu`)"
   - "expo-dev-menu-interface (from `../../../node_modules/.pnpm/expo-dev-menu-interface@58.0.1_expo@58.0.21/node_modules/expo-dev-menu-interface/ios`)"
+  - "ExpoApplication (from `../../../node_modules/.pnpm/expo-application@58.1.2_expo@58.0.21/node_modules/expo-application/ios`)"
   - "ExpoAsset (from `../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios`)"
   - "ExpoCrypto (from `../../../node_modules/.pnpm/expo-crypto@58.0.7_expo@58.0.21/node_modules/expo-crypto/ios`)"
   - "ExpoDomWebView (from `../../../node_modules/.pnpm/@expo+dom-webview@58.0.2_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._a76539e429313ec048a33d27eca11ecc/node_modules/@expo/dom-webview/ios`)"
@@ -2372,6 +2377,7 @@ DEPENDENCIES:
   - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-jsi@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@types+react@19.3.0_react@19.3.0_/node_modules/expo-modules-jsi/apple`)"
   - "ExpoModulesWorklets (from `../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core/ExpoModulesWorklets.podspec`)"
   - "ExpoModulesWorkletsAdapter (from `../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core`)"
+  - "ExpoNotifications (from `../../../node_modules/.pnpm/expo-notifications@58.1.8_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0_a5bb26d0618a0a86e4f605fa654d733f/node_modules/expo-notifications/ios`)"
   - "ExpoRouter (from `../../../node_modules/.pnpm/expo-router@58.0.28_94fcba7eb4ef80f13c3b1ff581a21a5e/node_modules/expo-router/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@58.0.2_expo@58.0.21/node_modules/expo-secure-store/ios`)"
   - "ExpoStatusBar (from `../../../node_modules/.pnpm/expo-status-bar@58.0.4_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88_94ddf64fe8aa69d973a611e07cfbf4a5/node_modules/expo-status-bar/ios`)"
@@ -2500,6 +2506,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-dev-menu@58.0.12_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._eb7beae99f123e52ba350a1315beccc9/node_modules/expo-dev-menu"
   expo-dev-menu-interface:
     :path: "../../../node_modules/.pnpm/expo-dev-menu-interface@58.0.1_expo@58.0.21/node_modules/expo-dev-menu-interface/ios"
+  ExpoApplication:
+    :path: "../../../node_modules/.pnpm/expo-application@58.1.2_expo@58.0.21/node_modules/expo-application/ios"
   ExpoAsset:
     :path: "../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios"
   ExpoCrypto:
@@ -2530,6 +2538,8 @@ EXTERNAL SOURCES:
     :podspec: "../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core/ExpoModulesWorklets.podspec"
   ExpoModulesWorkletsAdapter:
     :path: "../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core"
+  ExpoNotifications:
+    :path: "../../../node_modules/.pnpm/expo-notifications@58.1.8_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0_a5bb26d0618a0a86e4f605fa654d733f/node_modules/expo-notifications/ios"
   ExpoRouter:
     :path: "../../../node_modules/.pnpm/expo-router@58.0.28_94fcba7eb4ef80f13c3b1ff581a21a5e/node_modules/expo-router/ios"
   ExpoSecureStore:
@@ -2736,6 +2746,7 @@ SPEC CHECKSUMS:
   expo-dev-launcher: 768bfc33a94754b4f69f9aa769b5a4e54ffab09f
   expo-dev-menu: 6b2030d709633f4b0aa58bfeca54b612235e5a4c
   expo-dev-menu-interface: d304e400271187edf1534704a4a05dcc140076e2
+  ExpoApplication: c83355b2f69f996b5d26b64fef39228e7f1e1208
   ExpoAsset: 9c966d4d2c67a13de7d449561558f782df1c1787
   ExpoCrypto: 33ede543a3747abbef071c3bd747135ccc4e4fd5
   ExpoDomWebView: b2a6d681b9d34c23b1f584321386ca8da1d36afb
@@ -2751,6 +2762,7 @@ SPEC CHECKSUMS:
   ExpoModulesJSI: 0c41d2327b3002cc736e81465a3e5e55b6d93b94
   ExpoModulesWorklets: e010ffcda2ad799980848396501c9cd2bea18ef5
   ExpoModulesWorkletsAdapter: d640ace42f91ccef5346d01d45a1650a9401c131
+  ExpoNotifications: d0621bf548676831247952ec23d280098391ea3c
   ExpoRouter: f9bcec9be9c8faf06cac2c5fb3b00fc570f9491b
   ExpoSecureStore: 64e1fe78b5b0a1edb61beff044bb2cad03084f9c
   ExpoStatusBar: 56aa9746e1bee4d8adbab12f4d7efc97000ac49f

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { AppState, Linking } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import * as Location from "expo-location";
 import {
   ApartmentPage,
@@ -57,6 +57,13 @@ export default function Settings() {
   }
   return (
     <ApartmentPage title="设置">
+      {auth.session ? (
+        <ListRow
+          title="通知设置"
+          icon="message"
+          onPress={() => router.push("/account/notifications")}
+        />
+      ) : null}
       <ListRow
         title="位置权限"
         subtitle={permission}

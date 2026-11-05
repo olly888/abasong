@@ -1,5 +1,5 @@
 {
-  "version": "1.9",
+  "version": "2.0",
   "date": "2026-11-05",
   "status": "planned",
   "current_design": "V3.1",
@@ -457,6 +457,74 @@
       ],
       "implementation_dependency": "D21_generic_share_qr_landing_valid_distribution_links_no_grant",
       "prototype_status": "synthetic_20_pass_pending_user_confirmation_native_distribution_pending"
+    },
+    {
+      "id": "UP19",
+      "pages": [
+        "P01",
+        "P03",
+        "D01",
+        "P08",
+        "P09"
+      ],
+      "copy_ids": [
+        "C156",
+        "C157",
+        "C158",
+        "C159",
+        "C160",
+        "C161",
+        "C162",
+        "C163",
+        "C164",
+        "C165",
+        "C166",
+        "C167",
+        "C168",
+        "C169"
+      ],
+      "batch": "R3-delivery",
+      "acceptance": [
+        "UX17"
+      ],
+      "implementation_dependency": "D22_request_semantics_contract_before_native",
+      "prototype_status": "synthetic_25_checks_pending_user_confirmation"
+    },
+    {
+      "id": "UP20",
+      "pages": [
+        "H01"
+      ],
+      "copy_ids": [
+        "C170",
+        "C171",
+        "C172",
+        "C173",
+        "C174"
+      ],
+      "batch": "R3-delivery",
+      "acceptance": [
+        "UX18"
+      ],
+      "implementation_dependency": "D23_card_alignment_explicit_scope_only",
+      "prototype_status": "synthetic_25_checks_pending_user_confirmation"
+    },
+    {
+      "id": "UP21",
+      "pages": [
+        "H01"
+      ],
+      "copy_ids": [
+        "C175",
+        "C176",
+        "C177"
+      ],
+      "batch": "P1",
+      "acceptance": [
+        "UX19"
+      ],
+      "implementation_dependency": "D24_P1_nearby_list_not_in_first_release",
+      "prototype_status": "P1_documented_not_implemented"
     }
   ],
   "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/index.html",

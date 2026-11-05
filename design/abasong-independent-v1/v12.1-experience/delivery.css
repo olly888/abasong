@@ -1,0 +1,50 @@
+/* V3.2 two delivery scenarios. Only the isolated prototype uses these styles. */
+.delivery-form .form-section { margin: 0 0 20px; }
+.delivery-form .section-title { margin: 0 0 12px; font-size: 16px; line-height: 24px; }
+.delivery-form .field { margin: 0 0 12px; }
+.delivery-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.delivery-grid > * { min-width: 0; }
+.delivery-grid select { max-width: 100%; text-overflow: ellipsis; }
+.delivery-identity { margin: 0 0 20px; padding: 0 0 12px; border-bottom: 1px solid var(--ab-color-border); }
+.delivery-identity summary { margin: 0; justify-content: space-between; gap: 12px; min-height: 48px; color: var(--ab-color-ink); overflow-wrap: anywhere; }
+.delivery-identity summary span { color: var(--ab-color-brandPrimary); flex-shrink: 0; font-size: 14px; }
+.delivery-identity .account-publisher-options { padding-top: 8px; }
+.delivery-date-quick { display: flex; gap: 8px; margin: 0 0 12px; }
+.delivery-date-quick button { min-height: 48px; min-width: 70px; border-radius: 12px; border: 1px solid var(--ab-color-controlBorder); background: #fff; padding: 10px 16px; font-size: 14px; }
+.delivery-date-quick button.active { color: var(--ab-color-brandPrimary); border-color: var(--ab-color-brandPrimary); background: #edf4ff; }
+.delivery-form .ex-segment { margin-bottom: 12px; }
+.delivery-asap { display: flex; gap: 10px; align-items: center; min-height: 48px; font-size: 14px; padding: 0; margin: -4px 0 8px; }
+.delivery-asap input { width: 20px; height: 20px; accent-color: var(--ab-color-brandPrimary); }
+.delivery-short-note { font-size: 13px; line-height: 21px; color: #686c73; margin: 0 0 10px; }
+.delivery-quantity-kind { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; }
+.delivery-quantity-kind label { display: flex; gap: 6px; align-items: center; min-height: 48px; font-size: 14px; }
+.delivery-quantity-kind input { width: 18px; height: 18px; accent-color: var(--ab-color-brandPrimary); }
+.delivery-options { border-top: 1px solid var(--ab-color-border); padding-top: 6px; }
+.delivery-options > summary { font-size: 15px; color: var(--ab-color-brandPrimary); min-height: 48px; margin: 0; }
+.delivery-options > div { padding-top: 14px; }
+.delivery-form input[readonly] { background: #f5f7fa; color: #686c73; }
+.delivery-scene-button { padding: 18px 0; gap: 14px; min-height: 84px; }
+.delivery-scene-button b { font-size: 18px; line-height: 27px; }
+.delivery-scene-button small { display: block; font-size: 13px; line-height: 21px; color: #686c73; margin-top: 4px; font-weight: 400; }
+.delivery-preview .detail-row { align-items: start; gap: 16px; }
+.delivery-preview .detail-row > span:last-child { text-align: right; overflow-wrap: anywhere; }
+.delivery-preview .ex-preview-address { margin: 14px 0; padding: 14px; background: #f5f7fa; border-radius: 12px; }
+.delivery-preview .ex-preview-address p { margin: 4px 0; }
+.delivery-preview .button { width: 100%; }
+.delivery-form button:focus-visible { outline: 3px solid var(--ab-color-brandPrimary); outline-offset: 2px; }
+
+/* Same compact card, clearer auxiliary anchors; door label never competes with the code. */
+.ex-card-location { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.ex-card-location .ex-distance { flex-shrink: 0; }
+.ex-card-location .ex-distance:before { content: none; }
+.delivery-code-line { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.delivery-code-line .ex-code { flex: 1; min-width: 0; }
+.delivery-door { font-size: 13px; line-height: 20px; color: #686c73; max-width: 28%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+.ex-card-chevron { right: 16px; bottom: 14px; }
+.ex-code-meta { padding-right: 28px; }
+@media (max-width: 350px) {
+  .delivery-grid { gap: 8px; }
+  .delivery-form .field-label { font-size: 13px; }
+  .delivery-quantity-kind { gap: 8px; }
+  .delivery-code-line { gap: 6px; }
+}

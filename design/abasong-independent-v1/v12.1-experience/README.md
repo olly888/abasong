@@ -72,3 +72,9 @@ Google使用[官方Maps URLs](https://developers.google.com/maps/documentation/u
 [我的](index.html?v=r3-invite&task=me)、[邀请页](index.html?v=r3-invite&task=invite)、[接收页](index.html?v=r3-invite&task=invite-receive)。V3.2品牌邀请图与TEST QR，分享预览/取消、复制及保存的成功/失败演示，公开介绍与已安装/内测/平台未开放/微信受阻状态。未开放分发时不放假下载。二维码为保留域名，所有分享/保存/复制只内存演示，不调用系统或外发。
 
 [20项邀请检查](invitation-checks.json)＋[112项本轮回归](invitation-regressions.json)通过；40活动节点/374状态要求。实际App/接口/数据库/资格/云/分发未变，待用户体验后再实施。[详细范围与证据](邀请验收记录.md)区分浏览器默认/放大宽度检查与真实原生、系统权限、域名关联、分发及真人未验项。
+
+## 两场景发布与公寓卡片（r3-delivery，当前）
+
+[发需求](index.html?v=r3-delivery&task=delivery)、[首页](index.html?v=r3-delivery#home)。两入口共用简化表单，数量明确/约数/待确认与接手/送完/下架分开，仓库与途中交接条件化；固定核对/草稿、失败保留与版本校验。卡片城市/距离和密码/明确门别左右分级。公寓列表P1未做，P04专用求助后置。
+
+[25项本轮检查](delivery-checks.json)＋[132项既有回归](delivery-regressions.json)通过。原生/服务和人测未验；[详细证据与范围](配送发布验收记录.md)。实际App/契约/数据库/云未改，待用户体验后再实施。

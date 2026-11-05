@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "date": "2026-11-04",
+  "status": "planned",
+  "current_design": "V3.1",
+  "target_design": "V3.2-proposal",
+  "prototype_status": "not_started",
+  "app_changed": false,
+  "items": [
+    {"id":"UP01","pages":["H01","S01"],"copy_ids":["C01","C02","C03","C04","C05"],"batch":"R2a","acceptance":["UX01","UX02"],"implementation_dependency":"preserve_current_apartment_flow"},
+    {"id":"UP02","pages":["B02","B04","B05","B06","U01","U06"],"copy_ids":["C12","C13","C14","C15","C16","C17"],"batch":"R2b","acceptance":["UX03"],"implementation_dependency":"preserve_current_confirmed_contribution_and_correction"},
+    {"id":"UP03","pages":["H02","H03","D01","D02"],"copy_ids":["C20","C21","C40","C41"],"batch":"R2a","acceptance":["UX04"],"implementation_dependency":"region_query_and_mode_camera_state"},
+    {"id":"UP04","pages":["H02","H03"],"copy_ids":["C22","C23"],"batch":"R2a","acceptance":["UX04","UX05"],"implementation_dependency":"point_primary_geometry_comparison_optional"},
+    {"id":"UP05","pages":["H02","H03"],"copy_ids":["C22","C23","C24","C25","C26","C27"],"batch":"R2a","acceptance":["UX05"],"implementation_dependency":"loaded_counts_first_full_aggregate_contract_later"},
+    {"id":"UP06","pages":["H02","H03","U03"],"copy_ids":["C28","C32","C35"],"batch":"R2b","acceptance":["UX06"],"implementation_dependency":"versioned_date_semantics_and_DST_tests"},
+    {"id":"UP07","pages":["U03","H03"],"copy_ids":["C30","C31","C33","C34","C36","C37","C38","C39"],"batch":"R2b","acceptance":["UX06","UX07"],"implementation_dependency":"one_window_versioned_declaration"},
+    {"id":"UP08","pages":["M01","M02","U11"],"copy_ids":["C50","C51","C52","C53"],"batch":"R2c","acceptance":["UX05","UX07"],"implementation_dependency":"existing_notifications_only_new_opportunity_opt_in_deferred"},
+    {"id":"UP09","pages":["H01","H02","H03","U03"],"copy_ids":[],"batch":"R2c","acceptance":["UX07","UX08"],"implementation_dependency":"V3.1_tokens_retained_V3.2_not_active"},
+    {"id":"UP10","pages":["H01","H02","H03","U03","B02","B04","B05","B06","M01","M02"],"copy_ids":["C05","C08","C09","C14","C27","C38","C39","C52"],"batch":"R2c","acceptance":["UX07","UX08"],"implementation_dependency":"shared_states_and_native_accessibility_acceptance"}
+  ]
+}

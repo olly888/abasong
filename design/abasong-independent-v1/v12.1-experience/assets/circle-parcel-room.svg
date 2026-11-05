@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640" role="img" aria-label="TEST synthetic parcel room illustration">
+<rect width="960" height="640" fill="#e6e9ed"/><path d="M0 460h960v180H0z" fill="#cdd4dd"/>
+<rect x="80" y="145" width="230" height="330" rx="5" fill="#c2ccd6"/><g fill="none" stroke="#8698aa" stroke-width="4"><path d="M80 250h230M80 355h230M195 145v330"/></g>
+<rect x="390" y="135" width="330" height="350" rx="8" fill="#60798e"/><rect x="410" y="165" width="290" height="300" fill="#d6e5ef"/>
+<rect x="425" y="200" width="260" height="65" rx="8" fill="#fff"/><text x="450" y="243" font-family="Arial,sans-serif" font-size="27" fill="#395574">PARCEL ROOM</text>
+<path d="M560 460V280" stroke="#60798e" stroke-width="7"/><circle cx="540" cy="340" r="7" fill="#395574"/>
+<path d="M785 430h110v45H785zM805 380h70v50h-70z" fill="#bba98e"/>
+<rect x="32" y="28" width="320" height="60" rx="12" fill="#fff" opacity=".9"/><text x="54" y="68" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#395574">TEST · DELIVERY</text>
+<text x="580" y="600" font-family="Arial,sans-serif" font-size="25" fill="#4c6177">SYNTHETIC SAMPLE</text>
+</svg>

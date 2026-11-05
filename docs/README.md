@@ -1,6 +1,6 @@
 # Abasong 研发文档入口
 
-司机圈新增已批准目标：[定位与最小社区](product/Abasong_V3.2_司机圈定位与最小社区补充.md)、[C01–03原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-circle&task=circle)。原生仍未开放，D15/D16排B5；合成原型不是业务上线。
+司机圈新增已批准目标：[首版图片发布](product/Abasong_V3.2_司机圈图片发布补充.md)、[定位与最小社区](product/Abasong_V3.2_司机圈定位与最小社区补充.md)、[C01–03原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-images&task=circle)。原生仍未开放，D15/D16/D17排B5；合成原型不是业务上线。
 
 ## 本轮先看：进入B5之前
 

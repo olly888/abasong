@@ -18,9 +18,9 @@ P10,报名司机列表,本人需求内列表,02-找人找活,5,"listRequestAppli
 D02,司机档案,二级页，非DSP工作台,02-找人找活,6,"getDriver,createConversation,saveContact",B4本地实现；原生TEST与真实业务/物理设备分列，见专项报告
 M01,消息中心,二级列表，顶部分对话/通知,03-消息与常联系,6,"listConversations,listNotifications,getInboxSummary,readNotification",原型已认可·作为开发基线（状态部分覆盖）
 M02,一对一会话,二级会话页，键盘避让,03-消息与常联系,9,"listMessages,sendMessage,readConversation,shareMeeting,getSharedMeeting,revokeMeetingShare",原型已认可·作为开发基线（状态部分覆盖）
-C01,司机圈,底部导航根页,04-社区与我的,7,listPosts,V3.2司机圈合成原型已制作·原生待B5·真人未验
-C02,动态与回复,二级详情,04-社区与我的,7,"getPost,listComments,createComment,removeComment",V3.2司机圈合成原型已制作·原生待B5·真人未验
-C03,发布动态,二级编辑页,04-社区与我的,7,"createPost,listMyRequests",V3.2司机圈合成原型已制作·原生待B5·真人未验
+C01,司机圈,底部导航根页,04-社区与我的,9,listPosts,V3.2图片合成原型已制作·媒体/原生待B5·真人未验
+C02,动态与回复,二级详情,04-社区与我的,10,"getPost,listComments,createComment,removeComment",V3.2图片合成原型已制作·媒体/原生待B5·真人未验
+C03,发布动态,二级编辑页,04-社区与我的,13,"createPost,listMyRequests",V3.2图片合成原型已制作·媒体/原生待B5·真人未验
 U01,我的,底部导航根页,04-社区与我的,5,"getMe,getMyAvailability",原节点基线已认可；截图扩展已制作待评审
 U02,资料与经验,二级编辑页,04-社区与我的,4,"patchMyProfile,getMe",原型已认可·作为开发基线（状态部分覆盖）
 U03,可接活设置,二级编辑页,02-找人找活,10,"getMyAvailability,setMyAvailability,listRegions",B4本地实现；原生TEST与真实业务/物理设备分列，见专项报告

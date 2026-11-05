@@ -1,5 +1,7 @@
 # Abasong 研发文档入口
 
+司机圈新增已批准目标：[定位与最小社区](product/Abasong_V3.2_司机圈定位与最小社区补充.md)、[C01–03原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-circle&task=circle)。原生仍未开放，D15/D16排B5；合成原型不是业务上线。
+
 ## 本轮先看：进入B5之前
 
 [可开发与可验收基线](Abasong_V3.2_可开发与可验收基线.md)统一六步和门槛：[竞品证据](research/Abasong_竞品与替代方案证据表_2026-11-05.md) → [需求缺口](product/V3.2_首版需求缺口与范围裁决.md) → [五核心原型](../design/abasong-independent-v1/v12.1-experience/review.html) → [5司机/2DSP任务包](usability/V3.2_五司机两DSP可用性测试包.md) → [源码差异与分批](technical/V3.2_原型到代码差异与实施批次.md)。真实观察0/7，准备不等于通过；App未改、B5未启。旧工程状态和总计划全文移到[历史档案](archive/development-gate-20261105/README.md)。

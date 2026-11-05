@@ -1,10 +1,10 @@
 # Abasong V3.2 · R3核心流程交互原型
 
-[五核心流程评审](review.html)和[六步开发基准](../../../docs/Abasong_V3.2_可开发与可验收基线.md)为本轮入口。查码、贡献、本人纠正、临时支援与文字联系按任务补验；[10项核心报告](core-checks.json)与34项地图报告分开。真实用户0/7，原生/现场未替代，App未改。
+[核心与司机圈评审](review.html)和[六步开发基准](../../../docs/Abasong_V3.2_可开发与可验收基线.md)为本轮入口。查码、贡献、本人纠正、临时支援与文字联系按任务补验；[10项核心报告](core-checks.json)与34项地图报告分开。真实用户0/7，原生/现场未替代，App未改。
 
 未收录截图可在核对完整地址后确认共享；仅创建合成业务关联，不造地图点、不混进附近200米候选。明确共享/私存意图、疑字符核对、部分失败只重试失败项、离开后从头选图保留。评审快捷入口用于复核，真人观察从首页开始，不给按钮路线提示。
 
-入口：<http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-core>。静态服务根目录为`design/abasong-independent-v1`，只监听本机。2026-11-05制作；状态：**核心原型已制作，待用户体验确认**。旧版[v12.1-import](../v12.1-import/index.html)和实际App保留。
+入口：<http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-circle>。静态服务根目录为`design/abasong-independent-v1`，只监听本机。2026-11-05制作；状态：**核心原型已制作，待用户体验确认**。旧版[v12.1-import](../v12.1-import/index.html)和实际App保留。
 
 ## 本轮范围
 
@@ -44,3 +44,11 @@ Google使用[官方Maps URLs](https://developers.google.com/maps/documentation/u
 [浏览器结果](browser-checks.json)：独立Chromium上下文34项通过，0脚本异常、0外部请求；[可复跑检查函数](checks.browser.js)用Playwright的`browser_run_code_unsafe`读取该文件执行，返回报告。函数表达式末尾不加分号，以适配工具加载器。[UP12/UX10完整规则](../../../docs/product/Abasong_V3.2_地图卡片与距离体验补充.md)。九张截图在[evidence](evidence/home.png)，详细范围见[验收记录](验收记录.md)。这不是原生、真实账号或现场验收。
 
 下一步用户体验与R3问题修正，再更新实际代码；R2b/R2c未覆盖的状态、真实OCR、全量聚合、真实推送、200%字号和辅助技术继续记录待验，不因本次通过而关闭B6。
+
+## 司机圈增量（r3-circle）
+
+[直接体验C01–03](index.html?v=r3-circle&task=circle)。最新文字信息流；可选配送地区/标签；发布菜单复用临时需求；同ID引用当前状态；回复失败保留；作者→资料/私聊/常联系；删除/屏蔽和现有消息中心通知。自然高度，不使用地图192px卡壳或横滑。所有内容/发布/通知仍为内存合成，无实际发送。
+
+[19项司机圈检查](circle-checks.json)与[可复跑函数](circle-checks.browser.js)独立记录；既有34项地图、10项核心检查已对增量重跑。评审入口增加第6项，不增加产品内导航。截图：[信息流](evidence/circle-home.png)、[回复](evidence/circle-detail.png)、[发布](evidence/circle-publish.png)。浏览器宽度320/390/430通过；系统键盘/手势/200%字号/读屏及原生、服务权限仍待B5，不伪装为真人设计师签审。
+
+普通动态草稿仅当前会话。显式门码文本的正则是合成演示，不能作生产识别/防泄漏保证；密码仍使用统一贡献入口。详见[规则与代码差异](../../../docs/product/Abasong_V3.2_司机圈定位与最小社区补充.md)。

@@ -100,11 +100,9 @@ async (page) => {
       "address confirmation required",
     );
     await p.locator('[name="addressConfirmed"]').check();
-    await p
-      .locator("#device")
-      .screenshot({
-        path: "design/abasong-independent-v1/v12.1-experience/evidence/core-new-address.png",
-      });
+    await p.locator("#device").screenshot({
+      path: "design/abasong-independent-v1/v12.1-experience/evidence/core-new-address.png",
+    });
     await p.locator('.import-editor [type="submit"]').click();
     await share();
     assert(
@@ -156,11 +154,9 @@ async (page) => {
       (await p.locator('[data-action*="withdraw"]').count()) === 0,
       "no ordinary withdrawal",
     );
-    await p
-      .locator("#device")
-      .screenshot({
-        path: "design/abasong-independent-v1/v12.1-experience/evidence/core-correction.png",
-      });
+    await p.locator("#device").screenshot({
+      path: "design/abasong-independent-v1/v12.1-experience/evidence/core-correction.png",
+    });
   });
   await run("纠正取消保留原资料、不生成新来源", async () => {
     await fresh("correction");
@@ -208,11 +204,9 @@ async (page) => {
       (await p.locator(".message-source").innerText()).includes("Pasadena"),
       "source preserved",
     );
-    await p
-      .locator("#device")
-      .screenshot({
-        path: "design/abasong-independent-v1/v12.1-experience/evidence/core-contact.png",
-      });
+    await p.locator("#device").screenshot({
+      path: "design/abasong-independent-v1/v12.1-experience/evidence/core-contact.png",
+    });
   });
   await run("文字发送失败与重试：同条恢复，无重复气泡或假已读", async () => {
     await fresh("messages");
@@ -262,7 +256,9 @@ async (page) => {
   });
   await run("截图部分失败只重试未成功项，已共享不重复", async () => {
     await screenshots(["s5"]);
-    await p.locator("#import-submit-fail").evaluate(n => { n.checked = true; }); // Inject one synthetic save fault.
+    await p.locator("#import-submit-fail").evaluate((n) => {
+      n.checked = true;
+    }); // Inject one synthetic save fault.
     await p.locator("[data-import-consent]").check();
     await p.locator('[data-action="import-submit"]').click();
     await p.waitForSelector('[data-action="import-retry-submit"]');
@@ -314,7 +310,10 @@ async (page) => {
   });
   await run("评审快捷入口不计作用户测试，产品无研究备注", async () => {
     await p.goto("http://127.0.0.1:8765/v12.1-experience/review.html");
-    assert((await p.locator("article").count()) === 5, "five core tasks");
+    assert(
+      (await p.locator("article").count()) === 6,
+      "five core tasks and circle follow-up",
+    );
     await p.locator("nav a").click();
     await p.waitForFunction(() => window.abasongExperience);
     assert(

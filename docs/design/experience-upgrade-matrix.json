@@ -1,10 +1,10 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "date": "2026-11-05",
   "status": "planned",
   "current_design": "V3.1",
   "target_design": "V3.2-proposal",
-  "prototype_status": "r3_core_synthetic_ready_human_pending",
+  "prototype_status": "r3_core_and_circle_synthetic_pending_user_review",
   "app_changed": false,
   "items": [
     {
@@ -286,10 +286,46 @@
       ],
       "implementation_dependency": "shared_map_card_carousel_distance_basis_origin_freshness_query_selection_separation",
       "prototype_status": "core_implemented_pending_user_review"
+    },
+    {
+      "id": "UP13",
+      "pages": [
+        "C01",
+        "C02",
+        "C03",
+        "D01",
+        "D02",
+        "M01"
+      ],
+      "copy_ids": [
+        "C90",
+        "C91",
+        "C92",
+        "C93",
+        "C94",
+        "C95",
+        "C96",
+        "C97",
+        "C98",
+        "C99",
+        "C100",
+        "C101",
+        "C102",
+        "C103",
+        "C104",
+        "C105"
+      ],
+      "batch": "B5-prototype",
+      "acceptance": [
+        "UX11"
+      ],
+      "implementation_dependency": "native_post_comment_service_summary_permissions_reply_notifications_B5",
+      "prototype_status": "circle_implemented_synthetic_pending_user_review"
     }
   ],
   "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/index.html",
   "browser_report": "../../design/abasong-independent-v1/v12.1-experience/browser-checks.json",
   "development_gate": "../product/V3.2_开发基准状态.json",
-  "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json"
+  "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json",
+  "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json"
 }

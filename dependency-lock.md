@@ -168,3 +168,5 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 2026-11-05 R4-03：无新增依赖、原生模块或API契约。地址联想复用现有catalog/suggest/retrieve和会话限制，保存复用原共享/永久地址贡献/本人私存API；表单沿用V3令牌与PageFrame，键盘偏移采用当前RN0.88的View.measureInWindow/KeyboardAvoidingView。未重新原生编译，不以JS运行替代编译证据。
 
 2026-11-05 R4-04：无新增依赖、原生模块、契约、DDL或云变更。复用现有MapCardFrame/MapCardCarousel、RNMapbox10.3.16的相机事件/setCamera与PointAnnotation.refresh；中心/zoom/heading/pitch仅保存当前账号会话内存，不上传司机GPS。测试适配器/内存详情不作为业务导航或权限实现，原生编译与现场仍分栏。
+
+- 2026-11-06 R4-10：不新增依赖/原生模块；提取既有消息与缺口控制器的传输适配以接真实隔离HTTP，原路由鉴权适配保留。临时工具仅监听回环，短期JWT与密钥不进App/Metro/日志，不改云或D0防护。

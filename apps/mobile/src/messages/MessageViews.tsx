@@ -13,14 +13,11 @@ import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { ActionButton, FormError } from "../auth/AuthControls";
 import { Icon } from "../ui/Icon";
-import {
-  kindLabels,
-  requestPrice,
-  requestTime,
-} from "../requests/presentation";
+import { requestPrice, requestTime } from "../requests/presentation";
 import {
   deliveryLabel,
   notificationLabel,
+  sourceSummary,
   type Message,
   type PendingMessage,
   type Conversation,
@@ -67,9 +64,7 @@ export function ConversationRows({
                 ? [
                     c.last_request_region_label ??
                       c.last_request_snapshot.carrier,
-                    kindLabels[
-                      c.last_request_snapshot.kind as keyof typeof kindLabels
-                    ] ?? "配送求助",
+                    sourceSummary(c.last_request_snapshot).title,
                   ]
                     .filter(Boolean)
                     .join(" · ")
@@ -127,13 +122,16 @@ const Bubble = memo(function Bubble({
   message: m,
   own,
   peerRead,
+  onOpenRequest,
 }: {
   message: Message;
   own: boolean;
   peerRead: number;
+  onOpenRequest?: (id: string) => void;
 }) {
   if (m.kind === "request_card") {
     const snapshot = m.request_snapshot;
+    const summary = snapshot ? sourceSummary(snapshot) : null;
     return (
       <Pressable
         accessibilityRole="button"
@@ -145,10 +143,12 @@ const Bubble = memo(function Bubble({
         disabled={!snapshot}
         onPress={() =>
           snapshot &&
-          router.push({
-            pathname: "/requests/[id]",
-            params: { id: snapshot.request_id },
-          })
+          (onOpenRequest
+            ? onOpenRequest(snapshot.request_id)
+            : router.push({
+                pathname: "/requests/[id]",
+                params: { id: snapshot.request_id },
+              }))
         }
         style={({ pressed }) => [
           s.sourceCard,
@@ -172,9 +172,7 @@ const Bubble = memo(function Bubble({
         {snapshot ? (
           <>
             <Text style={s.name}>
-              {m.request_region_label ?? snapshot.carrier} ·{" "}
-              {kindLabels[snapshot.kind as keyof typeof kindLabels] ??
-                "配送求助"}
+              {m.request_region_label ?? snapshot.carrier} · {summary?.title}
             </Text>
             <View
               style={{
@@ -188,7 +186,7 @@ const Bubble = memo(function Bubble({
                 <Text style={s.quote}>{requestPrice(snapshot)}</Text>
               ) : null}
               <Text style={s.secondary}>
-                {snapshot.parcel_count ? `${snapshot.parcel_count}件 · ` : ""}
+                {summary?.quantity ? `${summary.quantity} · ` : ""}
                 {snapshot.carrier}
               </Text>
             </View>
@@ -218,6 +216,7 @@ const Bubble = memo(function Bubble({
   );
 });
 type ChatProps = {
+  onOpenRequest?: (id: string) => void;
   conversation: Conversation | null;
   userId: string;
   messages: Message[];
@@ -294,6 +293,7 @@ export function ChatHistory(p: ChatProps) {
             message={item}
             own={item.sender_id === p.userId}
             peerRead={p.conversation?.other_last_read_sequence ?? 0}
+            onOpenRequest={p.onOpenRequest}
           />
         )}
         contentContainerStyle={{ padding: 20, gap: 16, flexGrow: 1 }}

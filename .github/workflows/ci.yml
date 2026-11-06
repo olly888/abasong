@@ -51,6 +51,10 @@ jobs:
       - run: ./scripts/dev db:verify
       - run: ./scripts/dev verify:auth-api
       - run: ./scripts/dev verify:requests-api
+      - name: Verify native delivery inputs through isolated HTTP services
+        run: |
+          ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
+          ./scripts/dev exec tsx scripts/d1/verify-native-exit-collision.ts
       - run: ./scripts/dev verify:library-api
       - run: ./scripts/dev verify:import-api
       - run: ./scripts/dev verify:access-ranking

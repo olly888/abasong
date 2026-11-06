@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Text } from "react-native";
 import { Field, ActionButton, FormError } from "../auth/AuthControls";
 import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
+import type { ContributionRequest } from "../apartments/contribution-address-search";
 import { AccountError } from "../auth/api-client";
 import { exactQuantity, isV2, type DeliveryRequest } from "./presentation";
 import { requestStyles as s, RequestSheet } from "./RequestUi";
@@ -17,8 +18,38 @@ export function GapSheet({
   onSaved: (r: DeliveryRequest) => void;
   onRefresh: () => void;
 }) {
-  const { session } = useAuth(),
-    [quantity, setQuantity] = useState(String(r.remaining_parcels ?? 0)),
+  const { session } = useAuth();
+  const transport: ContributionRequest = useCallback(
+    (path, options) => {
+      if (!session) return Promise.reject(new Error("请先登录"));
+      return dataRequest(session, path, options);
+    },
+    [session?.access_token],
+  );
+  return (
+    <GapEditor
+      request={r}
+      transport={transport}
+      onClose={onClose}
+      onSaved={onSaved}
+      onRefresh={onRefresh}
+    />
+  );
+}
+export function GapEditor({
+  request: r,
+  transport,
+  onClose,
+  onSaved,
+  onRefresh,
+}: {
+  request: DeliveryRequest;
+  transport: ContributionRequest;
+  onClose: () => void;
+  onSaved: (r: DeliveryRequest) => void;
+  onRefresh: () => void;
+}) {
+  const [quantity, setQuantity] = useState(String(r.remaining_parcels ?? 0)),
     [drivers, setDrivers] = useState(String(r.remaining_drivers ?? 0)),
     [error, setError] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
@@ -32,7 +63,7 @@ export function GapSheet({
     };
   }, []);
   async function save() {
-    if (!session || lock.current) return;
+    if (lock.current) return;
     lock.current = true;
     setBusy(true);
     setError(null);
@@ -42,8 +73,7 @@ export function GapSheet({
           throw new Error("请填写有效的剩余数量");
         return Number(v);
       };
-      const result = await dataRequest<DeliveryRequest>(
-        session,
+      const result = await transport<DeliveryRequest>(
         `/v1/requests/${r.id}/gap`,
         {
           method: "PATCH",

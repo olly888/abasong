@@ -5,6 +5,7 @@ import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
+import type { ContributionRequest } from "../apartments/contribution-address-search";
 import { AccountError } from "../auth/api-client";
 import {
   updateMessageLog,
@@ -17,8 +18,26 @@ import {
 } from "./state";
 type S = components["schemas"];
 export function useConversation(id: string) {
-  const { session } = useAuth(),
-    [foreground, setForeground] = useState(AppState.currentState === "active");
+  const { session } = useAuth();
+  const request: ContributionRequest = useCallback(
+    (path, options) => {
+      if (!session) return Promise.reject(new Error("请先登录"));
+      return dataRequest(session, path, options);
+    },
+    [session?.access_token],
+  );
+  return useConversationData(id, session?.user.id ?? "", request);
+}
+// The normal route keeps its authenticated adapter. The native exit fixture uses
+// the same lifecycle/read-watermark/retry controller with an isolated transport.
+export function useConversationData(
+  id: string,
+  userId: string,
+  request: ContributionRequest,
+) {
+  const [foreground, setForeground] = useState(
+    AppState.currentState === "active",
+  );
   const [conversation, setConversation] = useState<Conversation | null>(null),
     [messages, setMessages] = useState<Message[]>([]),
     [pending, setPending] = useState<PendingMessage[]>([]),
@@ -71,7 +90,7 @@ export function useConversation(id: string) {
       ),
     );
     setMessages(next.messages);
-    setPending((old) => pendingAfterRead(old, items, session!.user.id));
+    setPending((old) => pendingAfterRead(old, items, userId));
   };
   function failed(e: unknown, g: number) {
     if (!valid(g)) return;
@@ -86,7 +105,7 @@ export function useConversation(id: string) {
   }
   const markRead = async (g: number) => {
     if (
-      !session ||
+      !userId ||
       !valid(g) ||
       readBusy.current ||
       readTarget.current <= readAck.current
@@ -97,7 +116,7 @@ export function useConversation(id: string) {
       c = new AbortController();
     controllers.current.add(c);
     try {
-      await dataRequest(session, `/v1/conversations/${id}/read`, {
+      await request(`/v1/conversations/${id}/read`, {
         method: "PUT",
         body: { last_read_sequence: target },
         signal: c.signal,
@@ -114,18 +133,17 @@ export function useConversation(id: string) {
   markReadRef.current = markRead;
   const refresh = useCallback(
     async (g: number) => {
-      if (!session || !valid(g) || refreshing.current === g) return;
+      if (!userId || !valid(g) || refreshing.current === g) return;
       refreshing.current = g;
       const c = new AbortController();
       controllers.current.add(c);
       const after = syncedSequence.current;
       try {
         const [meta, page] = await Promise.allSettled([
-          dataRequest<Conversation>(session, `/v1/conversations/${id}`, {
+          request<Conversation>(`/v1/conversations/${id}`, {
             signal: c.signal,
           }),
-          dataRequest<S["MessagePage"]>(
-            session,
+          request<S["MessagePage"]>(
             `/v1/conversations/${id}/messages?limit=40&${after ? `after_sequence=${after}` : `before_sequence=${Number.MAX_SAFE_INTEGER}`}`,
             { signal: c.signal },
           ),
@@ -150,7 +168,7 @@ export function useConversation(id: string) {
         if (valid(g)) setBusy(false);
       }
     },
-    [id, session?.access_token],
+    [id, userId, request],
   );
   useFocusEffect(
     useCallback(() => {
@@ -177,7 +195,7 @@ export function useConversation(id: string) {
   );
   async function deliver(p: PendingMessage) {
     if (
-      !session ||
+      !userId ||
       !live.current ||
       !currentConversation.current?.can_send ||
       sending.current.has(p.id)
@@ -193,8 +211,7 @@ export function useConversation(id: string) {
       ),
     );
     try {
-      const result = await dataRequest<Message>(
-        session,
+      const result = await request<Message>(
         `/v1/conversations/${id}/messages`,
         { method: "POST", body: retryInput(p), key: p.id, signal: c.signal },
       );
@@ -240,7 +257,7 @@ export function useConversation(id: string) {
   }
   async function older() {
     if (
-      !session ||
+      !userId ||
       !cursor ||
       !live.current ||
       loadingPage.current === scope.current
@@ -252,8 +269,7 @@ export function useConversation(id: string) {
     controllers.current.add(c);
     setLoadingOlder(true);
     try {
-      const page = await dataRequest<S["MessagePage"]>(
-        session,
+      const page = await request<S["MessagePage"]>(
         `/v1/conversations/${id}/messages?limit=40&cursor=${encodeURIComponent(cursor)}`,
         { signal: c.signal },
       );
@@ -290,7 +306,7 @@ export function useConversation(id: string) {
     busy,
     loadingOlder,
     hasOlder: !!cursor,
-    userId: session?.user.id ?? "",
+    userId,
     canSend: !!conversation?.can_send && foreground,
     onDraft: (v: string) => {
       draftRef.current = v;

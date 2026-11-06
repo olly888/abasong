@@ -6,9 +6,46 @@ import {
   retryInput,
   visibleWatermark,
   deliveryLabel,
+  sourceSummary,
   type Message,
   type PendingMessage,
 } from "./state";
+it("keeps V2 source-card estimates and the two-scene title consistent with request details", () => {
+  expect(
+    sourceSummary({
+      kind: "extra_drivers",
+      parcel_count: 150,
+      request_schema_version: 2,
+      scenario: "warehouse_shortage",
+      quantity_mode: "estimate",
+    }),
+  ).toEqual({ title: "仓库缺人，找司机", quantity: "约 150 件" });
+});
+it("shows unknown source quantities explicitly, without fabricating zero", () => {
+  expect(
+    sourceSummary({
+      kind: "partial_route",
+      parcel_count: null,
+      request_schema_version: 2,
+      scenario: "delivery_handoff",
+      quantity_mode: "unknown",
+    }),
+  ).toEqual({ title: "送不完，找人代送", quantity: "件数待确认" });
+});
+it("preserves exact quantities and legacy source labels without inventing a V2 scenario", () => {
+  expect(
+    sourceSummary({
+      kind: "extra_drivers",
+      parcel_count: 150,
+      request_schema_version: 2,
+      scenario: "warehouse_shortage",
+      quantity_mode: "exact",
+    }).quantity,
+  ).toBe("150 件");
+  expect(
+    sourceSummary({ kind: "partial_route", parcel_count: 80 }).quantity,
+  ).toBe("80 件");
+});
 const row = (sequence: number, cid = "one", sender = "peer"): Message => ({
   id: `m${sequence}`,
   client_message_id: `client${sequence}`,

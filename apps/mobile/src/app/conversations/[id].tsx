@@ -3,11 +3,13 @@ import { RequestGate } from "../../requests/RequestUi";
 import { ChatHistory, ChatComposer } from "../../messages/MessageViews";
 import { ConversationLayout } from "../../messages/ConversationLayout";
 import { useConversation } from "../../messages/useConversation";
+import { useAuth } from "../../auth/AuthProvider";
 export default function Conversation() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { session } = useAuth();
   return (
     <RequestGate title="对话">
-      <Chat key={id} id={id} />
+      <Chat key={`${session?.user.id ?? "guest"}:${id}`} id={id} />
     </RequestGate>
   );
 }

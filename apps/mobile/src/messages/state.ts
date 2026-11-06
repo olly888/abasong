@@ -1,4 +1,32 @@
 import type { components } from "@abasong/contracts";
+import { kindLabels, scenarioLabels } from "../requests/presentation";
+type SourceSummaryInput = Pick<
+  components["schemas"]["RequestVersion"],
+  "kind" | "parcel_count"
+> &
+  Partial<
+    Pick<
+      components["schemas"]["RequestVersionV2"],
+      "request_schema_version" | "scenario" | "quantity_mode"
+    >
+  >;
+export function sourceSummary(snapshot: SourceSummaryInput) {
+  const v2 =
+    "request_schema_version" in snapshot &&
+    snapshot.request_schema_version === 2;
+  return {
+    title:
+      v2 && snapshot.scenario
+        ? scenarioLabels[snapshot.scenario]
+        : (kindLabels[snapshot.kind as keyof typeof kindLabels] ?? "配送需求"),
+    quantity:
+      v2 && snapshot.quantity_mode === "unknown"
+        ? "件数待确认"
+        : snapshot.parcel_count !== null
+          ? `${v2 && snapshot.quantity_mode === "estimate" ? "约 " : ""}${snapshot.parcel_count} 件`
+          : "",
+  };
+}
 export type Message = components["schemas"]["Message"];
 export type Conversation = components["schemas"]["Conversation"];
 export type PendingMessage = {

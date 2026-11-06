@@ -1,18 +1,18 @@
 {
-  "version": "V3.2-R4-09-scoped-exit",
+  "version": "V3.2-R4-10-native-http-core",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_09_scoped_dual_native_exit_PASS_R4_10_next",
+  "scope": "R4_10_real_local_HTTP_native_core_PASS_ios_system_pending",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
     "requirements": "scoped",
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
-    "baseline_documents": "R4_09_single_window_dates_cancel_close_conflict_aligned_scoped",
-    "implementation": "R4_01_to_09_scoped_local_exit_R4_10_next",
+    "baseline_documents": "R4_10_actual_service_native_core_aligned_final_ios_system_pending",
+    "implementation": "R4_01_to_09_scoped_exit_R4_10_core_verified",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -193,7 +193,7 @@
     "P04"
   ],
   "delivery": {
-    "status": "scoped_native_forms_and_operations_verified_R4_10_combined_exit_pending",
+    "status": "R4_10_real_HTTP_native_core_verified_ios_final_system_pending",
     "requirements": "Abasong_V3.2_两场景发布与公寓卡片优化补充.md",
     "app_changed": true,
     "report": "../../design/abasong-independent-v1/v12.1-experience/delivery-checks.json",
@@ -202,7 +202,8 @@
     "deferred_specialized_help": true,
     "contracts_prepared": true,
     "v2_routes_enabled": true,
-    "native_report": "../technical/R4_08_两场景原生表单与仓库操作验收.md"
+    "native_report": "../technical/R4_08_两场景原生表单与仓库操作验收.md",
+    "combined_report": "../technical/R4_10_本地原生业务组合实施验收.md"
   },
   "release_ready": false,
   "readiness_scope": "controlled_R4_2_after_scoped_R4_1_exit_not_full_native_or_release_acceptance",
@@ -445,9 +446,82 @@
     "ios_native_supplement": "PASS_picker_cancel_dirty_cancel_save_retry_conflict_region_failure_expired_close",
     "android_owner_feedback": "PASS_both_groups",
     "latest_document_ci": {
-      "run_id": 42300095336,
-      "head_sha": "0b35c5b3e98b213605e616a6cd6f84482fbaaf8b",
+      "run_id": 42301127932,
+      "head_sha": "d475625a154b4144195007f1c73caecf2da1b3f8",
       "conclusion": "success"
     }
+  },
+  "r4_native_http_exit": {
+    "version": "R4-10-local-native-http",
+    "date": "2026-11-06",
+    "branch": "codex/r4-10-native-http-exit",
+    "base": "d475625a154b4144195007f1c73caecf2da1b3f8",
+    "status": "core_real_HTTP_dual_native_observed_android_owner_PASS_ios_final_system_pending",
+    "report": "../technical/R4_10_本地原生业务组合实施验收.md",
+    "current_batch_complete": false,
+    "engineering": {
+      "files": 80,
+      "tests": 476,
+      "lint_types_build": "PASS"
+    },
+    "native_mobile_payload_service": {
+      "assertions": 25,
+      "http_calls": 35,
+      "status": "PASS",
+      "actual_nest_postgres": true,
+      "provider": "localhost_synthetic",
+      "real_SMS_or_messages": false
+    },
+    "cleanup": {
+      "positive_lifecycle": "PASS",
+      "occupied_port_refusal": "PASS",
+      "signal_exit_regression": "PASS",
+      "remaining_disposable_databases": 0,
+      "remaining_disposable_roles": 0,
+      "earlier_owned_TEST_recovery": {
+        "databases": 3,
+        "roles": 3,
+        "D0_changed": false
+      },
+      "fixture_running": false
+    },
+    "native": {
+      "ios_device": "iPhone 18 Pro / iOS 27 simulator",
+      "android_device": "API 37 emulator",
+      "actual_components_real_HTTP": true,
+      "container": "DEV_only_not_normal_login_route",
+      "ios_business": "PASS_observed",
+      "ios_keyboard_edge_return": "pending_owner_feedback",
+      "android_owner_groups": 3,
+      "android_owner_result": "PASS_normal_all_three",
+      "android_feedback_reference": "call_234b8db558684fb3ae3abb90306f1d77:0,1,2",
+      "new_binary_compilation": false,
+      "ios_android_Hermes_export": "PASS",
+      "physical_acceptance": false,
+      "normal_route_real_account_exit": false,
+      "full_foreground_background_matrix": false,
+      "ios_pending_blocker": "Mac_locked_on_final_readonly_observation_owner_feedback_pending"
+    },
+    "production_changes": [
+      "V2_source_card_scenario_and_estimate_unknown_labels",
+      "shared_conversation_controller_authenticated_adapter_preserved",
+      "shared_gap_editor_authenticated_adapter_preserved",
+      "conversation_remount_on_user_and_conversation"
+    ],
+    "new_dependencies": false,
+    "new_contracts": false,
+    "new_migrations": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "d0_migrations": 17,
+    "d0_tables": 54,
+    "human_participants": 0,
+    "b5_ready": false,
+    "release_ready": false,
+    "next_task": "R4-11_after_R4-10_system_supplement",
+    "ci": "pending_current_head",
+    "pull_request": null,
+    "evidence": "../technical/R4_10_执行证据.json",
+    "requests_http_database_checks": 515
   }
 }

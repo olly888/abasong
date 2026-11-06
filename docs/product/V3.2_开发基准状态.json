@@ -261,6 +261,7 @@
     "android_physical_acceptance": false,
     "current_batch_complete": true,
     "whole_R4_1_exit": false,
-    "ci_source": "current_branch_draft_PR_exact_HEAD_checks"
+    "ci_source": "https://github.com/olly888/abasong/pull/91/checks",
+    "pull_request": "https://github.com/olly888/abasong/pull/91"
   }
 }

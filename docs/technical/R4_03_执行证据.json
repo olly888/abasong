@@ -36,9 +36,15 @@
       "local_log": "/private/tmp/abasong-r4-03-library-api.log"
     },
     "ci": {
-      "status": "tracked_at_current_branch_draft_PR_exact_HEAD_checks",
+      "status": "tracked_at_PR91_exact_HEAD_checks",
       "required": true,
-      "note": "The final answer verifies the exact commit run. Earlier PR90 CI is not evidence for this batch."
+      "note": "The final answer verifies the exact commit run. Earlier PR90 CI is not evidence for this batch.",
+      "source": "https://github.com/olly888/abasong/pull/91/checks"
+    },
+    "secret_scan": {
+      "command": ".tooling/security/gitleaks git . --pre-commit --staged --redact=100 --ignore-gitleaks-allow --no-banner",
+      "status": "PASS",
+      "commit_history_scan": "also_required_by_remote_CI"
     }
   },
   "native": {
@@ -89,5 +95,6 @@
   },
   "current_batch_complete": true,
   "whole_R4_1_exit": false,
-  "next_task": "R4-04"
+  "next_task": "R4-04",
+  "pull_request": "https://github.com/olly888/abasong/pull/91"
 }

@@ -2,7 +2,11 @@
 
 Updated 2026-11-05 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.32](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — R4-03 scoped implementation and dual-native checks complete
+## Current delivery — R4-04 scoped collaboration carousel, region query and native checks complete
+
+Branch `codex/r4-04-collaboration-carousel`, based on R4-03 `d087114eb7424ca32657c5d2dea17a4594ea8ba8` / PR91 (exact-head CI42161305642 success). User authorized the next planned batch. Implemented the existing MapCardFrame/MapCardCarousel request/driver variants, actual region query distinct from card selection, bounded/cancellable discovery reads, per-mode viewport and list/detail context. No new API, migration, dependency, qualification or cloud change. Focused model/loader/camera tests11 PASS; engineering73 files/387 tests plus lint/types/build PASS after final content/region-snapshot/retry-selection fixes, isolated requests/driver HTTP-PG261 PASS. iOS representative native region/query, map/list/detail, per-mode selection and error/recovery checks passed; Android owner confirmed swipe/detail-list-return/real region-query and recenter-retains-filter checks PASS; iOS owner confirmed manual pan/zoom, detail return and mode return retain the same object/viewport; final native AX observation recorded zoom10.03 after return. PointAnnotation snapshot refresh and failed-retry selection preservation corrected. Dual-native error/empty and320-width content screenshots retained. See [R4-04 report](docs/technical/R4_04_找活找人滑卡区域与相机验收.md). Exact-head CI will be linked from the draft PR; prior PR91 green does not certify this batch. R4-05/B5/B6 remain pending. Do not label the TEST adapter or simulated callbacks as real account writes/navigation.
+
+## Previous delivery — R4-03 scoped implementation and dual-native checks complete
 
 Branch `codex/r4-03-unified-contribution-form`, based on `1e6b306080a9a0cc1f7985b5f72f62d0dcd76627` / PR90. Card and My entries now use the same ContributionForm and ContributionAddressField. General entry opens the form directly; card entry revalidates its ID. Existing catalog + Mapbox suggest/retrieve provide deduped candidates and explicit address confirmation. Changing address preserves code/scope but clears source confirmation. Save failure retains this form's input and retries idempotently; success uses the submitted/returned apartment ID. Removed the duplicate screenshot button; shared/private mode locks after first submit. No new contract, migration, dependency, grant or cloud change.
 
@@ -44,7 +48,7 @@ Documentation/task/link/JS syntax validation is recorded in [baseline report](de
 
 ## Next execution
 
-1. R4-01 distance code and R4-02 representative dual-native observations are complete. R4-03 direct contribution form is also scoped verified. Continue R4-04 collaboration carousel/filter/camera, then R4-05 combined iOS/Android functional and visual exit. Already confirmed Android three gestures do not need repeating.
+1. R4-01 distance code and R4-02 representative dual-native observations are complete. R4-03 direct contribution form is also scoped verified. R4-04 collaboration carousel/filter/camera is now scoped verified; next is R4-05 combined iOS/Android functional and visual exit. Already confirmed Android three gestures do not need repeating.
 2. R4-06–10: versioned two-scene/pickup/quantity/date contracts and incremental migration, services/application semantics, native form/preview/details/navigation, availability interaction and dual-native exit.
 3. R4-11–13: protect imports/correction/application/messages and close core differences with exact evidence, then B5 profile/My→own team→circle text/replies→private images→invitation.
 

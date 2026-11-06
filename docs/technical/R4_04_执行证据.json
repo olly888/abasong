@@ -1,0 +1,111 @@
+{
+  "date": "2026-11-05",
+  "timezone": "America/Los_Angeles",
+  "base": "d087114eb7424ca32657c5d2dea17a4594ea8ba8",
+  "branch": "codex/r4-04-collaboration-carousel",
+  "scope": "R4-04 scoped collaboration carousel/region query/viewport; not R4-05 complete phase exit or release",
+  "code_diff_sha256": "a96b14203aee5b4d304adc91a8dc4913e40be47fc692c69fc8c2a07368cbf219",
+  "code_diff_command": "git diff --cached --binary d087114eb7424ca32657c5d2dea17a4594ea8ba8 -- apps/mobile",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS_after_final_region_snapshot_retry_selection_legacy_content_fixes",
+      "test_files": 73,
+      "tests": 387,
+      "includes": [
+        "lint",
+        "workspace_types",
+        "tests",
+        "shared_packages_API_worker_build"
+      ],
+      "native_compilation": false,
+      "local_log": "/private/tmp/abasong-r4-04-check.log",
+      "initial_sandbox_failure": "2_HTTP_listen_EPERM_tests_retried_unchanged_with_loopback_permission"
+    },
+    "focused": {
+      "status": "PASS",
+      "tests": 11,
+      "scope": "6_discovery_model_3_loader_race_2_camera"
+    },
+    "database": {
+      "command": "./scripts/dev verify:requests-api",
+      "status": "PASS",
+      "http_database_checks": 261,
+      "environment": "guarded_disposable_local_PostGIS",
+      "includes": [
+        "region_carrier_date_queries",
+        "availability_expiry_pagination",
+        "object_permissions_idempotency_blocks",
+        "synthetic_push_boundary_regression"
+      ],
+      "real_messages_or_SMS": false,
+      "local_log": "/private/tmp/abasong-r4-04-requests-api.log"
+    },
+    "ci": {
+      "status": "tracked_at_current_branch_draft_PR_exact_HEAD_checks",
+      "required": true
+    }
+  },
+  "native": {
+    "ios": {
+      "environment": "iPhone18Pro iOS27 simulator, installed Expo development build",
+      "selection_and_detail": "PASS_native_accessibility_card_switch_and_TEST_detail_return_same_ID",
+      "map_list": "PASS_same_three_unique_drivers_current_selection_retained_natural_height",
+      "region_query": "PASS_native_PointAnnotation_Altadena_query_3_to_2",
+      "locate": "PASS_same_region_and_selected_driver_retained",
+      "mode_return": "PASS_independent_mode_filter_selection_and_native_snapshot",
+      "slow_mode_switch": "PASS_loading_only_target_mode_no_stale_driver_on_jobs",
+      "error_retry_recovery": "PASS_no_false_zero_recovery_preserves_second_driver_after_fix",
+      "manual_pan_zoom_detail_mode_return": "PASS_owner_confirmed",
+      "observed_return_zoom": 10.03,
+      "narrow_320": "PASS_driver_and_request_equal_height_full_units_wrap"
+    },
+    "android": {
+      "environment": "API37 emulator, installed Expo development build",
+      "owner_confirmed": [
+        "swipe_second_driver_filter_remains_all_3",
+        "TEST_profile_and_list_return_same_driver",
+        "tap_Altadena_changes_query_2",
+        "locate_retains_region_filter"
+      ],
+      "narrow_320": "PASS_driver_and_request_screens_full_content_equal_neighbor_height",
+      "error_and_empty": "PASS_distinct_screens_no_false_zero_on_failure",
+      "arbitrary_pan_zoom_full_matrix": "not_claimed_pending_R4_05_B6"
+    },
+    "limitations": {
+      "TEST_detail_callback_is_real_authenticated_route_test": false,
+      "new_native_compilation": false,
+      "physical_iPhone_test": false,
+      "physical_Android_test": false,
+      "full_screen_reader_200_percent": false,
+      "actual_long_list_scroll_matrix": false,
+      "real_qualification_or_business_writes": false,
+      "live_driver_GPS_used": false,
+      "live_Mapbox_coverage_test": false
+    },
+    "sdk": "actual_native_Mapbox_map_with_TEST_background_style_and_public_region_points"
+  },
+  "changes": {
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "new_account_grants": false,
+    "new_native_modules": false
+  },
+  "screenshots": {
+    "android-empty.png": "90ef7f7ffc597fa76cf9d86ac46678504b2d094bbaf184b2f3fed061c499eec5",
+    "android-narrow-driver.png": "4c3f270a5de4ac552741e3fb62899ac518028f3703f48ca9102cfe9ab6ab195d",
+    "android-narrow-request.png": "1d1c651c7145d7b7a52aa0e0ee4d75ebe49b21a131baaa4eff76fbb465c10153",
+    "android-read-error.png": "2a6e544423fd6712fc60027f9a3a01a1789b31f6cfe159e6338e58c7f5f166b0",
+    "android-request.png": "493b0cffc65180681b92dea1230d4f8f1a4ddfa1f7a6fac23d8f14f515c7401f",
+    "ios-empty.png": "8487a8d5f2bb0c44918564c538b4e23914f772dc02471e582d6f34a9fd29c153",
+    "ios-narrow-driver.png": "65622c3d8669635d91b796a81726e93c1d66baaa47b8534bb16750a8f9cd0e39",
+    "ios-narrow-request.png": "59cfab8af99773e3da60a13e808c9fa2c43094754cb0289df03766323d6fc60b",
+    "ios-read-error.png": "2fbada01d4ee6c75e30255e6bcc67e5f3d20fb59d1773c8f1caf9015a3f9d344",
+    "ios-viewport-return.png": "a4f949fab94c0443a6679a29f02ee5133a4b5c9ae9eff7b741309de6a3862bb6"
+  },
+  "current_batch_complete": true,
+  "whole_R4_1_exit": false,
+  "next_task": "R4-05"
+}

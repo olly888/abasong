@@ -12,7 +12,7 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "aligned_target_not_released_contracts",
-    "implementation": "R4_01_02_03_scoped_verified_R4_04_queued",
+    "implementation": "R4_01_02_03_04_scoped_verified_R4_05_phase_exit_pending",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -215,7 +215,7 @@
     "eligible_batches": [
       "R4-1"
     ],
-    "next_task": "R4-04",
+    "next_task": "R4-05",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -263,5 +263,27 @@
     "whole_R4_1_exit": false,
     "ci_source": "https://github.com/olly888/abasong/pull/91/checks",
     "pull_request": "https://github.com/olly888/abasong/pull/91"
+  },
+  "r4_collaboration": {
+    "report": "../technical/R4_04_找活找人滑卡区域与相机验收.md",
+    "status": "implemented_scoped_dual_native_verified",
+    "branch": "codex/r4-04-collaboration-carousel",
+    "base": "d087114eb7424ca32657c5d2dea17a4594ea8ba8",
+    "engineering_tests": 387,
+    "http_database_checks": 261,
+    "android_manual_feedback": "PASS_owner_confirmed_swipe_detail_list_region_query_and_locate_retains_filters",
+    "ios_native": "PASS_representative_flows_and_owner_manual_viewport_return",
+    "native_compilation_run": false,
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "real_account_grants": false,
+    "cloud_changed": false,
+    "whole_R4_1_exit": false,
+    "evidence": "../technical/R4_04_执行证据.json",
+    "current_batch_complete": true,
+    "ios_physical_acceptance": false,
+    "android_physical_acceptance": false,
+    "ci_source": "current_branch_draft_PR_exact_HEAD_checks"
   }
 }

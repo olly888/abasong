@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { tokens } from "@abasong/ui";
@@ -20,11 +20,43 @@ import {
   availabilityPayload,
 } from "../drivers/availability-fields";
 import { ActionButton } from "../ui/Controls";
+import { PageFrame } from "../ui/PageFrame";
+import { DiscoveryCardContent } from "../drivers/DiscoveryCardContent";
 export default function DriverDiscoveryLab() {
-  const params = useLocalSearchParams<{ case?: string }>(),
-    fixtures = useMemo(() => driverFixtures(), []),
+  const params = useLocalSearchParams<{ case?: string; mode?: string }>(),
+    fixtures = useMemo(() => {
+      const f = driverFixtures();
+      f.drivers[0]!.regions = f.regions;
+      f.drivers[0]!.availability!.region_ids = f.regions.map((r) => r.id);
+      f.drivers.push({
+        ...f.drivers[1]!,
+        profile: {
+          ...f.drivers[1]!.profile,
+          user_id: "45333333-3333-4333-8333-333333333339",
+          display_name: "TEST Mia",
+        },
+        regions: [f.regions[0]!],
+        availability: {
+          ...f.drivers[1]!.availability!,
+          user_id: "45333333-3333-4333-8333-333333333339",
+          region_ids: [f.regions[0]!.id],
+        },
+      });
+      f.requests.push({
+        ...f.requests[0]!,
+        id: "45444444-4444-4444-8444-444444444449",
+        price_cents: 190,
+        route_label: "TEST-03",
+      });
+      return f;
+    }, []),
     memory = useRef(createDiscoveryMemory()),
-    failure = useRef(false);
+    failure = useRef(false),
+    slow = useRef(false),
+    empty = useRef(false);
+  const [selectedRequest, setSelectedRequest] = useState(fixtures.requests[0]!);
+  const [queryNotice, setQueryNotice] = useState("全部区域");
+  const [cameraNotice, setCameraNotice] = useState("");
   const [selectedProfile, setSelectedProfile] = useState(fixtures.drivers[0]!);
   const [testRevision, setTestRevision] = useState(0);
   const [mode, setMode] = useState<HomeMode>("找人"),
@@ -43,6 +75,16 @@ export default function DriverDiscoveryLab() {
       availabilityFields(fixtures.drivers[0]!.availability),
     ),
     [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    slow.current = params.case === "slow";
+    empty.current = params.case === "empty";
+    failure.current = params.case === "error";
+    setTestRevision((v) => v + 1);
+  }, [params.case]);
+  useEffect(() => {
+    if (params.mode === "jobs") setMode("找活");
+    if (params.mode === "people") setMode("找人");
+  }, [params.mode]);
   const adapter = useMemo<DiscoveryAdapter>(
     () => ({
       testMapStyle: JSON.stringify({
@@ -57,10 +99,17 @@ export default function DriverDiscoveryLab() {
         ],
       }),
       read: async (path) => {
+        if (slow.current)
+          await new Promise((resolve) => setTimeout(resolve, 3500));
         if (failure.current) throw new Error("TEST · 暂时无法加载，请重试");
         const u = new URL(path, "http://test.invalid");
         if (u.pathname === "/v1/regions")
           return { items: fixtures.regions, next_cursor: null };
+        setQueryNotice(
+          fixtures.regions.find((r) => r.id === u.searchParams.get("region_id"))
+            ?.label ?? "全部区域",
+        );
+        if (empty.current) return { items: [], next_cursor: null };
         if (u.pathname === "/v1/requests")
           return {
             items: fixtures.requests.filter(
@@ -98,7 +147,29 @@ export default function DriverDiscoveryLab() {
         if (item.kind === "driver") {
           setSelectedProfile(item.driver);
           setPage("profile");
+        } else {
+          setSelectedRequest(item.request);
+          setPage("request");
         }
+      },
+      onCamera: (snapshot) => {
+        const area = fixtures.regions.find(
+          (r) =>
+            Math.abs(r.display_point.lng - snapshot.center.lng) < 0.0001 &&
+            Math.abs(r.display_point.lat - snapshot.center.lat) < 0.0001,
+        );
+        const nearMe =
+          Math.abs(
+            fixtures.regions[0]!.display_point.lng +
+              0.002 -
+              snapshot.center.lng,
+          ) < 0.0001 &&
+          Math.abs(
+            fixtures.regions[0]!.display_point.lat - snapshot.center.lat,
+          ) < 0.0001;
+        setCameraNotice(
+          `${nearMe ? "TEST蓝点" : (area?.label ?? "手动视角")} Z${snapshot.zoom.toFixed(2)} H${snapshot.heading.toFixed(0)}`,
+        );
       },
     }),
     [fixtures, testRevision],
@@ -129,6 +200,16 @@ export default function DriverDiscoveryLab() {
         }}
       />
     );
+  if (page === "request")
+    return (
+      <PageFrame compact title="TEST · 需求详情" onBack={() => setPage("home")}>
+        <DiscoveryCardContent
+          item={{ kind: "request", request: selectedRequest }}
+          regions={fixtures.regions}
+        />
+        <Text>仅核对详情返回，不报名、不联系任何人。</Text>
+      </PageFrame>
+    );
   if (page === "profile")
     return (
       <DriverProfileView
@@ -142,16 +223,51 @@ export default function DriverDiscoveryLab() {
       />
     );
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: tokens.color.surface }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: tokens.color.surface,
+        width: params.case === "narrow" ? 320 : undefined,
+        alignSelf: params.case === "narrow" ? "center" : "stretch",
+      }}
+    >
       <Text style={{ fontSize: 12, paddingHorizontal: 16 }}>
-        TEST · 区域找活/找人 · 仅内存{notice ? ` · ${notice}` : ""}
+        TEST · R4-04 · 仅内存 · 查询{queryNotice} · {cameraNotice}
+        {notice ? ` · ${notice}` : ""}
       </Text>
-      <View
-        style={{
-          paddingHorizontal: 16,
-          flexDirection: "row",
-        }}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ maxHeight: 48 }}
+        contentContainerStyle={{ paddingHorizontal: 8, flexDirection: "row" }}
       >
+        <ActionButton
+          label="正常"
+          variant="text"
+          onPress={() => {
+            slow.current = false;
+            failure.current = false;
+            empty.current = false;
+            setTestRevision((v) => v + 1);
+          }}
+        />
+        <ActionButton
+          label="慢网"
+          variant="text"
+          onPress={() => {
+            slow.current = !slow.current;
+            setNotice(slow.current ? "慢网3.5秒" : "正常速度");
+            setTestRevision((v) => v + 1);
+          }}
+        />
+        <ActionButton
+          label="空结果"
+          variant="text"
+          onPress={() => {
+            empty.current = !empty.current;
+            setTestRevision((v) => v + 1);
+          }}
+        />
         <ActionButton
           label="设置时段"
           variant="text"
@@ -182,7 +298,7 @@ export default function DriverDiscoveryLab() {
             setTestRevision((v) => v + 1);
           }}
         />
-      </View>
+      </ScrollView>
       <CollaborationHome
         mode={mode === "找活" ? "找活" : "找人"}
         list={list}

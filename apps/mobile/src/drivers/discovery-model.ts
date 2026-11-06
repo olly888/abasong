@@ -1,5 +1,6 @@
 import type { components } from "@abasong/contracts";
 import type { DeliveryRequest } from "../requests/presentation";
+import type { MapCameraSnapshot } from "../components/map-camera";
 type S = components["schemas"];
 export type SupportMode = "找活" | "找人";
 export type Filters = {
@@ -17,6 +18,7 @@ export type DiscoveryView = {
   scroll: number;
   pages: number;
   focusPoint?: S["Point"];
+  camera?: MapCameraSnapshot;
 };
 export type DiscoveryMemory = Record<SupportMode, DiscoveryView>;
 export type AreaMarker = {
@@ -46,6 +48,17 @@ export function itemRegions(item: DiscoveryItem) {
       : []
     : item.driver.regions.map((r) => r.id);
 }
+export function discoveryFocusRegion(
+  item: DiscoveryItem,
+  regions: S["Region"][],
+  preferred: string,
+) {
+  const ids = itemRegions(item);
+  return (
+    regions.find((r) => r.id === preferred && ids.includes(r.id)) ??
+    regions.find((r) => ids.includes(r.id))
+  );
+}
 export function validItem(item: DiscoveryItem, now = Date.now()) {
   return item.kind === "request"
     ? item.request.status === "open" &&
@@ -59,11 +72,41 @@ export function areaMarkers(
   regions: S["Region"][],
 ): AreaMarker[] {
   return regions.flatMap((r) => {
-    const count = items.filter((i) => itemRegions(i).includes(r.id)).length;
+    const count = new Set(
+      items.filter((i) => itemRegions(i).includes(r.id)).map(itemId),
+    ).size;
     return count
       ? [{ id: r.id, label: r.label, count, point: r.display_point }]
       : [];
   });
+}
+export function reconcileDiscovery(
+  items: DiscoveryItem[],
+  view: DiscoveryView,
+  now = Date.now(),
+) {
+  const rows = [...new Map(items.map((r) => [itemId(r), r])).values()].filter(
+    (r) =>
+      validItem(r, now) &&
+      (!view.filters.region || itemRegions(r).includes(view.filters.region)),
+  );
+  view.selectedId = rows.some((r) => itemId(r) === view.selectedId)
+    ? view.selectedId
+    : rows[0]
+      ? itemId(rows[0])
+      : null;
+  return rows;
+}
+export function selectDiscoveryItem(view: DiscoveryView, item: DiscoveryItem) {
+  view.selectedId = itemId(item);
+}
+export function filterDiscovery(view: DiscoveryView, filters: Filters) {
+  if (JSON.stringify(view.filters) === JSON.stringify(filters)) return false;
+  view.filters = { ...filters };
+  view.selectedId = null;
+  view.scroll = 0;
+  view.pages = 1;
+  return true;
 }
 export function discoveryPath(mode: SupportMode, f: Filters, cursor?: string) {
   const q = new URLSearchParams({ limit: "20" });

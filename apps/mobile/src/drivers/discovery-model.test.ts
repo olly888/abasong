@@ -5,6 +5,10 @@ import {
   createDiscoveryMemory,
   discoveryPath,
   validItem,
+  reconcileDiscovery,
+  filterDiscovery,
+  selectDiscoveryItem,
+  discoveryFocusRegion,
   type DiscoveryItem,
 } from "./discovery-model";
 import { availabilityFields, availabilityPayload } from "./availability-fields";
@@ -16,7 +20,7 @@ it("uses declared service-region points, groups drivers in the same region and e
     }));
   items.push(items[0]!);
   const pins = areaMarkers(items, f.regions);
-  expect(pins[0]?.count).toBe(2);
+  expect(pins[0]?.count).toBe(1);
   expect(pins[0]?.point).toEqual(f.regions[0]?.display_point);
   expect(validItem(items[0]!, Date.now() + 86400000)).toBe(false);
   expect(
@@ -25,6 +29,61 @@ it("uses declared service-region points, groups drivers in the same region and e
       request: { ...f.requests[0]!, status: "closed" },
     }),
   ).toBe(false);
+});
+it("keeps one card per driver across pages/regions and distinguishes region query from card selection", () => {
+  const f = driverFixtures(),
+    memory = createDiscoveryMemory(),
+    view = memory["找人"];
+  f.drivers[0]!.regions = f.regions;
+  const items: DiscoveryItem[] = f.drivers.map((driver) => ({
+    kind: "driver",
+    driver,
+  }));
+  const rows = reconcileDiscovery([...items, items[0]!], view);
+  expect(rows).toHaveLength(2);
+  expect(discoveryFocusRegion(rows[0]!, f.regions, f.regions[1]!.id)?.id).toBe(
+    f.regions[1]!.id,
+  );
+  expect(areaMarkers(rows, f.regions).map((p) => p.count)).toEqual([1, 2]);
+  view.scroll = 213;
+  view.pages = 3;
+  const filters = view.filters;
+  view.camera = {
+    center: f.regions[0]!.display_point,
+    zoom: 15.4,
+    heading: 25,
+    pitch: 12,
+  };
+  const camera = view.camera;
+  selectDiscoveryItem(view, items[1]!);
+  expect(view.filters).toBe(filters);
+  expect([view.scroll, view.pages, view.camera]).toEqual([213, 3, camera]);
+  expect(memory["找活"].camera).toBeUndefined();
+  expect(filterDiscovery(view, { ...filters, region: f.regions[0]!.id })).toBe(
+    true,
+  );
+  expect(view.selectedId).toBeNull();
+  expect([view.scroll, view.pages]).toEqual([0, 1]);
+  expect(reconcileDiscovery(items, view)).toEqual([items[0]]);
+  selectDiscoveryItem(view, items[0]!);
+  expect(filterDiscovery(view, { ...view.filters })).toBe(false);
+  expect(view.selectedId).toBe(f.drivers[0]!.profile.user_id);
+});
+it("retains the selected ID after refresh and removes expired/closed objects without changing filters or camera", () => {
+  const f = driverFixtures(),
+    view = createDiscoveryMemory()["找活"];
+  const items: DiscoveryItem[] = f.requests.map((request) => ({
+    kind: "request",
+    request,
+  }));
+  selectDiscoveryItem(view, items[1]!);
+  expect(reconcileDiscovery(items, view)).toHaveLength(2);
+  expect(view.selectedId).toBe(f.requests[1]!.id);
+  f.requests[1]!.status = "closed";
+  expect(reconcileDiscovery(items, view)).toHaveLength(1);
+  expect(view.selectedId).toBe(f.requests[0]!.id);
+  expect(reconcileDiscovery(items, view, Date.now() + 86400000)).toEqual([]);
+  expect(view.selectedId).toBeNull();
 });
 it("keeps per-mode reading state and encodes filters without turning them into paths", () => {
   const memory = createDiscoveryMemory();

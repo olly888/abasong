@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ComponentRef } from "react";
+import { useEffect, useRef, useState, type ComponentRef } from "react";
 import {
   ActivityIndicator,
   PanResponder,
@@ -24,10 +24,19 @@ import {
 } from "./presentation";
 import { AddressLine } from "./AddressLine";
 import { locality } from "./address-presentation";
-import { compactCardHeight, cardHandleHeight } from "./card-layout";
+import {
+  compactCardHeight,
+  cardHandleHeight,
+  measuredCardHeight,
+} from "./card-layout";
+import { ApartmentMeta } from "./ApartmentMeta";
+import type { NearbyCardCandidate } from "./distance-presentation";
+import type { DiscoveryObservation } from "./nearby-policy";
 type S = components["schemas"];
 export type SheetProps = {
   apartment: S["Apartment"];
+  distanceCandidate?: NearbyCardCandidate;
+  observation?: DiscoveryObservation | null;
   embedded?: boolean;
   records: S["AccessRecord"][];
   status: "loading" | "ready" | "denied" | "error";
@@ -46,6 +55,8 @@ export type SheetProps = {
     v: "useful" | "not_useful",
   ) => Promise<boolean>;
   onHeight?: (height: number) => void;
+  collapsedHeight?: number;
+  onCompactHeight?: (height: number) => void;
 };
 export function ApartmentSheet(p: SheetProps) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null),
@@ -53,7 +64,13 @@ export function ApartmentSheet(p: SheetProps) {
     offset = useRef(0),
     anchor = useRef<Anchor | null>(null),
     mounted = useRef(true);
-  const collapsedHeight = compactCardHeight(useWindowDimensions().fontScale);
+  const [bodyHeight, setBodyHeight] = useState(0);
+  const baseHeight = compactCardHeight(useWindowDimensions().fontScale);
+  const collapsedHeight = Math.max(
+    baseHeight,
+    p.collapsedHeight ?? 0,
+    bodyHeight + cardHandleHeight + 8,
+  );
   const canRead = p.status === "ready",
     records = canRead ? p.records : [];
   const current = useRef(p);
@@ -114,6 +131,13 @@ export function ApartmentSheet(p: SheetProps) {
         >
           {r.method === "keypad" ? r.value : methodLabel(r)}
         </Text>
+        {r.method === "keypad" &&
+        r.scope.label &&
+        !["大门", "门别未注明", "门别未标注"].includes(r.scope.label) ? (
+          <Text style={[styles.body, { maxWidth: 88, flexShrink: 1 }]}>
+            {r.scope.label}
+          </Text>
+        ) : null}
         {r.method !== "keypad" ? (
           <Text style={styles.body}>{r.value}</Text>
         ) : null}
@@ -133,7 +157,7 @@ export function ApartmentSheet(p: SheetProps) {
           right: undefined,
           bottom: undefined,
           maxHeight: undefined,
-          borderRadius: 16,
+          borderRadius: 24,
           shadowOpacity: 0,
           elevation: 0,
         },
@@ -161,174 +185,209 @@ export function ApartmentSheet(p: SheetProps) {
         onScroll={(e) => {
           offset.current = e.nativeEvent.contentOffset.y;
         }}
-        contentContainerStyle={styles.inner}
       >
-        <View style={styles.heading}>
-          <Pressable
-            focusable
-            accessibilityRole="button"
-            accessibilityLabel={`${p.expanded ? "收起" : "展开"}公寓详情，${p.apartment.address_line1}, ${locality(p.apartment)}`}
-            onPress={() => p.onExpand(!p.expanded)}
-            style={{ flex: 1, gap: 4, minHeight: p.expanded ? 48 : 40 }}
-          >
-            <AddressLine
-              line={p.apartment.address_line1}
-              expanded={p.expanded}
-            />
+        <View
+          style={styles.inner}
+          onLayout={(e) => {
+            // A first-pass zero-width carousel can wrap every code character
+            // onto its own line on Android. Never cache that transient height.
+            if (p.expanded) return;
+            const measured = measuredCardHeight(
+              e.nativeEvent.layout.width,
+              e.nativeEvent.layout.height,
+              baseHeight,
+            );
+            if (measured === null) return;
+            const body = Math.ceil(e.nativeEvent.layout.height);
+            setBodyHeight(body);
+            p.onCompactHeight?.(measured);
+          }}
+        >
+          <View style={styles.heading}>
+            <Pressable
+              focusable
+              accessibilityRole="button"
+              accessibilityHint={`${p.expanded ? "收起" : "展开"}公寓详情`}
+              onPress={() => p.onExpand(!p.expanded)}
+              style={{
+                flex: 1,
+                gap: p.expanded ? 4 : 0,
+                minHeight: 48,
+              }}
+            >
+              <AddressLine
+                line={p.apartment.address_line1}
+                expanded={p.expanded}
+              />
+              {!p.expanded ? (
+                <ApartmentMeta
+                  city={p.apartment.city}
+                  candidate={p.distanceCandidate}
+                  observation={p.observation}
+                />
+              ) : null}
+              {p.expanded ? (
+                <>
+                  <Text style={styles.body}>{locality(p.apartment)}</Text>
+                  {p.apartment.name ? (
+                    <Text style={styles.body}>{p.apartment.name}</Text>
+                  ) : null}
+                </>
+              ) : null}
+            </Pressable>
             {p.expanded ? (
               <>
-                <Text style={styles.body}>{locality(p.apartment)}</Text>
-                {p.apartment.name ? (
-                  <Text style={styles.body}>{p.apartment.name}</Text>
-                ) : null}
+                <IconButton
+                  name="down"
+                  label="收起密码记录"
+                  onPress={() => p.onExpand(false)}
+                />
+                <IconButton
+                  name="bookmark"
+                  label={p.saved ? "取消收藏公寓" : "收藏公寓"}
+                  selected={p.saved}
+                  disabled={p.bookmarkBusy}
+                  onPress={p.onBookmark}
+                />
               </>
             ) : null}
-          </Pressable>
+          </View>
+
+          {p.status === "loading" ? (
+            <View style={[styles.state, !p.expanded && styles.compactState]}>
+              <ActivityIndicator color={tokens.color.brandPrimary} />
+              <Text style={styles.meta}>正在读取</Text>
+            </View>
+          ) : null}
+          {p.status === "denied" ? (
+            <View style={[styles.state, !p.expanded && styles.compactState]}>
+              <Text style={styles.stateTitle}>暂未开通资料查看资格</Text>
+            </View>
+          ) : null}
+          {p.status === "error" ? (
+            <View style={[styles.state, !p.expanded && styles.compactState]}>
+              <Text accessibilityRole="alert" style={styles.body}>
+                暂时无法读取密码
+              </Text>
+              <ActionButton label="重新读取" onPress={p.onRetry} />
+            </View>
+          ) : null}
+          {p.expanded && p.error && p.status !== "error" ? (
+            <Text accessibilityRole="alert" style={styles.error}>
+              {p.error}
+            </Text>
+          ) : null}
+          {canRead && !records.length ? (
+            <View style={[styles.state, !p.expanded && styles.compactState]}>
+              <Text style={styles.stateTitle}>暂无共享密码</Text>
+              {!p.expanded ? (
+                <ActionButton label="添加密码" onPress={p.onAdd} />
+              ) : null}
+            </View>
+          ) : null}
+          {canRead && !p.expanded && records[0] ? (
+            <>
+              {code(records[0], true)}
+              <Text style={styles.meta} numberOfLines={1} ellipsizeMode="tail">
+                {contributionMeta(records[0])}
+              </Text>
+              <Pressable
+                focusable
+                accessibilityRole="button"
+                hitSlop={2}
+                style={styles.linkRow}
+                onPress={() => p.onExpand(true)}
+              >
+                <Text style={styles.link}>
+                  查看 {records.length} 条进入信息
+                </Text>
+                <Icon name="up" size={18} color={tokens.color.brandPrimary} />
+              </Pressable>
+            </>
+          ) : null}
           {p.expanded ? (
             <>
-              <IconButton
-                name="down"
-                label="收起密码记录"
-                onPress={() => p.onExpand(false)}
-              />
-              <IconButton
-                name="bookmark"
-                label={p.saved ? "取消收藏公寓" : "收藏公寓"}
-                selected={p.saved}
-                disabled={p.bookmarkBusy}
-                onPress={p.onBookmark}
-              />
+              <View style={{ paddingTop: 18, paddingBottom: 14 }}>
+                <ActionButton label="＋ 添加密码" onPress={p.onAdd} />
+              </View>
+              {records.map((r) => (
+                <View
+                  key={r.id}
+                  onLayout={(e) => {
+                    positions.current[r.id] = e.nativeEvent.layout.y;
+                    if (anchor.current?.id === r.id) {
+                      const y = anchorOffset(anchor.current, positions.current);
+                      if (y !== null)
+                        scroll.current?.scrollTo({ y, animated: false });
+                    }
+                  }}
+                  style={styles.record}
+                >
+                  <View style={styles.recordTop}>
+                    <View style={{ flex: 1 }}>{code(r)}</View>
+                    {r.effective_useful ? (
+                      <Text style={styles.badge}>有用反馈</Text>
+                    ) : null}
+                  </View>
+                  {r.scope.weekdays?.length || r.scope.start_local ? (
+                    <Text style={styles.body}>{scopeLabel(r.scope)}</Text>
+                  ) : null}
+                  <Text style={styles.meta}>{contributionMeta(r)}</Text>
+                  {r.last_success_at ? (
+                    <Text style={styles.meta}>
+                      最近实测有用 ·{" "}
+                      {localTime(r.last_success_at, r.scope.timezone)}
+                    </Text>
+                  ) : null}
+                  <View style={styles.feedbackRow}>
+                    {(["useful", "not_useful"] as const).map((v) => (
+                      <Pressable
+                        focusable
+                        key={v}
+                        accessibilityRole="button"
+                        accessibilityLabel={v === "useful" ? "有用" : "没用"}
+                        accessibilityState={{
+                          selected: r.my_feedback === v,
+                          disabled: !!p.feedbackBusy,
+                          busy: p.feedbackBusy === r.id,
+                        }}
+                        disabled={!!p.feedbackBusy}
+                        onPress={() => void vote(r, v)}
+                        style={[
+                          styles.feedback,
+                          r.my_feedback === v && styles.feedbackSelected,
+                        ]}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            color:
+                              r.my_feedback === v
+                                ? tokens.color.brandPrimary
+                                : tokens.color.ink,
+                          }}
+                        >
+                          {r.my_feedback === v ? "✓ " : ""}
+                          {v === "useful" ? "有用" : "没用"}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ))}
+              <Pressable
+                focusable
+                accessibilityRole="button"
+                onPress={p.onOther}
+                hitSlop={2}
+                style={styles.linkRow}
+              >
+                <Text style={styles.meta}>不是这栋公寓？</Text>
+                <Icon name="chevron" size={18} color={tokens.color.textMuted} />
+              </Pressable>
             </>
           ) : null}
         </View>
-        {p.status === "loading" ? (
-          <View style={[styles.state, !p.expanded && styles.compactState]}>
-            <ActivityIndicator color={tokens.color.brandPrimary} />
-            <Text style={styles.meta}>正在读取</Text>
-          </View>
-        ) : null}
-        {p.status === "denied" ? (
-          <View style={[styles.state, !p.expanded && styles.compactState]}>
-            <Text style={styles.stateTitle}>暂未开通资料查看资格</Text>
-          </View>
-        ) : null}
-        {p.status === "error" ? (
-          <View style={[styles.state, !p.expanded && styles.compactState]}>
-            <Text accessibilityRole="alert" style={styles.body}>
-              暂时无法读取密码
-            </Text>
-            <ActionButton label="重新读取" onPress={p.onRetry} />
-          </View>
-        ) : null}
-        {p.expanded && p.error && p.status !== "error" ? (
-          <Text accessibilityRole="alert" style={styles.error}>
-            {p.error}
-          </Text>
-        ) : null}
-        {canRead && !records.length ? (
-          <View style={[styles.state, !p.expanded && styles.compactState]}>
-            <Text style={styles.stateTitle}>暂无共享密码</Text>
-            {!p.expanded ? (
-              <ActionButton label="添加密码" onPress={p.onAdd} />
-            ) : null}
-          </View>
-        ) : null}
-        {canRead && !p.expanded && records[0] ? (
-          <>
-            {code(records[0], true)}
-            <Text style={styles.meta} numberOfLines={1} ellipsizeMode="tail">
-              {contributionMeta(records[0])}
-            </Text>
-            <Pressable
-              focusable
-              accessibilityRole="button"
-              style={styles.linkRow}
-              onPress={() => p.onExpand(true)}
-            >
-              <Text style={styles.link}>查看 {records.length} 条进入信息</Text>
-              <Icon name="up" size={18} color={tokens.color.brandPrimary} />
-            </Pressable>
-          </>
-        ) : null}
-        {p.expanded ? (
-          <>
-            <View style={{ paddingTop: 18, paddingBottom: 14 }}>
-              <ActionButton label="＋ 添加密码" onPress={p.onAdd} />
-            </View>
-            {records.map((r) => (
-              <View
-                key={r.id}
-                onLayout={(e) => {
-                  positions.current[r.id] = e.nativeEvent.layout.y;
-                  if (anchor.current?.id === r.id) {
-                    const y = anchorOffset(anchor.current, positions.current);
-                    if (y !== null)
-                      scroll.current?.scrollTo({ y, animated: false });
-                  }
-                }}
-                style={styles.record}
-              >
-                <View style={styles.recordTop}>
-                  <View style={{ flex: 1 }}>{code(r)}</View>
-                  {r.effective_useful ? (
-                    <Text style={styles.badge}>有用反馈</Text>
-                  ) : null}
-                </View>
-                <Text style={styles.body}>{scopeLabel(r.scope)}</Text>
-                <Text style={styles.meta}>{contributionMeta(r)}</Text>
-                {r.last_success_at ? (
-                  <Text style={styles.meta}>
-                    最近实测有用 ·{" "}
-                    {localTime(r.last_success_at, r.scope.timezone)}
-                  </Text>
-                ) : null}
-                <View style={styles.feedbackRow}>
-                  {(["useful", "not_useful"] as const).map((v) => (
-                    <Pressable
-                      focusable
-                      key={v}
-                      accessibilityRole="button"
-                      accessibilityLabel={v === "useful" ? "有用" : "没用"}
-                      accessibilityState={{
-                        selected: r.my_feedback === v,
-                        disabled: !!p.feedbackBusy,
-                        busy: p.feedbackBusy === r.id,
-                      }}
-                      disabled={!!p.feedbackBusy}
-                      onPress={() => void vote(r, v)}
-                      style={[
-                        styles.feedback,
-                        r.my_feedback === v && styles.feedbackSelected,
-                      ]}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          color:
-                            r.my_feedback === v
-                              ? tokens.color.brandPrimary
-                              : tokens.color.ink,
-                        }}
-                      >
-                        {r.my_feedback === v ? "✓ " : ""}
-                        {v === "useful" ? "有用" : "没用"}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            ))}
-            <Pressable
-              focusable
-              accessibilityRole="button"
-              onPress={p.onOther}
-              style={styles.linkRow}
-            >
-              <Text style={styles.meta}>不是这栋公寓？</Text>
-              <Icon name="chevron" size={18} color={tokens.color.textMuted} />
-            </Pressable>
-          </>
-        ) : null}
       </ScrollView>
     </View>
   );
@@ -336,12 +395,11 @@ export function ApartmentSheet(p: SheetProps) {
 const styles = StyleSheet.create({
   panel: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: 16,
+    right: 16,
+    bottom: 8,
     maxHeight: "72%",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderRadius: 24,
     backgroundColor: tokens.color.surface,
     zIndex: 20,
     paddingBottom: 8,
@@ -351,14 +409,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -4 },
     elevation: 5,
   },
-  expanded: { height: "86%", maxHeight: "86%", zIndex: 30 },
+  expanded: {
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "86%",
+    maxHeight: "86%",
+    zIndex: 30,
+  },
   handleArea: {
     height: cardHandleHeight,
     alignItems: "center",
     justifyContent: "center",
   },
   handle: { width: 35, height: 4, borderRadius: 4, backgroundColor: "#D9DDE2" },
-  inner: { paddingHorizontal: 22, paddingBottom: 8 },
+  inner: { paddingHorizontal: 16, paddingBottom: 2 },
   heading: { flexDirection: "row", alignItems: "flex-start" },
   title: {
     fontSize: 20,
@@ -367,12 +432,12 @@ const styles = StyleSheet.create({
     color: tokens.color.ink,
   },
   body: { fontSize: 14, lineHeight: 21, color: tokens.color.textSecondary },
-  meta: { fontSize: 14, lineHeight: 22, color: tokens.color.textMuted },
+  meta: { fontSize: 12, lineHeight: 18, color: tokens.color.textMuted },
   codeBlock: { minWidth: 0, alignSelf: "stretch" },
   keypadBlock: { flexDirection: "row", alignItems: "center", gap: 12 },
   code: {
     fontSize: 40,
-    lineHeight: 52,
+    lineHeight: 44,
     fontWeight: "600",
     letterSpacing: 1.5,
     fontVariant: ["tabular-nums"],

@@ -1,10 +1,12 @@
 import { SharedContributionCard } from "../apartments/SharedContributions";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppState, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
+import type { NearbyCardCandidate } from "../apartments/distance-presentation";
+import type { DiscoveryObservation } from "../apartments/nearby-policy";
 import { ApartmentSheet } from "../apartments/ApartmentSheet";
 import HomeMap from "../components/HomeMap";
 import MapBuildingLab from "./MapBuildingLab";
@@ -23,6 +25,9 @@ const scenarios = [
   "时段限制",
   "反馈失败",
   "建筑高亮",
+  "距离粗略",
+  "距离过期",
+  "门别未知",
 ] as const;
 type Scene = (typeof scenarios)[number];
 const apartment: S["Apartment"] = {
@@ -74,6 +79,43 @@ function Lab() {
     [error, setError] = useState<string | null>(null),
     [records, setRecords] = useState<S["AccessRecord"][]>([record(1, true)]),
     [status, setStatus] = useState<"ready" | "denied" | "error">("ready");
+  const metric = useMemo(() => {
+    const t = Date.now(),
+      stamp = scene === "距离过期" ? t - 21000 : t;
+    const observation: DiscoveryObservation = {
+      approximate: scene === "距离粗略",
+      fix: {
+        timestamp: t,
+        coords: {
+          longitude: apartment.point.lng,
+          latitude: apartment.point.lat,
+          accuracy: 5,
+        },
+      },
+    };
+    const candidate: NearbyCardCandidate = {
+      key: apartment.id,
+      source: "catalog",
+      apartment,
+      address: apartment,
+      point: apartment.point,
+      distance_m: 23,
+      distance_basis: "community_boundary",
+      classification: "catalog_community",
+      requires_address_confirmation: false,
+      distance_reference: {
+        origin: apartment.point,
+        context: {
+          observation_id: null,
+          observed_at: new Date(stamp).toISOString(),
+          valid_until: new Date(stamp + 20000).toISOString(),
+          accuracy_m: 5,
+          accuracy_permission: "precise",
+        },
+      },
+    };
+    return { observation, candidate };
+  }, [scene, params.case]);
   function choose(s: Scene) {
     setScene(s);
     setExpanded(["多条记录", "时段限制", "反馈失败"].includes(s));
@@ -104,6 +146,7 @@ function Lab() {
       rows = [
         { ...record(1), method: "front_desk", value: "合成场景：到前台登记" },
       ];
+    if (s === "门别未知") rows = [{ ...record(1), scope: { label: "大门" } }];
     if (s === "时段限制")
       rows = [
         {
@@ -129,9 +172,13 @@ function Lab() {
       denied: "无资格",
       error: "读取失败",
       long: "长地址",
+      narrow: "长地址",
       schedule: "时段限制",
       failure: "反馈失败",
       building: "建筑高亮",
+      coarse: "距离粗略",
+      expired: "距离过期",
+      unknownscope: "门别未知",
     };
     if (params.case && map[params.case]) choose(map[params.case]);
   }, [params.case]);
@@ -140,7 +187,13 @@ function Lab() {
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
-      style={{ flex: 1, backgroundColor: tokens.color.surface }}
+      style={{
+        flex: 1,
+        backgroundColor: tokens.color.surface,
+        ...(params.case === "narrow"
+          ? { width: 320, alignSelf: "center" as const }
+          : {}),
+      }}
     >
       <Text
         style={{
@@ -220,6 +273,9 @@ function Lab() {
         />
         <HomeChrome mode="公寓" onMode={() => {}} />
         <ApartmentSheet
+          key={scene}
+          distanceCandidate={metric.candidate}
+          observation={metric.observation}
           apartment={
             scene === "长地址"
               ? {

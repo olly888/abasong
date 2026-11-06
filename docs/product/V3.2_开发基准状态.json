@@ -1,18 +1,18 @@
 {
-  "version": "V3.2-R4-source-audit",
+  "version": "V3.2-R4-distance-cards",
   "date": "2026-11-05",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
-  "app_design": "V3.1",
+  "app_design": "V3.1_base_with_R4_apartment_cards",
   "prototype": "3.2-r3-delivery",
-  "scope": "source_audit_and_implementation_preparation",
-  "app_changed": false,
+  "scope": "R4_distance_contract_and_apartment_cards",
+  "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
     "requirements": "scoped",
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "aligned_target_not_released_contracts",
-    "implementation": "R4_1_ready_not_started",
+    "implementation": "R4_01_local_verified_R4_02_representative_native_final_checks_pending",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -215,10 +215,24 @@
     "eligible_batches": [
       "R4-1"
     ],
-    "next_task": "R4-01",
+    "next_task": "R4-03",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
-    "business_changes_started": false
+    "business_changes_started": true
+  },
+  "r4_distance_cards": {
+    "report": "../technical/R4_01_距离契约与公寓卡片实施验收.md",
+    "evidence": "../technical/R4_01_执行证据.json",
+    "r4_01": "local_verified_ci_pending",
+    "r4_02": "implemented_representative_dual_simulator_final_error_screens_pending",
+    "native_compilation_run": false,
+    "ios_physical_acceptance": false,
+    "android_physical_acceptance": false,
+    "owner_android_three_interactions_passed": true,
+    "blocked_observation": "Mac locked; unlock requested for last visual states",
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false
   }
 }

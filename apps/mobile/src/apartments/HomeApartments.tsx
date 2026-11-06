@@ -12,9 +12,13 @@ import {
   nearbyFromSnapshots,
   isFreshDiscoveryObservation,
   observationPoint,
+  discoveryInput,
+  matchesDistanceContext,
   type DiscoveryObservation,
   type NearbySnapshot,
 } from "./nearby-policy";
+import type { NearbyCardCandidate } from "./distance-presentation";
+import { ApartmentMeta } from "./ApartmentMeta";
 import { setNearbyContribution } from "./nearby-contribution";
 import { AddressLine } from "./AddressLine";
 import { locality } from "./address-presentation";
@@ -50,7 +54,6 @@ import { tokens } from "@abasong/ui";
 import HomeMap from "../components/HomeMap";
 import type { HomeMode } from "../components/HomeChrome";
 import { watchDevicePosition } from "./location-stream";
-import type { ForegroundFix } from "./foreground-location";
 import { serialLatest } from "./serial-latest";
 import { HomeArrivalPanel } from "./HomeArrivalPanel";
 import { MapTools } from "../components/HomeChrome";
@@ -196,6 +199,7 @@ export function HomeApartmentContent({
     canRead: boolean;
     userId?: string;
     onObservation?: () => void;
+    onCardMetrics?: (h: number) => void;
   };
 }) {
   const collapsedHeight = compactCardHeight(useWindowDimensions().fontScale);
@@ -235,7 +239,8 @@ export function HomeApartmentContent({
     [cameraRevision, setCameraRevision] = useState(0),
     [blocked, setBlocked] = useState(false),
     [locationNotice, setLocationNotice] = useState<string | null>(null),
-    [nearbyItems, setNearbyItems] = useState<S["NearbyCandidate"][]>([]),
+    [nearbyItems, setNearbyItems] = useState<NearbyCardCandidate[]>([]),
+    [compactHeight, setCompactHeight] = useState(192),
     [providerSelected, setProviderSelected] = useState<
       S["NearbyCandidate"] | null
     >(null),
@@ -323,15 +328,17 @@ export function HomeApartmentContent({
     else invalidateAutomaticCard();
   }
   const onLookup = useRef<
-    (fix: ForegroundFix, lookup: S["NearbyDiscovery"]) => void
+    (origin: DiscoveryObservation, lookup: S["NearbyDiscovery"]) => void
   >(() => {});
-  onLookup.current = (fix, lookup) => {
+  onLookup.current = (origin, lookup) => {
+    const { fix } = origin;
     if (modeRef.current !== "公寓") return;
     if (Date.parse(lookup.expires_at) <= Date.now()) return;
     catalogRef.current = {
       items: lookup.items,
       point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
       until: Date.parse(lookup.expires_at),
+      context: lookup.distance_context,
     };
     const cache = providerRef.current;
     if (
@@ -383,12 +390,7 @@ export function HomeApartmentContent({
     void request<S["NearbyDiscovery"]>("/v1/apartments/discover/mapbox", {
       method: "POST",
       signal: stream.current?.signal,
-      body: {
-        point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
-        observed_at: new Date(fix.timestamp).toISOString(),
-        accuracy_m: fix.coords.accuracy,
-        accuracy_permission: "precise",
-      },
+      body: discoveryInput(origin),
     })
       .then((extra) => {
         if (
@@ -396,6 +398,7 @@ export function HomeApartmentContent({
           manualLocked.current ||
           epoch !== providerEpoch.current ||
           Date.parse(extra.expires_at) <= Date.now() ||
+          !matchesDistanceContext(extra, origin) ||
           !latestObservation.current ||
           !isFreshDiscoveryObservation(latestObservation.current) ||
           distanceM(observationPoint(latestObservation.current), {
@@ -412,6 +415,8 @@ export function HomeApartmentContent({
             items: extra.items,
             until: Date.parse(extra.expires_at),
             point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
+            context: extra.distance_context,
+            complete: !!extra.distance_context,
           };
           updateNearby(
             nearbyFromSnapshots(
@@ -490,20 +495,12 @@ export function HomeApartmentContent({
     setLocating(true);
     setLocationNotice(null);
     setNotice("正在定位");
-    const queue = serialLatest<
-      { fix: ForegroundFix; approximate: boolean },
-      S["NearbyDiscovery"]
-    >(
-      ({ fix, approximate }) =>
+    const queue = serialLatest<DiscoveryObservation, S["NearbyDiscovery"]>(
+      (origin) =>
         request<S["NearbyDiscovery"]>("/v1/apartments/discover", {
           method: "POST",
           signal: controller.signal,
-          body: {
-            point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
-            observed_at: new Date(fix.timestamp).toISOString(),
-            accuracy_m: fix.coords.accuracy,
-            accuracy_permission: approximate ? "approximate" : "precise",
-          },
+          body: discoveryInput(origin),
         }),
       (origin, lookup) => {
         if (!valid() || manualLocked.current || !latestObservation.current)
@@ -513,7 +510,7 @@ export function HomeApartmentContent({
           origin,
           latestObservation.current,
         );
-        if (accepted) onLookup.current(origin.fix, accepted);
+        if (accepted) onLookup.current(origin, accepted);
       },
       () => {
         if (valid()) onFailure.current();
@@ -615,7 +612,7 @@ export function HomeApartmentContent({
           staleReported = false;
           terminalError = false;
           lastFixAt.current = fix.timestamp;
-          latestObservation.current = { fix, approximate };
+          latestObservation.current = { fix, approximate, id: randomUUID() };
           if (__DEV__) testData?.onObservation?.();
           const p = { lng: longitude, lat: latitude };
           setPoint(p);
@@ -662,7 +659,7 @@ export function HomeApartmentContent({
               );
             if (!catalogRef.current && !providerRef.current)
               setNotice("正在查找公寓");
-            queue.offer({ fix, approximate });
+            queue.offer(latestObservation.current);
           }
         },
         fail,
@@ -1096,6 +1093,13 @@ export function HomeApartmentContent({
           const card = (height: (h: number) => void) =>
             selected ? (
               <ApartmentSheet
+                distanceCandidate={selectedNearby}
+                observation={latestObservation.current}
+                collapsedHeight={compactHeight}
+                onCompactHeight={(h) => {
+                  if (__DEV__) testData?.onCardMetrics?.(h);
+                  setCompactHeight((v) => Math.max(v, h));
+                }}
                 apartment={selected}
                 records={records}
                 status={
@@ -1142,6 +1146,11 @@ export function HomeApartmentContent({
                 ) : (
                   <Text style={styles.title}>公寓 · 地址待核对</Text>
                 )}
+                <ApartmentMeta
+                  city={providerSelected?.address?.city ?? ""}
+                  candidate={selectedNearby}
+                  observation={latestObservation.current}
+                />
                 <Text style={styles.muted}>请核对地址后添加密码</Text>
                 <ActionButton
                   label={providerSelected?.address ? "添加密码" : "核对地址"}
@@ -1164,6 +1173,7 @@ export function HomeApartmentContent({
             ) ? (
             <NearbyCarousel
               items={nearbyItems}
+              minimumHeight={compactHeight}
               selectedKey={key}
               onSelect={(c) => void chooseNearby(c)}
               onSwipeStart={() => {

@@ -1107,7 +1107,7 @@ paths:
   /v1/apartments/discover:
     post:
       operationId: discoverNearbyApartments
-      summary: 附近200米目录公寓；边界距离优先；不代表到达，不返回密码
+      summary: 附近200米目录公寓；同一定位快照的最近几何距离；不代表到达、不返回密码
       tags:
       - apartments
       responses:
@@ -1180,12 +1180,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ResolveInput'
+              $ref: '#/components/schemas/NearbyInput'
       x-sensitive-response: true
   /v1/apartments/discover/mapbox:
     post:
       operationId: discoverMapboxApartments
-      summary: Mapbox公寓候选；唯一地址及空间匹配可关联已有公寓，未关联需核对；无临时结果落库
+      summary: 同原点目录及Mapbox公寓候选；唯一地址及空间匹配可关联，未关联需核对；无临时结果落库
       tags:
       - apartments
       responses:
@@ -1258,7 +1258,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ResolveInput'
+              $ref: '#/components/schemas/NearbyInput'
       x-sensitive-response: true
   /v1/apartments/address-contributions:
     post:
@@ -9444,6 +9444,62 @@ components:
       - attribution
       - match_status
       - apartments
+    NearbyInput:
+      type: object
+      additionalProperties: false
+      properties:
+        point:
+          $ref: '#/components/schemas/Point'
+        observed_at:
+          type: string
+          format: date-time
+        accuracy_m:
+          type: number
+          minimum: 0
+          maximum: 100000
+        accuracy_permission:
+          type: string
+          enum:
+          - precise
+          - approximate
+        observation_id:
+          type: string
+          format: uuid
+      required:
+      - point
+      - observed_at
+      - accuracy_m
+      - accuracy_permission
+    DistanceContext:
+      type: object
+      additionalProperties: false
+      properties:
+        observation_id:
+          type: string
+          format: uuid
+          nullable: true
+        observed_at:
+          type: string
+          format: date-time
+        accuracy_m:
+          type: number
+          minimum: 0
+          maximum: 100000
+        accuracy_permission:
+          type: string
+          enum:
+          - precise
+          - approximate
+        valid_until:
+          type: string
+          format: date-time
+      required:
+      - observation_id
+      - observed_at
+      - accuracy_m
+      - accuracy_permission
+      - valid_until
+      description: 当前请求的定位快照，不重复返回坐标、不持久化；valid_until最多为observed_at后20秒。仅用于距离与请求关联，不表示到达、入口或读取资格。
     NearbyCandidate:
       type: object
       additionalProperties: false
@@ -9486,6 +9542,14 @@ components:
         requires_address_confirmation:
           type: boolean
           description: 未关联或存在歧义时需核对地址；不是贡献人工审核
+        distance_basis:
+          type: string
+          enum:
+          - address_point
+          - community_boundary
+          - building_footprint
+          - building_point_upper_bound
+          description: 与distance_m同一计算来源。最后一项为补充Tilequery返回点的保守上界；均非入口/路线距离。旧响应缺字段时不显示距离数字。
         provider_feature_id:
           type: string
           maxLength: 200
@@ -9530,6 +9594,8 @@ components:
           type: string
           enum:
           - temporary
+        distance_context:
+          $ref: '#/components/schemas/DistanceContext'
       required:
       - items
       - radius_m
@@ -9538,6 +9604,7 @@ components:
       - provider_status
       - attribution
       - use_mode
+      description: 本次定位快照的一组候选；Mapbox成功响应包含同原点目录及地图候选，按同源距离排序去重。新增距离字段为加法兼容；新服务总返回，旧服务缺失时客户端隐藏距离。
     ConfirmedAddressAccessScope:
       type: object
       additionalProperties: false

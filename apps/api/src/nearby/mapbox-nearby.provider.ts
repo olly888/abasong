@@ -102,7 +102,12 @@ export class MapboxNearbyProvider {
     }
     const closest = new Map<
       string,
-      { point: S["Point"]; distance_m: number; feature_id?: string }
+      {
+        point: S["Point"];
+        distance_m: number;
+        distance_basis: "building_footprint" | "building_point_upper_bound";
+        feature_id?: string;
+      }
     >();
     for (const batch of batches)
       for (const f of batch.features) {
@@ -125,6 +130,9 @@ export class MapboxNearbyProvider {
           closest.set(key, {
             point,
             distance_m: distance,
+            distance_basis: batch.primary
+              ? "building_footprint"
+              : "building_point_upper_bound",
             ...(id ? { feature_id: id } : {}),
           });
       }

@@ -312,6 +312,15 @@ export async function verifyNearbyCoverage(
   await check("VALID-GEOMETRY-FAR-CENTER", async () => {
     assert(await has(boundaryId));
     assert(await has(footprintId));
+    const found = await service.discoverCatalog(actor, origin);
+    assert.equal(
+      found.find((c) => c.apartment?.id === boundaryId)?.distance_basis,
+      "community_boundary",
+    );
+    assert.equal(
+      found.find((c) => c.apartment?.id === footprintId)?.distance_basis,
+      "building_footprint",
+    );
   });
   const childId = randomUUID();
   await db.query(

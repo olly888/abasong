@@ -59,7 +59,7 @@ function Content() {
     [target, setTarget] = useState<S["Apartment"] | null>(null),
     [address, setAddress] = useState(""),
     [value, setValue] = useState(""),
-    [scope, setScope] = useState("大门"),
+    [scope, setScope] = useState(""),
     [confirmed, setConfirmed] = useState(false),
     [requestedTarget, setRequestedTarget] = useState(params.apartment_id),
     [targetLoading, setTargetLoading] = useState(!!params.apartment_id),
@@ -148,7 +148,7 @@ function Content() {
       locked ||
       (requestedTarget && !target) ||
       !value.trim() ||
-      !scope.trim()
+      (isPrivate && !scope.trim())
     )
       return;
     if (
@@ -213,7 +213,7 @@ function Content() {
                 address_confirmed: true,
                 method: "keypad",
                 value,
-                scope: { label: scope },
+                ...(scope.trim() ? { scope: { label: scope.trim() } } : {}),
                 source_attested: true,
               },
             },
@@ -228,7 +228,7 @@ function Content() {
               body: {
                 method: "keypad",
                 value,
-                scope: { label: scope },
+                ...(scope.trim() ? { scope: { label: scope.trim() } } : {}),
                 source_attested: true,
               },
             },
@@ -267,7 +267,7 @@ function Content() {
             busy={busy}
             disabled={
               !value.trim() ||
-              !scope.trim() ||
+              (isPrivate && !scope.trim()) ||
               targetLoading ||
               !!(requestedTarget && !target) ||
               (!target && (isPrivate ? !address.trim() : !validNew)) ||
@@ -432,7 +432,7 @@ function Content() {
         autoCorrect={false}
       />
       <Field
-        label="门别"
+        label={isPrivate ? "门别" : "门别（选填）"}
         value={scope}
         onChangeText={(v) => {
           setScope(v);

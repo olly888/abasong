@@ -19,14 +19,20 @@ export function AddressLine({
       style={{
         fontSize: compact ? 17 : 20,
         lineHeight: compact ? 29 : 36,
-        fontWeight: "500",
-        color: tokens.color.ink,
+        fontWeight: "400",
+        color: tokens.color.inkSoft,
         minWidth: 0,
         flexShrink: 1,
       }}
     >
       {parts.number ? (
-        <Text style={{ fontSize: compact ? 21 : 28, fontWeight: "700" }}>
+        <Text
+          style={{
+            fontSize: compact ? 21 : 28,
+            fontWeight: "700",
+            color: tokens.color.ink,
+          }}
+        >
           {parts.number}{" "}
         </Text>
       ) : null}

@@ -1,11 +1,12 @@
 import { addressIdentity } from "@abasong/contracts";
 import type { components } from "@abasong/contracts";
+import type { NearbyCardCandidate } from "./distance-presentation";
 type S = components["schemas"];
 function nearbyOrder(a: S["NearbyCandidate"], b: S["NearbyCandidate"]) {
-  // A sub-metre difference at a roof/boundary edge is not a useful reason to
-  // replace a known address with an unconfirmed reverse-geocode suggestion.
-  const band = Math.floor(a.distance_m) - Math.floor(b.distance_m);
-  if (band) return band;
+  // Initial recommendations follow the same numeric distance as the card.
+  // Stability after deliberate selection is handled by the reading lock.
+  const difference = a.distance_m - b.distance_m;
+  if (difference) return difference;
   const resolved = (c: S["NearbyCandidate"]) =>
     Number(!!c.apartment && !c.requires_address_confirmation);
   const identity = (c: S["NearbyCandidate"]) =>
@@ -54,7 +55,32 @@ export function mergeNearby(
 export type DiscoveryObservation = {
   fix: import("./foreground-location").ForegroundFix;
   approximate: boolean;
+  id?: string;
 };
+export function discoveryInput(o: DiscoveryObservation): S["NearbyInput"] {
+  return {
+    point: observationPoint(o),
+    observed_at: new Date(o.fix.timestamp).toISOString(),
+    accuracy_m: o.fix.coords.accuracy ?? 100000,
+    accuracy_permission: o.approximate ? "approximate" : "precise",
+    ...(o.id ? { observation_id: o.id } : {}),
+  };
+}
+export function matchesDistanceContext(
+  lookup: S["NearbyDiscovery"],
+  o: DiscoveryObservation,
+) {
+  const c = lookup.distance_context;
+  // Legacy discovery is still usable, but has no displayable distance context.
+  return (
+    !c ||
+    (c.observed_at === new Date(o.fix.timestamp).toISOString() &&
+      c.accuracy_m === o.fix.coords.accuracy &&
+      c.accuracy_permission === (o.approximate ? "approximate" : "precise") &&
+      c.observation_id === (o.id ?? null) &&
+      Date.parse(c.valid_until) <= o.fix.timestamp + 20000)
+  );
+}
 export function isFreshDiscoveryObservation(
   a: DiscoveryObservation,
   now = Date.now(),
@@ -113,6 +139,7 @@ export function nearbyAtCurrentObservation(
 ) {
   if (
     !sameDiscoveryObservation(origin, current) ||
+    !matchesDistanceContext(lookup, origin) ||
     !(Date.parse(lookup.expires_at) > Date.now())
   )
     return null;
@@ -131,6 +158,8 @@ export type NearbySnapshot = {
   items: S["NearbyCandidate"][];
   point: S["Point"];
   until: number;
+  context?: S["DistanceContext"];
+  complete?: boolean;
 };
 
 // Revalidate visible automatic recommendations on every fresh fix, not only
@@ -140,13 +169,36 @@ export function nearbyFromSnapshots(
   catalog: NearbySnapshot | null,
   provider: NearbySnapshot | null,
   observation: DiscoveryObservation,
-) {
+): NearbyCardCandidate[] {
   if (!isFreshDiscoveryObservation(observation)) return [];
   const current = observationPoint(observation),
     now = Date.now();
-  const visible = (snapshot: NearbySnapshot | null) =>
+  const visible = (snapshot: NearbySnapshot | null): NearbyCardCandidate[] =>
     snapshot && snapshot.until > now
-      ? withinNearbyRadius(snapshot.items, snapshot.point, current)
+      ? withinNearbyRadius(snapshot.items, snapshot.point, current).map(
+          (c) => ({
+            ...c,
+            ...(snapshot.context
+              ? {
+                  distance_reference: {
+                    context: snapshot.context,
+                    origin: snapshot.point,
+                  },
+                }
+              : {}),
+          }),
+        )
       : [];
+  // New provider responses are atomic catalog+map bundles. Keep their common
+  // ranking origin during small GPS drift; never mix their distances with a
+  // newer catalog origin. A different fix cannot extend the label's lifetime.
+  if (
+    provider?.complete &&
+    provider.items.length > 0 &&
+    provider.until > now &&
+    distanceM(provider.point, current) <= 15
+  )
+    return visible(provider);
+  if (provider?.complete) return visible(catalog);
   return mergeNearby(visible(catalog), visible(provider));
 }

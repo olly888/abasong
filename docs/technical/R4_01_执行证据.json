@@ -1,0 +1,111 @@
+{
+  "date": "2026-11-05",
+  "timezone": "America/Los_Angeles",
+  "base": "1168328a3769777cd7f9e7870f3abb4b2d55ba4d",
+  "branch": "codex/r4-01-distance-apartment-cards",
+  "code_diff_sha256": "0ec6d0a42e1dc1e4de7fb42190a149d257b60a00c0d9a25ba84d7dafd6ebc021",
+  "scope": "R4-01 distance contract and R4-02 apartment cards; not full R4-1 or App release",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS_after_final_shared_component_and_boundary_fixes",
+      "test_files": 70,
+      "tests": 373,
+      "includes": [
+        "lint",
+        "workspace_types",
+        "unit_and_synthetic_HTTP",
+        "shared_packages_API_worker_build"
+      ],
+      "native_compilation": false,
+      "local_log": "/private/tmp/abasong-r4-final-check.log"
+    },
+    "database": {
+      "command": "./scripts/dev verify:library-api",
+      "status": "PASS",
+      "http_database_checks": 295,
+      "nearby_coverage_checks": 97,
+      "environment": "guarded_disposable_local_PostGIS",
+      "kms_gateway": "synthetic_no_AWS_calls",
+      "real_account_grants": false
+    },
+    "openapi": {
+      "status": "PASS",
+      "checks": 9,
+      "paths": 88,
+      "schemas": 139,
+      "validation": "full OAS spec and R4 schema/strict-input/snapshot structure using existing isolated Python dependencies",
+      "legacy_whole_validator_pass_claimed": false
+    },
+    "ci": {
+      "status": "pending_commit_and_PR",
+      "branch_filter": "pull_request/main_or_codex/**",
+      "permissions_changed": false
+    }
+  },
+  "native": {
+    "ios": {
+      "environment": "iPhone18Pro iOS27 simulator, existing Expo development build",
+      "multi_select_102": "PASS_native_accessibility_action",
+      "expand_collapse_same_102": "PASS_no_extra_read",
+      "empty_104": "PASS_address_and_add",
+      "coarse": "PASS",
+      "expired": "PASS_saved_image_review",
+      "narrow_320": "PASS_native_content_container_full_32_char_code",
+      "last_error_denied_and_final_component_screens": "PENDING_Mac_locked"
+    },
+    "android": {
+      "environment": "existing API37 emulator, Expo development build",
+      "normal_card_height_dp": 192,
+      "owner_confirmed": [
+        "102_TEST_02",
+        "expand_collapse_remains_102",
+        "104_empty_add"
+      ],
+      "coarse": "PASS_native_image",
+      "expired": "PASS_saved_image_review",
+      "narrow_320": "PASS_native_content_container_full_code",
+      "last_error_denied_and_final_component_screens": "PENDING_Mac_locked"
+    },
+    "new_native_compilation": false,
+    "physical_iPhone_test": false,
+    "physical_Android_test": false,
+    "system_200_percent_and_full_screen_reader_test": false,
+    "live_driver_GPS_used": false,
+    "synthetic_location_sequences": "bounded_public_sample_injection_only"
+  },
+  "side_effects": {
+    "migrations": false,
+    "cloud": false,
+    "qualifications": false,
+    "SMS": false,
+    "business_messages_or_contributions": false,
+    "new_dependencies": false,
+    "API_listener_change": false
+  },
+  "screenshots": [
+    "android-coarse.png",
+    "android-expired.png",
+    "android-narrow.png",
+    "android-user-confirmed.png",
+    "ios-102-expanded.png",
+    "ios-104-empty.png",
+    "ios-coarse.png",
+    "ios-expired.png",
+    "ios-narrow.png"
+  ],
+  "next": [
+    "unlock_dependent_visual_closure",
+    "exact_commit_CI",
+    "R4-03_direct_address_contribution",
+    "R4-04_collaboration_carousel"
+  ],
+  "code_hash_scope": [
+    "apps",
+    "packages/contracts/src/generated.ts",
+    "scripts/generate_v12_openapi.py",
+    "scripts/d1/verify-nearby.ts",
+    "scripts/d1/verify-nearby-coverage.ts",
+    ".github/workflows/ci.yml"
+  ]
+}

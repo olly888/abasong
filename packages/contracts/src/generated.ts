@@ -236,7 +236,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 附近200米目录公寓；边界距离优先；不代表到达，不返回密码 */
+        /** 附近200米目录公寓；同一定位快照的最近几何距离；不代表到达、不返回密码 */
         post: operations["discoverNearbyApartments"];
         delete?: never;
         options?: never;
@@ -253,7 +253,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mapbox公寓候选；唯一地址及空间匹配可关联已有公寓，未关联需核对；无临时结果落库 */
+        /** 同原点目录及Mapbox公寓候选；唯一地址及空间匹配可关联，未关联需核对；无临时结果落库 */
         post: operations["discoverMapboxApartments"];
         delete?: never;
         options?: never;
@@ -1704,6 +1704,28 @@ export interface components {
             apartments: components["schemas"]["Apartment"][];
             address?: components["schemas"]["SearchAddress"] | (never | null);
         };
+        NearbyInput: {
+            point: components["schemas"]["Point"];
+            /** Format: date-time */
+            observed_at: string;
+            accuracy_m: number;
+            /** @enum {string} */
+            accuracy_permission: "precise" | "approximate";
+            /** Format: uuid */
+            observation_id?: string;
+        };
+        /** @description 当前请求的定位快照，不重复返回坐标、不持久化；valid_until最多为observed_at后20秒。仅用于距离与请求关联，不表示到达、入口或读取资格。 */
+        DistanceContext: {
+            /** Format: uuid */
+            observation_id: string | null;
+            /** Format: date-time */
+            observed_at: string;
+            accuracy_m: number;
+            /** @enum {string} */
+            accuracy_permission: "precise" | "approximate";
+            /** Format: date-time */
+            valid_until: string;
+        };
         NearbyCandidate: {
             key: string;
             /** @enum {string} */
@@ -1717,9 +1739,15 @@ export interface components {
             classification: "catalog_community" | "apartments";
             /** @description 未关联或存在歧义时需核对地址；不是贡献人工审核 */
             requires_address_confirmation: boolean;
+            /**
+             * @description 与distance_m同一计算来源。最后一项为补充Tilequery返回点的保守上界；均非入口/路线距离。旧响应缺字段时不显示距离数字。
+             * @enum {string}
+             */
+            distance_basis?: "address_point" | "community_boundary" | "building_footprint" | "building_point_upper_bound";
             /** @description 会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可 */
             provider_feature_id?: string;
         };
+        /** @description 本次定位快照的一组候选；Mapbox成功响应包含同原点目录及地图候选，按同源距离排序去重。新增距离字段为加法兼容；新服务总返回，旧服务缺失时客户端隐藏距离。 */
         NearbyDiscovery: {
             items: components["schemas"]["NearbyCandidate"][];
             radius_m: number;
@@ -1731,6 +1759,7 @@ export interface components {
             attribution: string;
             /** @enum {string} */
             use_mode: "temporary";
+            distance_context?: components["schemas"]["DistanceContext"];
         };
         ConfirmedAddressAccessScope: {
             label: string;
@@ -4155,7 +4184,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResolveInput"];
+                "application/json": components["schemas"]["NearbyInput"];
             };
         };
         responses: {
@@ -4255,7 +4284,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResolveInput"];
+                "application/json": components["schemas"]["NearbyInput"];
             };
         };
         responses: {

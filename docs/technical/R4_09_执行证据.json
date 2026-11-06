@@ -93,9 +93,19 @@
     "release_ready": false
   },
   "ci": {
-    "status": "pending_current_head",
-    "inherited_previous_PR_success": false
+    "status": "PASS",
+    "inherited_previous_PR_success": false,
+    "run_id": 42295105317,
+    "url": "https://github.com/olly888/abasong/actions/runs/42295105317",
+    "head_sha": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+    "latest_document_closure_source": "https://github.com/olly888/abasong/pull/97/checks",
+    "scope": "implementation_commit_exact_head",
+    "note": "Documentation closure changes no business code; latest closure-head CI must be checked separately via PR97 Checks."
   },
   "current_batch_complete": false,
-  "next_task": "finish_R4-09_native_then_R4-10"
+  "next_task": "finish_R4-09_native_then_R4-10",
+  "pull_request": "https://github.com/olly888/abasong/pull/97",
+  "validated_code_commit": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+  "code_diff_sha256": "54b267aa3487c53babc23cd8716d181716e194b1a03bed8cbbc83d86eed95a26",
+  "code_diff_command": "git diff --binary 587b6c00b491049ff7a5ffff4fad79ffa8b72a1a VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml"
 }

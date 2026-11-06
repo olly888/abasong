@@ -433,6 +433,14 @@
     "cloud_changed": false,
     "my_compact_switch": "B5_pending",
     "physical_acceptance": false,
-    "next_task": "finish_R4-09_native_then_R4-10"
+    "next_task": "finish_R4-09_native_then_R4-10",
+    "pull_request": "https://github.com/olly888/abasong/pull/97",
+    "ci_source": "https://github.com/olly888/abasong/pull/97/checks",
+    "validated_code_commit": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+    "implementation_ci": {
+      "run_id": 42295105317,
+      "head_sha": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+      "conclusion": "success"
+    }
   }
 }

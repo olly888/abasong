@@ -3,9 +3,9 @@
   "timezone": "America/Los_Angeles",
   "branch": "codex/r4-05-home-integration-acceptance",
   "base": "7ac2d456739ea3fe04017ead1375bbf2d622d99d",
-  "scope": "R4-05 actual home/form/discovery combination; Android gesture/104 callback/long-list owner feedback pending; not phase exit or release",
+  "scope": "R4-05 scoped local dual-native home/form/discovery exit PASS; not full product, real account, physical field or release acceptance",
   "code_diff_sha256": "d82bb168e80e3e6f557a08001c13eaeeed5c185d0cb20ef0b536c1f774c95c9c",
-  "code_diff_command": "git diff --cached --binary 7ac2d456739ea3fe04017ead1375bbf2d622d99d -- apps/mobile",
+  "code_diff_command": "git diff --binary 7ac2d456739ea3fe04017ead1375bbf2d622d99d 3c3b57c7cd8fbfcc16e7bbd604400f20616ed176 -- apps/mobile",
   "checks": {
     "engineering": {
       "command": "./scripts/dev check",
@@ -36,13 +36,17 @@
       "real_messages_SMS": false
     },
     "ci": {
-      "status": "required_exact_HEAD_tracked_at_current_branch_draft_PR",
+      "status": "PASS_implementation_commit_exact_SHA",
       "head_branch": "codex/r4-05-home-integration-acceptance",
-      "previous_PR92_green_is_current_proof": false
+      "previous_PR92_green_is_current_proof": false,
+      "validated_code_commit": "3c3b57c7cd8fbfcc16e7bbd604400f20616ed176",
+      "run_id": 42172364103,
+      "source": "https://github.com/olly888/abasong/actions/runs/42172364103",
+      "closure_commit_checks": "https://github.com/olly888/abasong/pull/93/checks"
     },
     "secret_scan": {
       "status": "PASS_staged_Gitleaks",
-      "full_history": "required_in_remote_CI"
+      "full_history": "PASS_in_CI42172364103"
     }
   },
   "native": {
@@ -60,16 +64,39 @@
     },
     "android": {
       "environment": "API37 emulator installed development build",
-      "manual_102_collaboration_locate_mode_return": "PASS_native_map_tap102_locate_in_driver_mode_return102_TEST02",
+      "manual_102_collaboration_locate_mode_return": "PASS_owner_confirmed_swipe102_driver_locate_return102_TEST02",
       "read_error_retry": "PASS_read_count1_to2_still_failure_address_retained_no_secret",
       "denied": "PASS_zero_access_reads_no_secret",
-      "carousel_remount": "initial_native_clamp_bug_observed_post_layout_alignment_fixed_full_manual_remount_matrix_pending",
+      "carousel_remount": "PASS_owner_confirmed_08_detail_list_to_map_same_card_after_post_layout_alignment_fix",
       "owner_requested": [
         "swipe102_mode_locate_return",
         "empty104_actual_form_share_return",
         "long_list08_detail_and_map_return"
       ],
-      "owner_feedback": "pending_not_passed"
+      "owner_feedback": "PASS_both_requested_groups",
+      "empty_104_form_share_return": "PASS_owner_confirmed_prefill104_0012_symbol_scope_confirmation_and_return104",
+      "long_list": "PASS_owner_confirmed_scroll08_detail_return_same_list_position_selected08_map08",
+      "owner_feedback_source": {
+        "question_call": "call_43391bac3cfc4638b8289d9c501325de",
+        "answers": [
+          {
+            "item": 0,
+            "answer": "验证通过",
+            "scope": "swipe102_mode_locate_return_and_empty104_shared_callback"
+          },
+          {
+            "item": 1,
+            "answer": "验证成功",
+            "scope": "long_list08_detail_scroll_and_map_return"
+          }
+        ],
+        "evidence_type": "owner_manual_simulator_TEST_not_independent_participant_or_real_business_write"
+      },
+      "unrun_supplementary_matrix": [
+        "automatic_changed_position",
+        "late_initial_30second",
+        "combined_save_failure_retry_R4_03_prior_only"
+      ]
     },
     "limitations": {
       "new_native_compilation": false,
@@ -105,7 +132,10 @@
     "ios-save-failure.png": "815635c41a7489be4769e459231572f1adb4e0bf6ec2e9be37c6233105fef304",
     "ios-share-return.png": "679c3de542c8f409fafae32e140f6311dfccf5d1309433721761f6b39517ac4c"
   },
-  "whole_R4_1_exit": false,
-  "current_batch_complete": false,
-  "next_dependent_task": "R4-06_after_android_exit_and_exact_HEAD_CI"
+  "whole_R4_1_exit": true,
+  "current_batch_complete": true,
+  "next_dependent_task": "R4-06",
+  "exit_scope": "local_synthetic_dual_native_core_combination_only",
+  "pull_request": "https://github.com/olly888/abasong/pull/93",
+  "closure_changes": "documentation_and_acceptance_status_only_no_code_or_data_change"
 }

@@ -58,7 +58,7 @@ function delay(signal?: AbortSignal, milliseconds = 9000) {
     else signal?.addEventListener("abort", cancel, { once: true });
   });
 }
-function adapter(scene: Scene, onAccessRead: () => void) {
+export function arrivalAdapter(scene: Scene, onAccessRead: () => void) {
   let reads = 0;
   let discoveries = 0;
   return {
@@ -327,7 +327,7 @@ export default function ArrivalLab() {
     if (scenes.includes(params.scene as Scene)) setScene(params.scene as Scene);
   }, [params.scene, params.run]);
   const sceneAdapter = useMemo(
-    () => adapter(scene, () => setAccessReads((n) => n + 1)),
+    () => arrivalAdapter(scene, () => setAccessReads((n) => n + 1)),
     [scene, params.run, retest],
   );
 

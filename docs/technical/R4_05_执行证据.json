@@ -1,0 +1,111 @@
+{
+  "date": "2026-11-05",
+  "timezone": "America/Los_Angeles",
+  "branch": "codex/r4-05-home-integration-acceptance",
+  "base": "7ac2d456739ea3fe04017ead1375bbf2d622d99d",
+  "scope": "R4-05 actual home/form/discovery combination; Android gesture/104 callback/long-list owner feedback pending; not phase exit or release",
+  "code_diff_sha256": "d82bb168e80e3e6f557a08001c13eaeeed5c185d0cb20ef0b536c1f774c95c9c",
+  "code_diff_command": "git diff --cached --binary 7ac2d456739ea3fe04017ead1375bbf2d622d99d -- apps/mobile",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS_after_final_carousel_layout_alignment_fix",
+      "files": 74,
+      "tests": 390,
+      "local_log": "/private/tmp/abasong-r4-05-check.log",
+      "native_compilation": false
+    },
+    "focused": {
+      "tests": 3,
+      "status": "PASS",
+      "scope": "mode_specific_recenter_and_manual_vs_automatic_resume"
+    },
+    "library_database": {
+      "command": "./scripts/dev verify:library-api",
+      "checks": 295,
+      "nearby_checks": 97,
+      "status": "PASS",
+      "environment": "disposable_guarded_local_PostGIS",
+      "KMS": "synthetic_gateway_real_PG_no_AWS_calls"
+    },
+    "requests_database": {
+      "command": "./scripts/dev verify:requests-api",
+      "checks": 261,
+      "status": "PASS",
+      "environment": "disposable_guarded_local_PostGIS",
+      "real_messages_SMS": false
+    },
+    "ci": {
+      "status": "required_exact_HEAD_tracked_at_current_branch_draft_PR",
+      "head_branch": "codex/r4-05-home-integration-acceptance",
+      "previous_PR92_green_is_current_proof": false
+    },
+    "secret_scan": {
+      "status": "PASS_staged_Gitleaks",
+      "full_history": "required_in_remote_CI"
+    }
+  },
+  "native": {
+    "ios": {
+      "environment": "iPhone18Pro iOS27 simulator installed development build",
+      "manual_102_collaboration_locate_mode_return": "PASS_102_TEST02_reloaded",
+      "empty_104_form_share_return": "PASS_actual_ContributionForm_memory_only_0012_symbols_preserved",
+      "save_failure_retry": "PASS_input_source_and_address_retained_return104",
+      "long_list": "PASS_08_detail_return_same_scroll_07_08_09_and_map8of12",
+      "automatic_changed_position": "PASS_new_synthetic_street_position_low_contribution_only_no_old_code",
+      "read_error_retry": "PASS_same_address_no_secret_failure_does_not_become_empty",
+      "denied": "PASS_zero_access_reads_no_secret",
+      "late_initial": "PASS_30_second_delayed_initial102_recenter100_still100_read_count1",
+      "carousel_after_final_fix": "PASS_next102_expand_collapse_same102_read_count2"
+    },
+    "android": {
+      "environment": "API37 emulator installed development build",
+      "manual_102_collaboration_locate_mode_return": "PASS_native_map_tap102_locate_in_driver_mode_return102_TEST02",
+      "read_error_retry": "PASS_read_count1_to2_still_failure_address_retained_no_secret",
+      "denied": "PASS_zero_access_reads_no_secret",
+      "carousel_remount": "initial_native_clamp_bug_observed_post_layout_alignment_fixed_full_manual_remount_matrix_pending",
+      "owner_requested": [
+        "swipe102_mode_locate_return",
+        "empty104_actual_form_share_return",
+        "long_list08_detail_and_map_return"
+      ],
+      "owner_feedback": "pending_not_passed"
+    },
+    "limitations": {
+      "new_native_compilation": false,
+      "physical_iPhone": false,
+      "physical_Android": false,
+      "real_account_writes": false,
+      "actual_authenticated_detail_route": false,
+      "real_driver_GPS": false,
+      "live_Mapbox_classification_coverage": false,
+      "complete_200percent_screen_reader": false,
+      "all387_product_states": false
+    }
+  },
+  "changes": {
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "new_grants": false,
+    "real_messages": false
+  },
+  "screenshots": {
+    "android-denied.png": "20f8dd819379c87fe67a6a610e9d2e7dfb846ab055405d9510d5ea418087981e",
+    "android-detail-return-before-fix.png": "02817fbae167e29c215bcf9e69944ddb26af9dfb1e9fab45fd74eaf11e08268d",
+    "android-mode-return.png": "8e01a13989f68d537b1a3162ec603a56583bcaae670f7005ef40f298fec68bcf",
+    "android-read-error.png": "02684eac93da47245eb8fbf3262c64eddf4313017f25074a4ae9bc75700e5fb2",
+    "ios-card-final.png": "9800b29db258d2edde595d0d730ec95e4e83f4ac57d1d72199155b5754c3f446",
+    "ios-denied.png": "d1d6cffd612c16426598c20a506f08cb495e0e7b06fbe082e87f16b6d8f27cd5",
+    "ios-late-initial-safe.png": "acca3b5d58df669fea21012b0bac962362eb4bdb8b587790030590aab999db76",
+    "ios-list-return.png": "b527e85c9f3fa4a9565114c5dad2b61e4a77f8ff3867040bf61a6cfd9bdd9a94",
+    "ios-new-position-empty.png": "b3b24dcaa7566c4f48331760728522b41c8cc5390db692dcf673ec17283a4e9f",
+    "ios-read-error.png": "fdd30cf98d820064c1e7e2e9d9654ec8928e7b9fbe52aa6e4f8cc7203b9fdf56",
+    "ios-save-failure.png": "815635c41a7489be4769e459231572f1adb4e0bf6ec2e9be37c6233105fef304",
+    "ios-share-return.png": "679c3de542c8f409fafae32e140f6311dfccf5d1309433721761f6b39517ac4c"
+  },
+  "whole_R4_1_exit": false,
+  "current_batch_complete": false,
+  "next_dependent_task": "R4-06_after_android_exit_and_exact_HEAD_CI"
+}

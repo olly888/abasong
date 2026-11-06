@@ -3,9 +3,9 @@
   "date": "2026-11-06",
   "branch": "codex/r4-10-native-http-exit",
   "base": "d475625a154b4144195007f1c73caecf2da1b3f8",
-  "status": "core_real_HTTP_dual_native_observed_android_owner_PASS_ios_final_system_pending",
+  "status": "scoped_real_local_HTTP_dual_native_exit_PASS",
   "report": "R4_10_本地原生业务组合实施验收.md",
-  "current_batch_complete": false,
+  "current_batch_complete": true,
   "engineering": {
     "files": 80,
     "tests": 476,
@@ -38,7 +38,7 @@
     "actual_components_real_HTTP": true,
     "container": "DEV_only_not_normal_login_route",
     "ios_business": "PASS_observed",
-    "ios_keyboard_edge_return": "pending_owner_feedback",
+    "ios_keyboard_edge_return": "PASS_owner_software_keyboard_action_reachable_review_edge_back_preserves_1.86",
     "android_owner_groups": 3,
     "android_owner_result": "PASS_normal_all_three",
     "android_feedback_reference": "call_234b8db558684fb3ae3abb90306f1d77:0,1,2",
@@ -47,7 +47,7 @@
     "physical_acceptance": false,
     "normal_route_real_account_exit": false,
     "full_foreground_background_matrix": false,
-    "ios_pending_blocker": "Mac_locked_on_final_readonly_observation_owner_feedback_pending"
+    "ios_feedback_reference": "call_d4054483ad3044639723868d674ed656:0"
   },
   "production_changes": [
     "V2_source_card_scenario_and_estimate_unknown_labels",
@@ -65,7 +65,7 @@
   "human_participants": 0,
   "b5_ready": false,
   "release_ready": false,
-  "next_task": "R4-11_after_R4-10_system_supplement",
+  "next_task": "R4-11",
   "code_sha256": {
     ".github/workflows/ci.yml": "08f34d6f9efb1bfb019f22834e20eba7e384416f3300138abf62555c2b70415b",
     "apps/mobile/src/app/conversations/[id].tsx": "9e888cd0d835485761cfdf7fd6b87587a90221111b40b39408a498f8ddce3d26",
@@ -89,5 +89,6 @@
   "pull_request": "https://github.com/olly888/abasong/pull/98",
   "requests_http_database_checks": 515,
   "ci_source": "https://github.com/olly888/abasong/pull/98/checks",
-  "validated_code_commit": "cdff153f1fd6b409697e812fcd224b6fab488923"
+  "validated_code_commit": "cdff153f1fd6b409697e812fcd224b6fab488923",
+  "whole_R4_2_scoped_exit": true
 }

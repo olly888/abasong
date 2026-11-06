@@ -1,18 +1,18 @@
 {
-  "version": "V3.2-R4-10-native-http-core",
+  "version": "V3.2-R4-10-scoped-exit",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_10_real_local_HTTP_native_core_PASS_ios_system_pending",
+  "scope": "R4_10_scoped_real_HTTP_dual_native_exit_PASS",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
     "requirements": "scoped",
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
-    "baseline_documents": "R4_10_actual_service_native_core_aligned_final_ios_system_pending",
-    "implementation": "R4_01_to_09_scoped_exit_R4_10_core_verified",
+    "baseline_documents": "R4_10_real_local_services_and_scoped_dual_native_exit_aligned",
+    "implementation": "R4_01_to_10_scoped_local_exit_R4_11_next",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -193,7 +193,7 @@
     "P04"
   ],
   "delivery": {
-    "status": "R4_10_real_HTTP_native_core_verified_ios_final_system_pending",
+    "status": "R4_10_scoped_real_local_HTTP_dual_native_exit_PASS",
     "requirements": "Abasong_V3.2_两场景发布与公寓卡片优化补充.md",
     "app_changed": true,
     "report": "../../design/abasong-independent-v1/v12.1-experience/delivery-checks.json",
@@ -206,7 +206,7 @@
     "combined_report": "../technical/R4_10_本地原生业务组合实施验收.md"
   },
   "release_ready": false,
-  "readiness_scope": "controlled_R4_2_after_scoped_R4_1_exit_not_full_native_or_release_acceptance",
+  "readiness_scope": "controlled_R4_3_after_scoped_R4_2_exit_not_normal_login_physical_or_release_acceptance",
   "owner_review": {
     "status": "main_flows_accepted",
     "date": "2026-11-05",
@@ -217,9 +217,9 @@
   },
   "controlled_implementation": {
     "eligible_batches": [
-      "R4-2"
+      "R4-3"
     ],
-    "next_task": "R4-10",
+    "next_task": "R4-11",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -402,8 +402,8 @@
     "real_account_grants": false,
     "cloud_changed": false,
     "real_provider_business_calls": false,
-    "real_native_HTTP_combined_exit": "R4-10_pending",
-    "full_system_exception_matrix": "R4-10_pending",
+    "real_native_HTTP_combined_exit": "PASS_scoped_R4-10_actual_components_local_HTTP",
+    "full_system_exception_matrix": "scoped_R4-10_PASS_remaining_normal_route_and_foreground_protection_R4-12_13_B6",
     "next_task": "R4-09",
     "pull_request": "https://github.com/olly888/abasong/pull/96",
     "ci_source": "https://github.com/olly888/abasong/pull/96/checks",
@@ -456,9 +456,9 @@
     "date": "2026-11-06",
     "branch": "codex/r4-10-native-http-exit",
     "base": "d475625a154b4144195007f1c73caecf2da1b3f8",
-    "status": "core_real_HTTP_dual_native_observed_android_owner_PASS_ios_final_system_pending",
+    "status": "scoped_real_local_HTTP_dual_native_exit_PASS",
     "report": "../technical/R4_10_本地原生业务组合实施验收.md",
-    "current_batch_complete": false,
+    "current_batch_complete": true,
     "engineering": {
       "files": 80,
       "tests": 476,
@@ -491,7 +491,7 @@
       "actual_components_real_HTTP": true,
       "container": "DEV_only_not_normal_login_route",
       "ios_business": "PASS_observed",
-      "ios_keyboard_edge_return": "pending_owner_feedback",
+      "ios_keyboard_edge_return": "PASS_owner_software_keyboard_action_reachable_review_edge_back_preserves_1.86",
       "android_owner_groups": 3,
       "android_owner_result": "PASS_normal_all_three",
       "android_feedback_reference": "call_234b8db558684fb3ae3abb90306f1d77:0,1,2",
@@ -500,7 +500,7 @@
       "physical_acceptance": false,
       "normal_route_real_account_exit": false,
       "full_foreground_background_matrix": false,
-      "ios_pending_blocker": "Mac_locked_on_final_readonly_observation_owner_feedback_pending"
+      "ios_feedback_reference": "call_d4054483ad3044639723868d674ed656:0"
     },
     "production_changes": [
       "V2_source_card_scenario_and_estimate_unknown_labels",
@@ -518,12 +518,13 @@
     "human_participants": 0,
     "b5_ready": false,
     "release_ready": false,
-    "next_task": "R4-11_after_R4-10_system_supplement",
+    "next_task": "R4-11",
     "ci": "exact_current_head_via_PR98_checks_not_inherited",
     "pull_request": "https://github.com/olly888/abasong/pull/98",
-    "evidence": "../technical/R4_10_执行证据.json",
     "requests_http_database_checks": 515,
     "ci_source": "https://github.com/olly888/abasong/pull/98/checks",
-    "validated_code_commit": "cdff153f1fd6b409697e812fcd224b6fab488923"
+    "validated_code_commit": "cdff153f1fd6b409697e812fcd224b6fab488923",
+    "whole_R4_2_scoped_exit": true,
+    "evidence": "../technical/R4_10_执行证据.json"
   }
 }

@@ -14,6 +14,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
@@ -23,13 +24,20 @@ import { dataRequest } from "../apartments/client";
 import HomeMap from "../components/HomeMap";
 import { MapTools } from "../components/HomeChrome";
 import { ActionButton, FormError } from "../ui/Controls";
-import { RequestCard } from "../requests/RequestUi";
+import { MapCardFrame } from "../ui/MapCardFrame";
+import { MapCardCarousel } from "../ui/MapCardCarousel";
+import { compactCardHeight, measuredCardHeight } from "../ui/map-card-layout";
+import { cameraAt, type MapCameraSnapshot } from "../components/map-camera";
+import { DiscoveryCardContent } from "./DiscoveryCardContent";
+import { createDiscoveryLoader } from "./discovery-loader";
 import { typeStyles } from "../ui/foundation";
-import { DriverSummary } from "./DriverSummary";
 import { DiscoveryFilters } from "./DiscoveryFilters";
 import {
   areaMarkers,
-  discoveryPath,
+  reconcileDiscovery,
+  filterDiscovery,
+  selectDiscoveryItem,
+  discoveryFocusRegion,
   itemId,
   itemRegions,
   validItem,
@@ -42,9 +50,10 @@ type S = components["schemas"];
 export type DiscoveryAdapter = {
   read: (path: string, signal: AbortSignal) => Promise<unknown>;
   onOpen?: (item: DiscoveryItem) => void;
+  onCamera?: (camera: MapCameraSnapshot) => void;
   testMapStyle?: string;
 };
-export function CollaborationHome(p: {
+type CollaborationProps = {
   mode: SupportMode;
   list: boolean;
   toolbar: ReactNode;
@@ -61,7 +70,14 @@ export function CollaborationHome(p: {
   onLocationRetry: () => void;
   testAdapter?: DiscoveryAdapter;
   onSetAvailability?: () => void;
-}) {
+};
+export function CollaborationHome(p: CollaborationProps) {
+  const { session } = useAuth();
+  return (
+    <DiscoveryHome key={`${session?.user.id ?? "test"}:${p.mode}`} {...p} />
+  );
+}
+function DiscoveryHome(p: CollaborationProps) {
   const { session } = useAuth();
   const read = useMemo(
     () =>
@@ -73,6 +89,7 @@ export function CollaborationHome(p: {
           },
     [session?.access_token, p.testAdapter],
   );
+  const dimensions = useWindowDimensions();
   const current = p.memory[p.mode],
     filters = current.filters,
     signature = JSON.stringify(filters),
@@ -84,82 +101,48 @@ export function CollaborationHome(p: {
     [error, setError] = useState<string | null>(null),
     [cursor, setCursor] = useState<string | null>(null),
     [selectedId, setSelectedId] = useState(current.selectedId),
-    [focusPoint, setFocusPoint] = useState<S["Point"] | undefined>(
-      current.focusPoint ?? p.point ?? p.cameraPoint,
+    [camera, setCamera] = useState<MapCameraSnapshot | undefined>(
+      current.camera ??
+        ((current.focusPoint ?? p.point ?? p.cameraPoint)
+          ? cameraAt((current.focusPoint ?? p.point ?? p.cameraPoint)!)
+          : undefined),
     ),
     [revision, setRevision] = useState(0),
-    [height, setHeight] = useState(220),
+    [height, setHeight] = useState(212),
+    [width, setWidth] = useState(0),
+    [measurements, setMeasurements] = useState<Record<string, number>>({}),
     [clock, setClock] = useState(Date.now());
-  const control = useRef<AbortController | null>(null),
-    generation = useRef(0),
+  const reader = useRef(read);
+  reader.current = read;
+  const loader = useRef(
+      createDiscoveryLoader((path, signal) => reader.current(path, signal)),
+    ),
     working = useRef(false),
     scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const load = useCallback(
     async (more = false) => {
-      const g = ++generation.current;
-      control.current?.abort();
-      const c = new AbortController();
-      control.current = c;
       working.current = true;
       setBusy(true);
       setError(null);
       const view = p.memory[p.mode],
-        count = Math.min(5, view.pages + (more ? 1 : 0)),
-        f = { ...view.filters };
-      try {
-        const regionPage = (await read(
-          "/v1/regions?limit=100",
-          c.signal,
-        )) as S["RegionPage"];
-        const all: DiscoveryItem[] = [];
-        let next: string | null = null;
-        for (let i = 0; i < count; i++) {
-          const result = (await read(
-            discoveryPath(p.mode, f, next ?? undefined),
-            c.signal,
-          )) as S["RequestPage"] | S["DriverPage"];
-          all.push(
-            ...(p.mode === "找活"
-              ? (result as S["RequestPage"]).items.map((request) => ({
-                  kind: "request" as const,
-                  request,
-                }))
-              : (result as S["DriverPage"]).items.map((driver) => ({
-                  kind: "driver" as const,
-                  driver,
-                }))),
-          );
-          next = result.next_cursor;
-          if (!next) break;
-        }
-        if (g !== generation.current || c.signal.aborted) return;
-        const unique = [
-          ...new Map(all.map((r) => [itemId(r), r])).values(),
-        ].filter((r) => validItem(r));
-        setRegions(regionPage.items);
-        setRows(unique);
-        setLoadedKey(scopeKey);
-        setCursor(next);
-        view.pages = count;
-        view.selectedId = unique.some((r) => itemId(r) === view.selectedId)
-          ? view.selectedId
-          : unique[0]
-            ? itemId(unique[0])
-            : null;
-        setSelectedId(view.selectedId);
-      } catch (e) {
-        if (g === generation.current && !c.signal.aborted) {
-          setError(e instanceof Error ? e.message : "暂时无法加载，请重试");
-          setRows([]);
-          setCursor(null);
-          setLoadedKey(scopeKey);
-        }
-      } finally {
-        if (g === generation.current) {
-          working.current = false;
-          setBusy(false);
-        }
+        count = Math.min(5, view.pages + (more ? 1 : 0));
+      const result = await loader.current.load(p.mode, view.filters, count);
+      if (!result || JSON.stringify(view.filters) !== signature) return;
+      working.current = false;
+      setBusy(false);
+      setLoadedKey(scopeKey);
+      if (result.status === "error") {
+        setError(result.message);
+        setRows([]);
+        setCursor(null);
+        return;
       }
+      const unique = reconcileDiscovery(result.rows, view);
+      setRegions(result.regions);
+      setRows(unique);
+      setCursor(result.next);
+      view.pages = result.pages;
+      setSelectedId(view.selectedId);
     },
     [read, p.mode, p.memory, signature, scopeKey],
   );
@@ -173,27 +156,29 @@ export function CollaborationHome(p: {
       }, 15000);
       const app = AppState.addEventListener("change", (s) => {
         if (s !== "active") {
-          generation.current++;
-          control.current?.abort();
+          loader.current.cancel();
           working.current = false;
         } else void load();
       });
       return () => {
-        generation.current++;
-        control.current?.abort();
+        loader.current.cancel();
         working.current = false;
         clearInterval(timer);
         app.remove();
       };
     }, [load]),
   );
+  function moveCamera(point: S["Point"]) {
+    const next = cameraAt(point, current.camera ?? camera);
+    current.camera = next;
+    setCamera(next);
+    setRevision((v) => v + 1);
+  }
   const previousCamera = useRef(p.cameraRevision);
   useEffect(() => {
     if (previousCamera.current === p.cameraRevision) return;
     previousCamera.current = p.cameraRevision;
-    current.focusPoint = undefined;
-    setFocusPoint(undefined);
-    setRevision((v) => v + 1);
+    if (p.point) moveCamera(p.point);
   }, [p.cameraRevision]);
   useEffect(() => {
     const now = Date.now();
@@ -227,18 +212,24 @@ export function CollaborationHome(p: {
     selected = visible.find((r) => itemId(r) === selectedId) ?? visible[0],
     markers = areaMarkers(visible, regions),
     selectedRegions = selected ? itemRegions(selected) : [];
-  function choose(r: DiscoveryItem) {
-    current.selectedId = itemId(r);
+  useEffect(() => {
+    if (!scopeReady || scopedError || loading) return;
+    const id = selected ? itemId(selected) : null;
+    if (id !== current.selectedId) {
+      current.selectedId = id;
+      setSelectedId(id);
+    }
+  }, [scopeReady, scopedError, loading, selectedId, selected]);
+  function choose(r: DiscoveryItem, focus = true) {
+    selectDiscoveryItem(current, r);
     setSelectedId(itemId(r));
-    const region = regions.find((x) => itemRegions(r).includes(x.id));
-    if (region) {
-      current.focusPoint = region.display_point;
-      setFocusPoint(region.display_point);
-      setRevision((v) => v + 1);
+    if (focus) {
+      const region = discoveryFocusRegion(r, regions, filters.region);
+      if (region) moveCamera(region.display_point);
     }
   }
   function open(r: DiscoveryItem) {
-    choose(r);
+    choose(r, false);
     if (__DEV__ && p.testAdapter?.onOpen) {
       p.testAdapter.onOpen(r);
       return;
@@ -253,48 +244,56 @@ export function CollaborationHome(p: {
     );
   }
   function apply(f: Filters) {
-    current.filters = f;
-    current.selectedId = null;
-    current.scroll = 0;
-    current.pages = 1;
-    current.focusPoint = regions.find((r) => r.id === f.region)?.display_point;
-    setFocusPoint(current.focusPoint ?? p.point);
-    setRows([]);
-    setCursor(null);
-    setSelectedId(null);
+    if (filterDiscovery(current, f)) {
+      const region = regions.find((r) => r.id === f.region);
+      if (region) moveCamera(region.display_point);
+      setRows([]);
+      setCursor(null);
+      setSelectedId(null);
+      setRevision((v) => v + 1);
+    }
     p.onCloseFilters();
-    setRevision((v) => v + 1);
   }
-  function card(r: DiscoveryItem) {
-    return r.kind === "request" ? (
-      <RequestCard
-        request={r.request}
-        region={regions.find((x) => x.id === r.request.region_id)?.label}
-        pickupRegion={
-          regions.find((x) => x.id === r.request.pickup_region_id)?.label
-        }
-        onPress={() => open(r)}
-      />
-    ) : (
+  const cardLabel = (r: DiscoveryItem) =>
+    r.kind === "request"
+      ? `查看${regions.find((x) => x.id === r.request.region_id)?.label ?? "配送"}需求`
+      : `查看${r.driver.profile.display_name}的资料`;
+  function content(r: DiscoveryItem, onPress = true) {
+    return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`查看${r.driver.profile.display_name}的资料`}
-        onPress={() => open(r)}
-        style={s.card}
+        accessibilityLabel={cardLabel(r)}
+        disabled={!onPress}
+        onPress={onPress ? () => open(r) : undefined}
+        style={[s.content, p.list ? { paddingTop: 16 } : { flex: 1 }]}
       >
-        <DriverSummary driver={r.driver} compact />
+        <DiscoveryCardContent item={r} regions={regions} />
       </Pressable>
     );
   }
+  const measureKey = `${width}:${dimensions.fontScale}:${scopeKey}`;
+  const compactHeight = Math.max(
+    compactCardHeight(dimensions.fontScale),
+    ...visible.map((r) => measurements[measureKey + ":" + itemId(r)] ?? 0),
+  );
   const empty = !loading && !scopedError && !visible.length;
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={{ flex: 1 }}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+    >
       <View
         style={[StyleSheet.absoluteFill, p.list ? { opacity: 0 } : undefined]}
         pointerEvents={p.list ? "none" : "auto"}
       >
         <HomeMap
-          point={focusPoint ?? p.cameraPoint ?? p.point}
+          point={camera?.center ?? p.cameraPoint ?? p.point}
+          cameraState={camera}
+          onCameraSnapshot={(snapshot) => {
+            current.camera = snapshot;
+            if (!camera) setCamera(snapshot);
+            if (__DEV__) p.testAdapter?.onCamera?.(snapshot);
+          }}
           location={p.point}
           cameraRevision={p.cameraRevision + revision}
           cameraZoom={14}
@@ -302,10 +301,8 @@ export function CollaborationHome(p: {
           topInset={218}
           areaMarkers={markers}
           selectedAreaIds={selectedRegions}
-          onAreaSelect={(id) => {
-            const item = visible.find((r) => itemRegions(r).includes(id));
-            if (item) choose(item);
-          }}
+          filteredAreaId={filters.region}
+          onAreaSelect={(id) => apply({ ...filters, region: id })}
           testMapStyle={__DEV__ ? p.testAdapter?.testMapStyle : undefined}
         />
       </View>
@@ -338,6 +335,7 @@ export function CollaborationHome(p: {
           {regions.find((r) => r.id === filters.region)?.label ?? "全部区域"}
           {filters.day ? ` · ${filters.day}` : ""}
           {filters.text ? ` · ${filters.text}` : ""}
+          {` · 当前结果 ${loading || scopedError ? "—" : visible.length}`}
         </Text>
         {p.mode === "找人" ? (
           <ActionButton
@@ -356,42 +354,50 @@ export function CollaborationHome(p: {
           locating={p.locating}
           canRecenter={!!p.point}
           onLocate={() => {
-            current.focusPoint = undefined;
-            setFocusPoint(undefined);
+            if (p.point) moveCamera(p.point);
             p.onLocate();
           }}
         />
       ) : null}
-      <View
-        onLayout={(e) => {
-          if (!p.list) setHeight(e.nativeEvent.layout.height);
-        }}
-        style={[
-          s.panel,
-          p.list ? { top: 192, maxHeight: undefined } : undefined,
-        ]}
-      >
-        {scopedError ? (
-          <>
-            <FormError message={scopedError} />
-            <ActionButton
-              label="重新加载"
-              disabled={busy}
-              variant="text"
-              onPress={() => void load()}
-            />
-          </>
-        ) : loading && !visible.length ? (
-          <Text style={typeStyles.secondary}>
-            正在加载{p.mode === "找活" ? "临时支援" : "可用司机"}
-          </Text>
-        ) : empty ? (
-          <Text style={typeStyles.body}>
-            {p.mode === "找活"
-              ? "当前筛选下暂无开放需求"
-              : "当前筛选下暂无可用司机"}
-          </Text>
-        ) : p.list ? (
+      {p.locationNotice && !p.list ? (
+        <View style={[s.locationNotice, { bottom: height + 16 }]}>
+          <ActionButton
+            label={p.locationNotice}
+            variant="text"
+            onPress={p.onLocationRetry}
+          />
+        </View>
+      ) : null}
+      {scopedError || (loading && !visible.length) || empty ? (
+        <MapCardFrame
+          onLayout={(e) => {
+            if (!p.list) setHeight(e.nativeEvent.layout.height + 16);
+          }}
+          style={s.status}
+        >
+          {scopedError ? (
+            <>
+              <FormError message={scopedError} />
+              <ActionButton
+                label="重新加载"
+                busy={busy}
+                onPress={() => void load()}
+              />
+            </>
+          ) : loading ? (
+            <Text style={typeStyles.secondary}>
+              正在加载{p.mode === "找活" ? "配送需求" : "可接活声明"}
+            </Text>
+          ) : (
+            <Text style={typeStyles.body}>
+              {p.mode === "找活"
+                ? "当前筛选下暂无开放需求"
+                : "当前筛选下暂无可用司机"}
+            </Text>
+          )}
+        </MapCardFrame>
+      ) : p.list ? (
+        <View style={s.list}>
           <ScrollView
             ref={scroll}
             onContentSizeChange={() =>
@@ -401,23 +407,21 @@ export function CollaborationHome(p: {
               current.scroll = e.nativeEvent.contentOffset.y;
             }}
             scrollEventThrottle={100}
-            contentContainerStyle={{ gap: 12, paddingBottom: 20 }}
+            contentContainerStyle={{ gap: 12, padding: 16, paddingBottom: 20 }}
           >
             {visible.map((r) => (
-              <View
+              <MapCardFrame
                 key={itemId(r)}
-                style={
-                  itemId(r) === selectedId
-                    ? {
-                        borderLeftWidth: 3,
-                        borderColor: tokens.color.brandPrimary,
-                        paddingLeft: 5,
-                      }
-                    : undefined
-                }
+                style={{
+                  borderWidth: 1,
+                  borderColor:
+                    itemId(r) === selectedId
+                      ? tokens.color.brandPrimary
+                      : tokens.color.border,
+                }}
               >
-                {card(r)}
-              </View>
+                {content(r)}
+              </MapCardFrame>
             ))}
             {cursor && current.pages < 5 ? (
               <ActionButton
@@ -430,29 +434,63 @@ export function CollaborationHome(p: {
               <Text style={typeStyles.secondary}>请选择区域缩小范围</Text>
             ) : null}
           </ScrollView>
-        ) : selected ? (
-          <>
-            {card(selected)}
-            <ActionButton
-              label={p.mode === "找活" ? "查看需求列表" : "查看司机列表"}
-              variant="text"
-              onPress={p.onToggleList}
-            />
-          </>
-        ) : null}
-        {p.mode === "找人" && !p.list ? (
-          <Text style={typeStyles.metadata}>
-            地图按声明区域展示，不代表司机当前位置。
-          </Text>
-        ) : null}
-        {p.locationNotice && !p.list ? (
-          <ActionButton
-            label={p.locationNotice}
-            variant="text"
-            onPress={p.onLocationRetry}
-          />
-        ) : null}
-      </View>
+        </View>
+      ) : selected ? (
+        <MapCardCarousel
+          items={visible}
+          getKey={itemId}
+          selectedKey={itemId(selected)}
+          getAccessibilityLabel={(r, i, count) =>
+            `${cardLabel(r)}，第${i + 1}项，共${count}项`
+          }
+          nextLabel={p.mode === "找活" ? "下一条需求" : "下一位司机"}
+          previousLabel={p.mode === "找活" ? "上一条需求" : "上一位司机"}
+          expandLabel={cardLabel(selected)}
+          onSelect={choose}
+          onSwipeStart={() => {}}
+          onHeight={setHeight}
+          onExpand={() => open(selected)}
+          minimumHeight={compactHeight}
+          renderPreview={(r) => content(r, false)}
+        >
+          {() => content(selected)}
+        </MapCardCarousel>
+      ) : null}
+      {!p.list && width > 0 && visible.length ? (
+        <View
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={{
+            position: "absolute",
+            left: -10000,
+            width: width - (visible.length > 1 ? 64 : 32),
+            opacity: 0,
+          }}
+        >
+          {visible.map((r) => (
+            <View
+              key={itemId(r)}
+              style={s.content}
+              onLayout={(e) => {
+                const h = measuredCardHeight(
+                  e.nativeEvent.layout.width,
+                  e.nativeEvent.layout.height,
+                  compactCardHeight(dimensions.fontScale),
+                );
+                if (h !== null)
+                  setMeasurements((old) =>
+                    old[measureKey + ":" + itemId(r)] === h
+                      ? old
+                      : { ...old, [measureKey + ":" + itemId(r)]: h },
+                  );
+              }}
+            >
+              <DiscoveryCardContent item={r} regions={regions} />
+            </View>
+          ))}
+        </View>
+      ) : null}
       {p.filtersOpen ? (
         <DiscoveryFilters
           key={p.mode + signature}
@@ -467,25 +505,22 @@ export function CollaborationHome(p: {
   );
 }
 const s = StyleSheet.create({
-  panel: {
+  content: { paddingHorizontal: 16, paddingTop: 2, paddingBottom: 16, gap: 5 },
+  status: {
     position: "absolute",
+    bottom: 12,
+    left: 16,
+    right: 16,
+    padding: 18,
+    gap: 12,
+  },
+  list: {
+    position: "absolute",
+    top: 192,
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    padding: 16,
-    gap: 8,
-    backgroundColor: tokens.color.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "65%",
-  },
-  card: {
-    padding: 16,
-    gap: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: tokens.color.border,
     backgroundColor: tokens.color.surface,
   },
-  link: { ...typeStyles.label, color: tokens.color.brandPrimary },
+  locationNotice: { position: "absolute", left: 16, right: 130 },
 });

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { components } from "@abasong/contracts";
 import type { AreaMarker } from "../drivers/discovery-model";
+import type { MapCameraSnapshot } from "./map-camera";
 type S = components["schemas"];
 export type HomeMapProps = {
   point?: S["Point"];
@@ -23,7 +24,10 @@ export type HomeMapProps = {
   overlay?: ReactNode;
   areaMarkers?: AreaMarker[];
   selectedAreaIds?: string[];
+  filteredAreaId?: string;
   onAreaSelect?: (id: string) => void;
+  cameraState?: MapCameraSnapshot;
+  onCameraSnapshot?: (camera: MapCameraSnapshot) => void;
   /** Development-only synthetic native SDK acceptance, never a product input. */
   testMapStyle?: string;
   onTestBuildingResult?: (key: string, count: number) => void;

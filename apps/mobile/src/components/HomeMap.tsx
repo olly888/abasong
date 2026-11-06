@@ -1,7 +1,7 @@
 import Mapbox from "@rnmapbox/maps";
 import { tokens } from "@abasong/ui";
 import { Text, StyleSheet, View } from "react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
 import type { Camera } from "@rnmapbox/maps";
 import type { HomeMapProps } from "./HomeMap.types";
 import { buildingCamera } from "./building-camera";
@@ -11,6 +11,7 @@ import {
   type BuildingTarget,
 } from "./building-query";
 import { serialLatest } from "../apartments/serial-latest";
+import { cameraSnapshot } from "./map-camera";
 const INITIAL_CAMERA = {
   centerCoordinate: [-118.2437, 34.0522],
   zoomLevel: 12,
@@ -38,12 +39,34 @@ export default function HomeMap({
   overlay,
   areaMarkers = [],
   selectedAreaIds = [],
+  filteredAreaId,
   onAreaSelect,
+  cameraState,
+  onCameraSnapshot,
   testMapStyle,
   onTestBuildingResult,
 }: HomeMapProps = {}) {
   const camera = useRef<Camera>(null);
   const map = useRef<Mapbox.MapView>(null);
+  const areaAnnotations = useRef(
+    new Map<string, ComponentRef<typeof Mapbox.PointAnnotation>>(),
+  );
+  const areaAppearance = JSON.stringify(
+    areaMarkers.map((r) => [
+      r.id,
+      r.count,
+      selectedAreaIds.includes(r.id),
+      filteredAreaId === r.id,
+    ]),
+  );
+  useEffect(() => {
+    // PointAnnotation snapshots its child view. Refresh after native layout so
+    // switching cards actually updates the rendered region color/count.
+    const frame = requestAnimationFrame(() =>
+      areaAnnotations.current.forEach((a) => a.refresh()),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [areaAppearance]);
   const mapAlive = useRef(true);
   const latestCandidates = useRef(nearbyCandidates);
   latestCandidates.current = nearbyCandidates;
@@ -190,9 +213,12 @@ export default function HomeMap({
     zoomLevel: point ? cameraZoom : 12,
   });
   command.current = {
-    center: fitted?.centerCoordinate ?? center,
+    center: cameraState
+      ? [cameraState.center.lng, cameraState.center.lat]
+      : (fitted?.centerCoordinate ?? center),
     padding,
-    zoomLevel: fitted?.zoomLevel ?? (point ? cameraZoom : 12),
+    zoomLevel:
+      cameraState?.zoom ?? fitted?.zoomLevel ?? (point ? cameraZoom : 12),
   };
   const applyCamera = () => {
     const current = command.current;
@@ -200,8 +226,8 @@ export default function HomeMap({
       centerCoordinate: current.center,
       zoomLevel: current.zoomLevel,
       padding: current.padding,
-      pitch: 0,
-      heading: 0,
+      pitch: cameraState?.pitch ?? 0,
+      heading: cameraState?.heading ?? 0,
       animationMode: "moveTo",
       animationDuration: 0,
     });
@@ -235,7 +261,17 @@ export default function HomeMap({
         setMapReady(true);
         if (!touched.current) applyCamera();
       }}
-      onMapIdle={() => refreshBuildings()}
+      onCameraChanged={(state) => {
+        if (!onCameraSnapshot) return;
+        const snapshot = cameraSnapshot(state.properties);
+        if (snapshot) onCameraSnapshot(snapshot);
+      }}
+      onMapIdle={(state) => {
+        refreshBuildings();
+        if (!onCameraSnapshot) return;
+        const snapshot = cameraSnapshot(state.properties);
+        if (snapshot) onCameraSnapshot(snapshot);
+      }}
       onPress={async (feature) => {
         if (!onNearbySelect || !map.current) return;
         const { screenPointX: x, screenPointY: y } = feature.properties;
@@ -469,6 +505,10 @@ export default function HomeMap({
         <Mapbox.PointAnnotation
           anchor={{ x: 0.5, y: 1 }}
           key={`support-${r.id}`}
+          ref={(annotation) => {
+            if (annotation) areaAnnotations.current.set(r.id, annotation);
+            else areaAnnotations.current.delete(r.id);
+          }}
           id={`support-${r.id}`}
           coordinate={[r.point.lng, r.point.lat]}
           onSelected={() => onAreaSelect?.(r.id)}
@@ -479,7 +519,10 @@ export default function HomeMap({
               paddingVertical: 8,
               borderRadius: 16,
               borderWidth: 2,
-              borderColor: tokens.color.surface,
+              borderColor:
+                filteredAreaId === r.id
+                  ? tokens.color.brandPrimary
+                  : tokens.color.surface,
               backgroundColor: selectedAreaIds.includes(r.id)
                 ? tokens.color.brandPrimary
                 : tokens.color.ink,

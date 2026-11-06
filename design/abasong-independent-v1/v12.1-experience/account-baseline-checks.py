@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlsplit,unquote
 import csv,json,re,subprocess
-root=Path(__file__).resolve().parents[3];base='7240c03d4dd48ea7a7b33aa0f4b21946c05771e4';checks=[]
+root=Path(__file__).resolve().parents[3];base='df82aefc32bbcaef6a9671da18ad517e88c4d074';checks=[]
 def ok(test,label):
  if not test:raise AssertionError(label)
  checks.append(label)
@@ -30,7 +30,9 @@ ok(len(production)==39,'39 production rows')
 for p in production:ok(int(p['state_count'])==len(pages[p['id']]['states']),f"state count {p['id']}")
 for ident in ['C01','C02','C03']:ok(len(pages[ident]['states'])=={'C01':9,'C02':10,'C03':13}[ident],ident+' image state requirements')
 state=json.loads((root/'docs/product/V3.2_开发基准状态.json').read_text())
-ok(state['development_ready'] is False and state['b5_ready'] is False and state['app_changed'] is False,'unpassed gates honest')
+ok(state['development_ready'] is True and not state['b5_ready'] and not state['release_ready'] and not state['app_changed'],'R4 implementation eligible, B5/release/native not claimed')
+ok(state['owner_review']['status']=='main_flows_accepted' and not state['owner_review']['all_page_states_accepted'] and not state['owner_review']['native_acceptance'],'owner main-flow review distinct from full acceptance')
+ok(state['controlled_implementation']['eligible_batches']==['R4-1'] and state['controlled_implementation']['next_task']=='R4-01' and not state['controlled_implementation']['business_changes_started'],'only R4-1 scoped ready')
 ok(state['human_testing']['completed']==0 and state['human_testing']['template_rows']==38,'core human testing remains 0/7 and38rows')
 diffs=list(csv.DictReader((root/'docs/technical/V3.2_代码差异清单.csv').open()))
 ok([d['id'] for d in diffs]==state['difference_ids']==[f'D{i:02}' for i in range(1,25)],'D01–D24 trace')
@@ -50,7 +52,7 @@ for name,total in [('browser-checks.json',34),('core-checks.json',10),('circle-c
 for p in proto.glob('*.js'):subprocess.run(['./scripts/dev','exec','node','--check',str(p)],cwd=root,check=True,stdout=subprocess.DEVNULL)
 ok(len(list(proto.glob('*.js')))==17,'seventeen JS syntax checks')
 old=cmd(['git','show',base+':DEVELOPMENT_STATUS.md'])
-ok((root/'docs/archive/delivery-simple-20261105/工程状态_7240c03快照.md').read_text()==old,'prior current status fully preserved')
+ok((root/'docs/archive/app-alignment-audit-20261105/工程状态_df82aef快照.md').read_text()==old,'prior current status fully preserved')
 for ident,ux in [('UP15','UX13'),('UP16','UX14'),('UP17','UX15'),('UP18','UX16'),('UP19','UX17'),('UP20','UX18'),('UP21','UX19')]:
  u=next(x for x in matrix['items'] if x['id']==ident)
  ok(ux in u['acceptance'] and all(c in copy for c in u['copy_ids']),ident+' copy and UX trace')
@@ -61,15 +63,15 @@ for ident in ['U01','U02','U03','U10','D02','D01','P01','P03','P08','P09','H01',
  p=pages[ident];part=spec.split('### '+ident+' · ')[1].split('\n### ')[0]
  ok(all(x in part for x in p['states']),'spec states '+ident)
 ok(state['account_follow_up']['completed']==0 and state['account_follow_up']['template_rows']==7 and not state['account_follow_up']['blocks_core_R4_preparation'],'account followup 0/7 does not add core prep blocker')
-ok(state['synthetic_checks']['account_tasks']==20 and state['scope']=='documents_and_independent_prototype_only','prototype scope honest')
+ok(state['synthetic_checks']['account_tasks']==20 and state['scope']=='source_audit_and_implementation_preparation','prototype scope honest')
 ok('U08' not in pages and [p['id'] for p in catalog['retired_pages']]==['U08'],'U08 retired, IDs not renumbered')
 ok(next(d for d in diffs if d['id']=='D19')['status']=='cancelled_scope' and state['cancelled_difference_ids']==['D19'],'D19 cancelled, not queued implementation')
 ok(not any(a['target']=='U08' for p in pages.values() for a in p['actions']),'no active links to retired U08')
 invitation=state['invitation']
 ok(not catalog['planned_extensions'] and all(x in pages for x in ['U15','X02']),'invitation IDs now active prototype pages')
-ok(invitation['status']=='synthetic_prototype_pending_user_confirmation' and not invitation['app_changed'] and invitation['prototype_changed'] and not invitation['invite_sent'] and not invitation['distribution_deployed'],'synthetic prototype not native or deployed')
+ok(invitation['status']=='owner_main_flow_review_recorded_native_distribution_pending' and not invitation['app_changed'] and invitation['prototype_changed'] and not invitation['invite_sent'] and not invitation['distribution_deployed'],'synthetic prototype not native or deployed')
 ok(next(d for d in diffs if d['id']=='D21')['status']=='prototype_synthetic_20_pass_actual_implementation_pending','D21 actual code still pending')
-ok(next(u for u in matrix['items'] if u['id']=='UP18')['prototype_status']=='synthetic_20_pass_pending_user_confirmation_native_distribution_pending','UP18 accurate scope')
+ok(next(u for u in matrix['items'] if u['id']=='UP18')['prototype_status']=='synthetic_20_pass_owner_main_flow_review_recorded_native_distribution_pending','UP18 accurate scope')
 ok((root/'docs/product'/invitation['requirements']).is_file(),'invitation specification exists')
 inv=json.loads((proto/'invitation-checks.json').read_text());reg=json.loads((proto/'invitation-regressions.json').read_text())
 for report,total in [(inv,20),(reg,112)]:
@@ -86,4 +88,26 @@ ok(not any(a['target']=='P04' for p in pages.values() for a in p['actions']),'no
 ok(not state['delivery']['app_changed'] and not state['delivery']['p1_apartment_list_implemented'],'actual App and P1 list unchanged')
 ok(next(d for d in diffs if d['id']=='D24')['status']=='P1_documented_not_implemented','P1 list not marked done')
 ok(catalog['planned_features'][0]['id']=='G24' and catalog['planned_features'][0]['status']=='documented_not_implemented','P1 planned feature separate from active pages')
-print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':17,'pages':39,'state_requirements':387,'difference_rows':24,'delivery_synthetic_tests':25,'existing_synthetic_regressions':132,'p1_apartment_list_implemented':False,'prototype_ui_changed':True,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))
+tasks=list(csv.DictReader((root/'docs/technical/V3.2_App对齐开发任务清单.csv').open()))
+ids={t['task_id'] for t in tasks}
+ok(len(tasks)==len(ids)==22,'22 unique work packages, no duplicate D14/D22/D23 counting')
+for task in tasks:
+ for path in task['code_paths'].split(';'):ok((root/path).is_file(),task['task_id']+' actual source '+path)
+ for dep in task['dependencies'].split(';'):
+  ok(dep=='none' or dep in ids,task['task_id']+' dependency '+dep)
+ ok(all(task[k] for k in ['scope','acceptance','verification','github_issues']),task['task_id']+' executable fields')
+visiting=set();visited=set();byid={t['task_id']:t for t in tasks}
+def visit(ident):
+ ok(ident not in visiting,'acyclic '+ident)
+ if ident in visited:return
+ visiting.add(ident)
+ for dep in byid[ident]['dependencies'].split(';'):
+  if dep!='none':visit(dep)
+ visiting.remove(ident);visited.add(ident)
+for ident in ids:visit(ident)
+ok(sum(t['status']=='done_source_audit' for t in tasks)==1 and sum(t['status']=='ready' for t in tasks)==1,'only source audit done and first task ready')
+ok(not state['human_testing']['blocks_all_local_R4_implementation'] and state['human_testing']['results_required_for_usability_acceptance'],'human evidence still required, local work independent')
+evidence=json.loads((root/'docs/technical/V3.2_App对齐审查证据.json').read_text())
+ok(evidence['engineering_check']['tests']==367 and evidence['engineering_check']['result']=='PASS','current engineering check recorded')
+ok(not any(evidence[k] for k in ['business_changed','prototype_ui_changed','native_compilation_run','dual_native_visual_run','database_migrations_run','real_mapbox_sms_cloud_run']),'source audit does not claim native/cloud effects')
+print(json.dumps({'result':'PASS','validated_assertions':len(checks),'local_links_assets':links,'scoped_files':len(changed),'javascript_syntax_files':17,'pages':39,'state_requirements':387,'difference_rows':24,'delivery_synthetic_tests':25,'existing_synthetic_regressions':132,'p1_apartment_list_implemented':False,'prototype_ui_changed':False,'owner_main_flow_accepted':True,'controlled_R4_ready':True,'implementation_work_packages':22,'unrun_observations':[38,10,7],'human_participants':0,'native_acceptance':False},ensure_ascii=False,indent=2))

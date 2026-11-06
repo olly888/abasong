@@ -1,0 +1,202 @@
+{
+  "version": "V3.2-R3-delivery",
+  "date": "2026-11-05",
+  "code_audit_base": "99a76da38708f796fe64e2d6ce7363138fa36916",
+  "app_design": "V3.1",
+  "prototype": "3.2-r3-delivery",
+  "scope": "documents_and_independent_prototype_only",
+  "app_changed": false,
+  "gates": {
+    "research_evidence": "documented_primary_sources_not_competitor_account_test",
+    "requirements": "scoped",
+    "core_prototype": "synthetic_checks_only",
+    "human_usability": "not_scheduled",
+    "baseline_documents": "aligned_target_not_released_contracts",
+    "implementation": "queued_not_started",
+    "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
+    "circle_images": "synthetic_only_private_media_and_native_pending_B5",
+    "my_account": "simplified_synthetic_only_native_service_pending",
+    "invitation_prototype": "synthetic_only_pending_user_confirmation_system_share_distribution_native",
+    "delivery_prototype": "synthetic_only_pending_user_confirmation_contract_and_native_not_changed"
+  },
+  "human_testing": {
+    "drivers_required": 5,
+    "dsp_required": 2,
+    "completed": 0,
+    "template_rows": 38,
+    "results": "not_run"
+  },
+  "development_ready": false,
+  "b5_ready": false,
+  "pending": [
+    "human_task_observation",
+    "prototype_user_confirmation",
+    "R4_P0_differences_before_B5"
+  ],
+  "evidence": "../research/Abasong_竞品与替代方案证据表_2026-11-05.md",
+  "requirements": "V3.2_首版需求缺口与范围裁决.md",
+  "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/review.html",
+  "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json",
+  "usability": "../usability/V3.2_五司机两DSP可用性测试包.md",
+  "differences": "../technical/V3.2_代码差异清单.csv",
+  "requirement_ids": [
+    "G01",
+    "G02",
+    "G03",
+    "G04",
+    "G05",
+    "G06",
+    "G07",
+    "G08",
+    "G09",
+    "G10",
+    "G11",
+    "G12",
+    "G13",
+    "G14",
+    "G15",
+    "G16",
+    "G17",
+    "G18",
+    "G19",
+    "G20",
+    "G21",
+    "G22",
+    "G23",
+    "G24"
+  ],
+  "difference_ids": [
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06",
+    "D07",
+    "D08",
+    "D09",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14",
+    "D15",
+    "D16",
+    "D17",
+    "D18",
+    "D19",
+    "D20",
+    "D21",
+    "D22",
+    "D23",
+    "D24"
+  ],
+  "evidence_ids": [
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "E11",
+    "E12"
+  ],
+  "user_task_ids": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09"
+  ],
+  "synthetic_checks": {
+    "map_warehouse": 34,
+    "core_tasks": 10,
+    "human_participants": 0,
+    "native_acceptance": false,
+    "circle_tasks": 19,
+    "circle_image_tasks": 17,
+    "account_tasks": 20,
+    "simplification_tasks": 12,
+    "invitation_tasks": 20,
+    "delivery_tasks": 25
+  },
+  "circle_requirements": "Abasong_V3.2_司机圈定位与最小社区补充.md",
+  "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
+  "b5_follow_up": {
+    "user_task_ids": [
+      "T10",
+      "T11"
+    ],
+    "template_rows": 10,
+    "completed": 0,
+    "results": "not_run",
+    "template": "../usability/V3.2_司机圈任务记录模板.csv",
+    "blocks_core_R4_preparation": false
+  },
+  "circle_image_requirements": "Abasong_V3.2_司机圈图片发布补充.md",
+  "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json",
+  "account_requirements": "Abasong_V3.2_我的与团队资料补充.md",
+  "account_report": "../../design/abasong-independent-v1/v12.1-experience/account-checks.json",
+  "account_follow_up": {
+    "user_task_ids": [
+      "T12",
+      "T13"
+    ],
+    "template_rows": 7,
+    "completed": 0,
+    "results": "not_run",
+    "template": "../usability/V3.2_我的团队任务记录模板.csv",
+    "blocks_core_R4_preparation": false
+  },
+  "cancelled_difference_ids": [
+    "D19"
+  ],
+  "retired_page_ids": [
+    "U08"
+  ],
+  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json",
+  "requirements_version": "two_delivery_scenarios_20261105",
+  "prototype_audit_base": "7240c03d4dd48ea7a7b33aa0f4b21946c05771e4",
+  "active_page_count": 39,
+  "state_requirements": 387,
+  "invitation": {
+    "status": "synthetic_prototype_pending_user_confirmation",
+    "requirements": "Abasong_V3.2_邀请司机功能方案.md",
+    "page_ids": [
+      "U15",
+      "X02"
+    ],
+    "difference_id": "D21",
+    "design_upgrade": "UP18",
+    "acceptance": "UX16",
+    "app_changed": false,
+    "prototype_changed": true,
+    "invite_sent": false,
+    "tests_executed": 20,
+    "native_acceptance": false,
+    "distribution_deployed": false,
+    "scope": "documents_and_independent_prototype_only",
+    "report": "../../design/abasong-independent-v1/v12.1-experience/invitation-checks.json",
+    "regressions": "../../design/abasong-independent-v1/v12.1-experience/invitation-regressions.json"
+  },
+  "deferred_page_ids": [
+    "P04"
+  ],
+  "delivery": {
+    "status": "synthetic_pending_user_confirmation",
+    "requirements": "Abasong_V3.2_两场景发布与公寓卡片优化补充.md",
+    "app_changed": false,
+    "report": "../../design/abasong-independent-v1/v12.1-experience/delivery-checks.json",
+    "regressions": "../../design/abasong-independent-v1/v12.1-experience/delivery-regressions.json",
+    "p1_apartment_list_implemented": false,
+    "deferred_specialized_help": true
+  }
+}

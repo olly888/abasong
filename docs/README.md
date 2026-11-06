@@ -1,18 +1,10 @@
 # Abasong 研发文档入口
 
-本轮优先体验：[两场景发布与卡片补充](product/Abasong_V3.2_两场景发布与公寓卡片优化补充.md)、[发需求](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[公寓首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)。P04专用求助后置，附近列表P1；39活动节点/387状态要求，实际App/API/分发未改。
+更新2026-11-05。**新版原型主要体验已获产品认可，已完成实际源码与目标差异复核；下一步实施R4-1，不再先做一轮全站原型改版。** 实际App仍V3.1，V3.2为认可目标；39活动节点/387状态未全验，真实观察仍0/7。R4本地实现就绪与B5/发布就绪分开。
 
-已制作合成原型：[邀请司机](product/Abasong_V3.2_邀请司机功能方案.md)。入口位置、价值文案、通用二维码图/分享链接、接收介绍和分发边界已整理；[邀请页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-invite&task=invite)、[接收页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-invite&task=invite-receive)，20项浏览器检查及112项回归通过，待体验确认；实际App/分发未改。
+本轮先看：[App对齐审查与开发任务](technical/V3.2_App对齐审查与开发任务.md)、[22个工作包CSV](technical/V3.2_App对齐开发任务清单.csv)、[总计划1.31](Abasong_V12.1_项目开发与验收总计划.md)、[机器状态](product/V3.2_开发基准状态.json)。源码起点df82aef，工程lint/类型/367测试/包及API-worker构建通过；不是新的原生/HTTP-PG现场验收。普通常联系取消、公寓列表P1、专用求助P04后置。
 
-我的与团队已批准目标：[规则](product/Abasong_V3.2_我的与团队资料补充.md)、[原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-simple&task=me)、[20项账户合成报告](../design/abasong-independent-v1/v12.1-experience/account-checks.json)。统一账号、接活开关上移、联系方式自愿；首版无常联系/收费/成员管理；实际App/服务待B5。原评审保留历史语境。
-
-司机圈新增已批准目标：[首版图片发布](product/Abasong_V3.2_司机圈图片发布补充.md)、[定位与最小社区](product/Abasong_V3.2_司机圈定位与最小社区补充.md)、[C01–03原型](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-images&task=circle)。原生仍未开放，D15/D16/D17排B5；合成原型不是业务上线。
-
-## 本轮先看：进入B5之前
-
-[可开发与可验收基线](Abasong_V3.2_可开发与可验收基线.md)统一六步和门槛：[竞品证据](research/Abasong_竞品与替代方案证据表_2026-11-05.md) → [需求缺口](product/V3.2_首版需求缺口与范围裁决.md) → [五核心原型](../design/abasong-independent-v1/v12.1-experience/review.html) → [5司机/2DSP任务包](usability/V3.2_五司机两DSP可用性测试包.md) → [源码差异与分批](technical/V3.2_原型到代码差异与实施批次.md)。真实观察0/7，准备不等于通过；App未改、B5未启。旧工程状态和总计划全文移到[历史档案](archive/development-gate-20261105/README.md)。
-
-更新2026-11-05。产品/设计/技术已收敛，R2a核心原型已制作待用户确认，再按差异恢复实际代码批次。文档已写、原型可操作、服务已实现、原生观察及现场验收是不同状态。
+原型入口：[首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)、[两场景发布](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[我的](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=me)。产品确认只覆盖主要体验，原型图不代表App已更新。当前和目标依据[可开发基准](Abasong_V3.2_可开发与可验收基线.md)；之前全文保留在[审查前档案](archive/app-alignment-audit-20261105/README.md)。
 
 ## 当前入口
 
@@ -24,9 +16,9 @@
 
 - [产品体验升级与需求收敛](product/Abasong_V12.1_产品体验升级与需求收敛方案.md)：目标优先级、日期/区域/数量含义、UX01–10。
 - [页面功能与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[当前39活动节点目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
-- [V3.2新版原型](../design/abasong-independent-v1/v12.1-experience/index.html)、[说明](../design/abasong-independent-v1/v12.1-experience/README.md)、[R2a实际检查](../design/abasong-independent-v1/v12.1-experience/验收记录.md)：核心地图/滑卡/找活找人/仓库流程可体验，34项浏览器检查通过，待用户确认；App未改。
+- [V3.2新版原型](../design/abasong-independent-v1/v12.1-experience/index.html)、[说明](../design/abasong-independent-v1/v12.1-experience/README.md)、[R2a实际检查](../design/abasong-independent-v1/v12.1-experience/验收记录.md)：核心地图/滑卡/找活找人/仓库流程可体验，34项浏览器检查通过，主流程已获产品认可；App未改。
 - [旧版参考v12.1-import](../design/abasong-independent-v1/v12.1-import/index.html)、[说明](../design/abasong-independent-v1/v12.1-import/README.md)、[历史验收](../design/abasong-independent-v1/v12.1-import/验收记录.md)：合成交互，不能证明真实接口与权限。
-- [新版原型制作与验收方案](product/Abasong_V12.1_原型升级制作与验收方案.md)：R2a核心已制作待确认；R2b/R2c未覆盖状态继续单列。
+- [新版原型制作与验收方案](product/Abasong_V12.1_原型升级制作与验收方案.md)：原型主流程已获产品认可；R2b/R2c未覆盖状态继续单列。
 - [三模式卡片与距离补充](product/Abasong_V3.2_地图卡片与距离体验补充.md)：UP12/UX10；地址分级、同源近似距离、共用外框与横滑、筛选/选择分离，原型已改、App待R4。
 - [仓库取件地址与导航补充](product/Abasong_V12.1_仓库取件地址与导航补充.md)：本轮DashLink截图借鉴，UP11/UX09原型目标；不恢复独立集合点或候补。
 - [截图贡献需求](product/Abasong_V12.1_截图批量贡献需求补充.md)、[附近滑卡补充](product/Abasong_V12.1_附近公寓滑卡补充.md)、[我的公寓](product/Abasong_V12.1_我的公寓与私存共享补充.md)。旧细节服从最新产品基线。

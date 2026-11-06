@@ -1,37 +1,39 @@
 {
-  "version": "V3.2-R3-delivery",
+  "version": "V3.2-R4-source-audit",
   "date": "2026-11-05",
-  "code_audit_base": "99a76da38708f796fe64e2d6ce7363138fa36916",
+  "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1",
   "prototype": "3.2-r3-delivery",
-  "scope": "documents_and_independent_prototype_only",
+  "scope": "source_audit_and_implementation_preparation",
   "app_changed": false,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
     "requirements": "scoped",
-    "core_prototype": "synthetic_checks_only",
-    "human_usability": "not_scheduled",
+    "core_prototype": "owner_main_flow_accepted_not_native",
+    "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "aligned_target_not_released_contracts",
-    "implementation": "queued_not_started",
+    "implementation": "R4_1_ready_not_started",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
-    "invitation_prototype": "synthetic_only_pending_user_confirmation_system_share_distribution_native",
-    "delivery_prototype": "synthetic_only_pending_user_confirmation_contract_and_native_not_changed"
+    "invitation_prototype": "owner_main_flow_review_recorded_native_distribution_pending",
+    "delivery_prototype": "owner_main_flow_accepted_contract_native_pending"
   },
   "human_testing": {
     "drivers_required": 5,
     "dsp_required": 2,
     "completed": 0,
     "template_rows": 38,
-    "results": "not_run"
+    "results": "not_run",
+    "blocks_all_local_R4_implementation": false,
+    "results_required_for_usability_acceptance": true
   },
-  "development_ready": false,
+  "development_ready": true,
   "b5_ready": false,
   "pending": [
+    "R4_P0_implementation_and_dual_native_acceptance",
     "human_task_observation",
-    "prototype_user_confirmation",
-    "R4_P0_differences_before_B5"
+    "B6_real_cloud_and_field_evidence"
   ],
   "evidence": "../research/Abasong_竞品与替代方案证据表_2026-11-05.md",
   "requirements": "V3.2_首版需求缺口与范围裁决.md",
@@ -168,7 +170,7 @@
   "active_page_count": 39,
   "state_requirements": 387,
   "invitation": {
-    "status": "synthetic_prototype_pending_user_confirmation",
+    "status": "owner_main_flow_review_recorded_native_distribution_pending",
     "requirements": "Abasong_V3.2_邀请司机功能方案.md",
     "page_ids": [
       "U15",
@@ -191,12 +193,32 @@
     "P04"
   ],
   "delivery": {
-    "status": "synthetic_pending_user_confirmation",
+    "status": "owner_main_flow_accepted_contract_native_pending",
     "requirements": "Abasong_V3.2_两场景发布与公寓卡片优化补充.md",
     "app_changed": false,
     "report": "../../design/abasong-independent-v1/v12.1-experience/delivery-checks.json",
     "regressions": "../../design/abasong-independent-v1/v12.1-experience/delivery-regressions.json",
     "p1_apartment_list_implemented": false,
     "deferred_specialized_help": true
+  },
+  "release_ready": false,
+  "readiness_scope": "controlled_R4_1_implementation_only_not_native_or_release_acceptance",
+  "owner_review": {
+    "status": "main_flows_accepted",
+    "date": "2026-11-05",
+    "evidence": "user: 原型基本体验符合预期",
+    "all_page_states_accepted": false,
+    "native_acceptance": false,
+    "human_test_participants_added": 0
+  },
+  "controlled_implementation": {
+    "eligible_batches": [
+      "R4-1"
+    ],
+    "next_task": "R4-01",
+    "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
+    "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
+    "task_count": 22,
+    "business_changes_started": false
   }
 }

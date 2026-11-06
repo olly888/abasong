@@ -571,7 +571,7 @@
     "scope": "apartment_distance_and_cards_only",
     "report": "../technical/R4_01_距离契约与公寓卡片实施验收.md",
     "whole_app_migrated": false,
-    "final_native_checks": "pending_Mac_unlock",
+    "final_native_checks": "scoped_dual_development_client_failure_retry_denied_and_final_carousel_PASS",
     "collaboration_carousel": "pending_R4-04"
   }
 }

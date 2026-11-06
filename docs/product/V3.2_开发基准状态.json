@@ -12,7 +12,7 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "aligned_target_not_released_contracts",
-    "implementation": "R4_01_local_verified_R4_02_representative_native_final_checks_pending",
+    "implementation": "R4_01_code_CI_passed_R4_02_scoped_dual_native_verified_R4_03_next",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -224,17 +224,21 @@
   "r4_distance_cards": {
     "report": "../technical/R4_01_距离契约与公寓卡片实施验收.md",
     "evidence": "../technical/R4_01_执行证据.json",
-    "r4_01": "local_verified_exact_HEAD_CI_tracked_at_PR90",
-    "r4_02": "implemented_representative_dual_simulator_final_error_screens_pending",
+    "r4_01": "implemented_local_and_remote_code_CI_verified",
+    "r4_02": "implemented_scoped_dual_native_function_and_visual_verified",
     "native_compilation_run": false,
     "ios_physical_acceptance": false,
     "android_physical_acceptance": false,
     "owner_android_three_interactions_passed": true,
-    "blocked_observation": "Mac locked; unlock requested for last visual states",
+    "blocked_observation": null,
     "new_migrations": false,
     "new_dependencies": false,
     "cloud_changed": false,
     "pull_request": "https://github.com/olly888/abasong/pull/90",
-    "ci_source": "https://github.com/olly888/abasong/pull/90/checks"
+    "ci_source": "https://github.com/olly888/abasong/pull/90/checks",
+    "validated_code_commit": "fdb0fca3881c521c5e4c760f7126669a18fc458c",
+    "validated_code_run_id": 42143887719,
+    "current_batch_complete": true,
+    "whole_R4_1_exit": false
   }
 }

@@ -43,7 +43,11 @@
       "source": "https://github.com/olly888/abasong/pull/90/checks",
       "branch_filter": "pull_request/main_or_codex/**",
       "permissions_changed": false,
-      "note": "CI result is recorded against the exact commit in GitHub Checks; an earlier run is not acceptance for a later code commit."
+      "note": "CI result is recorded against the exact commit in GitHub Checks; an earlier run is not acceptance for a later code commit.",
+      "validated_code_commit": "fdb0fca3881c521c5e4c760f7126669a18fc458c",
+      "validated_code_run_id": 42143887719,
+      "validated_code_result": "success",
+      "code_changed_after_validated_commit": false
     }
   },
   "native": {
@@ -55,7 +59,12 @@
       "coarse": "PASS",
       "expired": "PASS_saved_image_review",
       "narrow_320": "PASS_native_content_container_full_32_char_code",
-      "last_error_denied_and_final_component_screens": "PENDING_Mac_locked"
+      "last_error_denied_and_final_component_screens": "PASS_final_development_client_native_UI",
+      "read_error": "PASS_address_retained_no_secret_no_false_empty",
+      "retry": "PASS_native_UI_action_recovers_TEST_01",
+      "denied": "PASS_address_retained_no_secret",
+      "final_shared_carousel": "PASS_192_height_neighbor_edge_city_metric_scale",
+      "simulator_location_note": "Repeated identical simctl positions did not always emit a fresh CoreLocation observation; a bounded public TEST micro-movement restored observations. After injections stopped, the automatic card cleared with location-expired state. No freshness checks were bypassed."
     },
     "android": {
       "environment": "existing API37 emulator, Expo development build",
@@ -68,7 +77,11 @@
       "coarse": "PASS_native_image",
       "expired": "PASS_saved_image_review",
       "narrow_320": "PASS_native_content_container_full_code",
-      "last_error_denied_and_final_component_screens": "PENDING_Mac_locked"
+      "last_error_denied_and_final_component_screens": "PASS_final_development_client_native_UI",
+      "read_error": "PASS_address_retained_no_secret_no_false_empty",
+      "retry": "PASS_native_UI_action_recovers_TEST_01",
+      "denied": "PASS_address_retained_no_secret",
+      "final_shared_carousel": "PASS_192_height_neighbor_edge_city_metric_scale"
     },
     "new_native_compilation": false,
     "physical_iPhone_test": false,
@@ -87,21 +100,30 @@
     "API_listener_change": false
   },
   "screenshots": [
+    "android-carousel-final.png",
     "android-coarse.png",
+    "android-denied-final.png",
+    "android-error-final.png",
     "android-expired.png",
     "android-narrow.png",
+    "android-retry-success-final.png",
     "android-user-confirmed.png",
     "ios-102-expanded.png",
     "ios-104-empty.png",
+    "ios-carousel-final.png",
     "ios-coarse.png",
+    "ios-denied-final.png",
+    "ios-error-final.png",
     "ios-expired.png",
-    "ios-narrow.png"
+    "ios-location-expired-final.png",
+    "ios-narrow.png",
+    "ios-retry-success-final.png"
   ],
   "next": [
-    "unlock_dependent_visual_closure",
-    "confirm_exact_HEAD_CI_in_PR90",
+    "confirm_documentation_commit_CI_in_PR90",
     "R4-03_direct_address_contribution",
-    "R4-04_collaboration_carousel"
+    "R4-04_collaboration_carousel",
+    "R4-05_combined_phase_exit"
   ],
   "code_hash_scope": [
     "apps",

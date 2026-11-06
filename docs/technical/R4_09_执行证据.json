@@ -63,25 +63,25 @@
       "compact date/time rows and fixed operations observed",
       "brand track/white native thumb observed"
     ],
-    "pending": [
-      "Android draft cancel / failed-save retry / version-conflict reload / region failure close"
-    ],
-    "blocked_observation": "Android mirror click noWindowsAvailable; owner supplementary groups requested; iOS controls working",
+    "pending": [],
+    "blocked_observation": null,
     "physical_device_acceptance": false,
     "full_native_HTTP_combined_exit": "R4-10_pending",
     "software_keyboard_matrix": "R4-10_pending",
-    "android_owner_requests": [
+    "android_owner_feedback": [
       {
-        "scope": "dirty_cancel_and_failed_save_retry",
-        "status": "pending",
-        "source": "current_turn_async_supplement_question_1"
+        "question_id": "call_6b4879d97cc7497a940c9fe747518892:0",
+        "result": "正常",
+        "scope": "dirty_cancel_continue_preserves_draft/discard_zero_writes/failed_save_tomorrow_retry_two_attempts"
       },
       {
-        "scope": "version_conflict_reload_and_region_failure_close",
-        "status": "pending",
-        "source": "current_turn_async_supplement_question_2"
+        "question_id": "call_6b4879d97cc7497a940c9fe747518892:1",
+        "result": "正常",
+        "scope": "version_conflict_locks_reload_current_date_capacity80_save/region_failure_close"
       }
-    ]
+    ],
+    "android_tool_clicks": "unreliable_noWindowsAvailable_owner_results_used",
+    "android_native_picker_cancel": "not_newly_claimed_R4-10_system_matrix"
   },
   "artifacts": [
     {
@@ -125,15 +125,15 @@
     "scope": "implementation_commit_exact_head",
     "note": "Documentation closure changes no business code; latest closure-head CI must be checked separately via PR97 Checks."
   },
-  "current_batch_complete": false,
-  "next_task": "finish_R4-09_native_then_R4-10",
+  "current_batch_complete": true,
+  "next_task": "R4-10",
   "pull_request": "https://github.com/olly888/abasong/pull/97",
   "validated_code_commit": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
   "code_diff_sha256": "54b267aa3487c53babc23cd8716d181716e194b1a03bed8cbbc83d86eed95a26",
   "code_diff_command": "git diff --binary 587b6c00b491049ff7a5ffff4fad79ffa8b72a1a VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml",
   "latest_document_closure_ci": {
-    "run_id": 42295772587,
-    "head_sha": "492e17ef8c02d80babe9f6ff35b3cfbd41caa157",
+    "run_id": 42300095336,
+    "head_sha": "0b35c5b3e98b213605e616a6cd6f84482fbaaf8b",
     "status": "PASS"
   },
   "next_plan": "R4_10_本地原生业务组合验收方案.md"

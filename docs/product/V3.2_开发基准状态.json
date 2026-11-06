@@ -1,10 +1,10 @@
 {
-  "version": "V3.2-R4-09-availability-window",
+  "version": "V3.2-R4-09-scoped-exit",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_09_implemented_automated_PASS_ios_supplement_PASS_Android_owner_pending",
+  "scope": "R4_09_scoped_dual_native_exit_PASS_R4_10_next",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
@@ -12,7 +12,7 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "R4_09_single_window_dates_cancel_close_conflict_aligned_scoped",
-    "implementation": "R4_01_to_08_scoped_local_exit_R4_09_native_supplement_pending",
+    "implementation": "R4_01_to_09_scoped_local_exit_R4_10_next",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -218,7 +218,7 @@
     "eligible_batches": [
       "R4-2"
     ],
-    "next_task": "R4-09",
+    "next_task": "R4-10",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -418,8 +418,8 @@
     "evidence": "../technical/R4_09_执行证据.json",
     "branch": "codex/r4-09-availability-window",
     "base": "587b6c00b491049ff7a5ffff4fad79ffa8b72a1a",
-    "status": "implemented_ios_supplement_PASS_Android_owner_pending",
-    "current_batch_complete": false,
+    "status": "scoped_dual_native_exit_PASS",
+    "current_batch_complete": true,
     "engineering_files": 79,
     "engineering_tests": 470,
     "requests_http_database_checks": 515,
@@ -433,7 +433,7 @@
     "cloud_changed": false,
     "my_compact_switch": "B5_pending",
     "physical_acceptance": false,
-    "next_task": "finish_R4-09_native_then_R4-10",
+    "next_task": "R4-10",
     "pull_request": "https://github.com/olly888/abasong/pull/97",
     "ci_source": "https://github.com/olly888/abasong/pull/97/checks",
     "validated_code_commit": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
@@ -442,6 +442,12 @@
       "head_sha": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
       "conclusion": "success"
     },
-    "ios_native_supplement": "PASS_picker_cancel_dirty_cancel_save_retry_conflict_region_failure_expired_close"
+    "ios_native_supplement": "PASS_picker_cancel_dirty_cancel_save_retry_conflict_region_failure_expired_close",
+    "android_owner_feedback": "PASS_both_groups",
+    "latest_document_ci": {
+      "run_id": 42300095336,
+      "head_sha": "0b35c5b3e98b213605e616a6cd6f84482fbaaf8b",
+      "conclusion": "success"
+    }
   }
 }

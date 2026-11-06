@@ -1,4 +1,4 @@
-"""Prepared R4-06 models; no route opts into V2 before R4-07."""
+"""Versioned delivery models and backwards-compatible R4-07 routing."""
 from copy import deepcopy
 
 
@@ -62,7 +62,8 @@ def add_request_v2_contracts(S, obj, out, ref, string, enum, integer, uid, dt, b
     snapshot = {k: deepcopy(v) for k, v in S['RequestVersion']['properties'].items() if k != 'private_payment_terms'}
     snapshot.update(terms)
     snapshot.update({'pickup_kind': nullable(enum('warehouse', 'contact_handoff')),
-                     'pickup_address_version': nullable(integer(1))})
+                     'pickup_address_version': nullable(integer(1)),
+                     'publisher_display_name': nullable(string(60)), 'organization_name': nullable(string(120))})
     out('RequestVersionV2', snapshot)
     public = deepcopy(S['PublicRequestSummary']['properties'])
     public.update(terms)
@@ -72,8 +73,8 @@ def add_request_v2_contracts(S, obj, out, ref, string, enum, integer, uid, dt, b
              'RequestPatchV2', 'GapInputV2', 'WarehousePickupDetailV2', 'PickupLocationDetailV2',
              'RequestSummaryV2', 'RequestDetailV2', 'RequestVersionV2', 'PublicRequestSummaryV2']
     for name in names:
-        S[name]['x-implementation-stage'] = 'R4-06-prepared-not-routed'
-        S[name]['description'] = ('R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。'
+        S[name]['x-implementation-stage'] = 'R4-07-local-service'
+        S[name]['description'] = ('R4-07本地服务已接通；原生表单在R4-08接入。'
                                 '未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。')
     S['RequestSummaryV2']['description'] += '仅发现摘要，不含完整取件地址。'
     S['RequestDetailV2']['description'] += '完整取件信息仅在有权登录详情读取。'
@@ -82,3 +83,38 @@ def add_request_v2_contracts(S, obj, out, ref, string, enum, integer, uid, dt, b
     S['RequestDraftInputV2']['description'] += ('草稿可不完整；发布前须完整核对。asap的starts_at为空并由服务端当次生成；'
         'scheduled使用明确时刻和匹配的洛杉矶接手日。下架默认最迟接手或接手日23:59，独立于送完要求。')
     S['WarehousePickupDraftV2']['description'] += ('address_source需明确区分手填与Mapbox联想；联想地址文字也须经后台有持久许可的来源核对后保存，不能仅删除坐标后当手填存储。')
+
+
+def wire_request_v2(S, paths, ref, query):
+    def union(name, *items):
+        S[name] = {'oneOf': [ref(item) for item in items]}
+    union('RequestRead', 'Request', 'RequestDetailV2')
+    union('RequestSummaryRead', 'Request', 'RequestSummaryV2')
+    union('RequestDraftAny', 'RequestDraftInput', 'RequestDraftInputV2')
+    union('RequestPatchAny', 'RequestPatch', 'RequestPatchV2')
+    union('GapAny', 'GapInput', 'GapInputV2')
+    union('RequestSnapshot', 'RequestVersion', 'RequestVersionV2')
+    union('PublicRequestSummaryRead', 'PublicRequestSummary', 'PublicRequestSummaryV2')
+    S['RequestPageV2'] = {'type':'object','additionalProperties':False,'required':['items','next_cursor'],
+        'properties':{'items':{'type':'array','items':ref('RequestSummaryV2')},'next_cursor':{'type':'string','nullable':True}}}
+    union('RequestListRead','RequestPage','RequestPageV2')
+    # Empty legacy/V2 pages intentionally have the same shape.
+    S['RequestListRead']={'anyOf':[ref('RequestPage'),ref('RequestPageV2')]}
+    for obj,key,target in [('Application','request_summary','RequestSummaryRead'),('Message','request_snapshot','RequestSnapshot'),
+                           ('Conversation','last_request_snapshot','RequestSnapshot'),('PublicRequestShare','summary','PublicRequestSummaryRead')]:
+        S[obj]['properties'][key]={'allOf':[ref(target)],'nullable':True}
+    S['RequestVersionPage']['properties']['items']['items']=ref('RequestSnapshot')
+    for path,operations in paths.items():
+        for method,op in operations.items():
+            body=op.get('requestBody',{}).get('content',{}).get('application/json',{})
+            if body.get('schema',{}).get('$ref') in [ref(x)['$ref'] for x in ['RequestDraftInput','RequestPatch','GapInput']]:
+                old=body['schema']['$ref'].split('/')[-1]
+                body['schema']=ref({'RequestDraftInput':'RequestDraftAny','RequestPatch':'RequestPatchAny','GapInput':'GapAny'}[old])
+            for response in op.get('responses',{}).values():
+                content=response.get('content',{}).get('application/json',{})
+                old=content.get('schema',{}).get('$ref')
+                if old==ref('Request')['$ref']:content['schema']=ref('RequestRead')
+                if old==ref('RequestPage')['$ref']:content['schema']=ref('RequestListRead')
+            if method=='get' and path in ['/v1/requests','/v1/me/requests']:
+                op.setdefault('parameters',[]).append(query('request_schema_version',{'type':'integer','enum':[1,2],'default':1}))
+                op['description']='默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。'

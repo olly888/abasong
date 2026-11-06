@@ -1,18 +1,18 @@
 {
-  "version": "V3.2-R4-06-prepared",
-  "date": "2026-11-05",
+  "version": "V3.2-R4-07-local-services",
+  "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_base_with_scoped_R4_home_cards_and_contribution",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_06_contract_and_local_migration_prepared_next_R4_07",
+  "scope": "R4_07_local_delivery_services_verified_next_R4_08",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
     "requirements": "scoped",
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
-    "baseline_documents": "V2_models_prepared_routes_V1_R4_07_service_pending",
-    "implementation": "R4_01_to_05_local_native_exit_passed_R4_06_contract_prepared_not_routed",
+    "baseline_documents": "V2_service_contract_local_HTTP_PG_aligned_native_R4_08_pending",
+    "implementation": "R4_01_to_05_local_native_exit_R4_06_contract_R4_07_services_verified",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -193,7 +193,7 @@
     "P04"
   ],
   "delivery": {
-    "status": "contract_and_local_migration_prepared_service_native_pending",
+    "status": "local_services_verified_native_form_pending",
     "requirements": "Abasong_V3.2_两场景发布与公寓卡片优化补充.md",
     "app_changed": false,
     "report": "../../design/abasong-independent-v1/v12.1-experience/delivery-checks.json",
@@ -201,7 +201,7 @@
     "p1_apartment_list_implemented": false,
     "deferred_specialized_help": true,
     "contracts_prepared": true,
-    "v2_routes_enabled": false
+    "v2_routes_enabled": true
   },
   "release_ready": false,
   "readiness_scope": "controlled_R4_2_after_scoped_R4_1_exit_not_full_native_or_release_acceptance",
@@ -217,7 +217,7 @@
     "eligible_batches": [
       "R4-2"
     ],
-    "next_task": "R4-07",
+    "next_task": "R4-08",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -346,5 +346,35 @@
     "pull_request": "https://github.com/olly888/abasong/pull/94",
     "ci_source": "https://github.com/olly888/abasong/pull/94/checks",
     "validated_code_commit": "87d52eef7c595737073c155adb00666954583a0e"
+  },
+  "r4_delivery_services": {
+    "report": "../technical/R4_07_两场景服务闭环验收.md",
+    "evidence": "../technical/R4_07_执行证据.json",
+    "branch": "codex/r4-07-delivery-services",
+    "base": "3bc2037c5a776018aee19a610a67890adeb71713",
+    "status": "scoped_local_HTTP_PG_services_verified",
+    "current_batch_complete": true,
+    "v2_routes_enabled": true,
+    "default_list_schema_version": 1,
+    "new_list_opt_in_schema_version": 2,
+    "engineering_files": 76,
+    "engineering_tests": 434,
+    "requests_http_database_checks": 509,
+    "delivery_additional_assertions": 88,
+    "library_http_database_checks": 295,
+    "import_http_database_checks": 124,
+    "d0_migrations": 17,
+    "d0_tables": 54,
+    "new_migrations": [
+      "0017"
+    ],
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "real_provider_calls": false,
+    "public_share_receiver_deployed": false,
+    "native_ui_changed": false,
+    "new_native_acceptance": false,
+    "next_task": "R4-08"
   }
 }

@@ -22,6 +22,11 @@ import { ApartmentsService } from "./apartments/apartments.service";
 import { SensitiveDatabase } from "./apartments/sensitive-database";
 import { RequestsController } from "./requests/requests.controller";
 import { RequestsService } from "./requests/requests.service";
+import { RequestSharesService } from "./requests/request-shares.service";
+import {
+  RequestSharesController,
+  PublicRequestSharesController,
+} from "./requests/request-shares.controller";
 import { CollaborationController } from "./requests/collaboration.controller";
 import { MessagingService } from "./requests/messaging.service";
 import { CollaborationService } from "./requests/collaboration.service";
@@ -71,6 +76,8 @@ class HealthController {
     SearchController,
     NearbyController,
     RequestsController,
+    RequestSharesController,
+    PublicRequestSharesController,
     CollaborationController,
     DevicesController,
     DriversController,
@@ -88,6 +95,7 @@ class HealthController {
     SearchService,
     NearbyService,
     RequestsService,
+    RequestSharesService,
     CollaborationService,
     MessagingService,
     DevicesService,

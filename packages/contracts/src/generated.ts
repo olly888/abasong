@@ -511,7 +511,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 仅开放且未到期的可见需求 */
+        /**
+         * 仅开放且未到期的可见需求
+         * @description 默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。
+         */
         get: operations["listRequests"];
         put?: never;
         /** 创建本人需求草稿 */
@@ -685,7 +688,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 本人草稿与发布记录 */
+        /**
+         * 本人草稿与发布记录
+         * @description 默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。
+         */
         get: operations["listMyRequests"];
         put?: never;
         post?: never;
@@ -2055,7 +2061,7 @@ export interface components {
             contacted_at: string | null;
             /** Format: uuid */
             conversation_id: string;
-            request_summary: components["schemas"]["Request"] | (never | null);
+            request_summary: components["schemas"]["RequestSummaryRead"] | (never | null);
             applicant_profile: components["schemas"]["Profile"] | (never | null);
         };
         AvailabilityInput: {
@@ -2107,7 +2113,7 @@ export interface components {
             other_last_read_sequence: number;
             can_send: boolean;
             last_request_region_label: string | null;
-            last_request_snapshot: components["schemas"]["RequestVersion"] | (never | null);
+            last_request_snapshot: components["schemas"]["RequestSnapshot"] | (never | null);
             /** Format: date-time */
             updated_at: string;
         };
@@ -2148,7 +2154,7 @@ export interface components {
             /** @enum {string} */
             kind: "text" | "request_card";
             text: string | null;
-            request_snapshot: components["schemas"]["RequestVersion"] | (never | null);
+            request_snapshot: components["schemas"]["RequestSnapshot"] | (never | null);
             /** Format: date-time */
             created_at: string;
         };
@@ -2389,9 +2395,9 @@ export interface components {
             /** @enum {string} */
             status: "open" | "ended";
             title: string;
-            summary: components["schemas"]["PublicRequestSummary"] | (never | null);
+            summary: components["schemas"]["PublicRequestSummaryRead"] | (never | null);
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。address_source需明确区分手填与Mapbox联想；联想地址文字也须经后台有持久许可的来源核对后保存，不能仅删除坐标后当手填存储。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。address_source需明确区分手填与Mapbox联想；联想地址文字也须经后台有持久许可的来源核对后保存，不能仅删除坐标后当手填存储。 */
         WarehousePickupDraftV2: {
             /** @enum {string} */
             kind: "warehouse";
@@ -2404,14 +2410,14 @@ export interface components {
             /** @enum {string} */
             address_source?: "publisher_entered" | "mapbox_suggestion";
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
         ContactHandoffV2: {
             /** @enum {string} */
             kind: "contact_handoff";
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
         PickupDraftV2: components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"];
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。草稿可不完整；发布前须完整核对。asap的starts_at为空并由服务端当次生成；scheduled使用明确时刻和匹配的洛杉矶接手日。下架默认最迟接手或接手日23:59，独立于送完要求。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。草稿可不完整；发布前须完整核对。asap的starts_at为空并由服务端当次生成；scheduled使用明确时刻和匹配的洛杉矶接手日。下架默认最迟接手或接手日23:59，独立于送完要求。 */
         RequestDraftInputV2: {
             /** @enum {integer} */
             request_schema_version: 2;
@@ -2462,7 +2468,7 @@ export interface components {
             completion_mode?: "same_day" | "next_day" | "contact";
             pickup?: (components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"]) | (never | null);
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
         RequestPatchV2: {
             /** @enum {integer} */
             request_schema_version: 2;
@@ -2510,7 +2516,7 @@ export interface components {
             completion_mode?: "same_day" | "next_day" | "contact";
             pickup?: (components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"]) | (never | null);
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
         GapInputV2: {
             /** @enum {integer} */
             request_schema_version: 2;
@@ -2518,7 +2524,7 @@ export interface components {
             remaining_parcels?: number | null;
             remaining_drivers?: number;
         } | unknown | unknown;
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
         WarehousePickupDetailV2: {
             /** @enum {string} */
             kind: "warehouse";
@@ -2535,9 +2541,9 @@ export interface components {
             /** @enum {string} */
             point_source: "unlocated" | "persistent_source";
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
         PickupLocationDetailV2: components["schemas"]["WarehousePickupDetailV2"] | components["schemas"]["ContactHandoffV2"];
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。仅发现摘要，不含完整取件地址。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。仅发现摘要，不含完整取件地址。 */
         RequestSummaryV2: {
             /** Format: uuid */
             id: string;
@@ -2598,7 +2604,7 @@ export interface components {
             /** @enum {string|null} */
             pickup_kind: "warehouse" | "contact_handoff" | null;
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。完整取件信息仅在有权登录详情读取。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。完整取件信息仅在有权登录详情读取。 */
         RequestDetailV2: {
             /** Format: uuid */
             id: string;
@@ -2661,7 +2667,7 @@ export interface components {
             pickup: components["schemas"]["PickupLocationDetailV2"] | (never | null);
             private_payment_terms: string | null;
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。去敏来源快照：不含地址、坐标或私下付款正文。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。去敏来源快照：不含地址、坐标或私下付款正文。 */
         RequestVersionV2: {
             /** Format: uuid */
             request_id: string;
@@ -2713,8 +2719,10 @@ export interface components {
             /** @enum {string|null} */
             pickup_kind: "warehouse" | "contact_handoff" | null;
             pickup_address_version: number | null;
+            publisher_display_name: string | null;
+            organization_name: string | null;
         };
-        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。独立游客白名单，不含取件地址、坐标及私人联系方式。 */
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。独立游客白名单，不含取件地址、坐标及私人联系方式。 */
         PublicRequestSummaryV2: {
             carrier: string | null;
             kind: string;
@@ -2765,7 +2773,7 @@ export interface components {
             next_cursor: string | null;
         };
         RequestVersionPage: {
-            items: components["schemas"]["RequestVersion"][];
+            items: components["schemas"]["RequestSnapshot"][];
             next_cursor: string | null;
         };
         ApplicationPage: {
@@ -3071,6 +3079,18 @@ export interface components {
             recognizer_version: string;
             candidates: components["schemas"]["ImportDeviceCandidateInput"][];
         };
+        RequestRead: components["schemas"]["Request"] | components["schemas"]["RequestDetailV2"];
+        RequestSummaryRead: components["schemas"]["Request"] | components["schemas"]["RequestSummaryV2"];
+        RequestDraftAny: components["schemas"]["RequestDraftInput"] | components["schemas"]["RequestDraftInputV2"];
+        RequestPatchAny: components["schemas"]["RequestPatch"] | components["schemas"]["RequestPatchV2"];
+        GapAny: components["schemas"]["GapInput"] | components["schemas"]["GapInputV2"];
+        RequestSnapshot: components["schemas"]["RequestVersion"] | components["schemas"]["RequestVersionV2"];
+        PublicRequestSummaryRead: components["schemas"]["PublicRequestSummary"] | components["schemas"]["PublicRequestSummaryV2"];
+        RequestPageV2: {
+            items: components["schemas"]["RequestSummaryV2"][];
+            next_cursor: string | null;
+        };
+        RequestListRead: components["schemas"]["RequestPage"] | components["schemas"]["RequestPageV2"];
     };
     responses: never;
     parameters: never;
@@ -6650,6 +6670,7 @@ export interface operations {
                 carrier?: string;
                 day?: string;
                 kind?: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+                request_schema_version?: 1 | 2;
             };
             header?: never;
             path?: never;
@@ -6665,7 +6686,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RequestPage"];
+                    "application/json": components["schemas"]["RequestListRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -6753,7 +6774,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RequestDraftInput"];
+                "application/json": components["schemas"]["RequestDraftAny"];
             };
         };
         responses: {
@@ -6765,7 +6786,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -6861,7 +6882,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -7045,7 +7066,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RequestPatch"];
+                "application/json": components["schemas"]["RequestPatchAny"];
             };
         };
         responses: {
@@ -7057,7 +7078,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -7159,7 +7180,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -7261,7 +7282,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -7363,7 +7384,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -7451,7 +7472,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GapInput"];
+                "application/json": components["schemas"]["GapAny"];
             };
         };
         responses: {
@@ -7463,7 +7484,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -8037,6 +8058,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                request_schema_version?: 1 | 2;
             };
             header?: never;
             path?: never;
@@ -8052,7 +8074,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RequestPage"];
+                    "application/json": components["schemas"]["RequestListRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -11669,7 +11691,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */

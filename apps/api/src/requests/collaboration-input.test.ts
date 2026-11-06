@@ -26,6 +26,62 @@ const body = {
   capacity_parcels: 50,
 };
 describe("application business limits", () => {
+  const v2 = {
+    ...row,
+    request_schema_version: 2,
+    scenario: "warehouse_shortage",
+    quantity_mode: "unknown",
+    handoff_date: "2026-11-05",
+    starts_at: new Date("2026-11-05T20:00:00Z"),
+    expires_at: new Date(now + 60000),
+    remaining_parcels: null,
+    remaining_drivers: 2,
+    minimum_parcels: null,
+  } as RequestRow;
+  const v2Body = {
+    observed_request_version: 3,
+    expected_arrival_at: "2026-11-05T20:15:00Z",
+  };
+  it("accepts a future pickup after discovery expiry and unknown capacity without reserving parcels", () => {
+    expect(() => validateApplication(v2, v2Body, now)).not.toThrow();
+    expect(() =>
+      validateApplication({ ...v2, remaining_drivers: 0 }, v2Body, now),
+    ).toThrow();
+    expect(() =>
+      validateApplication(
+        v2,
+        { ...v2Body, expected_arrival_at: "2026-11-06T20:15:00Z" },
+        now,
+      ),
+    ).toThrow();
+  });
+  it("estimated volume is not a hard upper bound but an explicit minimum still applies", () => {
+    const estimate = {
+      ...v2,
+      quantity_mode: "estimate",
+      parcel_count: 10,
+      minimum_parcels: 20,
+    };
+    expect(() =>
+      validateApplication(estimate, { ...v2Body, capacity_parcels: 35 }, now),
+    ).not.toThrow();
+    expect(() =>
+      validateApplication(estimate, { ...v2Body, capacity_parcels: 10 }, now),
+    ).toThrow();
+  });
+  it("V2 source projection strips address and payment body from historical stored data", () => {
+    const projected = safeRequestSnapshot({
+      request_schema_version: 2,
+      request_id: "TEST",
+      private_payment_terms: "TEST",
+      pickup: { address_line1: "TEST" },
+      point: { lng: 0, lat: 0 },
+      publisher_display_name: "TEST author",
+    });
+    for (const key of ["private_payment_terms", "pickup", "point"])
+      expect(projected).not.toHaveProperty(key);
+    expect(projected).toHaveProperty("publisher_display_name", "TEST author");
+  });
   it("requires the conditions actually read, without accepting spoofed identities", () => {
     expect(() =>
       validateApplication(row, { ...body, observed_request_version: 2 }, now),

@@ -129,6 +129,13 @@ function parts(time: number) {
   };
 }
 export const laDate = (time: number) => parts(time).date;
+// pg DATE has no timezone. Its Date parser uses the process-local calendar;
+// converting that value to UTC/LA would change the intended workday.
+export function calendarDate(value: unknown): string | null {
+  if (value instanceof Date)
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+  return typeof value === "string" ? value : null;
+}
 export function endOfLaDay(day: string) {
   checked(z.iso.date(), day);
   const [y, m, d] = day.split("-").map(Number) as [number, number, number];
@@ -150,7 +157,11 @@ function nextDay(day: string) {
 function incomplete(message: string): never {
   throw new ApiError(422, "REQUEST_INCOMPLETE", message);
 }
-export function prepareV2Publication(input: unknown, now: number) {
+export function prepareV2Publication(
+  input: unknown,
+  now: number,
+  existingStart?: string,
+) {
   if (!Number.isFinite(now)) throw new Error("Publication clock unavailable");
   const p = checked(draftV2Input, input);
   if (
@@ -199,14 +210,18 @@ export function prepareV2Publication(input: unknown, now: number) {
   }
   let start: number;
   if (p.handoff_mode === "asap") {
-    if (p.starts_at != null || p.handoff_date !== laDate(now))
+    if (
+      p.starts_at != null ||
+      (!existingStart && p.handoff_date !== laDate(now))
+    )
       incomplete("尽快接手仅适用于今天，请重新核对日期");
-    start = now;
+    start = existingStart ? Date.parse(existingStart) : now;
+    if (laDate(start) !== p.handoff_date) incomplete("请核对原接手日");
   } else {
     start = Date.parse(p.starts_at ?? "");
     if (
       !Number.isFinite(start) ||
-      start < now ||
+      (start < now && existingStart !== new Date(start).toISOString()) ||
       laDate(start) !== p.handoff_date
     )
       incomplete("请选择未来的接手时间及对应洛杉矶日期");

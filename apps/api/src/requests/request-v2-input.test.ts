@@ -6,6 +6,7 @@ import {
   prepareV2Publication,
   endOfLaDay,
   laDate,
+  calendarDate,
 } from "./request-v2-input";
 const now = Date.parse("2026-11-05T20:00:00Z");
 const full = () => ({
@@ -236,4 +237,25 @@ it("last-minute asap still has a future end-of-day expiry", () => {
   );
   expect(Date.parse(p.expires_at)).toBeGreaterThan(late);
   expect(p.expires_at).toBe("2026-11-06T07:59:59.999Z");
+});
+it("preserves a pg calendar DATE without reinterpreting it as a GPS timestamp", () => {
+  expect(calendarDate(new Date(2026, 10, 6))).toBe("2026-11-06");
+  expect(calendarDate("2026-11-06")).toBe("2026-11-06");
+});
+it("only an existing unchanged start can remain in the past when editing open work", () => {
+  const original = "2026-11-05T19:00:00.000Z";
+  expect(() =>
+    prepareV2Publication({ ...full(), starts_at: original }, now),
+  ).toThrow();
+  expect(
+    prepareV2Publication({ ...full(), starts_at: original }, now, original)
+      .starts_at,
+  ).toBe(original);
+  expect(() =>
+    prepareV2Publication(
+      { ...full(), starts_at: "2026-11-05T18:00:00.000Z" },
+      now,
+      original,
+    ),
+  ).toThrow();
 });

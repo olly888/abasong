@@ -4,7 +4,7 @@
   "status": "planned",
   "current_design": "V3.1",
   "target_design": "V3.2-proposal",
-  "prototype_status": "r3_simple_synthetic_pending_user_review",
+  "prototype_status": "owner_main_flows_accepted_not_all_states_or_native",
   "app_changed": false,
   "items": [
     {
@@ -26,7 +26,8 @@
         "UX02"
       ],
       "implementation_dependency": "preserve_current_apartment_flow",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP02",
@@ -56,7 +57,8 @@
         "UX03"
       ],
       "implementation_dependency": "preserve_current_confirmed_contribution_and_correction",
-      "prototype_status": "partial_or_retained_pending_review"
+      "prototype_status": "partial_or_retained_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP03",
@@ -77,7 +79,8 @@
         "UX04"
       ],
       "implementation_dependency": "region_query_and_mode_camera_state",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP04",
@@ -95,7 +98,8 @@
         "UX05"
       ],
       "implementation_dependency": "point_primary_geometry_comparison_optional",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP05",
@@ -116,7 +120,8 @@
         "UX05"
       ],
       "implementation_dependency": "loaded_counts_first_full_aggregate_contract_later",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP06",
@@ -135,7 +140,8 @@
         "UX06"
       ],
       "implementation_dependency": "versioned_date_semantics_and_DST_tests",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP07",
@@ -159,7 +165,8 @@
         "UX07"
       ],
       "implementation_dependency": "one_window_versioned_declaration",
-      "prototype_status": "partial_or_retained_pending_review"
+      "prototype_status": "partial_or_retained_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP08",
@@ -180,7 +187,8 @@
         "UX07"
       ],
       "implementation_dependency": "existing_notifications_only_new_opportunity_opt_in_deferred",
-      "prototype_status": "partial_or_retained_pending_review"
+      "prototype_status": "partial_or_retained_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP09",
@@ -197,7 +205,8 @@
         "UX08"
       ],
       "implementation_dependency": "V3.1_tokens_retained_V3.2_not_active",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP10",
@@ -229,7 +238,8 @@
         "UX08"
       ],
       "implementation_dependency": "shared_states_and_native_accessibility_acceptance",
-      "prototype_status": "partial_or_retained_pending_review"
+      "prototype_status": "partial_or_retained_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP11",
@@ -262,7 +272,8 @@
         "UX09"
       ],
       "implementation_dependency": "versioned_pickup_location_authenticated_detail_external_navigation_public_summary_excludes_exact_address",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP12",
@@ -288,7 +299,8 @@
         "UX10"
       ],
       "implementation_dependency": "shared_map_card_carousel_distance_basis_origin_freshness_query_selection_separation",
-      "prototype_status": "core_implemented_pending_user_review"
+      "prototype_status": "core_implemented_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP13",
@@ -323,7 +335,8 @@
         "UX11"
       ],
       "implementation_dependency": "native_post_comment_service_summary_permissions_reply_notifications_B5",
-      "prototype_status": "circle_implemented_synthetic_pending_user_review"
+      "prototype_status": "circle_implemented_synthetic_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP14",
@@ -354,7 +367,8 @@
         "UX12"
       ],
       "implementation_dependency": "D15_D17_private_media_upload_read_lifecycle",
-      "prototype_status": "photos_implemented_synthetic_native_pending"
+      "prototype_status": "photos_implemented_synthetic_native_pending",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP15",
@@ -380,7 +394,8 @@
         "UX13"
       ],
       "implementation_dependency": "D18_profile_purpose_and_availability_switch_not_grant",
-      "prototype_status": "account_implemented_synthetic_native_service_pending"
+      "prototype_status": "account_implemented_synthetic_native_service_pending",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP16",
@@ -402,7 +417,8 @@
         "UX14"
       ],
       "implementation_dependency": "D19_cancelled_keep_existing_chat_and_block_recovery",
-      "prototype_status": "saved_contact_list_cancelled_first_release"
+      "prototype_status": "saved_contact_list_cancelled_first_release",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP17",
@@ -430,7 +446,8 @@
         "UX15"
       ],
       "implementation_dependency": "D20_own_team_opt_in_contact_source_snapshot",
-      "prototype_status": "account_implemented_synthetic_native_service_pending"
+      "prototype_status": "account_implemented_synthetic_native_service_pending",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP18",
@@ -456,7 +473,8 @@
         "UX16"
       ],
       "implementation_dependency": "D21_generic_share_qr_landing_valid_distribution_links_no_grant",
-      "prototype_status": "synthetic_20_pass_pending_user_confirmation_native_distribution_pending"
+      "prototype_status": "synthetic_20_pass_owner_main_flow_review_recorded_native_distribution_pending",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP19",
@@ -488,7 +506,8 @@
         "UX17"
       ],
       "implementation_dependency": "D22_request_semantics_contract_before_native",
-      "prototype_status": "synthetic_25_checks_pending_user_confirmation"
+      "prototype_status": "synthetic_25_checks_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP20",
@@ -507,7 +526,8 @@
         "UX18"
       ],
       "implementation_dependency": "D23_card_alignment_explicit_scope_only",
-      "prototype_status": "synthetic_25_checks_pending_user_confirmation"
+      "prototype_status": "synthetic_25_checks_owner_main_flow_review_recorded",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {
       "id": "UP21",
@@ -524,7 +544,8 @@
         "UX19"
       ],
       "implementation_dependency": "D24_P1_nearby_list_not_in_first_release",
-      "prototype_status": "P1_documented_not_implemented"
+      "prototype_status": "P1_documented_not_implemented",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     }
   ],
   "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/index.html",
@@ -535,5 +556,14 @@
   "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json",
   "account_report": "../../design/abasong-independent-v1/v12.1-experience/account-checks.json",
   "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json",
-  "invitation_plan": "../product/Abasong_V3.2_邀请司机功能方案.md"
+  "invitation_plan": "../product/Abasong_V3.2_邀请司机功能方案.md",
+  "owner_review": {
+    "status": "main_flows_accepted",
+    "date": "2026-11-05",
+    "evidence": "user: 原型基本体验符合预期",
+    "all_page_states_accepted": false,
+    "native_acceptance": false,
+    "human_test_participants_added": 0
+  },
+  "implementation_task_register": "../technical/V3.2_App对齐开发任务清单.csv"
 }

@@ -12,7 +12,7 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "aligned_target_not_released_contracts",
-    "implementation": "R4_01_code_CI_passed_R4_02_scoped_dual_native_verified_R4_03_next",
+    "implementation": "R4_01_02_03_scoped_verified_R4_04_queued",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -215,7 +215,7 @@
     "eligible_batches": [
       "R4-1"
     ],
-    "next_task": "R4-03",
+    "next_task": "R4-04",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -240,5 +240,27 @@
     "validated_code_run_id": 42143887719,
     "current_batch_complete": true,
     "whole_R4_1_exit": false
+  },
+  "r4_contribution_form": {
+    "report": "../technical/R4_03_统一贡献表单实施验收.md",
+    "status": "implemented_scoped_dual_native_verified",
+    "branch": "codex/r4-03-unified-contribution-form",
+    "base": "1e6b306080a9a0cc1f7985b5f72f62d0dcd76627",
+    "engineering_tests": 380,
+    "http_database_checks": 295,
+    "android_manual_feedback": "PASS_owner_confirmed_both_groups",
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "real_account_grants": false,
+    "cloud_changed": false,
+    "evidence": "../technical/R4_03_执行证据.json",
+    "ios_native": "PASS_TEST_component_flows_and_visual",
+    "native_compilation_run": false,
+    "ios_physical_acceptance": false,
+    "android_physical_acceptance": false,
+    "current_batch_complete": true,
+    "whole_R4_1_exit": false,
+    "ci_source": "current_branch_draft_PR_exact_HEAD_checks"
   }
 }

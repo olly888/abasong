@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-05",
+  "timezone": "America/Los_Angeles",
+  "base": "1e6b306080a9a0cc1f7985b5f72f62d0dcd76627",
+  "branch": "codex/r4-03-unified-contribution-form",
+  "code_diff_sha256": "b3ac78b86f659f95cb8b93083341fc06eab62ad62d53650e37ca715886612727",
+  "code_diff_command": "git diff --cached --binary 1e6b306080a9a0cc1f7985b5f72f62d0dcd76627 -- apps/mobile",
+  "scope": "R4-03 unified manual contribution form and autocomplete; not full R4-05, B5, B6 or release",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS_after_final_keyboard_offset_fix",
+      "test_files": 71,
+      "tests": 380,
+      "includes": [
+        "lint",
+        "workspace_types",
+        "unit_tests",
+        "shared_packages_API_worker_build"
+      ],
+      "native_compilation": false,
+      "local_log": "/private/tmp/abasong-r4-03-check.log"
+    },
+    "focused": {
+      "status": "PASS",
+      "tests": 10,
+      "scope": "contribution-address-search and contribution-attempt"
+    },
+    "database": {
+      "command": "./scripts/dev verify:library-api",
+      "status": "PASS",
+      "http_database_checks": 295,
+      "nearby_coverage_checks": 97,
+      "environment": "guarded_disposable_local_PostGIS",
+      "provider_and_kms_gateway": "synthetic_no_AWS_calls",
+      "local_log": "/private/tmp/abasong-r4-03-library-api.log"
+    },
+    "ci": {
+      "status": "tracked_at_current_branch_draft_PR_exact_HEAD_checks",
+      "required": true,
+      "note": "The final answer verifies the exact commit run. Earlier PR90 CI is not evidence for this batch."
+    }
+  },
+  "native": {
+    "ios": {
+      "environment": "iPhone18Pro iOS27 simulator, existing Expo development build",
+      "component_flows": "PASS_autocomplete_dedupe_change_address_preserve_code_scope_clear_attestation_unknown_address_callback",
+      "save_failure_retry": "PASS_same_form_inputs_and_single_synthetic_write",
+      "target_read_retry": "PASS_same_apartment_code_retained",
+      "manual_fallback": "PASS_fields_and_explicit_confirmation_state",
+      "private_save": "PASS_two_step_callback",
+      "software_keyboard": "not_directly_verified_hardware_accessibility_input_used"
+    },
+    "android": {
+      "environment": "API37 emulator, existing Expo development build",
+      "owner_feedback": "PASS_both_requested_groups",
+      "change_address": "PASS_2445_to_385_code_scope_retained_attestation_cleared_return_385",
+      "save_failure_retry": "PASS_retained_input_retry_return_2445",
+      "keyboard_footer": "included_in_owner_first_group_confirmation",
+      "limitations": "coordinate_tool_unreliable_owner_confirmation_used"
+    },
+    "visual": "PASS_same_components_tokens_fields_hierarchy_and_primary_secondary_actions_representative_states",
+    "screenshot_directory": "../design/evidence/r4-03/",
+    "new_native_compilation": false,
+    "physical_iPhone_test": false,
+    "physical_Android_test": false,
+    "full_screen_reader_200_percent": false,
+    "real_account_share": false,
+    "live_driver_GPS_used": false,
+    "test_callback_is_real_map_navigation": false
+  },
+  "changes": {
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "real_account_grants": false,
+    "cloud_changed": false,
+    "native_lock_changed": false
+  },
+  "screenshots": {
+    "android-card-form.png": "659acec9ac34003b3a2a87aee0abebdc6c0923ae2773f4119fc80b7ac1616580",
+    "android-owner-return.png": "58b1c6ee6bab4c40a9eb3f4db5034120e02bd33143bb2b0299b051e60242f5c9",
+    "ios-address-read-recovered.png": "a44861eb33ee7215cb22a3b6024b653c22aca5242cc86f2d5a563730248d8b27",
+    "ios-card-form.png": "6521622b03ff335b156e39f4b833a1f76a6573246a64241bb7e6a18a720989f7",
+    "ios-form-final.png": "2f5f09769018e4b80a32139310a6cd51fa0ecc3405e6abd879cf1f362aac4d74",
+    "ios-new-address-return.png": "fd51c626f9f8621163d433952aed7f6e339a8b77d270b3479d545706439c5fd9",
+    "ios-save-failure.png": "65dd12737e9db197e82080151e8f685b9c244b9a6b8dfbc8f701aa06c7d4302c",
+    "ios-selected-confirmed.png": "973683807c91ec6de223fac43a430791aff4e80197eeb46230ef6bf7a9bd0e28"
+  },
+  "current_batch_complete": true,
+  "whole_R4_1_exit": false,
+  "next_task": "R4-04"
+}

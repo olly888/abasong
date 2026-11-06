@@ -156,3 +156,5 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 ## R4-01（2026-11-05）
 
 距离契约与公寓卡片不新增依赖/原生模块；复用现有PostGIS、Tilequery及已安装RNMapbox的metric比例尺。球面距离与快照校验使用既有本地实现，不增加Turf/Matrix逐卡调用；没有Pod、Gradle或pnpm锁更新。共用组件属于应用源码，原生编译、模拟器功能与物理验收仍分别记录。
+
+2026-11-05 R4-03：无新增依赖、原生模块或API契约。地址联想复用现有catalog/suggest/retrieve和会话限制，保存复用原共享/永久地址贡献/本人私存API；表单沿用V3令牌与PageFrame，键盘偏移采用当前RN0.88的View.measureInWindow/KeyboardAvoidingView。未重新原生编译，不以JS运行替代编译证据。

@@ -565,5 +565,13 @@
     "native_acceptance": false,
     "human_test_participants_added": 0
   },
-  "implementation_task_register": "../technical/V3.2_App对齐开发任务清单.csv"
+  "implementation_task_register": "../technical/V3.2_App对齐开发任务清单.csv",
+  "implementation": {
+    "batch": "R4-01/R4-02",
+    "scope": "apartment_distance_and_cards_only",
+    "report": "../technical/R4_01_距离契约与公寓卡片实施验收.md",
+    "whole_app_migrated": false,
+    "final_native_checks": "scoped_dual_development_client_failure_retry_denied_and_final_carousel_PASS",
+    "collaboration_carousel": "pending_R4-04"
+  }
 }

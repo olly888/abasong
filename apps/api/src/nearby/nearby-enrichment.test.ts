@@ -184,8 +184,8 @@ it("does not suppress a separate address merely because its building lies in a c
     address_line1: "102 TEST Ave",
   });
   const result = await f.service.discover(f.actor, f.fix, true);
-  expect(result.items).toHaveLength(1);
-  expect(result.items[0]).toMatchObject({
+  expect(result.items).toHaveLength(2);
+  expect(result.items.find((c) => c.source === "mapbox")).toMatchObject({
     address: { address_line1: "102 TEST Ave" },
     apartment: null,
     requires_address_confirmation: true,
@@ -203,7 +203,7 @@ it("deduplicates community roofs by confirmed postal identity and bounds reverse
     truncated: false,
   });
   const result = await f.service.discover(f.actor, f.fix, true);
-  expect(result.items).toEqual([]);
+  expect(result.items).toEqual([catalog]);
   expect(f.maps.reverse).toHaveBeenCalledTimes(4);
   expect(result.truncated).toBe(true);
 });
@@ -211,8 +211,8 @@ it("keeps unresolved addresses temporary without binding another apartment or re
   const f = setup();
   f.maps.reverse.mockRejectedValue(Error("TEST reverse unavailable"));
   const result = await f.service.discover(f.actor, f.fix, true);
-  expect(result.items).toHaveLength(1);
-  expect(result.items[0]).toMatchObject({
+  expect(result.items).toHaveLength(2);
+  expect(result.items.find((c) => c.source === "mapbox")).toMatchObject({
     address: null,
     apartment: null,
     requires_address_confirmation: true,

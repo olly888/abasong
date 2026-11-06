@@ -152,3 +152,7 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 新增expo-notifications **58.1.8**，通过Expo58 install匹配后精确固定；传递expo-application58.1.2，pnpm与native-locks/Podfile.lock同步。SDK离线bundledNativeModules检查通过，未据此声称在线依赖服务核验。实际iOS Debug模拟器与Android arm64 Debug编译成功，Pods新增模块并锁定；无Expo Go/SwiftUI重写。配置notifications插件、Android collaboration通道，iOS后台远程开关false。field-review过滤通知插件，pilot仍需自己的APNs/FCM和签名分发条件。
 
 无服务端SDK依赖：Expo固定HTTPS send/getReceipts接口使用Node fetch8秒超时/白名单错误；worker默认PUSH_PROVIDER=disabled，未配置凭据不消费事件或连接供应商。EXPO_PUBLIC_EXPO_PROJECT_ID是可公开项目ID、不是密钥，目前未配置；未来访问令牌只能用worker秘密注入。未新建EAS项目、APNs/FCM凭据/长期密钥或云资源，真实远程送达保留B6。0013已应用D0后用户取消独立集合点，新增0014撤去敏感服务的集合点权限；保留历史表，不删除数据。两项均只限D0，云仍待B6。
+
+## R4-01（2026-11-05）
+
+距离契约与公寓卡片不新增依赖/原生模块；复用现有PostGIS、Tilequery及已安装RNMapbox的metric比例尺。球面距离与快照校验使用既有本地实现，不增加Turf/Matrix逐卡调用；没有Pod、Gradle或pnpm锁更新。共用组件属于应用源码，原生编译、模拟器功能与物理验收仍分别记录。

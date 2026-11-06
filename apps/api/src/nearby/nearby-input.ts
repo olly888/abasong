@@ -21,6 +21,7 @@ export const observation = z
     observed_at: z.string().datetime({ offset: true }),
     accuracy_m: z.number().finite().min(0).max(100000),
     accuracy_permission: z.enum(["precise", "approximate"]),
+    observation_id: z.string().uuid().optional(),
   })
   .strict();
 export const confirmedAddress = z

@@ -139,6 +139,7 @@ export async function verifyNearby(db: Client, url: string, issuedAt: number) {
       1,
     );
     assert.equal(found[0]?.distance_m, 0);
+    assert.equal(found[0]?.distance_basis, "address_point");
     assert.equal(JSON.stringify(found).includes("TEST-NEARBY#"), false);
     await db.query(
       "UPDATE abasong.apartments SET boundary=extensions.ST_GeomFromText('MULTIPOLYGON(((-118.2921 34.1999,-118.2919 34.1999,-118.2919 34.2001,-118.2921 34.2001,-118.2921 34.1999)))',4326) WHERE id=$1",
@@ -155,6 +156,10 @@ export async function verifyNearby(db: Client, url: string, issuedAt: number) {
     assert.equal(
       edge.find((c) => c.apartment?.id === result.apartment.id)?.distance_m,
       0,
+    );
+    assert.equal(
+      edge.find((c) => c.apartment?.id === result.apartment.id)?.distance_basis,
+      "community_boundary",
     );
 
     const missing = { ...address, address_line1: "101 TEST Nearby Ave" };

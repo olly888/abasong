@@ -227,7 +227,7 @@ export default function HomeMap({
       styleJSON={__DEV__ ? testMapStyle : undefined}
       scaleBarEnabled
       scaleBarPosition={{ top: Math.max(12, topInset - 28), left: 16 }}
-      scaleBarUnits="imperial"
+      scaleBarUnits="metric"
       compassEnabled={false}
       logoPosition={{ bottom: bottomInset + 8, left: 16 }}
       attributionPosition={{ bottom: bottomInset + 8, left: 106 }}

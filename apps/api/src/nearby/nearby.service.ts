@@ -54,8 +54,19 @@ export class NearbyService {
       provider_status: "not_requested",
       attribution: "",
       use_mode: "temporary",
+      distance_context: {
+        observation_id: p.observation_id ?? null,
+        observed_at: p.observed_at,
+        accuracy_m: p.accuracy_m,
+        accuracy_permission: p.accuracy_permission,
+        valid_until: new Date(Date.parse(p.observed_at) + 20000).toISOString(),
+      },
     };
-    if (!provider) return base;
+    if (!provider) {
+      freshObservation(body);
+      await this.accounts.get(a);
+      return base;
+    }
     const now = Date.now();
     for (const [k, v] of this.rates) if (v <= now) this.rates.delete(k);
     if (
@@ -118,6 +129,7 @@ export class NearbyService {
           point: b.point,
           ...(b.feature_id ? { provider_feature_id: b.feature_id } : {}),
           distance_m: b.distance_m,
+          distance_basis: b.distance_basis,
           classification: "apartments",
           requires_address_confirmation: !linked,
         });
@@ -126,14 +138,43 @@ export class NearbyService {
       await this.accounts.get(a);
       return {
         ...base,
-        items,
-        truncated: buildings.truncated || points.length > 4,
+        // An atomic same-origin bundle prevents cached provider distances from
+        // being mixed with a newer catalog observation on the mobile client.
+        items: [...catalog, ...items]
+          .sort(
+            (x, y) =>
+              x.distance_m - y.distance_m ||
+              Number(!!y.apartment) - Number(!!x.apartment) ||
+              (
+                addressIdentity(x.address) ??
+                x.provider_feature_id ??
+                `${x.point.lng},${x.point.lat}`
+              ).localeCompare(
+                addressIdentity(y.address) ??
+                  y.provider_feature_id ??
+                  `${y.point.lng},${y.point.lat}`,
+              ),
+          )
+          .filter(
+            (x, i, all) =>
+              all.findIndex(
+                (c) =>
+                  (c.apartment?.id ?? c.key) === (x.apartment?.id ?? x.key),
+              ) === i,
+          )
+          .slice(0, 20),
+        truncated:
+          base.truncated ||
+          buildings.truncated ||
+          points.length > 4 ||
+          catalog.length + items.length > 20,
         provider_status: "ok",
         attribution: "© Mapbox © OpenStreetMap",
         expires_at: new Date(Date.now() + 60000).toISOString(),
       };
     } catch (e) {
       if (e instanceof ApiError && [401, 403, 404].includes(e.status)) throw e;
+      await this.accounts.get(a);
       return { ...base, items: [], provider_status: "unavailable" };
     }
   }

@@ -46,8 +46,15 @@ out('AddressSuggestions',{'items':arr(ref('AddressSuggestion')),'session_token':
 obj('AddressRetrieveInput',{'provider_result_id':string(4096),'session_token':uid},['provider_result_id','session_token'])
 out('TemporaryAddress',{'label':string(300),'title':string(200),'point':ref('Point'),'use_mode':enum('temporary'),'attribution':string(2000),'match_status':enum('matched','ambiguous','unmatched'),'apartments':arr(ref('Apartment'))})
 # ADD-18: discovery is not a claim of arrival and never contains secret values.
+obj('NearbyInput',{**S['ResolveInput']['properties'],'observation_id':uid},S['ResolveInput']['required'])
+out('DistanceContext',{'observation_id':nullable_id,'observed_at':dt,'accuracy_m':{'type':'number','minimum':0,'maximum':100000},'accuracy_permission':enum('precise','approximate'),'valid_until':dt})
+S['DistanceContext']['description']='当前请求的定位快照，不重复返回坐标、不持久化；valid_until最多为observed_at后20秒。仅用于距离与请求关联，不表示到达、入口或读取资格。'
 out('NearbyCandidate',{'key':string(100),'source':enum('catalog','mapbox'),'apartment':{'allOf':[ref('Apartment')],'nullable':True},'address':{'allOf':[ref('SearchAddress')],'nullable':True},'point':ref('Point'),'distance_m':{'type':'number','minimum':0},'classification':enum('catalog_community','apartments'),'requires_address_confirmation':boolean})
 out('NearbyDiscovery',{'items':{**arr(ref('NearbyCandidate')),'maxItems':20},'radius_m':integer(200),'expires_at':dt,'truncated':boolean,'provider_status':enum('not_requested','ok','unavailable'),'attribution':string(2000),'use_mode':enum('temporary')})
+S['NearbyCandidate']['properties']['distance_basis']=enum('address_point','community_boundary','building_footprint','building_point_upper_bound')
+S['NearbyCandidate']['properties']['distance_basis']['description']='与distance_m同一计算来源。最后一项为补充Tilequery返回点的保守上界；均非入口/路线距离。旧响应缺字段时不显示距离数字。'
+S['NearbyDiscovery']['properties']['distance_context']=ref('DistanceContext')
+S['NearbyDiscovery']['description']='本次定位快照的一组候选；Mapbox成功响应包含同原点目录及地图候选，按同源距离排序去重。新增距离字段为加法兼容；新服务总返回，旧服务缺失时客户端隐藏距离。'
 S['NearbyCandidate']['properties']['provider_feature_id']=string(200,minLength=1,description='会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可')
 S['NearbyCandidate']['properties']['apartment']['description']='已有业务公寓的唯一完整地址与空间匹配；Mapbox来源也可关联。发现响应不含密码正文'
 S['NearbyCandidate']['properties']['requires_address_confirmation']={**boolean,'description':'未关联或存在歧义时需核对地址；不是贡献人工审核'}
@@ -186,8 +193,8 @@ op('/v1/apartments','get','searchApartments','自有公寓检索，无密码','A
 op('/v1/apartments/{apartment_id}','get','getApartment','公寓元信息，无密码','Apartment')
 op('/v1/search/addresses/suggest','post','suggestAddresses','Mapbox临时地址联想；不落永久库','AddressSuggestions','AddressSuggestInput',sensitive=True)
 op('/v1/search/addresses/retrieve','post','retrieveAddress','临时地址选择；来源用途受限','TemporaryAddress','AddressRetrieveInput',sensitive=True)
-op('/v1/apartments/discover','post','discoverNearbyApartments','附近200米目录公寓；边界距离优先；不代表到达，不返回密码','NearbyDiscovery','ResolveInput',sensitive=True)
-op('/v1/apartments/discover/mapbox','post','discoverMapboxApartments','Mapbox公寓候选；唯一地址及空间匹配可关联已有公寓，未关联需核对；无临时结果落库','NearbyDiscovery','ResolveInput',sensitive=True)
+op('/v1/apartments/discover','post','discoverNearbyApartments','附近200米目录公寓；同一定位快照的最近几何距离；不代表到达、不返回密码','NearbyDiscovery','NearbyInput',sensitive=True)
+op('/v1/apartments/discover/mapbox','post','discoverMapboxApartments','同原点目录及Mapbox公寓候选；唯一地址及空间匹配可关联，未关联需核对；无临时结果落库','NearbyDiscovery','NearbyInput',sensitive=True)
 op('/v1/apartments/address-contributions','post','contributeAtConfirmedAddress','核对地址后直接共享；新位置只接受服务端永久许可地理编码；同事务幂等','AddressContributionResult','AddressContributionInput',code=201,cap=['access.contribute'],idem=True,sensitive=True)
 op('/v1/apartments/proposals','post','proposeApartment','自有/授权来源的新公寓提议，待核验','Submitted','ApartmentProposalInput',code=201,cap=['access.contribute'],idem=True)
 op('/v1/apartment-corrections','post','correctApartment','提交错栋/地址更正','Submitted','CorrectionInput',code=201,idem=True)

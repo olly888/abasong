@@ -1258,6 +1258,7 @@ export class ApartmentsService {
         },
         point: { lng: r.lng, lat: r.lat },
         distance_m: Number(r.distance),
+        distance_basis: r.distance_basis,
         classification: "catalog_community",
         requires_address_confirmation: false,
       }));

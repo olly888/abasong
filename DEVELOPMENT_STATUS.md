@@ -1,20 +1,24 @@
 # Abasong development status
 
-Updated 2026-11-05 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.31](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-05 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.32](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current result — accepted prototype, source audit and execution register
+## Current delivery — R4-01/02 scoped implementation and native checks complete
 
-Owner reports the prototype's main experience meets expectations. Recorded as **main-flow product acceptance**, not all39 pages/387 states, new dual-native acceptance,7 human participants, or release approval. Actual App remains V3.1; V3.2 r3-delivery is the implementation target. This batch changes documentation/readiness/trace validation only; no App/API/contracts/database/cloud/grants/env/dependencies/prototype UI changes and no real messages or SMS.
+User authorized implementation after PR89/source audit. Working branch `codex/r4-01-distance-apartment-cards`, starting `1168328a3769777cd7f9e7870f3abb4b2d55ba4d`. Actual nearby contract/service/native components now changed; no cloud or migration/dependency/grant changes. V3.1 base remains, apartment cards now use the scoped V3.2 target; no whole-App upgrade claim.
 
-Source baseline `df82aefc32bbcaef6a9671da18ad517e88c4d074`, initial worktree clean. Latest apps/packages/database/scripts business commit is `b29c1c3613051a4ad1734b73e3cf941af2ac85be`. Audit branch `codex/v32-app-alignment-audit` inherits the accepted prototype. PR88 is open/draft, based on PR87; exact-base query returned no workflow runs. Workflow currently only triggers pushes/PR bases on main, excluding the stacked codex bases; R4-01 must add project-scoped CI coverage and exact-SHA verification. No integration into main is claimed.
+Implemented: optional snapshot ID on separate NearbyInput, distance basis and response snapshot validity; catalog nearest geometry basis; atomic same-origin catalog+Mapbox bundle; client expiry/drift/legacy handling; shared card surface/rail/gesture/layout; street weight/city+m/door fallback; measured adaptive height with zero-width Android guard; map scale metric; shared contribution no default door. CI PR-base filters now include codex/**. Implementation review: [draft PR90](https://github.com/olly888/abasong/pull/90). Exact-HEAD remote CI is tracked in [PR checks](https://github.com/olly888/abasong/pull/90/checks); earlier green runs do not certify a later commit.
 
-[Source audit and delivery sequence](docs/technical/V3.2_App对齐审查与开发任务.md), [22 work packages](docs/technical/V3.2_App对齐开发任务清单.csv), [D01–D24 mapping](docs/technical/V3.2_代码差异清单.csv), and [machine evidence](docs/technical/V3.2_App对齐审查证据.json) distinguish retained, adjusted, missing, cancelled/P1 and external work. The22 include this completed source audit1, core implementation13, B5 five and concentrated validation3, not a completion percentage or schedule estimate.
+Executed after final component and boundary fixes: full engineering check70 files/373 tests PASS plus lint/types/build; isolated local HTTP/PG suite295 and nearby coverage97 PASS; full OpenAPI spec +9 R4 checks PASS. Existing whole historical Python validator contains older messaging/public-device assumptions and is not claimed passed; no changes retained to that script. Current API source is under tsx watch; no listener/network change made.
 
-## Actual implementation facts
+Native iOS simulator: TEST100→102 via native accessibility action, TEST-02#, expand/collapse stays102 and read count unchanged,104 empty/add, coarse/expired and320-width long content checked. Android:192px stabilized after fixing zero-width first-pass height capture; owner explicitly confirmed102/password/expand-collapse/104-empty three items PASS. Labs are memory-only; no real contributions or qualification changes. After unlock, both native clients passed read-error/no-stale-secret, retry-to-TEST, denied/no-secret and final shared-carousel/metric-scale observations. Final screenshot evidence is saved. No iPhone action needed. No new native compilation, physical field or human-participant acceptance claimed.
+
+Next: R4-03 direct generic contribution form; latest documentation-only commit CI remains tracked at PR90. Business code fdb0fca passed full remote CI; code fingerprint is unchanged by this observation batch. Current implementation and evidence: [R4 report](docs/technical/R4_01_距离契约与公寓卡片实施验收.md). R4-04 collaboration carousel and combined R4-05 phase exit remain queued; do not jump to B5. Prior audit/plans and historical metrics remain below for traceability, not current pass results.
+
+## Implementation coverage and remaining deltas
 
 | Area | Retain | Target delta |
 |---|---|---|
-| Apartments | Continuous foreground location,200m discovery, independent carousel, search/highlight/house numbers, read states/feedback/contribution/correction | Street weight/city+m/explicit same-source door scope; distance geometry/snapshot semantics; generic direct address form |
+| Apartments | Continuous foreground location,200m discovery, independent carousel, search/highlight/house numbers, read states/feedback/contribution/correction; R4 distance contract and compact shared card components | Scoped R4-01/02 verified; generic direct address form R4-03. No full R4-1 exit yet |
 | Collaboration | Regional map/list/filter, minimum profiles, single availability interval, version/expiry | Common three-variant carousel, region query distinct from selection, full camera memory; two-scene pickup/date/quantity semantics |
 | Publish/application | Actual local services, idempotency/version/source conversation/manual close | Warehouse full address and map/copy/navigation; exact/estimated/unknown; arrival/completion/expiry separation. New contracts/migration needed, not UI-only |
 | Availability | Cross-midnight conversion and disabled short-circuit already implemented | Today/tomorrow interactions, clear end-date/cancel/errors; reuse for My switch |
@@ -24,7 +28,7 @@ Source baseline `df82aefc32bbcaef6a9671da18ad517e88c4d074`, initial worktree cle
 
 Keep default-nearby behavior without dwell/entry gates. Do not guess an entry, copy one community code across buildings, imply physical driver GPS on regional discovery, or reinstate cancelled contacts/meeting points. Door labels need explicit-versus-legacy/default handling; fallback “大门” is not evidence of user-confirmed scope.
 
-## Executed checks and limits
+## Prior source-audit evidence (historical)
 
 `./scripts/dev check` PASS: lint, workspace/script typechecks,68 files/367 tests and shared-package/API/worker builds. Initial sandbox attempt failed only two HTTP tests at `listen EPERM 127.0.0.1` (365 pass); full rerun with local-listener permission passed all367 plus builds, without test changes. This is not native compilation, actual PostgreSQL execution, real Mapbox/Auth/SMS or cloud acceptance.
 
@@ -32,8 +36,8 @@ Documentation/task/link/JS syntax validation is recorded in [baseline report](de
 
 ## Next execution
 
-1. **R4-01**: same-source distance/basis/location snapshot contract, preserving existing200m/verified geometry behavior. Then R4-02 shared card frame and compact apartment content, R4-03 direct contribution form, R4-04 collaboration carousel/filter/camera, R4-05 fresh iOS/Android functional and visual exit.
+1. R4-01 distance code and R4-02 representative dual-native observations are complete. Continue R4-03 direct contribution form, R4-04 collaboration carousel/filter/camera, then R4-05 combined iOS/Android functional and visual exit. Already confirmed Android three gestures do not need repeating.
 2. R4-06–10: versioned two-scene/pickup/quantity/date contracts and incremental migration, services/application semantics, native form/preview/details/navigation, availability interaction and dual-native exit.
 3. R4-11–13: protect imports/correction/application/messages and close core differences with exact evidence, then B5 profile/My→own team→circle text/replies→private images→invitation.
 
-`development_ready=true` means only controlled **R4-1 implementation can start**; business implementation has not started in this batch. `b5_ready=false`, `release_ready=false`. D14 is umbrella, D22 overlaps D05/D06, D23 overlaps D01; no duplicate counts. D19 cancelled, D24 apartment list P1.7-person usability can run alongside independent local tasks; real-account/KMS/push/independent bundle/physical and field evidence remain B6, not waived or claimed complete. Follow existing issue mapping; do not bulk merge open PRs or close tasks from this audit alone.
+`development_ready=true` authorizes controlled **R4-1 implementation**; distance/card implementation has now started. It does not mean the full milestone is accepted. `b5_ready=false`, `release_ready=false`. D14 is umbrella, D22 overlaps D05/D06, D23 overlaps D01; no duplicate counts. D19 cancelled, D24 apartment list P1.7-person usability can run alongside independent local tasks; real-account/KMS/push/independent bundle/physical and field evidence remain B6, not waived or claimed complete. Follow existing issue mapping; do not bulk merge open PRs or close tasks from this audit alone.

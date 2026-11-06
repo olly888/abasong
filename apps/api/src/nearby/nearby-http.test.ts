@@ -60,8 +60,8 @@ it("exercises real discovery HTTP guards, validation, partial provider failure a
         useValue: {
           buildings: async () => {
             calls++;
-            if (failProvider) throw Error("TEST");
             if (revokeDuringProvider) blocked = true;
+            if (failProvider) throw Error("TEST");
             return { items: [], truncated: false };
           },
           reverse: async () => null,
@@ -91,6 +91,7 @@ it("exercises real discovery HTTP guards, validation, partial provider failure a
       observed_at: new Date(clock).toISOString(),
       accuracy_m: 5,
       accuracy_permission: "precise",
+      observation_id: user,
     });
     const req = async (
       path: string,
@@ -122,11 +123,36 @@ it("exercises real discovery HTTP guards, validation, partial provider failure a
     const catalog = await req("discover", fix(), 200);
     expect(catalog.items).toEqual([]);
     expect(catalog.provider_status).toBe("not_requested");
+    expect(catalog.distance_context).toEqual({
+      observation_id: user,
+      observed_at: fix().observed_at,
+      accuracy_m: 5,
+      accuracy_permission: "precise",
+      valid_until: new Date(clock + 20000).toISOString(),
+    });
+    expect(catalog.distance_context.point).toBeUndefined();
+    // Fresh at request time does not create a new 20s lease from response time.
+    const older = await req(
+      "discover",
+      {
+        ...fix(),
+        observed_at: new Date(clock - 15000).toISOString(),
+      },
+      200,
+    );
+    expect(older.distance_context.valid_until).toBe(
+      new Date(clock + 5000).toISOString(),
+    );
+    await req("discover", { ...fix(), observation_id: "invalid" }, 400);
     failProvider = true;
     const partial = await req("discover/mapbox", fix(), 200);
     expect(partial.provider_status).toBe("unavailable");
     expect(partial.items).toEqual([]);
     await req("discover/mapbox", fix(), 429);
+    clock += 31000;
+    revokeDuringProvider = true;
+    await req("discover/mapbox", fix(), 403);
+    blocked = false;
     clock += 31000;
     failProvider = false;
     revokeDuringProvider = true;

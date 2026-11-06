@@ -108,11 +108,24 @@ function adapter(scene: Scene, onAccessRead: () => void) {
                     address: null,
                     point: apartment.point,
                     distance_m: 10,
+                    distance_basis: "building_footprint",
                     classification: "apartments",
                     requires_address_confirmation: true,
                   },
                 ]
               : [],
+          distance_context: {
+            observation_id:
+              (options.body as S["NearbyInput"]).observation_id ?? null,
+            observed_at: (options.body as S["NearbyInput"]).observed_at,
+            accuracy_m: (options.body as S["NearbyInput"]).accuracy_m,
+            accuracy_permission: (options.body as S["NearbyInput"])
+              .accuracy_permission,
+            valid_until: new Date(
+              Date.parse((options.body as S["NearbyInput"]).observed_at) +
+                20000,
+            ).toISOString(),
+          },
           radius_m: 200,
           expires_at: new Date(Date.now() + 60000).toISOString(),
           truncated: false,
@@ -181,9 +194,22 @@ function adapter(scene: Scene, onAccessRead: () => void) {
                 : scene === "近邻补全"
                   ? 100
                   : i * 20,
+            distance_basis: "address_point",
             classification: "catalog_community",
             requires_address_confirmation: false,
           })),
+          distance_context: {
+            observation_id:
+              (options.body as S["NearbyInput"]).observation_id ?? null,
+            observed_at: (options.body as S["NearbyInput"]).observed_at,
+            accuracy_m: (options.body as S["NearbyInput"]).accuracy_m,
+            accuracy_permission: (options.body as S["NearbyInput"])
+              .accuracy_permission,
+            valid_until: new Date(
+              Date.parse((options.body as S["NearbyInput"]).observed_at) +
+                20000,
+            ).toISOString(),
+          },
           radius_m: 200,
           expires_at: new Date(Date.now() + 20000).toISOString(),
           truncated: false,
@@ -292,6 +318,7 @@ export default function ArrivalLab() {
   const params = useLocalSearchParams<{ scene?: string; run?: string }>();
   const [observations, setObservations] = useState(0);
   const [accessReads, setAccessReads] = useState(0);
+  const [cardMetric, setCardMetric] = useState(0);
   const [retest, setRetest] = useState(0);
   const [scene, setScene] = useState<Scene>(
     scenes.includes(params.scene as Scene) ? (params.scene as Scene) : "有密码",
@@ -318,7 +345,8 @@ export default function ArrivalLab() {
         <Text
           style={{ flex: 1, fontSize: 12, textAlign: "center", padding: 6 }}
         >
-          TEST · {scene} · 位置 {observations} · 查码 {accessReads}
+          TEST · {scene} · 位置 {observations} · 查码 {accessReads} · 卡高{" "}
+          {cardMetric}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -361,6 +389,7 @@ export default function ArrivalLab() {
           ...sceneAdapter,
           userId: "99999999-9999-4999-8999-999999999999",
           onObservation: () => setObservations((n) => n + 1),
+          onCardMetrics: setCardMetric,
         }}
         toolbar={<HomeChrome mode="公寓" onMode={() => {}} />}
       />

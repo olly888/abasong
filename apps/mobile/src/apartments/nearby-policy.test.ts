@@ -43,10 +43,13 @@ const resolved = (distance_m: number): C => {
     },
   };
 };
-it("keeps an explicitly linked address ahead of unconfirmed roofs in the same metre band during boundary jitter", () => {
-  for (const d of [0, 0.22, 0.01, 0.22, 0])
+it("prefers a known address only at an exact distance tie; closer candidates are not displaced by data availability", () => {
+  expect(mergeNearby([resolved(0)], [item("a-temporary", 0)])[0]?.key).toBe(
+    "z-known",
+  );
+  for (const d of [0.22, 0.01, 0.22])
     expect(mergeNearby([resolved(d)], [item("a-temporary", 0)])[0]?.key).toBe(
-      "z-known",
+      "a-temporary",
     );
 });
 it("uses postal identity rather than fresh random keys for equal-distance temporary cards", () => {
@@ -56,9 +59,9 @@ it("uses postal identity rather than fresh random keys for equal-distance tempor
     state: "CA",
     postal_code: null,
   };
-  const a = { ...item("z-random", 20.2), address };
+  const a = { ...item("z-random", 20), address };
   const b = {
-    ...item("a-random", 20.1),
+    ...item("a-random", 20),
     address: { ...address, address_line1: "102 TEST St" },
   };
   expect(mergeNearby([], [b, a]).map((c) => c.address?.address_line1)).toEqual([

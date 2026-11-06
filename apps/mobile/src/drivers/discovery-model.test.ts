@@ -118,16 +118,23 @@ it("preserves explicit off intent without requiring stale date fields and handle
     ...f,
     enabled: true,
     date: "2026-11-04",
+    endDate: "2026-11-05",
     start: "23:00",
     end: "01:00",
     regions: ["TEST"],
     capacity: "80",
   };
-  const body = availabilityPayload(on, 3);
+  const body = availabilityPayload(on, 3, Date.parse("2026-11-04T20:00:00Z"));
   expect(body.starts_at).toBe("2026-11-05T07:00:00.000Z");
   expect(body.ends_at).toBe("2026-11-05T09:00:00.000Z");
   expect(body.capacity_parcels).toBe(80);
-  expect(() => availabilityPayload({ ...on, capacity: "0" }, 3)).toThrow();
+  expect(() =>
+    availabilityPayload(
+      { ...on, capacity: "0" },
+      3,
+      Date.parse("2026-11-04T20:00:00Z"),
+    ),
+  ).toThrow();
 });
 
 it("reopens an expired declaration as an off draft with fresh times while retaining declared regions", () => {

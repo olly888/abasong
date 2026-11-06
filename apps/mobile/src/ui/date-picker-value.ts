@@ -22,9 +22,18 @@ export function pickerDate(
 export function pickedValue(mode: PickerMode, date: Date) {
   return localDateTime(date.toISOString())[mode];
 }
-export function pickerLabel(mode: PickerMode, value: string, date: string) {
+export function pickerLabel(
+  mode: PickerMode,
+  value: string,
+  date: string,
+  compactDate = false,
+) {
   if (!value) return "请选择";
   const d = pickerDate(mode, value, date);
+  if (mode === "date" && compactDate) {
+    const [year, month, day] = localDateTime(d.toISOString()).date.split("-");
+    return `${month}/${day}/${year}`;
+  }
   return new Intl.DateTimeFormat(mode === "date" ? "zh-CN" : "en-US", {
     timeZone: "America/Los_Angeles",
     ...(mode === "date"

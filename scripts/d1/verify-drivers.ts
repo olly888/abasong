@@ -2,6 +2,12 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import type { Client } from "pg";
 import type { components } from "../../packages/contracts/src/generated";
+import {
+  availabilityFields,
+  availabilityPayload,
+  nextDate,
+} from "../../apps/mobile/src/drivers/availability-fields";
+import { localDateTime } from "../../apps/mobile/src/requests/presentation";
 type S = components["schemas"];
 type Http = (
   path: string,
@@ -302,6 +308,65 @@ export async function verifyDrivers(p: {
     (await call<S["DriverPage"]>("/v1/drivers", "GET", other)).items.some(
       (d) => d.profile.user_id === owner,
     ),
+  );
+  // R4-09: real native payload builder → actual guard/DTO/service/PG, no grants.
+  const tomorrow = nextDate(localDateTime(null).date);
+  const fields = {
+    ...availabilityFields(future),
+    date: tomorrow,
+    start: "09:00",
+    endDate: tomorrow,
+    end: "11:00",
+    capacity: "",
+  };
+  const native = await call<S["Availability"]>(
+    "/v1/me/availability",
+    "PUT",
+    auth,
+    200,
+    availabilityPayload(fields, future.version),
+  );
+  assert.equal(native.capacity_parcels, null);
+  assert.equal(native.currently_available, false);
+  assert(
+    (
+      await call<S["DriverPage"]>(`/v1/drivers?day=${tomorrow}`, "GET", other)
+    ).items.some((d) => d.profile.user_id === owner),
+  );
+  const closing = availabilityPayload(
+    {
+      ...fields,
+      enabled: false,
+      date: "invalid",
+      endDate: "invalid",
+      regions: [],
+      capacity: "invalid",
+    },
+    native.version,
+  );
+  const nativeClosed = await call<S["Availability"]>(
+    "/v1/me/availability",
+    "PUT",
+    auth,
+    200,
+    closing,
+  );
+  assert(
+    !(await call<S["DriverPage"]>("/v1/drivers", "GET", other)).items.some(
+      (d) => d.profile.user_id === owner,
+    ),
+  );
+  const replay = await call<S["Availability"]>(
+    "/v1/me/availability",
+    "PUT",
+    auth,
+    200,
+    { enabled: false, expected_version: nativeClosed.version },
+  );
+  assert.equal(replay.version, nativeClosed.version);
+  await http("/v1/me/availability", "PUT", auth, 409, closing);
+  console.log(
+    "PASS: R4-09 native tomorrow/explicit end/optional capacity/minimal close/replay/conflict actual HTTP/PG; six additional calls.",
   );
   console.log(
     "PASS: driver availability/version/expiry/filter/pagination/block/privacy actual HTTP/PG; no driver GPS, real accounts or cloud writes.",

@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { pickerDate, pickedValue, pickerLabel } from "./date-picker-value";
 describe("Los Angeles native picker values", () => {
+  it("keeps compact visible dates within paired fields while retaining the long accessible label", () => {
+    expect(pickerLabel("date", "2026-11-07", "", true)).toBe("11/07/2026");
+    expect(pickerLabel("date", "2026-11-07", "")).toContain("2026");
+    expect(pickerLabel("date", "", "", true)).toBe("请选择");
+  });
   it("preserves selected local date across UTC days", () => {
     expect(pickedValue("date", pickerDate("date", "2026-11-04", ""))).toBe(
       "2026-11-04",

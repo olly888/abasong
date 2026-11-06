@@ -1,8 +1,12 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.37](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.38](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — R4-08 scoped native delivery complete
+## Current delivery — R4-09 scoped native exit complete
+
+Branch `codex/r4-09-availability-window`, base587b6c0 / prior PR96 (exact-head CI42269694883 SUCCESS). Current [draft PR97](https://github.com/olly888/abasong/pull/97) tracks this batch. Scope: U03 today/tomorrow and explicit end date, preserve overnight/off behavior, cancellation/failed save/conflict protections and scoped dual-native TEST checks. Reuses existing single-window PUT/version/expiry service; no new API/migration/dependency/cloud/grant. The My compact switch is B5 integration, not a new scheduling system. Latest engineering79 files/470 tests and both Hermes JS exports PASS; isolated actual HTTP/PG515 checks PASS, including6 mobile-payload calls. iOS/Android today/tomorrow overnight shifting and layout observed; iOS picker/cancel/retry/conflict/region-close/expired-close supplementary interactions now PASS. Android mirror input returned noWindowsAvailable; both owner TEST groups now explicitly confirmed normal. No blocked interaction counted as PASS. See [R4-09 report](docs/technical/R4_09_单次接活时段实施验收.md) and [machine evidence](docs/technical/R4_09_执行证据.json). Implementation1db799f exact-head CI42295105317 SUCCESS on PR97; document-only closure must independently pass current [PR97 Checks](https://github.com/olly888/abasong/pull/97/checks). Scoped dual-native closure PASS; next R4-10 is authorized. Latest supplementary document0b35c5b exact-head CI42300095336 SUCCESS. [R4-10 isolated-native/HTTP acceptance plan](docs/technical/R4_10_本地原生业务组合验收方案.md) is prepared; start in a separate R4-10 branch.
+
+## Previous delivery — R4-08 scoped native delivery complete
 
 Branch `codex/r4-08-native-delivery`, base d5cb673 / draft PR95. Two-scene editor/review, explicit V2 discovery/My queries, detail/application and warehouse address search/map/copy/navigation are connected. Unknown/estimated quantities remain distinct; unchanged published scheduling is omitted from patches to preserve the original start. Review doesn't write, and failed publishing/application retains inputs with idempotent retries. Scoped native TEST checks use the production components; they do not grant real-account capabilities or post business data.
 
@@ -75,7 +79,7 @@ Documentation/task/link/JS syntax validation is recorded in [baseline report](de
 ## Next execution
 
 1. R4-01 distance code and R4-02 representative dual-native observations are complete. R4-03 direct contribution form is also scoped verified. R4-04 collaboration carousel/filter/camera and R4-05 scoped local combined exit are complete. Android two-group owner confirmation is recorded; these gestures do not need repeating.
-2. R4-06 contracts and R4-07 local services/schema17 are verified. Next R4-08 native form/preview/details/navigation, R4-09 availability and R4-10 dual-native exit.
+2. R4-06 contracts and R4-07 local services/schema17 are verified. R4-08 native form/preview/details/navigation is scoped verified. R4-09 implementation and automated checks pass; finish Android owner native supplement before R4-10 dual-native exit.
 3. R4-11–13: protect imports/correction/application/messages and close core differences with exact evidence, then B5 profile/My→own team→circle text/replies→private images→invitation.
 
 `development_ready=true` now authorizes controlled **R4-2 implementation** after scoped local R4-1 exit. It does not mean full product, physical field or release acceptance. `b5_ready=false`, `release_ready=false`. D14 is umbrella, D22 overlaps D05/D06, D23 overlaps D01; no duplicate counts. D19 cancelled, D24 apartment list P1.7-person usability can run alongside independent local tasks; real-account/KMS/push/independent bundle/physical and field evidence remain B6, not waived or claimed complete. Follow existing issue mapping; do not bulk merge open PRs or close tasks from this audit alone.

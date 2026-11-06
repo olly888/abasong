@@ -342,6 +342,9 @@
     "new_real_account_grants": false,
     "native_ui_changed": false,
     "new_native_acceptance": false,
-    "next_task": "R4-07"
+    "next_task": "R4-07",
+    "pull_request": "https://github.com/olly888/abasong/pull/94",
+    "ci_source": "https://github.com/olly888/abasong/pull/94/checks",
+    "validated_code_commit": "87d52eef7c595737073c155adb00666954583a0e"
   }
 }

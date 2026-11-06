@@ -61,13 +61,17 @@
       "network_or_database_writes": false
     },
     "ci": {
-      "status": "pending_new_exact_HEAD",
-      "prior_PR93_green_is_current_proof": false
+      "status": "consult_latest_exact_HEAD_at_PR_checks",
+      "source": "https://github.com/olly888/abasong/pull/94/checks",
+      "head_branch": "codex/r4-06-delivery-contracts",
+      "prior_PR93_green_is_current_proof": false,
+      "code_commit": "87d52eef7c595737073c155adb00666954583a0e",
+      "latest_head_results_recorded_in": "PR94 body"
     },
     "secret_scan": {
       "status": "PASS_staged_Gitleaks",
       "command": ".tooling/security/gitleaks git . --pre-commit --staged --redact=100 --ignore-gitleaks-allow --no-banner",
-      "full_history": "pending_current_head_CI"
+      "full_history": "current_exact_HEAD_CI_at_PR94_checks"
     }
   },
   "migration_sha256": {
@@ -104,5 +108,7 @@
   "task_register_rows": 22,
   "human_participants": 0,
   "current_batch_complete": true,
-  "next_dependent_task": "R4-07"
+  "next_dependent_task": "R4-07",
+  "pull_request": "https://github.com/olly888/abasong/pull/94",
+  "validated_code_commit": "87d52eef7c595737073c155adb00666954583a0e"
 }

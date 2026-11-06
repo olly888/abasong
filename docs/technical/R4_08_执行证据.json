@@ -146,10 +146,18 @@
     "release_ready": false
   },
   "ci": {
-    "status": "pending_current_branch_run",
+    "status": "PASS",
+    "run_id": 42268830936,
+    "url": "https://github.com/olly888/abasong/actions/runs/42268830936",
+    "head_sha": "5f354de7b3783aa8046ac5a148ae2ecd03fec048",
+    "scope": "implementation_commit_exact_head",
+    "latest_document_closure_source": "https://github.com/olly888/abasong/pull/96/checks",
+    "note": "Closing evidence-index commit changes documents only. Its latest-head CI must be checked separately; code fingerprint is invariant.",
     "inherited_previous_PR_success": false
   },
   "next_task": "R4-09",
   "code_diff_sha256": "ab122d55524926fef21e6f09b31bf8b2aa530ecbce877c212005dd924ffa86ba",
-  "code_diff_command": "git diff --binary d5cb673c6870e822f955017302cd1e995b24d9c3 VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml"
+  "code_diff_command": "git diff --binary d5cb673c6870e822f955017302cd1e995b24d9c3 VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml",
+  "validated_code_commit": "5f354de7b3783aa8046ac5a148ae2ecd03fec048",
+  "pull_request": "https://github.com/olly888/abasong/pull/96"
 }

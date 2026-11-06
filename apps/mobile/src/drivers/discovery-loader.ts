@@ -50,11 +50,11 @@ export function createDiscoveryLoader(
           const result = (await read(
             discoveryPath(mode, f, next ?? undefined),
             c.signal,
-          )) as S["RequestPage"] | S["DriverPage"];
+          )) as S["RequestPageV2"] | S["DriverPage"];
           if (!valid()) return null;
           rows.push(
             ...(mode === "找活"
-              ? (result as S["RequestPage"]).items.map((request) => ({
+              ? (result as S["RequestPageV2"]).items.map((request) => ({
                   kind: "request" as const,
                   request,
                 }))

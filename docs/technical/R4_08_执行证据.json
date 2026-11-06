@@ -1,0 +1,155 @@
+{
+  "date": "2026-11-06",
+  "timezone": "America/Los_Angeles",
+  "branch": "codex/r4-08-native-delivery",
+  "base": "d5cb673c6870e822f955017302cd1e995b24d9c3",
+  "scope": "R4-08 scoped native two-scene editor/detail/application and warehouse operations; full real HTTP/native combined exit R4-10 pending",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS",
+      "files": 78,
+      "tests": 453,
+      "added_tests": 19,
+      "lint_types_build": true,
+      "local_log": "/private/tmp/abasong-r4-08-check.log"
+    },
+    "native_payload_server": {
+      "status": "PASS",
+      "cases": 6,
+      "file": "scripts/d1/native-delivery-input.test.ts",
+      "actual_server_schemas_and_normalization": true
+    },
+    "requests_database": {
+      "command": "./scripts/dev verify:requests-api",
+      "status": "PASS",
+      "checks": 509,
+      "delivery_additional_assertions": 88,
+      "upgrade_groups": 5,
+      "v2_role_storage_checks": 42,
+      "environment": "disposable_guarded_local_PostGIS",
+      "local_log": "/private/tmp/abasong-r4-08-requests.log"
+    },
+    "ios_native": {
+      "status": "PASS",
+      "device": "iPhone 18 Pro simulator",
+      "os": "iOS27.0",
+      "errors": 0,
+      "warnings": 2,
+      "new_module": "ExpoClipboard58.0.4",
+      "local_log": "/private/tmp/abasong-r4-08-ios-build.log"
+    },
+    "android_native": {
+      "status": "PASS",
+      "device": "Abasong D0 API37 emulator",
+      "gradle_tasks": 543,
+      "new_module": "ExpoClipboard58.0.4",
+      "local_log": "/private/tmp/abasong-r4-08-android-build.log"
+    },
+    "native_export": {
+      "status": "PASS",
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "hermes_bundles": 2,
+      "local_log": "/private/tmp/abasong-r4-08-export.log"
+    },
+    "clipboard_exact_text": {
+      "ios_success_and_failure_fallback": "PASS",
+      "scope": "only newly copied public TEST address",
+      "reads_user_preexisting_clipboard": false
+    },
+    "secret_scan": {
+      "staged_diff": "PASS",
+      "history": "PASS_142_commits",
+      "redaction": "100_percent",
+      "local_logs": [
+        "/private/tmp/abasong-r4-08-staged-secrets.log",
+        "/private/tmp/abasong-r4-08-history-secrets.log"
+      ]
+    }
+  },
+  "native_acceptance": {
+    "transport": "DEV memory adapter reusing production components; real API/PG separately exercised",
+    "ios": [
+      "two-scene entry and warehouse/handoff forms",
+      "review, failed save retaining input, retry returning to same warehouse",
+      "address suggestion/retrieve/unchecked confirmation/independent blank manual source",
+      "native warehouse Mapbox view/metric scale/attribution",
+      "native clipboard full-text comparison",
+      "external Google Maps web fallback and same map preserved on return",
+      "application capacity80 retained after failure and successful retry",
+      "tomorrow clears ASAP, native time picker cancel retains value",
+      "409 requires current data, no-coordinate map failure retains copy/navigation"
+    ],
+    "android_owner_feedback": [
+      {
+        "question_id": "call_9230371c9aa7402bbc98fb8342cb80d8:0",
+        "result": "正常",
+        "scope": "failed save retention/retry/same warehouse/map/copy/navigation/return"
+      },
+      {
+        "question_id": "call_9230371c9aa7402bbc98fb8342cb80d8:1",
+        "result": "正常",
+        "scope": "estimated capacity omitted/application failure/retry success"
+      },
+      {
+        "question_id": "call_65c42f3ed3ad46aaa2b391308d3d7076:0",
+        "result": "正常",
+        "scope": "warehouse autocomplete/reconfirm/independent manual source/input-footer"
+      }
+    ],
+    "android_tool_clicks": "unreliable_noWindowsAvailable_not_counted_as_pass",
+    "ios_software_keyboard_visibility": "hardware keyboard connected; not counted as a new software-keyboard assertion",
+    "remaining_full_system_exception_matrix": "R4-10",
+    "physical_device_acceptance": false
+  },
+  "artifacts": [
+    {
+      "path": ".artifacts/r4-08/android-warehouse-detail.png",
+      "sha256": "7fbbc46fddc952fb7f3590cb4e43e3057a33878197949dccb91e20e85024a6a1"
+    },
+    {
+      "path": ".artifacts/r4-08/ios-handoff-form.png",
+      "sha256": "359fa473fe34d84b84f328af3cd4447c12d2f4aa6da4d30b1e00b515dd2057e5"
+    },
+    {
+      "path": ".artifacts/r4-08/ios-map-unavailable.png",
+      "sha256": "d39c8f0e3aff896b4759d47b193569093d8fbcd50f1e374511a0c399ed0f51d5"
+    },
+    {
+      "path": ".artifacts/r4-08/ios-warehouse-map.png",
+      "sha256": "82c910915835927fa534ad9333c10da6f6efab6102ce8797df8d9e5a7bb5cd10"
+    }
+  ],
+  "dependencies": {
+    "added": "expo-clipboard@58.0.4",
+    "pnpm_single_lock": true,
+    "ios_pod_lock_only_adds_clipboard": true,
+    "global_runtime_changed": false
+  },
+  "boundaries": {
+    "cloud_changed": false,
+    "migrations_added": false,
+    "D0_migrations": 17,
+    "D0_tables": 54,
+    "real_account_grants": false,
+    "real_SMS_or_messages": false,
+    "business_provider_transport": "synthetic",
+    "Mapbox_native_basemap": "real_existing_service",
+    "permanent_provider_results_saved_by_client": false,
+    "test_records_in_business_database": false,
+    "human_study_participants": 0,
+    "human_study_required": 7,
+    "B5_ready": false,
+    "release_ready": false
+  },
+  "ci": {
+    "status": "pending_current_branch_run",
+    "inherited_previous_PR_success": false
+  },
+  "next_task": "R4-09",
+  "code_diff_sha256": "ab122d55524926fef21e6f09b31bf8b2aa530ecbce877c212005dd924ffa86ba",
+  "code_diff_command": "git diff --binary d5cb673c6870e822f955017302cd1e995b24d9c3 VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml"
+}

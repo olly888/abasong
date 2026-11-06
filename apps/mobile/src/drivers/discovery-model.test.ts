@@ -101,6 +101,12 @@ it("keeps per-mode reading state and encodes filters without turning them into p
   expect(q.pathname).toBe("/v1/drivers");
   expect(q.searchParams.get("carrier")).toBe("A&B / C");
   expect(q.searchParams.has("lat")).toBe(false);
+  const work = new URL(
+    discoveryPath("找活", { region: "", text: "", kind: "", day: "" }),
+    "http://test.invalid",
+  );
+  expect(work.searchParams.get("request_schema_version")).toBe("2");
+  expect(q.searchParams.has("request_schema_version")).toBe(false);
 });
 it("preserves explicit off intent without requiring stale date fields and handles an overnight shift in LA", () => {
   const f = availabilityFields(null);

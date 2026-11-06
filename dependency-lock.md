@@ -1,5 +1,7 @@
 # D0 依赖与运行时基线
 
+2026-11-06 R4-08：通过 Expo58 `expo install` 安装并精确锁定 expo-clipboard 58.0.4，用于仓库完整地址原生复制；不读取既有剪贴板。复用现有 expo-linking58.0.15、RNMapbox10.3.16 及临时地址搜索会话；无新地图供应商、迁移或云资源。本批重新编译 iOS／Android 开发应用，实际结果见 R4-08 报告。
+
 2026-11-06 R4-07：没有新增依赖、SDK、原生模块或锁文件变更；复用现有MapboxNearbyProvider永久地理编码、Intl、HMAC幂等及PostGIS。0017只追加发布身份与重开校验，D0为17迁移/54表。REQUEST_SHARE_BASE_URL是可选服务端HTTPS接收页来源；未配置时不创建分享，真实分发未开放。供应商测试仅用严格test环境子进程的localhost transport替身，无真实网络调用/费用；不把测试配置写入正式.env或云环境。
 
 2026-11-05 R4-06：没有新增包、原生模块、SDK或锁文件变更。复用Node24 Intl处理America/Los_Angeles日期及23/25小时日边界；契约校验复用现有openapi-typescript。生成器新增只读`--json`路径仅需Python3标准库，不给CI增加PyYAML安装依赖；默认YAML生成仍沿用既有环境。0015新增一张受控仓库地址版本表，0016补齐地址文字持久来源，D0为16迁移/54表；V2模型本批准备、端点接通属于R4-07。未调用云库、地理供应商或新增付费资源。

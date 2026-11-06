@@ -26,6 +26,7 @@ export function createContributionAddressSearch(
   request: ContributionRequest,
   makeKey: () => string,
   now = Date.now,
+  includeApartments = true,
 ) {
   let version = 0,
     controller: AbortController | null = null,
@@ -63,10 +64,13 @@ export function createContributionAddressSearch(
       const current = session;
       current.calls++;
       const [local, external] = await Promise.allSettled([
-        request<S["ApartmentPage"]>(
-          "/v1/apartments?limit=5&query=" + encodeURIComponent(query.trim()),
-          { signal: run.signal },
-        ),
+        includeApartments
+          ? request<S["ApartmentPage"]>(
+              "/v1/apartments?limit=5&query=" +
+                encodeURIComponent(query.trim()),
+              { signal: run.signal },
+            )
+          : Promise.resolve({ items: [] }),
         request<S["AddressSuggestions"]>("/v1/search/addresses/suggest", {
           method: "POST",
           signal: run.signal,

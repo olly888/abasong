@@ -1,8 +1,16 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.36](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.37](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — R4-07 local delivery service exit complete
+## Current delivery — R4-08 scoped native delivery complete
+
+Branch `codex/r4-08-native-delivery`, base d5cb673 / draft PR95. Two-scene editor/review, explicit V2 discovery/My queries, detail/application and warehouse address search/map/copy/navigation are connected. Unknown/estimated quantities remain distinct; unchanged published scheduling is omitted from patches to preserve the original start. Review doesn't write, and failed publishing/application retains inputs with idempotent retries. Scoped native TEST checks use the production components; they do not grant real-account capabilities or post business data.
+
+Latest engineering78 files/453 tests, lint/types/package/API/worker builds PASS; mobile-built inputs pass6 actual server schema/normalization combinations. Isolated requests HTTP/PG509 checks PASS. Expo Clipboard58.0.4 is precisely locked; actual iOS and Android development builds/install and both Hermes exports PASS. iOS native map/copy/navigation/date/failed-save/retry/conflict/address states observed; Android three owner-feedback groups confirm failed-save/application retry, warehouse map/copy/navigation return, address source reset and input/footer behavior. No new migration/cloud/real-account grant; D0 remains17 migrations/54 tables. Latest exact-head CI is recorded in the batch evidence/PR, not inherited from PR95.
+
+See [R4-08 report](docs/technical/R4_08_两场景原生表单与仓库操作验收.md) and [machine evidence](docs/technical/R4_08_执行证据.json). Next R4-09 availability date/time interaction; R4-10 real local HTTP/native combined exit and remaining system/exception matrix. B5/B6/release and human study0/7 remain pending; simulators are not physical-device acceptance.
+
+## Previous delivery — R4-07 local delivery service exit complete
 
 Branch `codex/r4-07-delivery-services`, base3bc2037 / PR94 exact-head CI42183906516 SUCCESS. Enabled strict V2 create/edit/publish/reopen/gap and explicit schema2 discovery/My queries; legacy lists default to schema1. V2 applications/versions/source messages use new quantity/day semantics and private-summary projection. Warehouse replacement preserves history and clears stale region association; unchanged valid address reuses its version/provider result. First-publish display identity is frozen, while current DSP authority is checked on later edits/reopen. Optional public share service is implemented with an independent allowlist and configured HTTPS receiver origin; actual receiver/distribution is not deployed.
 

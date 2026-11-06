@@ -54,7 +54,9 @@ export default function DriverDiscoveryLab() {
     failure = useRef(false),
     slow = useRef(false),
     empty = useRef(false);
-  const [selectedRequest, setSelectedRequest] = useState(fixtures.requests[0]!);
+  const [selectedRequest, setSelectedRequest] = useState<
+    import("../requests/presentation").DeliverySummary
+  >(fixtures.requests[0]!);
   const [queryNotice, setQueryNotice] = useState("全部区域");
   const [cameraNotice, setCameraNotice] = useState("");
   const [selectedProfile, setSelectedProfile] = useState(fixtures.drivers[0]!);

@@ -5,7 +5,7 @@ import { BottomSheet } from "../ui/BottomSheet";
 import { ActionButton, Field } from "../ui/Controls";
 import { SelectionField } from "../ui/SelectionField";
 import { typeStyles } from "../ui/foundation";
-import { localDateTime, kindLabels } from "../requests/presentation";
+import { localDateTime } from "../requests/presentation";
 import { nextDate } from "./availability-fields";
 import {
   defaultFilters,
@@ -49,7 +49,12 @@ export function DiscoveryFilters(p: {
         <SelectionField
           label="支援类型"
           value={draft.kind}
-          options={[["", "全部类型"], ...Object.entries(kindLabels)]}
+          options={[
+            ["", "全部类型"],
+            ["extra_drivers", "仓库缺人"],
+            ["partial_route", "部分包裹代送"],
+            ["whole_route", "整批代送"],
+          ]}
           onChange={(kind) => setDraft({ ...draft, kind })}
         />
       ) : null}

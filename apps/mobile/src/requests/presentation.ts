@@ -1,5 +1,48 @@
 import type { components } from "@abasong/contracts";
-export type DeliveryRequest = components["schemas"]["Request"];
+export type DeliveryRequest =
+  components["schemas"]["Request"] | components["schemas"]["RequestDetailV2"];
+export type DeliverySummary =
+  components["schemas"]["Request"] | components["schemas"]["RequestSummaryV2"];
+export const scenarioLabels = {
+  warehouse_shortage: "仓库缺人，找司机",
+  delivery_handoff: "送不完，找人代送",
+} as const;
+export const isV2 = (
+  r: DeliverySummary,
+): r is components["schemas"]["RequestSummaryV2"] =>
+  "request_schema_version" in r && r.request_schema_version === 2;
+export function requestTitle(r: DeliverySummary) {
+  return isV2(r) ? scenarioLabels[r.scenario] : kindLabels[r.kind];
+}
+export function requestQuantity(r: DeliverySummary) {
+  if (isV2(r) && r.quantity_mode === "unknown") return "件数待确认";
+  if (isV2(r) && r.quantity_mode === "estimate")
+    return r.parcel_count === null ? "件数待确认" : `约 ${r.parcel_count} 件`;
+  return r.remaining_parcels !== null
+    ? `剩余 ${r.remaining_parcels} 件`
+    : r.parcel_count !== null
+      ? `${r.parcel_count} 件`
+      : "件数待确认";
+}
+export function canApplyTo(r: DeliverySummary) {
+  if (
+    r.status !== "open" ||
+    !r.expires_at ||
+    Date.parse(r.expires_at) <= Date.now()
+  )
+    return false;
+  if (r.remaining_drivers === 0) return false;
+  if (isV2(r) && r.quantity_mode !== "exact") return true;
+  return (
+    ["vehicle_help", "other_help"].includes(r.kind) ||
+    (Number(r.remaining_parcels) > 0 &&
+      Number(r.remaining_parcels) >= (r.minimum_parcels ?? 1))
+  );
+}
+export const exactQuantity = (r: DeliverySummary) =>
+  !isV2(r) || r.quantity_mode === "exact";
+export const hasEditableGap = (r: DeliverySummary) =>
+  (exactQuantity(r) && r.parcel_count !== null) || r.drivers_needed !== null;
 export const kindLabels = {
   partial_route: "部分包裹代跑",
   whole_route: "整条线路代跑",

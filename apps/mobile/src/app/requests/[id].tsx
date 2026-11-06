@@ -9,12 +9,12 @@ import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate, requestStyles as s } from "../../requests/RequestUi";
 import { ApplySheet } from "../../requests/ApplySheet";
+import { DeliveryDetailBody } from "../../requests/DeliveryDetailBody";
+import type { ContributionRequest } from "../../apartments/contribution-address-search";
 import { GapSheet } from "../../requests/GapSheet";
 import {
-  kindLabels,
-  requestPrice,
-  requestTime,
-  statusLabels,
+  canApplyTo,
+  hasEditableGap,
   type DeliveryRequest,
 } from "../../requests/presentation";
 export default function RequestDetail() {
@@ -141,20 +141,15 @@ function Detail() {
       if (focused.current && targetId.current === r.id) setBusy(false);
     }
   }
-  const detail = (label: string, value: string | null | undefined) =>
-    value ? (
-      <View style={{ gap: 6 }}>
-        <Text style={s.secondary}>{label}</Text>
-        <Text style={s.text}>{value}</Text>
-      </View>
-    ) : null;
   const delivery = r && !["vehicle_help", "other_help"].includes(r.kind);
-  const canApply =
-    r?.status === "open" &&
-    (!delivery ||
-      (Number(r.remaining_parcels) > 0 &&
-        Number(r.remaining_parcels) >= Number(r.minimum_parcels ?? 1) &&
-        (r.kind !== "extra_drivers" || Number(r.remaining_drivers) > 0)));
+  const canApply = r && canApplyTo(r);
+  const transport: ContributionRequest = useCallback(
+    (path, options) => {
+      if (!session) return Promise.reject(new Error("请先登录"));
+      return dataRequest(session, path, options);
+    },
+    [session?.access_token],
+  );
   const footer =
     r && own ? (
       <View
@@ -239,7 +234,7 @@ function Detail() {
           />
         ) : canApply ? (
           <ActionButton
-            label={delivery ? "报名支援" : "我能帮忙"}
+            label={delivery ? "报名接活" : "我能帮忙"}
             disabled={busy}
             onPress={() => setApplying(true)}
           />
@@ -258,89 +253,11 @@ function Detail() {
         <ActionButton label="重新加载" secondary onPress={() => void load()} />
       ) : null}
       {r ? (
-        <>
-          <View style={s.row}>
-            <Text style={s.status}>{statusLabels[r.status]}</Text>
-            <Text style={s.secondary}>{r.publisher.display_name}</Text>
-          </View>
-          <Text style={s.headline}>{kindLabels[r.kind]}</Text>
-          {detail("配送区域", regions[r.region_id ?? ""] ?? "未选择区域")}
-          {delivery ? (
-            <>
-              {detail("取件区域", r.pickup_area)}
-              {detail(
-                "承运商 / 线路",
-                [r.carrier, r.route_label].filter(Boolean).join(" · "),
-              )}
-              <View style={s.row}>
-                <Text style={s.headline}>
-                  {r.parcel_count !== null
-                    ? `${r.parcel_count} 件`
-                    : "件数未填写"}
-                </Text>
-                <Text style={s.price}>{requestPrice(r)}</Text>
-              </View>
-              {r.drivers_needed
-                ? detail("本次人数", `${r.drivers_needed} 人`)
-                : null}
-              {r.status === "open" && r.remaining_parcels !== null
-                ? detail("当前剩余", `${r.remaining_parcels} 件`)
-                : null}
-              {detail(
-                "承接方式",
-                r.kind === "whole_route" || !r.accepts_partial
-                  ? "整批接手"
-                  : r.minimum_parcels
-                    ? `可以分担，每人至少 ${r.minimum_parcels} 件`
-                    : "可以分担",
-              )}
-            </>
-          ) : null}
-          {detail("开始时间", requestTime(r.starts_at))}
-          {detail("有效截止", requestTime(r.expires_at))}
-          {detail(
-            "最晚取件",
-            r.pickup_deadline_at ? requestTime(r.pickup_deadline_at) : null,
-          )}
-          {detail(
-            "配送截止",
-            r.delivery_deadline_at ? requestTime(r.delivery_deadline_at) : null,
-          )}
-          {delivery ? (
-            <>
-              {detail(
-                "理货状态",
-                (
-                  {
-                    sorted: "已理货",
-                    unsorted: "未理货",
-                    unknown: "联系确认",
-                  } as Record<string, string>
-                )[r.sorted_state ?? ""],
-              )}
-              {detail(
-                "包裹转交",
-                (
-                  {
-                    carrier_account: "须有承运商账号",
-                    dsp_approval: "须 DSP 确认",
-                    contact_confirm: "联系后确认",
-                  } as Record<string, string>
-                )[r.handoff_requirement ?? ""],
-              )}
-              {detail(
-                "配送经验",
-                {
-                  any: "不限",
-                  delivery_experience: "有配送经验",
-                  carrier_experience: "熟悉该承运商",
-                }[r.experience_requirement],
-              )}
-              {detail("私下付款约定", r.private_payment_terms)}
-            </>
-          ) : null}
-          {detail("说明", r.description)}
-        </>
+        <DeliveryDetailBody
+          request={r}
+          regions={regions}
+          transport={transport}
+        />
       ) : null}
       <Modal
         visible={!!confirmation}
@@ -402,6 +319,7 @@ function Detail() {
       {r && gapEditing ? (
         <GapSheet
           request={r}
+          onRefresh={() => void load()}
           onClose={() => setGapEditing(false)}
           onSaved={(value) => {
             setRequest(value);
@@ -465,7 +383,7 @@ function Detail() {
                   });
               }}
             />
-            {r?.status === "open" && delivery ? (
+            {r?.status === "open" && delivery && hasEditableGap(r) ? (
               <ActionButton
                 label="更新剩余缺口"
                 secondary

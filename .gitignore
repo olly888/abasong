@@ -34,3 +34,4 @@ apps/mobile/modules/*/android/.cxx/
 apps/mobile/modules/abasong-location/android/build/
 apps/mobile/modules/abasong-location/android/.gradle/
 apps/mobile/modules/abasong-location/android/.cxx/
+.artifacts/r4-08/

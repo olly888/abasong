@@ -5,16 +5,17 @@ import { tokens } from "@abasong/ui";
 import { useAuth } from "../auth/AuthProvider";
 import { AuthPage, AuthResolution, ActionButton } from "../auth/AuthControls";
 import {
-  kindLabels,
+  requestTitle,
+  requestQuantity,
   statusLabels,
   requestPrice,
   requestTime,
-  type DeliveryRequest,
+  type DeliverySummary,
 } from "./presentation";
 export { BottomSheet as RequestSheet } from "../ui/BottomSheet";
 export function RequestGate({
   children,
-  title = "临时配送支援",
+  title = "配送需求",
 }: {
   children: ReactNode;
   title?: string;
@@ -86,7 +87,7 @@ export function RequestCard({
   pickupRegion,
   onPress,
 }: {
-  request: DeliveryRequest;
+  request: DeliverySummary;
   region?: string;
   pickupRegion?: string;
   onPress: () => void;
@@ -98,7 +99,7 @@ export function RequestCard({
       style={requestStyles.card}
     >
       <View style={requestStyles.row}>
-        <Text style={requestStyles.label}>{kindLabels[r.kind]}</Text>
+        <Text style={requestStyles.label}>{requestTitle(r)}</Text>
         <Text style={requestStyles.status}>{statusLabels[r.status]}</Text>
       </View>
       <Text style={requestStyles.headline}>
@@ -106,9 +107,7 @@ export function RequestCard({
       </Text>
       <View style={requestStyles.row}>
         <Text style={requestStyles.text}>
-          {r.parcel_count
-            ? `剩余 ${r.remaining_parcels ?? r.parcel_count} 件`
-            : r.description || ""}
+          {requestQuantity(r)}
           {r.drivers_needed
             ? ` · 需 ${r.remaining_drivers ?? r.drivers_needed} 人`
             : ""}
@@ -173,7 +172,7 @@ export const requestStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.color.border,
     borderRadius: 12,
-    minHeight: 46,
+    minHeight: 48,
   },
   selected: {
     borderColor: tokens.color.brandPrimary,

@@ -42,8 +42,13 @@
       "local_log": "/private/tmp/abasong-r4-04-requests-api.log"
     },
     "ci": {
-      "status": "tracked_at_current_branch_draft_PR_exact_HEAD_checks",
-      "required": true
+      "status": "tracked_at_PR92_exact_HEAD_checks",
+      "required": true,
+      "source": "https://github.com/olly888/abasong/pull/92/checks"
+    },
+    "secret_scan": {
+      "status": "PASS_staged_Gitleaks",
+      "full_history": "required_in_remote_CI"
     }
   },
   "native": {
@@ -107,5 +112,6 @@
   },
   "current_batch_complete": true,
   "whole_R4_1_exit": false,
-  "next_task": "R4-05"
+  "next_task": "R4-05",
+  "pull_request": "https://github.com/olly888/abasong/pull/92"
 }

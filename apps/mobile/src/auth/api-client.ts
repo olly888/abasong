@@ -3,15 +3,8 @@ import type { Session } from '@supabase/supabase-js';
 import type { components } from '@abasong/contracts';
 import { supabase } from './supabase';
 export type Me = components['schemas']['Me'];
-export class AccountError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+import { AccountError } from './errors';
+export { AccountError } from './errors';
 const base =
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim().replace(/\/$/, '') ||
   (Platform.OS === 'android'

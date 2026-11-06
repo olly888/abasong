@@ -9,6 +9,8 @@ import { Client } from "pg";
 import { localTarget } from "../d0/database-target";
 import { childRunning } from "./native-exit-guard";
 async function main() {
+  const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
+  assert(["delivery", "contribution"].includes(scenario));
   const env = parseEnv(readFileSync(".env", "utf8"));
   const admin = new Client({
     connectionString: localTarget(env.DATABASE_ADMIN_URL).href,
@@ -58,7 +60,13 @@ async function main() {
     assert(ready, "isolated fixture not ready");
     verifier = spawn(
       process.execPath,
-      ["--import", "tsx", "scripts/d1/verify-native-exit.ts"],
+      [
+        "--import",
+        "tsx",
+        scenario === "contribution"
+          ? "scripts/d1/verify-native-contribution.ts"
+          : "scripts/d1/verify-native-exit.ts",
+      ],
       { stdio: "inherit" },
     );
     const [code] = await once(verifier, "exit");

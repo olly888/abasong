@@ -490,3 +490,34 @@ it("persists removing the last unsubmitted row without creating an empty replace
   );
   expect(client.batch?.id).toBe("b");
 });
+
+it("refuses to attach a new row to a different screenshot when its original source is missing", async () => {
+  mock.request.mockImplementation(async (_s, path) =>
+    path.endsWith("/import-policy")
+      ? { version: 1 }
+      : path.includes("/candidates?")
+        ? { items: [], next_cursor: null }
+        : { ...batch, mode: "private_only", mode_locked: false },
+  );
+  const client = new ServerDraft(session, new AbortController().signal);
+  await expect(
+    client.save(
+      [{ ...local, privateId: undefined, sourceId: "missing-original" }],
+      [
+        {
+          id: "different-screenshot",
+          uri: "file:///TEST-other.png",
+          state: "recognized",
+          width: 100,
+          height: 100,
+          bytes: 100,
+          mime: "image/png",
+        },
+      ],
+      "private_only",
+    ),
+  ).rejects.toThrow("截图来源");
+  expect(
+    mock.request.mock.calls.some((c) => c[1].endsWith("/sources/local")),
+  ).toBe(false);
+});

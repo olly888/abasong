@@ -10,6 +10,10 @@ import { generateKeyPair, exportJWK, SignJWT } from "jose";
 import { Client, escapeLiteral } from "pg";
 import { localTarget } from "../d0/database-target";
 import {
+  seedContributions,
+  toggleContributionFailure,
+} from "./native-contribution-seed";
+import {
   fixtureRequestAllowed,
   fixtureFaultMatch,
   childRunning,
@@ -19,6 +23,9 @@ import {
 // Native clients choose fictional actors; JWTs stay in this process and go only
 // to the fixed disposable API. No login bypass is added to the business server.
 async function main() {
+  const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
+  assert(["delivery", "contribution"].includes(scenario));
+  let apartments: string[] = [];
   const env = parseEnv(readFileSync(".env", "utf8")),
     adminUrl = localTarget(env.DATABASE_ADMIN_URL),
     runtime = localTarget(env.DATABASE_URL),
@@ -87,9 +94,12 @@ async function main() {
     createdRole = false,
     stopping = false;
   let lifetime: ReturnType<typeof setTimeout> | undefined;
-  const resourceFile = `artifacts/r4-10/test-resources/${name}.json`;
+  const resourceFile = `artifacts/${scenario === "contribution" ? "r4-11" : "r4-10"}/test-resources/${name}.json`;
   const recordResources = (cleaned = false) => {
-    mkdirSync("artifacts/r4-10/test-resources", { recursive: true });
+    mkdirSync(
+      `artifacts/${scenario === "contribution" ? "r4-11" : "r4-10"}/test-resources`,
+      { recursive: true },
+    );
     writeFileSync(
       resourceFile,
       JSON.stringify(
@@ -119,7 +129,14 @@ async function main() {
       res.writeHead(status);
       res.end(JSON.stringify(value));
     };
-    if (!fixtureRequestAllowed(req.headers, req.url ?? "", req.method ?? ""))
+    if (
+      !fixtureRequestAllowed(
+        req.headers,
+        req.url ?? "",
+        req.method ?? "",
+        scenario as "delivery" | "contribution",
+      )
+    )
       return reply(403, {
         code: "FIXTURE_ONLY",
         message: "仅本机 TEST 工具可用",
@@ -132,6 +149,8 @@ async function main() {
           region,
           pickup,
           isolated: true,
+          scenario,
+          apartments,
           run_id: process.env.ABASONG_NATIVE_EXIT_RUN ?? null,
         });
       if (req.url === "/fixture/snapshot" && req.method === "GET") {
@@ -142,7 +161,7 @@ async function main() {
         ).rows;
         const counts = (
           await db!.query(
-            "SELECT (SELECT count(*)::int FROM abasong.requests) requests,(SELECT count(*)::int FROM abasong.applications) applications,(SELECT count(*)::int FROM abasong.messages WHERE kind='text') messages,(SELECT count(*)::int FROM abasong.conversations) conversations",
+            "SELECT (SELECT count(*)::int FROM abasong.requests) requests,(SELECT count(*)::int FROM abasong.applications) applications,(SELECT count(*)::int FROM abasong.messages WHERE kind='text') messages,(SELECT count(*)::int FROM abasong.conversations) conversations,(SELECT count(*)::int FROM abasong.access_records) access_records,(SELECT count(*)::int FROM abasong.access_contribution_sources) contribution_sources,(SELECT count(*)::int FROM abasong.personal_access_records) private_records",
           )
         ).rows[0];
         return reply(200, { ...counts, states: rows });
@@ -151,12 +170,26 @@ async function main() {
         const b = JSON.parse(await body(req)) as Record<string, unknown>;
         if (
           b.action === "fault" &&
-          ["create", "publish", "apply", "message"].includes(
-            String(b.operation),
-          )
+          [
+            "create",
+            "publish",
+            "apply",
+            "message",
+            "contribute",
+            "correct",
+            "import_commit",
+          ].includes(String(b.operation))
         ) {
           fault = { operation: String(b.operation), after: b.after === true };
           return reply(200, { armed: true });
+        }
+        if (
+          scenario === "contribution" &&
+          b.action === "share_failure" &&
+          typeof b.enabled === "boolean"
+        ) {
+          await toggleContributionFailure(db!, b.enabled);
+          return reply(200, { enabled: b.enabled });
         }
         if (b.action === "qualification" && typeof b.enabled === "boolean") {
           await db!.query(
@@ -271,6 +304,8 @@ async function main() {
       "INSERT INTO abasong.regions(id,label,display_point) VALUES($1,'TEST Pasadena','SRID=4326;POINT(-118.14 34.15)'::extensions.geography),($2,'TEST Industry','SRID=4326;POINT(-117.96 34.01)'::extensions.geography)",
       [region, pickup],
     );
+    if (scenario === "contribution")
+      apartments = await seedContributions(db, owner, driver);
     provider.listen(0, "127.0.0.1");
     await once(provider, "listening");
     const issuer = `http://127.0.0.1:${(provider.address() as { port: number }).port}/auth/v1`;

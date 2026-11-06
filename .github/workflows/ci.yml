@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, 'codex/**']
+    branches: [main, "codex/**"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -55,6 +55,7 @@ jobs:
         run: |
           ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
           ./scripts/dev exec tsx scripts/d1/verify-native-exit-collision.ts
+          ABASONG_NATIVE_EXIT_SCENARIO=contribution ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
       - run: ./scripts/dev verify:library-api
       - run: ./scripts/dev verify:import-api
       - run: ./scripts/dev verify:access-ranking

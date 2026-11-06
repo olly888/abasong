@@ -51,3 +51,16 @@ it("injects a one-shot fault only into the intended versioned mutation", () => {
   expect(fixtureFaultMatch("apply", "POST", "/fixture/control")).toBe(false);
   expect(fixtureFaultMatch("other", "POST", "/v1/requests")).toBe(false);
 });
+
+it("separates contribution paths from delivery paths in the disposable broker", () => {
+  const h = { host: "127.0.0.1:3028", "content-type": "application/json" };
+  const path = "/v1/me/import-batches";
+  expect(fixtureRequestAllowed(h, path, "POST")).toBe(false);
+  expect(fixtureRequestAllowed(h, path, "POST", "contribution")).toBe(true);
+  expect(fixtureRequestAllowed(h, "/v1/requests", "POST", "contribution")).toBe(
+    false,
+  );
+  expect(
+    fixtureRequestAllowed(h, "/v1/me/capabilities", "GET", "contribution"),
+  ).toBe(false);
+});

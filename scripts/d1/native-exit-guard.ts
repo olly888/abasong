@@ -7,6 +7,7 @@ export function fixtureRequestAllowed(
   h: IncomingHttpHeaders,
   path: string,
   method: string,
+  scenario: "delivery" | "contribution" = "delivery",
 ) {
   if (h.origin || h.referer || h["sec-fetch-site"]) return false;
   if (
@@ -22,11 +23,20 @@ export function fixtureRequestAllowed(
   )
     return false;
   const [pathname] = path.split("?");
-  const businessPath =
+  const deliveryPath =
     /^\/v1\/(requests|regions|drivers|conversations|applications)(\/[a-z0-9-]+)*$/i.test(
       pathname ?? "",
     ) ||
     /^\/v1\/me\/(requests|applications|availability)$/.test(pathname ?? "");
+  const contributionPath =
+    /^\/v1\/(apartments|access-records)(\/[a-z0-9-]+)*$/i.test(
+      pathname ?? "",
+    ) ||
+    /^\/v1\/me\/(contributions|apartment-library|private-access-records|import-policy|import-batches)(\/[a-z0-9-]+)*$/i.test(
+      pathname ?? "",
+    );
+  const businessPath =
+    scenario === "contribution" ? contributionPath : deliveryPath;
   return (
     (businessPath && /^\/v1\/[a-z0-9/?%_=,&.-]+$/i.test(path)) ||
     ["/fixture", "/fixture/snapshot", "/fixture/control"].includes(path)
@@ -38,6 +48,12 @@ export function fixtureFaultMatch(
   path: string,
 ) {
   if (method !== "POST") return false;
+  if (operation === "contribute")
+    return /^\/v1\/apartments\/[a-f0-9-]{36}\/access-records$/.test(path);
+  if (operation === "correct")
+    return /^\/v1\/me\/contributions\/[a-f0-9-]{36}\/corrections$/.test(path);
+  if (operation === "import_commit")
+    return /^\/v1\/me\/import-batches\/[a-f0-9-]{36}\/commit$/.test(path);
   return operation === "create"
     ? path === "/v1/requests"
     : operation === "publish"

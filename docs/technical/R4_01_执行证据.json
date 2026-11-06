@@ -3,7 +3,7 @@
   "timezone": "America/Los_Angeles",
   "base": "1168328a3769777cd7f9e7870f3abb4b2d55ba4d",
   "branch": "codex/r4-01-distance-apartment-cards",
-  "code_diff_sha256": "0ec6d0a42e1dc1e4de7fb42190a149d257b60a00c0d9a25ba84d7dafd6ebc021",
+  "code_diff_sha256": "9f1ed077bec6fc9103c46199dc477921aad0650950267cd6be10d4ca9f7793d2",
   "scope": "R4-01 distance contract and R4-02 apartment cards; not full R4-1 or App release",
   "checks": {
     "engineering": {
@@ -38,9 +38,12 @@
       "legacy_whole_validator_pass_claimed": false
     },
     "ci": {
-      "status": "pending_commit_and_PR",
+      "status": "tracked_at_PR90_exact_HEAD_checks",
+      "required": true,
+      "source": "https://github.com/olly888/abasong/pull/90/checks",
       "branch_filter": "pull_request/main_or_codex/**",
-      "permissions_changed": false
+      "permissions_changed": false,
+      "note": "CI result is recorded against the exact commit in GitHub Checks; an earlier run is not acceptance for a later code commit."
     }
   },
   "native": {
@@ -96,7 +99,7 @@
   ],
   "next": [
     "unlock_dependent_visual_closure",
-    "exact_commit_CI",
+    "confirm_exact_HEAD_CI_in_PR90",
     "R4-03_direct_address_contribution",
     "R4-04_collaboration_carousel"
   ],
@@ -107,5 +110,6 @@
     "scripts/d1/verify-nearby.ts",
     "scripts/d1/verify-nearby-coverage.ts",
     ".github/workflows/ci.yml"
-  ]
+  ],
+  "pull_request": "https://github.com/olly888/abasong/pull/90"
 }

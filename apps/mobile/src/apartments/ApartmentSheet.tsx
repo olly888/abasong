@@ -122,7 +122,7 @@ export function ApartmentSheet(p: SheetProps) {
       >
         <Text
           accessibilityLabel={
-            r.method === "keypad" ? `密码 ${r.value}` : methodLabel(r)
+            r.method === "keypad" ? `门禁码 ${r.value}` : methodLabel(r)
           }
           style={[
             big ? styles.code : styles.recordCode,
@@ -239,7 +239,7 @@ export function ApartmentSheet(p: SheetProps) {
               <>
                 <IconButton
                   name="down"
-                  label="收起密码记录"
+                  label="收起门禁码记录"
                   onPress={() => p.onExpand(false)}
                 />
                 <IconButton
@@ -267,7 +267,7 @@ export function ApartmentSheet(p: SheetProps) {
           {p.status === "error" ? (
             <View style={[styles.state, !p.expanded && styles.compactState]}>
               <Text accessibilityRole="alert" style={styles.body}>
-                暂时无法读取密码
+                暂时无法读取门禁码
               </Text>
               <ActionButton label="重新读取" onPress={p.onRetry} />
             </View>
@@ -279,9 +279,9 @@ export function ApartmentSheet(p: SheetProps) {
           ) : null}
           {canRead && !records.length ? (
             <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <Text style={styles.stateTitle}>暂无共享密码</Text>
+              <Text style={styles.stateTitle}>暂无共享门禁码</Text>
               {!p.expanded ? (
-                <ActionButton label="添加密码" onPress={p.onAdd} />
+                <ActionButton label="添加门禁码" onPress={p.onAdd} />
               ) : null}
             </View>
           ) : null}
@@ -299,7 +299,7 @@ export function ApartmentSheet(p: SheetProps) {
                 onPress={() => p.onExpand(true)}
               >
                 <Text style={styles.link}>
-                  查看 {records.length} 条进入信息
+                  查看 {records.length} 条门禁码记录
                 </Text>
                 <Icon name="up" size={18} color={tokens.color.brandPrimary} />
               </Pressable>
@@ -308,7 +308,7 @@ export function ApartmentSheet(p: SheetProps) {
           {p.expanded ? (
             <>
               <View style={{ paddingTop: 18, paddingBottom: 14 }}>
-                <ActionButton label="＋ 添加密码" onPress={p.onAdd} />
+                <ActionButton label="＋ 添加门禁码" onPress={p.onAdd} />
               </View>
               {records.map((r) => (
                 <View

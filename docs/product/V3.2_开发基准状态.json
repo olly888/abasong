@@ -224,7 +224,7 @@
   "r4_distance_cards": {
     "report": "../technical/R4_01_距离契约与公寓卡片实施验收.md",
     "evidence": "../technical/R4_01_执行证据.json",
-    "r4_01": "local_verified_ci_pending",
+    "r4_01": "local_verified_exact_HEAD_CI_tracked_at_PR90",
     "r4_02": "implemented_representative_dual_simulator_final_error_screens_pending",
     "native_compilation_run": false,
     "ios_physical_acceptance": false,
@@ -233,6 +233,8 @@
     "blocked_observation": "Mac locked; unlock requested for last visual states",
     "new_migrations": false,
     "new_dependencies": false,
-    "cloud_changed": false
+    "cloud_changed": false,
+    "pull_request": "https://github.com/olly888/abasong/pull/90",
+    "ci_source": "https://github.com/olly888/abasong/pull/90/checks"
   }
 }

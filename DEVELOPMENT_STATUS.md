@@ -1,8 +1,12 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.37](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.38](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — R4-08 scoped native delivery complete
+## Current delivery — R4-09 availability window in progress
+
+Branch `codex/r4-09-availability-window`, base587b6c0 / draft PR96 (exact-head CI42269694883 SUCCESS). Scope: U03 today/tomorrow and explicit end date, preserve overnight/off behavior, cancellation/failed save/conflict protections and scoped dual-native TEST checks. Reuses existing single-window PUT/version/expiry service; no new API/migration/dependency/cloud/grant. The My compact switch is B5 integration, not a new scheduling system. Latest engineering79 files/470 tests and both Hermes JS exports PASS; isolated actual HTTP/PG515 checks PASS, including6 mobile-payload calls. iOS/Android today/tomorrow overnight shifting and layout observed; remaining picker/cancel/retry/conflict interactions await Mac unlock. No blocked interaction counted as PASS. See [R4-09 report](docs/technical/R4_09_单次接活时段实施验收.md) and [machine evidence](docs/technical/R4_09_执行证据.json). Current-head CI and scoped native closure pending; next R4-10 only after this batch closes.
+
+## Previous delivery — R4-08 scoped native delivery complete
 
 Branch `codex/r4-08-native-delivery`, base d5cb673 / draft PR95. Two-scene editor/review, explicit V2 discovery/My queries, detail/application and warehouse address search/map/copy/navigation are connected. Unknown/estimated quantities remain distinct; unchanged published scheduling is omitted from patches to preserve the original start. Review doesn't write, and failed publishing/application retains inputs with idempotent retries. Scoped native TEST checks use the production components; they do not grant real-account capabilities or post business data.
 

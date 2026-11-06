@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-06",
+  "timezone": "America/Los_Angeles",
+  "branch": "codex/r4-09-availability-window",
+  "base": "587b6c00b491049ff7a5ffff4fad79ffa8b72a1a",
+  "scope": "R4-09 single availability window; My compact switch B5 and full native_HTTP exit R4-10 pending",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS",
+      "files": 79,
+      "tests": 470,
+      "added_tests": 17,
+      "lint_types_build": true,
+      "local_log": "/private/tmp/abasong-r4-09-check.log"
+    },
+    "requests_database": {
+      "command": "./scripts/dev verify:requests-api",
+      "status": "PASS",
+      "checks": 515,
+      "native_payload_additional_http_calls": 6,
+      "actual_mobile_payload": true,
+      "upgrade_groups": 5,
+      "v2_role_storage_checks": 42,
+      "environment": "disposable_guarded_local_PostGIS",
+      "local_log": "/private/tmp/abasong-r4-09-requests.log"
+    },
+    "native_export": {
+      "status": "PASS",
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "hermes_bundles": 2,
+      "local_log": "/private/tmp/abasong-r4-09-export.log"
+    },
+    "new_native_binary_compilation": false,
+    "secret_scan": {
+      "history": "PASS_144_commits",
+      "staged_diff": "PASS",
+      "local_logs": [
+        "/private/tmp/abasong-r4-09-history-secrets.log",
+        "/private/tmp/abasong-r4-09-staged-secrets.log"
+      ]
+    }
+  },
+  "native_acceptance": {
+    "transport": "DEV memory adapter reusing production AvailabilityFlow/Editor/native pickers; actual API/PG separately exercised",
+    "ios": [
+      "today/tomorrow shifts both start and overnight end date; saved summary unchanged",
+      "compact date/time rows and fixed operations observed",
+      "native end-date picker opens"
+    ],
+    "android": [
+      "tomorrow shifts overnight end date; saved summary unchanged",
+      "compact date/time rows and fixed operations observed",
+      "brand track/white native thumb observed"
+    ],
+    "pending": [
+      "native picker cancel",
+      "draft cancel",
+      "failed save retry",
+      "region failure minimal close",
+      "version conflict explicit reload"
+    ],
+    "blocked_observation": "Mac locked; user unlock requested; no blocked gesture counted as pass",
+    "physical_device_acceptance": false,
+    "full_native_HTTP_combined_exit": "R4-10_pending",
+    "software_keyboard_matrix": "R4-10_pending"
+  },
+  "artifacts": [
+    {
+      "path": "artifacts/r4-09/android-current.png",
+      "sha256": "6f9902bbc0cd1b99691e330408d04641092edfa602d3a2b8ff402b4a3046ecd6"
+    },
+    {
+      "path": "artifacts/r4-09/ios-current.png",
+      "sha256": "53ab0759d69c501b3c6d9882caca13c1e72bce26b66d51636151f82c342b5757"
+    }
+  ],
+  "boundaries": {
+    "cloud_changed": false,
+    "migrations_added": false,
+    "D0_migrations": 17,
+    "D0_tables": 54,
+    "new_dependencies": false,
+    "real_account_grants": false,
+    "real_SMS_or_messages": false,
+    "test_records_in_business_database": false,
+    "human_study_participants": 0,
+    "human_study_required": 7,
+    "B5_ready": false,
+    "release_ready": false
+  },
+  "ci": {
+    "status": "pending_current_head",
+    "inherited_previous_PR_success": false
+  },
+  "current_batch_complete": false,
+  "next_task": "finish_R4-09_native_then_R4-10"
+}

@@ -1,5 +1,7 @@
 # D0 依赖与运行时基线
 
+2026-11-06 R4-09：无新增包、SDK、原生模块、迁移或锁变更。复用Expo58 Router及RN0.88 AppState/Switch、已安装DateTimePicker9.2.1和V3.2共用控件；时段仍为既有版本化PUT，关闭只提交开关及版本。仅刷新显示，不增加后台自动续期/定位/推送或云调用。
+
 2026-11-06 R4-08：通过 Expo58 `expo install` 安装并精确锁定 expo-clipboard 58.0.4，用于仓库完整地址原生复制；不读取既有剪贴板。复用现有 expo-linking58.0.15、RNMapbox10.3.16 及临时地址搜索会话；无新地图供应商、迁移或云资源。本批重新编译 iOS／Android 开发应用，实际结果见 R4-08 报告。
 
 2026-11-06 R4-07：没有新增依赖、SDK、原生模块或锁文件变更；复用现有MapboxNearbyProvider永久地理编码、Intl、HMAC幂等及PostGIS。0017只追加发布身份与重开校验，D0为17迁移/54表。REQUEST_SHARE_BASE_URL是可选服务端HTTPS接收页来源；未配置时不创建分享，真实分发未开放。供应商测试仅用严格test环境子进程的localhost transport替身，无真实网络调用/费用；不把测试配置写入正式.env或云环境。

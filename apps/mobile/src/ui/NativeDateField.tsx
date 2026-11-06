@@ -20,6 +20,7 @@ export type DateFieldProps = {
   date?: string;
   disabled?: boolean;
   optional?: boolean;
+  compactDate?: boolean;
   onChange: (value: string) => void;
 };
 export function NativeDateField({
@@ -29,6 +30,7 @@ export function NativeDateField({
   date = "",
   disabled = false,
   optional = false,
+  compactDate = false,
   onChange,
 }: DateFieldProps) {
   const [open, setOpen] = useState(false),
@@ -114,7 +116,7 @@ export function NativeDateField({
           }}
         >
           {value
-            ? pickerLabel(mode, value, date)
+            ? pickerLabel(mode, value, date, compactDate)
             : optional
               ? "选填"
               : "请选择"}

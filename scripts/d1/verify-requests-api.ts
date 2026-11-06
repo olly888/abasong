@@ -1,5 +1,10 @@
 import { verifyDrivers } from "./verify-drivers";
 import { verifyPush } from "./verify-push";
+import {
+  verifyV2Upgrade,
+  verifyPickupProvenanceUpgrade,
+  verifyV2Storage,
+} from "./verify-request-v2";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { once } from "node:events";
@@ -109,8 +114,14 @@ async function main() {
     await db.connect();
     for (const f of readdirSync("database/migrations")
       .filter((f) => /^\d{4}_.+\.sql$/.test(f))
-      .sort())
-      await db.query(readFileSync("database/migrations/" + f, "utf8"));
+      .sort()) {
+      const sql = readFileSync("database/migrations/" + f, "utf8");
+      if (f === "0015_delivery_request_v2.sql")
+        checks += await verifyV2Upgrade(db, sql);
+      else if (f === "0016_pickup_address_provenance.sql")
+        checks += await verifyPickupProvenanceUpgrade(db, sql);
+      else await db.query(sql);
+    }
     // CI deliberately has no persistent sensitive-service login. Use the same
     // disposable restricted-role pattern as the library/import HTTP harnesses.
     const sensitivePassword = randomBytes(24).toString("hex");
@@ -136,6 +147,8 @@ async function main() {
       "INSERT INTO abasong.regions(id,label,display_point) VALUES($1,'TEST Pasadena','SRID=4326;POINT(-118.14 34.15)'::extensions.geography),($2,'TEST Industry','SRID=4326;POINT(-117.96 34.01)'::extensions.geography)",
       [region, pickup],
     );
+    const v2 = await verifyV2Storage(db, { owner, reader, region, pickup });
+    checks += v2.checks;
     const free = createServer();
     free.listen(0, "127.0.0.1");
     await once(free, "listening");
@@ -174,6 +187,44 @@ async function main() {
       await pause(100);
     }
     assert(ready);
+    // Prepared V2 records must not be misread/mutated by the V1 service.
+    await request(`/v1/requests/${v2.requestId}`, "GET", auth, 404);
+    assert(
+      !(await request("/v1/me/requests")).items.some(
+        (r: { id: string }) => r.id === v2.requestId,
+      ),
+    );
+    await request(
+      "/v1/requests",
+      "POST",
+      auth,
+      400,
+      { request_schema_version: 2, scenario: "warehouse_shortage" },
+      randomUUID(),
+    );
+    for (const required of ["V12.0015", "V12.0016"]) {
+      const missingVersion = (
+        await db.query(
+          "DELETE FROM abasong.schema_version WHERE version=$1 RETURNING version,applied_at",
+          [required],
+        )
+      ).rows[0];
+      const missingSchema = await request(
+        "/health/ready",
+        "GET",
+        undefined,
+        503,
+      );
+      assert(!JSON.stringify(missingSchema).includes("schema_version"));
+      await db.query(
+        "INSERT INTO abasong.schema_version(version,applied_at) VALUES($1,$2)",
+        [missingVersion.version, missingVersion.applied_at],
+      );
+      await request("/health/ready", "GET", undefined, 200);
+    }
+    console.log(
+      `PASS: R4-06 migration upgrade5 groups and V2 storage/role checks${v2.checks}; prepared V2 kept out of V1 HTTP, missing0015/0016 readiness denied.`,
+    );
     await request("/v1/requests", "GET", "", 401);
     await request(
       "/v1/requests",
@@ -1666,6 +1717,7 @@ void main().catch((error: unknown) => {
         (line) =>
           line.trim().startsWith("at ") &&
           (line.includes("/scripts/d1/verify-requests-api.ts:") ||
+            line.includes("/scripts/d1/verify-request-v2.ts:") ||
             line.includes("/scripts/d1/verify-meeting-push.ts:")),
       );
     for (const frame of frames ?? []) console.error(frame.trim());

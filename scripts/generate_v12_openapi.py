@@ -1,6 +1,6 @@
 """Generate the reviewable V12 contract; no cloud/network operations."""
 from pathlib import Path
-import re,yaml
+import re,json,sys
 ROOT=Path(__file__).resolve().parents[1]
 S={}
 def ref(n): return {'$ref':f'#/components/schemas/{n}'}
@@ -146,6 +146,8 @@ obj('ShareCreateInput',{'public_preview_confirmed':{'type':'boolean','enum':[Tru
 out('RequestShare',{'id':uid,'public_url':string(1000),'expires_at':dt})
 out('PublicRequestSummary',{'carrier':string(80,nullable=True),'kind':string(50),'region_label':string(200),'pickup_area':string(200,nullable=True),'starts_at':dt,'expires_at':dt,'parcel_count':{'type':'integer','nullable':True},'drivers_needed':{'type':'integer','nullable':True},'minimum_parcels':{'type':'integer','nullable':True},'accepts_partial':boolean,'price_cents':{'type':'integer','nullable':True},'price_unit':string(30,nullable=True),'currency':enum('USD'),'experience_requirement':string(50),'public_publisher_name':string(60),'public_organization_name':string(120,nullable=True)})
 out('PublicRequestShare',{'status':enum('open','ended'),'title':string(200),'summary':{'allOf':[ref('PublicRequestSummary')],'nullable':True}})
+from request_v2_contracts import add_request_v2_contracts
+add_request_v2_contracts(S,obj,out,ref,string,enum,integer,uid,dt,boolean)
 for item in ['Apartment','Region','Request','RequestVersion','Application','Driver','Conversation','Message','Contact','Post','Comment','Notification','Report','AccessRecord']:
  page(item+'Page',item)
 paths={}
@@ -287,5 +289,10 @@ def normalize_nullable_refs(node):
  return {k:normalize_nullable_refs(v) for k,v in node.items()}
 S=normalize_nullable_refs(S)
 D={'openapi':'3.0.3','info':{'title':'Abasong V12.1 API Contract','version':'12.1.0','description':'设计契约，尚未实现或部署。OTP/refresh由Supabase Auth SDK完成。输出为直接DTO；身份来自验证JWT，不接收任意actor_id。参数约束之外的对象权限、状态机、跨字段校验见V12权限和数据库文档。x-required-capabilities仅为契约元数据，必须由服务端实现。仅专用public/request-shares摘要允许游客读取；不得扩大正常Request或密码接口权限。'},'servers':[{'url':'https://api.abasong.invalid','description':'占位域名，非实际服务'}],'security':[{'BearerAuth':[]}],'paths':paths,'components':{'securitySchemes':{'BearerAuth':{'type':'http','scheme':'bearer','bearerFormat':'JWT'}},'schemas':S}}
-(ROOT/'docs/technical/openapi-v12.yaml').write_text(yaml.safe_dump(D,allow_unicode=True,sort_keys=False),encoding='utf-8')
-print(f'Generated {len(paths)} paths, {sum(len(v) for v in paths.values())} operations, {len(S)} schemas')
+if sys.argv[1:]==['--json']:
+ print(json.dumps(D,ensure_ascii=False))
+else:
+ if sys.argv[1:]:raise SystemExit('Choose no arguments or --json')
+ import yaml
+ (ROOT/'docs/technical/openapi-v12.yaml').write_text(yaml.safe_dump(D,allow_unicode=True,sort_keys=False),encoding='utf-8')
+ print(f'Generated {len(paths)} paths, {sum(len(v) for v in paths.values())} operations, {len(S)} schemas')

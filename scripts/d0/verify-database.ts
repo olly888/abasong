@@ -229,10 +229,36 @@ async function main() {
           "utf8",
         ),
       );
+    if (
+      !(
+        await db.query(
+          "SELECT 1 FROM abasong.schema_version WHERE version='V12.0015'",
+        )
+      ).rowCount
+    )
+      await db.query(
+        readFileSync(
+          "database/migrations/0015_delivery_request_v2.sql",
+          "utf8",
+        ),
+      );
+    if (
+      !(
+        await db.query(
+          "SELECT 1 FROM abasong.schema_version WHERE version='V12.0016'",
+        )
+      ).rowCount
+    )
+      await db.query(
+        readFileSync(
+          "database/migrations/0016_pickup_address_provenance.sql",
+          "utf8",
+        ),
+      );
     const tables = await db.query(
       "SELECT count(*)::int AS count, bool_and(relrowsecurity AND relforcerowsecurity) AS protected FROM pg_class c JOIN pg_namespace n ON c.relnamespace=n.oid WHERE n.nspname='abasong' AND relkind='r'",
     );
-    assert.equal(tables.rows[0].count, 53);
+    assert.equal(tables.rows[0].count, 54);
     assert.equal(tables.rows[0].protected, true);
     const extension = await db.query(
       "SELECT n.nspname FROM pg_extension e JOIN pg_namespace n ON e.extnamespace=n.oid WHERE extname='postgis'",
@@ -339,7 +365,7 @@ async function main() {
       await api.end();
     }
     console.log(
-      "PASS: 53 migrated tables, forced RLS, PostGIS query, untrusted role denied, sensitive separation, append-only permissions, constraints, rollback, non-owner login",
+      "PASS: 54 migrated tables, forced RLS, PostGIS query, untrusted role denied, sensitive separation, append-only permissions, constraints, rollback, non-owner login",
     );
   } finally {
     await db.end();

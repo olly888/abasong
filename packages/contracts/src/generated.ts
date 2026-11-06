@@ -2391,6 +2391,367 @@ export interface components {
             title: string;
             summary: components["schemas"]["PublicRequestSummary"] | (never | null);
         };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。address_source需明确区分手填与Mapbox联想；联想地址文字也须经后台有持久许可的来源核对后保存，不能仅删除坐标后当手填存储。 */
+        WarehousePickupDraftV2: {
+            /** @enum {string} */
+            kind: "warehouse";
+            name?: string | null;
+            address_line1?: string | null;
+            city?: string | null;
+            state?: string | null;
+            postal_code?: string | null;
+            address_confirmed?: boolean;
+            /** @enum {string} */
+            address_source?: "publisher_entered" | "mapbox_suggestion";
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        ContactHandoffV2: {
+            /** @enum {string} */
+            kind: "contact_handoff";
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        PickupDraftV2: components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"];
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。草稿可不完整；发布前须完整核对。asap的starts_at为空并由服务端当次生成；scheduled使用明确时刻和匹配的洛杉矶接手日。下架默认最迟接手或接手日23:59，独立于送完要求。 */
+        RequestDraftInputV2: {
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** Format: uuid */
+            organization_id?: string;
+            /** Format: uuid */
+            region_id?: string;
+            carrier?: string;
+            route_label?: string;
+            description?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            pickup_deadline_at?: string | null;
+            /** Format: date-time */
+            delivery_deadline_at?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** @enum {string} */
+            timezone?: "America/Los_Angeles";
+            parcel_count?: number | null;
+            stop_count?: number | null;
+            drivers_needed?: number | null;
+            price_cents?: number | null;
+            /** @enum {string} */
+            price_unit?: "per_parcel" | "per_route" | "negotiable";
+            /** @enum {string} */
+            sorted_state?: "sorted" | "unsorted" | "unknown";
+            /** @enum {string} */
+            handoff_requirement?: "carrier_account" | "dsp_approval" | "contact_confirm";
+            private_payment_terms?: string;
+            minimum_parcels?: number | null;
+            /** @enum {string} */
+            experience_requirement?: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id?: string;
+            /** @enum {string} */
+            task_scope?: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode?: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode?: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date?: string;
+            /** @enum {string} */
+            completion_mode?: "same_day" | "next_day" | "contact";
+            pickup?: (components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"]) | (never | null);
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        RequestPatchV2: {
+            /** @enum {integer} */
+            request_schema_version: 2;
+            expected_version: number;
+            /** Format: uuid */
+            region_id?: string;
+            carrier?: string;
+            route_label?: string;
+            description?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            pickup_deadline_at?: string | null;
+            /** Format: date-time */
+            delivery_deadline_at?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** @enum {string} */
+            timezone?: "America/Los_Angeles";
+            parcel_count?: number | null;
+            stop_count?: number | null;
+            drivers_needed?: number | null;
+            price_cents?: number | null;
+            /** @enum {string} */
+            price_unit?: "per_parcel" | "per_route" | "negotiable";
+            /** @enum {string} */
+            sorted_state?: "sorted" | "unsorted" | "unknown";
+            /** @enum {string} */
+            handoff_requirement?: "carrier_account" | "dsp_approval" | "contact_confirm";
+            private_payment_terms?: string;
+            minimum_parcels?: number | null;
+            /** @enum {string} */
+            experience_requirement?: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id?: string;
+            /** @enum {string} */
+            task_scope?: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode?: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode?: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date?: string;
+            /** @enum {string} */
+            completion_mode?: "same_day" | "next_day" | "contact";
+            pickup?: (components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"]) | (never | null);
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        GapInputV2: {
+            /** @enum {integer} */
+            request_schema_version: 2;
+            expected_version: number;
+            remaining_parcels?: number | null;
+            remaining_drivers?: number;
+        } | unknown | unknown;
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        WarehousePickupDetailV2: {
+            /** @enum {string} */
+            kind: "warehouse";
+            address_version: number;
+            name: string | null;
+            address_line1: string | null;
+            city: string | null;
+            state: string | null;
+            postal_code: string | null;
+            address_confirmed: boolean;
+            /** @enum {string} */
+            address_source: "publisher_entered" | "provider_permanent" | "legacy_unclassified";
+            point: components["schemas"]["Point"] | (never | null);
+            /** @enum {string} */
+            point_source: "unlocated" | "persistent_source";
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        PickupLocationDetailV2: components["schemas"]["WarehousePickupDetailV2"] | components["schemas"]["ContactHandoffV2"];
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。仅发现摘要，不含完整取件地址。 */
+        RequestSummaryV2: {
+            /** Format: uuid */
+            id: string;
+            publisher: components["schemas"]["Profile"];
+            organization: components["schemas"]["Organization"] | (never | null);
+            /** @enum {string} */
+            kind: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+            /** @enum {string} */
+            status: "draft" | "open" | "found" | "closed" | "expired";
+            version: number;
+            /** Format: uuid */
+            region_id: string | null;
+            pickup_area: string | null;
+            carrier: string | null;
+            route_label: string | null;
+            description: string | null;
+            /** Format: date-time */
+            starts_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            pickup_deadline_at: string | null;
+            /** Format: date-time */
+            delivery_deadline_at: string | null;
+            timezone: string;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            remaining_parcels: number | null;
+            remaining_drivers: number | null;
+            price_cents: number | null;
+            /** @enum {string|null} */
+            price_unit: "per_parcel" | "per_route" | "negotiable" | null;
+            /** @enum {string} */
+            currency: "USD";
+            sorted_state: string | null;
+            handoff_requirement: string | null;
+            stop_count: number | null;
+            accepts_partial: boolean;
+            minimum_parcels: number | null;
+            /** @enum {string} */
+            experience_requirement: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string|null} */
+            task_scope: "partial" | "whole_route" | null;
+            /** @enum {string|null} */
+            quantity_mode: "exact" | "estimate" | "unknown" | null;
+            /** @enum {string|null} */
+            handoff_mode: "asap" | "scheduled" | null;
+            /** Format: date */
+            handoff_date: string | null;
+            /** @enum {string|null} */
+            completion_mode: "same_day" | "next_day" | "contact" | null;
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。完整取件信息仅在有权登录详情读取。 */
+        RequestDetailV2: {
+            /** Format: uuid */
+            id: string;
+            publisher: components["schemas"]["Profile"];
+            organization: components["schemas"]["Organization"] | (never | null);
+            /** @enum {string} */
+            kind: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+            /** @enum {string} */
+            status: "draft" | "open" | "found" | "closed" | "expired";
+            version: number;
+            /** Format: uuid */
+            region_id: string | null;
+            pickup_area: string | null;
+            carrier: string | null;
+            route_label: string | null;
+            description: string | null;
+            /** Format: date-time */
+            starts_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            pickup_deadline_at: string | null;
+            /** Format: date-time */
+            delivery_deadline_at: string | null;
+            timezone: string;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            remaining_parcels: number | null;
+            remaining_drivers: number | null;
+            price_cents: number | null;
+            /** @enum {string|null} */
+            price_unit: "per_parcel" | "per_route" | "negotiable" | null;
+            /** @enum {string} */
+            currency: "USD";
+            sorted_state: string | null;
+            handoff_requirement: string | null;
+            stop_count: number | null;
+            accepts_partial: boolean;
+            minimum_parcels: number | null;
+            /** @enum {string} */
+            experience_requirement: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string|null} */
+            task_scope: "partial" | "whole_route" | null;
+            /** @enum {string|null} */
+            quantity_mode: "exact" | "estimate" | "unknown" | null;
+            /** @enum {string|null} */
+            handoff_mode: "asap" | "scheduled" | null;
+            /** Format: date */
+            handoff_date: string | null;
+            /** @enum {string|null} */
+            completion_mode: "same_day" | "next_day" | "contact" | null;
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
+            pickup: components["schemas"]["PickupLocationDetailV2"] | (never | null);
+            private_payment_terms: string | null;
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。去敏来源快照：不含地址、坐标或私下付款正文。 */
+        RequestVersionV2: {
+            /** Format: uuid */
+            request_id: string;
+            version: number;
+            kind: string;
+            /** Format: uuid */
+            region_id: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            price_cents: number | null;
+            price_unit: string | null;
+            parcel_count: number | null;
+            handoff_requirement: string | null;
+            pickup_area: string | null;
+            carrier: string | null;
+            route_label: string | null;
+            /** Format: date-time */
+            pickup_deadline_at: string | null;
+            /** Format: date-time */
+            delivery_deadline_at: string | null;
+            timezone: string;
+            drivers_needed: number | null;
+            stop_count: number | null;
+            sorted_state: string | null;
+            /** @enum {string} */
+            currency: "USD";
+            accepts_partial: boolean;
+            minimum_parcels: number | null;
+            /** @enum {string} */
+            experience_requirement: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string} */
+            task_scope: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date: string;
+            /** @enum {string} */
+            completion_mode: "same_day" | "next_day" | "contact";
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
+            pickup_address_version: number | null;
+        };
+        /** @description R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。独立游客白名单，不含取件地址、坐标及私人联系方式。 */
+        PublicRequestSummaryV2: {
+            carrier: string | null;
+            kind: string;
+            region_label: string;
+            pickup_area: string | null;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            minimum_parcels: number | null;
+            accepts_partial: boolean;
+            price_cents: number | null;
+            price_unit: string | null;
+            /** @enum {string} */
+            currency: "USD";
+            experience_requirement: string;
+            public_publisher_name: string;
+            public_organization_name: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string} */
+            task_scope: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date: string;
+            /** @enum {string} */
+            completion_mode: "same_day" | "next_day" | "contact";
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
+        };
         ApartmentPage: {
             items: components["schemas"]["Apartment"][];
             next_cursor: string | null;

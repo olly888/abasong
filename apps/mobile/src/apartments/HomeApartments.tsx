@@ -1,5 +1,10 @@
 import { NearbyCarousel } from "./NearbyCarousel";
-import { CollaborationHome } from "../drivers/CollaborationHome";
+import { apartmentResume, recenterHome } from "./home-actions";
+import type { MapCameraSnapshot } from "../components/map-camera";
+import {
+  CollaborationHome,
+  type DiscoveryAdapter,
+} from "../drivers/CollaborationHome";
 import {
   createDiscoveryMemory,
   type DiscoveryMemory,
@@ -63,6 +68,11 @@ import { useAuth } from "../auth/AuthProvider";
 import { AccountError } from "../auth/api-client";
 import { dataRequest } from "./client";
 type S = components["schemas"];
+export type ApartmentReadingMemory = {
+  apartmentId?: string;
+  destinationKey?: string;
+  camera?: MapCameraSnapshot;
+};
 export function HomeApartments({
   toolbar,
   apartmentId,
@@ -86,15 +96,35 @@ export function HomeApartments({
   const discovery = useRef({
     owner: auth.session?.user.id,
     memory: createDiscoveryMemory(),
+    reading: {} as ApartmentReadingMemory,
   });
   if (discovery.current.owner !== auth.session?.user.id)
     discovery.current = {
       owner: auth.session?.user.id,
       memory: createDiscoveryMemory(),
+      reading: {},
     };
+  if (
+    auth.phase === "ready" &&
+    auth.session &&
+    (apartmentId || destinationKey)
+  ) {
+    discovery.current.reading.apartmentId = apartmentId;
+    discovery.current.reading.destinationKey = destinationKey;
+    discovery.current.reading.camera = undefined;
+  }
   const [focused, setFocused] = useState(false),
     [active, setActive] = useState(AppState.currentState !== "background"),
     [obscured, setObscured] = useState(AppState.currentState !== "active");
+  useEffect(() => {
+    if (
+      focused &&
+      auth.phase === "ready" &&
+      auth.session &&
+      (apartmentId || destinationKey)
+    )
+      router.setParams({ apartment_id: undefined, destination_key: undefined });
+  }, [focused, auth.phase, auth.session?.user.id, apartmentId, destinationKey]);
   useFocusEffect(
     useCallback(() => {
       setFocused(true);
@@ -153,6 +183,7 @@ export function HomeApartments({
           mode={mode}
           list={list}
           discoveryMemory={discovery.current.memory}
+          readingMemory={discovery.current.reading}
           filtersOpen={filtersOpen}
           onCloseFilters={onCloseFilters}
           onToggleList={onToggleList}
@@ -178,6 +209,7 @@ export function HomeApartmentContent({
   list = false,
   testData,
   discoveryMemory,
+  readingMemory,
   filtersOpen = false,
   onCloseFilters = () => {},
   onToggleList = () => {},
@@ -188,6 +220,7 @@ export function HomeApartmentContent({
   mode?: HomeMode;
   list?: boolean;
   discoveryMemory?: DiscoveryMemory;
+  readingMemory?: ApartmentReadingMemory;
   filtersOpen?: boolean;
   onCloseFilters?: () => void;
   onToggleList?: () => void;
@@ -200,6 +233,9 @@ export function HomeApartmentContent({
     userId?: string;
     onObservation?: () => void;
     onCardMetrics?: (h: number) => void;
+    collaboration?: DiscoveryAdapter;
+    watchPosition?: typeof watchDevicePosition;
+    onAdd?: (apartment: S["Apartment"]) => void;
   };
 }) {
   const collapsedHeight = compactCardHeight(useWindowDimensions().fontScale);
@@ -211,8 +247,12 @@ export function HomeApartmentContent({
     session = auth.session!;
   const ownerId =
     (__DEV__ ? testData?.userId : undefined) ?? session?.user.id ?? "";
+  const initialId = apartmentId ?? readingMemory?.apartmentId;
   const initialDestination = useRef(
-    getSearchDestination(destinationKey, ownerId),
+    getSearchDestination(
+      destinationKey ?? readingMemory?.destinationKey,
+      ownerId,
+    ),
   );
   const [temporary, setTemporary] = useState(initialDestination.current);
   const control = useRef(new AbortController()),
@@ -223,15 +263,17 @@ export function HomeApartmentContent({
     providerSelectionKey = useRef<string | null>(null),
     lastFixAt = useRef(0),
     latestObservation = useRef<DiscoveryObservation | null>(null),
-    manualLocked = useRef(!!apartmentId || !!initialDestination.current);
+    manualLocked = useRef(!!initialId || !!initialDestination.current);
   const catalogRef = useRef<NearbySnapshot | null>(null),
     providerRef = useRef<NearbySnapshot | null>(null);
   const providerLast = useRef(0),
     providerEpoch = useRef(0),
     providerStatus = useRef<"idle" | "loading" | "ok" | "unavailable">("idle");
   const [point, setPoint] = useState<S["Point"]>(),
-    [cameraTarget, setCameraTarget] = useState<S["Point"]>(),
-    [cameraZoom, setCameraZoom] = useState(17),
+    [cameraTarget, setCameraTarget] = useState<S["Point"] | undefined>(
+      readingMemory?.camera?.center,
+    ),
+    [cameraZoom, setCameraZoom] = useState(readingMemory?.camera?.zoom ?? 17),
     [cameraIntent, setCameraIntent] = useState<"explicit" | "arrival">(
       "explicit",
     ),
@@ -265,6 +307,26 @@ export function HomeApartmentContent({
     [lookupState, setLookupState] = useState<
       "loading" | "nearby" | "ambiguous" | "empty" | "error"
     >("loading");
+  const apartmentViewport = useRef<MapCameraSnapshot | undefined>(
+      readingMemory?.camera,
+    ),
+    restoredViewport = useRef<{
+      snapshot?: MapCameraSnapshot;
+      revision: number;
+    } | null>(
+      readingMemory?.camera
+        ? { snapshot: readingMemory.camera, revision: 0 }
+        : null,
+    ),
+    renderedMode = useRef(mode);
+  if (renderedMode.current !== mode) {
+    if (mode === "公寓")
+      restoredViewport.current = {
+        snapshot: apartmentViewport.current,
+        revision: cameraRevision,
+      };
+    renderedMode.current = mode;
+  }
   const request = <T,>(
     path: string,
     options: Parameters<typeof dataRequest>[2] = {},
@@ -278,25 +340,37 @@ export function HomeApartmentContent({
   const alive = () => !control.current.signal.aborted;
   useEffect(() => {
     control.current = new AbortController();
+    const expected = generation.current;
     if (modeRef.current === "公寓" && initialDestination.current) {
-      setCameraTarget(initialDestination.current.point);
-      setCameraZoom(18);
-      setCameraRevision((v) => v + 1);
+      if (!readingMemory?.camera) {
+        setCameraTarget(initialDestination.current.point);
+        setCameraZoom(18);
+        setCameraRevision((v) => v + 1);
+      }
       setCandidates(initialDestination.current.apartments);
-    } else if (modeRef.current === "公寓" && apartmentId)
+    } else if (modeRef.current === "公寓" && initialId)
       void request<S["Apartment"]>(
-        "/v1/apartments/" + encodeURIComponent(apartmentId),
+        "/v1/apartments/" + encodeURIComponent(initialId),
       )
         .then((p) => {
-          if (alive()) return select(p);
+          if (
+            alive() &&
+            modeRef.current === "公寓" &&
+            generation.current === expected
+          )
+            return select(p, readingMemory?.camera ? "retry" : "manual");
         })
         .catch(() => {
-          if (alive()) {
+          if (
+            alive() &&
+            modeRef.current === "公寓" &&
+            generation.current === expected
+          ) {
             setNotice("公寓已不可用，请搜索地址");
             setError(null);
           }
         });
-    void locate(false, !apartmentId && !initialDestination.current);
+    void locate(false, !initialId && !initialDestination.current);
     return () => {
       control.current.abort();
       stream.current?.abort();
@@ -594,7 +668,11 @@ export function HomeApartmentContent({
       { once: true },
     );
     try {
-      await watchDevicePosition(
+      await (
+        __DEV__ && testData?.watchPosition
+          ? testData.watchPosition
+          : watchDevicePosition
+      )(
         (fix, approximate) => {
           if (!valid()) return;
           const { latitude, longitude, accuracy } = fix.coords;
@@ -621,10 +699,12 @@ export function HomeApartmentContent({
           setLocationNotice(null);
           if (first) {
             first = false;
-            setCameraIntent("explicit");
-            setCameraZoom(17);
-            setFrameSelected(false);
-            setCameraTarget(p);
+            if (modeRef.current === "公寓") {
+              setCameraIntent("explicit");
+              setCameraZoom(17);
+              setFrameSelected(false);
+              setCameraTarget(p);
+            }
             setCameraRevision((v) => v + 1);
           }
           if (modeRef.current !== "公寓") return;
@@ -678,33 +758,45 @@ export function HomeApartmentContent({
     }
   }
   function returnToPosition() {
-    clearSearchDestination();
-    if (temporary) {
-      setTemporary(undefined);
-      setCandidates([]);
-    }
-    manualLocked.current = false;
-    providerLast.current = 0;
-    providerRef.current = null;
-    providerStatus.current = "idle";
-    catalogRef.current = null;
-    providerEpoch.current++;
-    setNearbyItems([]);
-    setCandidates([]);
-    setLookupState("loading");
-    invalidateAutomaticCard();
-    if (blocked) {
-      void openLocationSettings();
-      return;
-    }
-    if (point && Date.now() - lastFixAt.current <= 20_000) {
-      setCameraIntent("explicit");
-      setCameraZoom(17);
-      setFrameSelected(false);
-      setCameraTarget({ ...point });
-      setCameraRevision((v) => v + 1);
-    }
-    if (!locating) void locate(true);
+    recenterHome(modeRef.current, {
+      blocked,
+      resetApartments: () => {
+        if (readingMemory) {
+          readingMemory.apartmentId = undefined;
+          readingMemory.destinationKey = undefined;
+          readingMemory.camera = undefined;
+        }
+        clearSearchDestination();
+        if (temporary) setTemporary(undefined);
+        manualLocked.current = false;
+        providerLast.current = 0;
+        providerRef.current = null;
+        providerStatus.current = "idle";
+        catalogRef.current = null;
+        providerEpoch.current++;
+        setNearbyItems([]);
+        setCandidates([]);
+        setLookupState("loading");
+        invalidateAutomaticCard();
+      },
+      openSettings: () => {
+        void openLocationSettings();
+      },
+      moveCamera: () => {
+        if (point && Date.now() - lastFixAt.current <= 20_000) {
+          if (modeRef.current === "公寓") {
+            setCameraIntent("explicit");
+            setCameraZoom(17);
+            setFrameSelected(false);
+            setCameraTarget({ ...point });
+          }
+          setCameraRevision((v) => v + 1);
+        }
+      },
+      refreshLocation: () => {
+        if (!locating) void locate(true);
+      },
+    });
   }
   async function select(
     p: S["Apartment"],
@@ -712,6 +804,10 @@ export function HomeApartmentContent({
     arrivalPoint?: S["Point"],
   ) {
     if (origin === "manual") {
+      if (readingMemory) {
+        readingMemory.apartmentId = p.id;
+        readingMemory.destinationKey = undefined;
+      }
       manualLocked.current = true;
       clearSearchDestination();
       setTemporary(undefined);
@@ -895,12 +991,17 @@ export function HomeApartmentContent({
     __DEV__ && testData
       ? testData.canRead
       : auth.me?.capabilities.includes("access.read");
-  const add = () =>
-    selected &&
+  const add = () => {
+    if (!selected) return;
+    if (__DEV__ && testData?.onAdd) {
+      testData.onAdd(selected);
+      return;
+    }
     router.push({
       pathname: "/apartments/contribute",
       params: { apartment_id: selected.id },
     });
+  };
   const clearSelection = () => {
     setExpanded(false);
     const n = nearbyItems.findIndex((c) => c.apartment?.id === selected?.id);
@@ -915,8 +1016,34 @@ export function HomeApartmentContent({
     setRecords([]);
     setMapContext(null);
     if (mode === "公寓") {
-      if (selectionRef.current) void select(selectionRef.current, "retry");
-      else void locate(false, false);
+      const resume = apartmentResume(
+        manualLocked.current,
+        !!selectionRef.current,
+      );
+      if (resume === "reload_selection")
+        void select(selectionRef.current!, "retry");
+      else if (resume === "keep_destination" && initialId) {
+        const expected = generation.current;
+        void request<S["Apartment"]>(
+          "/v1/apartments/" + encodeURIComponent(initialId),
+        )
+          .then((p) => {
+            if (
+              alive() &&
+              modeRef.current === "公寓" &&
+              generation.current === expected
+            )
+              void select(p, "retry");
+          })
+          .catch(() => {
+            if (alive() && generation.current === expected)
+              setError("公寓资料暂时无法加载");
+          });
+      } else if (resume === "discover") {
+        invalidateAutomaticCard();
+        setLookupState("loading");
+        void locate(false, false);
+      }
     }
   }, [mode]);
   const hideMap = (list && mode !== "公寓") || (expanded && mode === "公寓");
@@ -932,6 +1059,7 @@ export function HomeApartmentContent({
         list={list}
         toolbar={toolbar}
         memory={discoveryMemory ?? fallbackMemory.current}
+        testAdapter={__DEV__ ? testData?.collaboration : undefined}
         filtersOpen={filtersOpen}
         onCloseFilters={onCloseFilters}
         onToggleList={onToggleList}
@@ -954,6 +1082,16 @@ export function HomeApartmentContent({
       >
         <HomeMap
           point={cameraTarget}
+          cameraState={
+            restoredViewport.current?.revision === cameraRevision
+              ? restoredViewport.current.snapshot
+              : undefined
+          }
+          onCameraSnapshot={(snapshot) => {
+            apartmentViewport.current = snapshot;
+            if (readingMemory && manualLocked.current)
+              readingMemory.camera = snapshot;
+          }}
           cameraRevision={cameraRevision}
           cameraIntent={mode === "公寓" ? cameraIntent : "explicit"}
           cameraZoom={mode === "公寓" ? cameraZoom : 14}

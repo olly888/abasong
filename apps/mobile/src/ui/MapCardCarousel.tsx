@@ -40,6 +40,7 @@ export function MapCardCarousel<T>(p: {
   const current = useRef(p);
   current.current = p;
   const frame = useRef({ step: 1 });
+  const alignmentFrame = useRef<number | undefined>(undefined);
   const alignment = useRef(createCarouselAlignment());
   const [width, setWidth] = useState(0),
     scroll = useRef<ComponentRef<typeof ScrollView>>(null),
@@ -77,14 +78,29 @@ export function MapCardCarousel<T>(p: {
     w = Math.max(0, width - (multi ? 64 : 32)),
     step = w + 12;
   frame.current.step = step;
-  useEffect(() => {
+  const align = () => {
     gesture.current.cancel();
+    if (alignmentFrame.current !== undefined)
+      cancelAnimationFrame(alignmentFrame.current);
     if (width > 0) {
       alignment.current.alignTo(index * step);
-      scroll.current?.scrollTo({ x: index * step, animated: false });
+      alignmentFrame.current = requestAnimationFrame(() => {
+        alignmentFrame.current = undefined;
+        scroll.current?.scrollTo({ x: index * step, animated: false });
+      });
     }
+  };
+  useEffect(() => {
+    align();
   }, [index, step, width]);
-  useEffect(() => () => gesture.current.cancel(), []);
+  useEffect(
+    () => () => {
+      gesture.current.cancel();
+      if (alignmentFrame.current !== undefined)
+        cancelAnimationFrame(alignmentFrame.current);
+    },
+    [],
+  );
   const settle = (x: number) => {
     gesture.current.finish(x, step, p.items.length, index);
   };
@@ -101,6 +117,7 @@ export function MapCardCarousel<T>(p: {
       <ScrollView
         ref={scroll}
         horizontal
+        contentOffset={{ x: index * step, y: 0 }}
         scrollEnabled={multi}
         showsHorizontalScrollIndicator={false}
         snapToInterval={step}
@@ -112,6 +129,11 @@ export function MapCardCarousel<T>(p: {
           paddingHorizontal: multi ? 32 : 16,
           paddingVertical: 8,
           gap: 12,
+        }}
+        onContentSizeChange={() => {
+          // Android may clamp the first scrollTo to zero before its children
+          // are laid out. Reapply selection once native content is measurable.
+          if (!gesture.current.isActive()) align();
         }}
         onScrollBeginDrag={() => {
           gesture.current.begin();

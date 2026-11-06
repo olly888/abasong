@@ -1,10 +1,10 @@
 {
-  "version": "V3.2-R4-distance-cards",
+  "version": "V3.2-R4-1-scoped-exit",
   "date": "2026-11-05",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
-  "app_design": "V3.1_base_with_R4_apartment_cards",
+  "app_design": "V3.1_base_with_scoped_R4_home_cards_and_contribution",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_distance_contract_and_apartment_cards",
+  "scope": "R4_01_to_05_scoped_local_exit_passed_next_R4_06",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
@@ -12,7 +12,7 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "aligned_target_not_released_contracts",
-    "implementation": "R4_01_02_03_04_scoped_verified_R4_05_phase_exit_pending",
+    "implementation": "R4_01_to_05_scoped_local_dual_native_exit_passed_R4_2_next",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -202,7 +202,7 @@
     "deferred_specialized_help": true
   },
   "release_ready": false,
-  "readiness_scope": "controlled_R4_1_implementation_only_not_native_or_release_acceptance",
+  "readiness_scope": "controlled_R4_2_after_scoped_R4_1_exit_not_full_native_or_release_acceptance",
   "owner_review": {
     "status": "main_flows_accepted",
     "date": "2026-11-05",
@@ -213,9 +213,9 @@
   },
   "controlled_implementation": {
     "eligible_batches": [
-      "R4-1"
+      "R4-2"
     ],
-    "next_task": "R4-05",
+    "next_task": "R4-06",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -286,5 +286,29 @@
     "android_physical_acceptance": false,
     "ci_source": "https://github.com/olly888/abasong/pull/92/checks",
     "pull_request": "https://github.com/olly888/abasong/pull/92"
+  },
+  "r4_home_integration": {
+    "report": "../technical/R4_05_首页组合流程与阶段验收.md",
+    "evidence": "../technical/R4_05_执行证据.json",
+    "branch": "codex/r4-05-home-integration-acceptance",
+    "base": "7ac2d456739ea3fe04017ead1375bbf2d622d99d",
+    "status": "scoped_local_dual_native_exit_passed",
+    "engineering_tests": 390,
+    "library_http_database_checks": 295,
+    "requests_http_database_checks": 261,
+    "android_owner_feedback": "PASS_both_combined_groups",
+    "whole_R4_1_exit": true,
+    "new_native_compilation": false,
+    "physical_acceptance": false,
+    "real_account_writes": false,
+    "cloud_changed": false,
+    "new_grants": false,
+    "new_migrations": false,
+    "current_batch_complete": true,
+    "validated_code_commit": "3c3b57c7cd8fbfcc16e7bbd604400f20616ed176",
+    "validated_code_run_id": 42172364103,
+    "pull_request": "https://github.com/olly888/abasong/pull/93",
+    "ci_source": "https://github.com/olly888/abasong/pull/93/checks",
+    "closure_changes": "documents_only_code_fingerprint_unchanged"
   }
 }

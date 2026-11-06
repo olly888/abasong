@@ -85,7 +85,9 @@
     "scripts/d1/verify-native-exit.ts": "d5f2b6f4810b414351b0cde9cf40882d75b806b888cf839a6710ad0e377b2750"
   },
   "artifact_directory": "../../artifacts/r4-10",
-  "ci": "pending_current_head",
-  "pull_request": null,
-  "requests_http_database_checks": 515
+  "ci": "exact_current_head_via_PR98_checks_not_inherited",
+  "pull_request": "https://github.com/olly888/abasong/pull/98",
+  "requests_http_database_checks": 515,
+  "ci_source": "https://github.com/olly888/abasong/pull/98/checks",
+  "validated_code_commit": "cdff153f1fd6b409697e812fcd224b6fab488923"
 }

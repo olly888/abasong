@@ -519,9 +519,11 @@
     "b5_ready": false,
     "release_ready": false,
     "next_task": "R4-11_after_R4-10_system_supplement",
-    "ci": "pending_current_head",
-    "pull_request": null,
+    "ci": "exact_current_head_via_PR98_checks_not_inherited",
+    "pull_request": "https://github.com/olly888/abasong/pull/98",
     "evidence": "../technical/R4_10_执行证据.json",
-    "requests_http_database_checks": 515
+    "requests_http_database_checks": 515,
+    "ci_source": "https://github.com/olly888/abasong/pull/98/checks",
+    "validated_code_commit": "cdff153f1fd6b409697e812fcd224b6fab488923"
   }
 }

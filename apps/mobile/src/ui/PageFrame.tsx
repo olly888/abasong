@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode, type ComponentRef } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -59,52 +59,67 @@ export function PageFrame({
   footer?: ReactNode;
   headerRight?: ReactNode;
 }) {
+  const frame = useRef<ComponentRef<typeof View>>(null),
+    [keyboardOffset, setKeyboardOffset] = useState(0);
   const back =
     onBack ??
     (() => (router.canGoBack() ? router.back() : router.replace("/profile")));
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: tokens.color.surface }}>
-      <KeyboardAvoidingView
+      <View
+        ref={frame}
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        onLayout={() => {
+          frame.current?.measureInWindow((_x, y) => {
+            if (Number.isFinite(y)) setKeyboardOffset(Math.max(0, y));
+          });
+        }}
       >
-        {compact ? (
-          <PageHeader title={title} onBack={back} right={headerRight} />
-        ) : null}
-        <ScrollView
+        <KeyboardAvoidingView
           style={{ flex: 1 }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          contentContainerStyle={{ padding: metrics.inset, flexGrow: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={keyboardOffset}
         >
-          {!compact ? (
-            <>
-              <IconButton name="back" label="返回" onPress={back} />
-              <Text style={[typeStyles.hero, { marginTop: 28 }]}>{title}</Text>
-            </>
+          {compact ? (
+            <PageHeader title={title} onBack={back} right={headerRight} />
           ) : null}
-          {subtitle ? (
-            <Text
-              style={[
-                typeStyles.body,
-                {
-                  color: tokens.color.textSecondary,
-                  marginTop: compact ? 0 : 12,
-                  marginBottom: compact ? 20 : 0,
-                },
-              ]}
-            >
-              {subtitle}
-            </Text>
-          ) : null}
-          <View
-            style={{ gap: metrics.sectionGap, marginTop: compact ? 0 : 32 }}
+          <ScrollView
+            style={{ flex: 1 }}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            contentContainerStyle={{ padding: metrics.inset, flexGrow: 1 }}
           >
-            {children}
-          </View>
-        </ScrollView>
-        {footer ? <View style={s.footer}>{footer}</View> : null}
-      </KeyboardAvoidingView>
+            {!compact ? (
+              <>
+                <IconButton name="back" label="返回" onPress={back} />
+                <Text style={[typeStyles.hero, { marginTop: 28 }]}>
+                  {title}
+                </Text>
+              </>
+            ) : null}
+            {subtitle ? (
+              <Text
+                style={[
+                  typeStyles.body,
+                  {
+                    color: tokens.color.textSecondary,
+                    marginTop: compact ? 0 : 12,
+                    marginBottom: compact ? 20 : 0,
+                  },
+                ]}
+              >
+                {subtitle}
+              </Text>
+            ) : null}
+            <View
+              style={{ gap: metrics.sectionGap, marginTop: compact ? 0 : 32 }}
+            >
+              {children}
+            </View>
+          </ScrollView>
+          {footer ? <View style={s.footer}>{footer}</View> : null}
+        </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }

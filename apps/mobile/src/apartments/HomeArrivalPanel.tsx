@@ -72,7 +72,7 @@ export function HomeArrivalPanel(p: {
       style={s.quiet}
     >
       <Icon name="plus" size={20} color={tokens.color.brandPrimary} />
-      <Text style={s.link}>贡献公寓密码</Text>
+      <Text style={s.link}>共享门禁码</Text>
     </Pressable>
   );
 }

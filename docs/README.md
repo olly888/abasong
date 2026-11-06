@@ -1,12 +1,14 @@
 # Abasong 研发文档入口
 
-更新2026-11-05。**新版原型主要体验已获产品认可，已完成实际源码与目标差异复核；R4-01/02已完成本批实现及双端代表状态核对；下一步R4-03，共用组件后续用于R4-04。** 实际App沿用V3.1基础，R4距离及公寓组件已局部接入V3.2目标；39活动节点/387状态未全验，真实观察仍0/7。R4本地实现就绪与B5/发布就绪分开。
+更新2026-11-05。**新版原型主要体验已获产品认可，已完成实际源码与目标差异复核；R4-01/02已完成本批实现及双端代表状态核对；R4-03统一贡献表单与地址联想已完成本批实现及双端核对，下一项R4-04。** 实际App沿用V3.1基础，R4距离及公寓组件已局部接入V3.2目标；39活动节点/387状态未全验，真实观察仍0/7。R4本地实现就绪与B5/发布就绪分开。
 
-本轮先看：[App对齐审查与开发任务](technical/V3.2_App对齐审查与开发任务.md)、[22个工作包CSV](technical/V3.2_App对齐开发任务清单.csv)、[总计划1.32](Abasong_V12.1_项目开发与验收总计划.md)、[机器状态](product/V3.2_开发基准状态.json)。源码审查起点df82aef；当前实现基于PR89。R4工程lint/类型/373测试/包及API-worker构建通过，本地隔离HTTP/PG295项（含附近覆盖97项）通过；双端代表场景已核对，失败/重试/无资格和最终视觉状态已补齐；业务代码远程CI通过，文档最新HEAD见PR90 Checks，非现场验收。普通常联系取消、公寓列表P1、专用求助P04后置。
+本轮先看：[App对齐审查与开发任务](technical/V3.2_App对齐审查与开发任务.md)、[22个工作包CSV](technical/V3.2_App对齐开发任务清单.csv)、[总计划1.32](Abasong_V12.1_项目开发与验收总计划.md)、[机器状态](product/V3.2_开发基准状态.json)。源码审查起点df82aef；当前实现基于PR89。本批R4-03工程lint/类型/380测试/包及API-worker构建通过，本地隔离HTTP/PG295项（含附近覆盖97项）通过；双端代表场景已核对，失败/重试/无资格和最终视觉状态已补齐；R4-01/02旧批次远程CI通过；R4-03最新HEAD查看[PR91 Checks](https://github.com/olly888/abasong/pull/91/checks)，非现场验收。普通常联系取消、公寓列表P1、专用求助P04后置。
 
 原型入口：[首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)、[两场景发布](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[我的](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=me)。产品确认只覆盖主要体验，原型图不代表App已更新。当前和目标依据[可开发基准](Abasong_V3.2_可开发与可验收基线.md)；之前全文保留在[审查前档案](archive/app-alignment-audit-20261105/README.md)。
 
 ## 当前入口
+
+- [R4-03统一贡献表单与地址联想](technical/R4_03_统一贡献表单实施验收.md)：同一表单、候选会话/换址保护及失败重试；Android两组用户补验通过，双端合成证据与真实接口证据分别记录。
 
 - [R4-01距离契约与公寓卡片](technical/R4_01_距离契约与公寓卡片实施验收.md)：实际代码、双端代表场景、自动检查及未验项。
 

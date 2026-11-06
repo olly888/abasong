@@ -351,7 +351,7 @@ function LibraryContent() {
       footer={
         <>
           <ActionButton
-            label="＋ 贡献公寓密码"
+            label="＋ 共享门禁码"
             onPress={openContributionMenu}
           />
           <Pressable

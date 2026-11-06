@@ -58,7 +58,7 @@ export default function Profile() {
                 : "暂未开通资料查看资格"}
             </Text>
             <ActionButton
-              label="＋ 贡献公寓密码"
+              label="＋ 共享门禁码"
               onPress={openContributionMenu}
             />
             <ListRow

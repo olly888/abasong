@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ApiError } from "../common/api-error";
 import type { RequestRow } from "./requests.service";
+import { calendarDate, laDate } from "./request-v2-input";
 export const applyInput = z
   .object({
     expected_arrival_at: z.iso.datetime({ offset: true }),
@@ -79,7 +80,10 @@ export function validateApplication(
   const arrival = Date.parse(p.expected_arrival_at);
   if (
     arrival < now - 60000 ||
-    arrival > r.expires_at.getTime() ||
+    (r.request_schema_version !== 2 && arrival > r.expires_at.getTime()) ||
+    (r.request_schema_version === 2 &&
+      (laDate(arrival) !== calendarDate(r.handoff_date) ||
+        (r.starts_at instanceof Date && arrival < r.starts_at.getTime()))) ||
     (r.pickup_deadline_at instanceof Date &&
       arrival > r.pickup_deadline_at.getTime())
   )
@@ -91,6 +95,19 @@ export function validateApplication(
   if (["vehicle_help", "other_help"].includes(r.kind)) {
     if (p.capacity_parcels !== undefined)
       throw new ApiError(400, "INVALID_INPUT", "此类求助无需可接件数");
+    return;
+  }
+  if (r.request_schema_version === 2 && r.quantity_mode !== "exact") {
+    if (
+      p.capacity_parcels !== undefined &&
+      p.capacity_parcels < Number(r.minimum_parcels ?? 1)
+    )
+      throw new ApiError(422, "INVALID_CAPACITY", "请核对最低承接量");
+    if (
+      r.scenario === "warehouse_shortage" &&
+      Number(r.remaining_drivers ?? 0) < 1
+    )
+      throw new ApiError(409, "NO_REMAINING_GAP", "本次已没有司机缺口");
     return;
   }
   const remaining = Number(r.remaining_parcels ?? 0),

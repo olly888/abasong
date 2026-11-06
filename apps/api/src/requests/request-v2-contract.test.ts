@@ -56,7 +56,7 @@ it("keeps full pickup detail separate from public/list/source and rejects coordi
     kind: { type: "string", enum: ["contact_handoff"] },
   });
 });
-it("marks V2 prepared, preserves strict legacy routes, and represents unknown as nullable", () => {
+it("routes explicit V2 while preserving strict legacy models and nullable unknown quantities", () => {
   expect(s.RequestDraftInputV2!.required).toEqual([
     "request_schema_version",
     "scenario",
@@ -64,14 +64,13 @@ it("marks V2 prepared, preserves strict legacy routes, and represents unknown as
   expect(s.RequestDraftInputV2!.properties!.parcel_count!.nullable).toBe(true);
   expect(s.RequestSummaryV2!.properties!.handoff_date!.nullable).toBe(true);
   expect(s.RequestDraftInputV2!["x-implementation-stage"]).toBe(
-    "R4-06-prepared-not-routed",
+    "R4-07-local-service",
   );
   expect(s.RequestDraftInput!.properties).not.toHaveProperty(
     "request_schema_version",
   );
-  expect(JSON.stringify(contract.paths)).not.toMatch(
-    /(?:InputV2|SummaryV2|DetailV2|PatchV2)/,
-  );
+  expect(JSON.stringify(contract.paths)).toContain("RequestDraftAny");
+  expect(JSON.stringify(contract.paths)).toContain("request_schema_version");
   expect(s.RequestDraftInputV2!.properties!.quantity_mode!.enum).toEqual([
     "exact",
     "estimate",

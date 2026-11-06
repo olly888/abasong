@@ -67,7 +67,7 @@ export class MessagingService {
     await conversationRow(c, a, r.conversation_id);
     let regionLabel: string | null = null;
     let text: string | null = null,
-      snapshot: S["RequestVersion"] | null = null;
+      snapshot: S["Message"]["request_snapshot"] = null;
     if (r.kind === "text") {
       if (
         !r.ciphertext ||

@@ -22,7 +22,9 @@ export async function enqueueCollaboration(
 }
 export function safeRequestSnapshot(
   value: Record<string, unknown>,
-): components["schemas"]["RequestVersion"] {
+):
+  | components["schemas"]["RequestVersion"]
+  | components["schemas"]["RequestVersionV2"] {
   const fields = [
     "request_id",
     "version",
@@ -50,6 +52,24 @@ export function safeRequestSnapshot(
     "experience_requirement",
     "pickup_region_id",
   ] as const;
+  if (value.request_schema_version === 2) {
+    return Object.fromEntries(
+      [
+        ...fields.filter((k) => k !== "private_payment_terms"),
+        "request_schema_version",
+        "scenario",
+        "task_scope",
+        "quantity_mode",
+        "handoff_mode",
+        "handoff_date",
+        "completion_mode",
+        "pickup_kind",
+        "pickup_address_version",
+        "publisher_display_name",
+        "organization_name",
+      ].map((k) => [k, value[k] ?? null]),
+    ) as components["schemas"]["RequestVersionV2"];
+  }
   return Object.fromEntries(
     fields.map((k) => [k, value[k] ?? null]),
   ) as components["schemas"]["RequestVersion"];

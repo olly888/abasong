@@ -1,5 +1,6 @@
 import { verifyDrivers } from "./verify-drivers";
 import { verifyPush } from "./verify-push";
+import { verifyDeliveryServices } from "./verify-delivery-services";
 import {
   verifyV2Upgrade,
   verifyPickupProvenanceUpgrade,
@@ -33,8 +34,48 @@ async function main() {
       kid: "d2-test",
       alg: "ES256",
     };
-  const provider = createServer((_req, res) => {
+  let providerMode: "success" | "failure" | "mismatch" = "success",
+    providerCalls = 0;
+  const provider = createServer((req, res) => {
     res.setHeader("Content-Type", "application/json");
+    if (req.url?.startsWith("/mapbox-permanent?")) {
+      providerCalls++;
+      if (providerMode === "failure") {
+        res.writeHead(503);
+        res.end("{}");
+        return;
+      }
+      res.end(
+        JSON.stringify({
+          features: [
+            {
+              geometry: { type: "Point", coordinates: [-118.2437, 34.0522] },
+              properties: {
+                feature_type: "address",
+                coordinates: { accuracy: "rooftop" },
+                match_code: {
+                  confidence: "exact",
+                  address_number: "matched",
+                  street: "matched",
+                  region: "matched",
+                },
+                context: {
+                  address: {
+                    address_number: providerMode === "mismatch" ? "999" : "100",
+                    street_name: "TEST Avenue",
+                  },
+                  place: { name: "TEST City" },
+                  region: { region_code: "US-CA" },
+                  country: { country_code: "US" },
+                  postcode: { name: "90000" },
+                },
+              },
+            },
+          ],
+        }),
+      );
+      return;
+    }
     res.end(JSON.stringify({ keys: [jwk] }));
   });
   provider.listen(0, "127.0.0.1");
@@ -71,7 +112,7 @@ async function main() {
     path: string,
     method = "GET",
     t: string | undefined = auth,
-    status = 200,
+    status: number | readonly number[] = 200,
     body?: unknown,
     key?: string,
   ) {
@@ -86,7 +127,8 @@ async function main() {
     });
     assert.equal(r.headers.get("cache-control"), "no-store");
     const value = await r.json();
-    if (r.status !== status)
+    const accepted = typeof status === "number" ? [status] : status;
+    if (!accepted.includes(r.status))
       console.error(
         "HTTP mismatch",
         method,
@@ -95,9 +137,8 @@ async function main() {
         r.status,
         /^[A-Z_]{1,80}$/.test(value.code ?? "") ? value.code : "unknown",
       );
-    assert.equal(
-      r.status,
-      status,
+    assert.ok(
+      accepted.includes(r.status),
       `${method} ${path} status (${value.code ?? "ok"})`,
     );
     checks++;
@@ -154,25 +195,37 @@ async function main() {
     await once(free, "listening");
     port = (free.address() as { port: number }).port;
     await new Promise<void>((r) => free.close(() => r()));
-    api = spawn(process.execPath, ["apps/api/dist/main.js"], {
-      stdio: "ignore",
-      env: {
-        ...process.env,
-        ...env,
-        NODE_ENV: "test",
-        ABASONG_ENV: "test",
-        DATA_ENCRYPTION_PROVIDER: "local-development",
-        LOCAL_DATA_KEK: randomBytes(32).toString("hex"),
-        DATABASE_URL: runtime.href,
-        DATABASE_SENSITIVE_URL: sensitive.href,
-        AUTH_ISSUER: issuer,
-        AUTH_AUDIENCE: "authenticated",
-        AUTH_JWT_ALGORITHM: "ES256",
-        API_HOST: "127.0.0.1",
-        API_PORT: String(port),
-        IDEMPOTENCY_RETENTION_SECONDS: "3600",
+    api = spawn(
+      process.execPath,
+      [
+        "--import",
+        "./scripts/d1/request-mapbox-fixture.mjs",
+        "apps/api/dist/main.js",
+      ],
+      {
+        stdio: "ignore",
+        env: {
+          ...process.env,
+          ...env,
+          NODE_ENV: "test",
+          ABASONG_ENV: "test",
+          DATA_ENCRYPTION_PROVIDER: "local-development",
+          LOCAL_DATA_KEK: randomBytes(32).toString("hex"),
+          DATABASE_URL: runtime.href,
+          DATABASE_SENSITIVE_URL: sensitive.href,
+          AUTH_ISSUER: issuer,
+          AUTH_AUDIENCE: "authenticated",
+          AUTH_JWT_ALGORITHM: "ES256",
+          API_HOST: "127.0.0.1",
+          API_PORT: String(port),
+          IDEMPOTENCY_RETENTION_SECONDS: "3600",
+          ABASONG_TEST_PROVIDER_URL: issuer.replace("/auth/v1", ""),
+          MAPBOX_SEARCH_TOKEN: "pk.TEST.fixture",
+          MAPBOX_PERMANENT_GEOCODING_ENABLED: "true",
+          REQUEST_SHARE_BASE_URL: "https://share.abasong.invalid",
+        },
       },
-    });
+    );
     let ready = false;
     for (let i = 0; i < 60; i++) {
       if (api.exitCode !== null) throw new Error("TEST API exited");
@@ -187,8 +240,8 @@ async function main() {
       await pause(100);
     }
     assert(ready);
-    // Prepared V2 records must not be misread/mutated by the V1 service.
-    await request(`/v1/requests/${v2.requestId}`, "GET", auth, 404);
+    // V2 detail is enabled; legacy list defaults remain compatible.
+    await request(`/v1/requests/${v2.requestId}`, "GET", auth, 200);
     assert(
       !(await request("/v1/me/requests")).items.some(
         (r: { id: string }) => r.id === v2.requestId,
@@ -198,11 +251,11 @@ async function main() {
       "/v1/requests",
       "POST",
       auth,
-      400,
+      201,
       { request_schema_version: 2, scenario: "warehouse_shortage" },
       randomUUID(),
     );
-    for (const required of ["V12.0015", "V12.0016"]) {
+    for (const required of ["V12.0015", "V12.0016", "V12.0017"]) {
       const missingVersion = (
         await db.query(
           "DELETE FROM abasong.schema_version WHERE version=$1 RETURNING version,applied_at",
@@ -223,7 +276,7 @@ async function main() {
       await request("/health/ready", "GET", undefined, 200);
     }
     console.log(
-      `PASS: R4-06 migration upgrade5 groups and V2 storage/role checks${v2.checks}; prepared V2 kept out of V1 HTTP, missing0015/0016 readiness denied.`,
+      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015/0016/0017 readiness denied.`,
     );
     await request("/v1/requests", "GET", "", 401);
     await request(
@@ -1671,6 +1724,22 @@ async function main() {
       region,
       pickup,
     });
+    const deliveryAssertions = await verifyDeliveryServices({
+      db,
+      http: request,
+      auth,
+      other,
+      strangerToken: noRights,
+      owner,
+      reader,
+      region,
+      pickup,
+      providerMode: (mode) => {
+        providerMode = mode;
+      },
+      providerCalls: () => providerCalls,
+    });
+    checks += deliveryAssertions;
     await db.query(
       "UPDATE abasong.users SET session_invalid_before=now() WHERE id=$1",
       [owner],
@@ -1718,6 +1787,7 @@ void main().catch((error: unknown) => {
           line.trim().startsWith("at ") &&
           (line.includes("/scripts/d1/verify-requests-api.ts:") ||
             line.includes("/scripts/d1/verify-request-v2.ts:") ||
+            line.includes("/scripts/d1/verify-delivery-services.ts:") ||
             line.includes("/scripts/d1/verify-meeting-push.ts:")),
       );
     for (const frame of frames ?? []) console.error(frame.trim());

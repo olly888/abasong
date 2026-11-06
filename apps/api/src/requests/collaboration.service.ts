@@ -8,7 +8,7 @@ import { ENVELOPE_CRYPTO } from "../encryption/provider";
 import type { EnvelopeCrypto } from "../encryption/envelope";
 import type { VerifiedIdentity } from "../common/request-context";
 import { ApiError } from "../common/api-error";
-import { RequestsService } from "./requests.service";
+import { RequestsService, type RequestView } from "./requests.service";
 import { checked, requestId, requestPageInput } from "./request-input";
 import {
   applyInput,
@@ -130,12 +130,13 @@ export class CollaborationService {
         "APPLICATION_LINK_UNAVAILABLE",
         "报名关联暂不可用",
       );
-    let summary: S["Request"] | null = null,
+    let summary: RequestView | null = null,
       profile: S["Profile"] | null = null;
     try {
       summary = await this.requests.view(
         c,
         await this.requests.row(c, a, row.request_id),
+        false,
       );
     } catch (e) {
       if (!(e instanceof ApiError) || e.status !== 404) throw e;

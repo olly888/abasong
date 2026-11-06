@@ -2808,7 +2808,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RequestPage'
+                $ref: '#/components/schemas/RequestListRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -2905,6 +2905,16 @@ paths:
           - extra_drivers
           - vehicle_help
           - other_help
+      - name: request_schema_version
+        in: query
+        required: false
+        schema:
+          type: integer
+          enum:
+          - 1
+          - 2
+          default: 1
+      description: 默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。
     post:
       operationId: createDraft
       summary: 创建本人需求草稿
@@ -2920,7 +2930,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -2979,7 +2989,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequestDraftInput'
+              $ref: '#/components/schemas/RequestDraftAny'
       x-required-capabilities:
       - request.publish
   /v1/requests/{request_id}:
@@ -2998,7 +3008,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -3067,7 +3077,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -3126,7 +3136,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequestPatch'
+              $ref: '#/components/schemas/RequestPatchAny'
       x-required-capabilities:
       - request.publish
     delete:
@@ -3214,7 +3224,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -3296,7 +3306,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -3376,7 +3386,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -3458,7 +3468,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -3517,7 +3527,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GapInput'
+              $ref: '#/components/schemas/GapAny'
   /v1/requests/{request_id}/versions:
     get:
       operationId: getRequestVersions
@@ -3923,7 +3933,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RequestPage'
+                $ref: '#/components/schemas/RequestListRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -3987,6 +3997,16 @@ paths:
           minimum: 1
           maximum: 100
           default: 20
+      - name: request_schema_version
+        in: query
+        required: false
+        schema:
+          type: integer
+          enum:
+          - 1
+          - 2
+          default: 1
+      description: 默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。
   /v1/me/applications:
     get:
       operationId: listMyApplications
@@ -6714,7 +6734,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/RequestRead'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -10464,7 +10484,7 @@ components:
         request_summary:
           anyOf:
           - allOf:
-            - $ref: '#/components/schemas/Request'
+            - $ref: '#/components/schemas/RequestSummaryRead'
           - type: object
             nullable: true
             enum:
@@ -10634,7 +10654,7 @@ components:
         last_request_snapshot:
           anyOf:
           - allOf:
-            - $ref: '#/components/schemas/RequestVersion'
+            - $ref: '#/components/schemas/RequestSnapshot'
           - type: object
             nullable: true
             enum:
@@ -10738,7 +10758,7 @@ components:
         request_snapshot:
           anyOf:
           - allOf:
-            - $ref: '#/components/schemas/RequestVersion'
+            - $ref: '#/components/schemas/RequestSnapshot'
           - type: object
             nullable: true
             enum:
@@ -11478,7 +11498,7 @@ components:
         summary:
           anyOf:
           - allOf:
-            - $ref: '#/components/schemas/PublicRequestSummary'
+            - $ref: '#/components/schemas/PublicRequestSummaryRead'
           - type: object
             nullable: true
             enum:
@@ -11524,8 +11544,8 @@ components:
           - mapbox_suggestion
       required:
       - kind
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。address_source需明确区分手填与Mapbox联想；联想地址文字也须经后台有持久许可的来源核对后保存，不能仅删除坐标后当手填存储。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。address_source需明确区分手填与Mapbox联想；联想地址文字也须经后台有持久许可的来源核对后保存，不能仅删除坐标后当手填存储。
     ContactHandoffV2:
       type: object
       additionalProperties: false
@@ -11536,14 +11556,14 @@ components:
           - contact_handoff
       required:
       - kind
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
     PickupDraftV2:
       oneOf:
       - $ref: '#/components/schemas/WarehousePickupDraftV2'
       - $ref: '#/components/schemas/ContactHandoffV2'
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
     RequestDraftInputV2:
       type: object
       additionalProperties: false
@@ -11677,8 +11697,8 @@ components:
           - oneOf:
             - $ref: '#/components/schemas/WarehousePickupDraftV2'
             - $ref: '#/components/schemas/ContactHandoffV2'
-            x-implementation-stage: R4-06-prepared-not-routed
-            description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+            x-implementation-stage: R4-07-local-service
+            description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
           - type: object
             nullable: true
             enum:
@@ -11686,8 +11706,8 @@ components:
       required:
       - request_schema_version
       - scenario
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。草稿可不完整；发布前须完整核对。asap的starts_at为空并由服务端当次生成；scheduled使用明确时刻和匹配的洛杉矶接手日。下架默认最迟接手或接手日23:59，独立于送完要求。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。草稿可不完整；发布前须完整核对。asap的starts_at为空并由服务端当次生成；scheduled使用明确时刻和匹配的洛杉矶接手日。下架默认最迟接手或接手日23:59，独立于送完要求。
     RequestPatchV2:
       type: object
       additionalProperties: false
@@ -11817,8 +11837,8 @@ components:
           - oneOf:
             - $ref: '#/components/schemas/WarehousePickupDraftV2'
             - $ref: '#/components/schemas/ContactHandoffV2'
-            x-implementation-stage: R4-06-prepared-not-routed
-            description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+            x-implementation-stage: R4-07-local-service
+            description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
           - type: object
             nullable: true
             enum:
@@ -11826,8 +11846,8 @@ components:
       required:
       - request_schema_version
       - expected_version
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
     GapInputV2:
       type: object
       additionalProperties: false
@@ -11857,8 +11877,8 @@ components:
         - remaining_parcels
       - required:
         - remaining_drivers
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
     WarehousePickupDetailV2:
       type: object
       additionalProperties: false
@@ -11923,14 +11943,14 @@ components:
       - address_source
       - point
       - point_source
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
     PickupLocationDetailV2:
       oneOf:
       - $ref: '#/components/schemas/WarehousePickupDetailV2'
       - $ref: '#/components/schemas/ContactHandoffV2'
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。
     RequestSummaryV2:
       type: object
       additionalProperties: false
@@ -12141,8 +12161,8 @@ components:
       - handoff_date
       - completion_mode
       - pickup_kind
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。仅发现摘要，不含完整取件地址。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。仅发现摘要，不含完整取件地址。
     RequestDetailV2:
       type: object
       additionalProperties: false
@@ -12367,8 +12387,8 @@ components:
       - pickup_kind
       - pickup
       - private_payment_terms
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。完整取件信息仅在有权登录详情读取。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。完整取件信息仅在有权登录详情读取。
     RequestVersionV2:
       type: object
       additionalProperties: false
@@ -12502,6 +12522,14 @@ components:
           type: integer
           minimum: 1
           nullable: true
+        publisher_display_name:
+          type: string
+          maxLength: 60
+          nullable: true
+        organization_name:
+          type: string
+          maxLength: 120
+          nullable: true
       required:
       - request_id
       - version
@@ -12536,8 +12564,10 @@ components:
       - completion_mode
       - pickup_kind
       - pickup_address_version
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。去敏来源快照：不含地址、坐标或私下付款正文。
+      - publisher_display_name
+      - organization_name
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。去敏来源快照：不含地址、坐标或私下付款正文。
     PublicRequestSummaryV2:
       type: object
       additionalProperties: false
@@ -12659,8 +12689,8 @@ components:
       - handoff_date
       - completion_mode
       - pickup_kind
-      x-implementation-stage: R4-06-prepared-not-routed
-      description: R4-06已准备模型，R4-07接通事务及对象权限前不用于现有端点。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。独立游客白名单，不含取件地址、坐标及私人联系方式。
+      x-implementation-stage: R4-07-local-service
+      description: R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。独立游客白名单，不含取件地址、坐标及私人联系方式。
     ApartmentPage:
       type: object
       additionalProperties: false
@@ -12710,7 +12740,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/RequestVersion'
+            $ref: '#/components/schemas/RequestSnapshot'
         next_cursor:
           type: string
           nullable: true
@@ -13720,3 +13750,49 @@ components:
       - expected_source_version
       - recognizer_version
       - candidates
+    RequestRead:
+      oneOf:
+      - $ref: '#/components/schemas/Request'
+      - $ref: '#/components/schemas/RequestDetailV2'
+    RequestSummaryRead:
+      oneOf:
+      - $ref: '#/components/schemas/Request'
+      - $ref: '#/components/schemas/RequestSummaryV2'
+    RequestDraftAny:
+      oneOf:
+      - $ref: '#/components/schemas/RequestDraftInput'
+      - $ref: '#/components/schemas/RequestDraftInputV2'
+    RequestPatchAny:
+      oneOf:
+      - $ref: '#/components/schemas/RequestPatch'
+      - $ref: '#/components/schemas/RequestPatchV2'
+    GapAny:
+      oneOf:
+      - $ref: '#/components/schemas/GapInput'
+      - $ref: '#/components/schemas/GapInputV2'
+    RequestSnapshot:
+      oneOf:
+      - $ref: '#/components/schemas/RequestVersion'
+      - $ref: '#/components/schemas/RequestVersionV2'
+    PublicRequestSummaryRead:
+      oneOf:
+      - $ref: '#/components/schemas/PublicRequestSummary'
+      - $ref: '#/components/schemas/PublicRequestSummaryV2'
+    RequestPageV2:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      - next_cursor
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestSummaryV2'
+        next_cursor:
+          type: string
+          nullable: true
+    RequestListRead:
+      anyOf:
+      - $ref: '#/components/schemas/RequestPage'
+      - $ref: '#/components/schemas/RequestPageV2'

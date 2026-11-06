@@ -146,7 +146,7 @@ obj('ShareCreateInput',{'public_preview_confirmed':{'type':'boolean','enum':[Tru
 out('RequestShare',{'id':uid,'public_url':string(1000),'expires_at':dt})
 out('PublicRequestSummary',{'carrier':string(80,nullable=True),'kind':string(50),'region_label':string(200),'pickup_area':string(200,nullable=True),'starts_at':dt,'expires_at':dt,'parcel_count':{'type':'integer','nullable':True},'drivers_needed':{'type':'integer','nullable':True},'minimum_parcels':{'type':'integer','nullable':True},'accepts_partial':boolean,'price_cents':{'type':'integer','nullable':True},'price_unit':string(30,nullable=True),'currency':enum('USD'),'experience_requirement':string(50),'public_publisher_name':string(60),'public_organization_name':string(120,nullable=True)})
 out('PublicRequestShare',{'status':enum('open','ended'),'title':string(200),'summary':{'allOf':[ref('PublicRequestSummary')],'nullable':True}})
-from request_v2_contracts import add_request_v2_contracts
+from request_v2_contracts import add_request_v2_contracts, wire_request_v2
 add_request_v2_contracts(S,obj,out,ref,string,enum,integer,uid,dt,boolean)
 for item in ['Apartment','Region','Request','RequestVersion','Application','Driver','Conversation','Message','Contact','Post','Comment','Notification','Report','AccessRecord']:
  page(item+'Page',item)
@@ -279,6 +279,7 @@ add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
                      nullable_id, boolean, page, op, paths)
 # OpenAPI 3.0 nullable does not override a referenced non-nullable object in allOf.
 # Explicit null branch keeps ended shares and undeclared driver availability valid.
+wire_request_v2(S,paths,ref,query)
 def normalize_nullable_refs(node):
  if isinstance(node,list):return [normalize_nullable_refs(x) for x in node]
  if not isinstance(node,dict):return node

@@ -1,0 +1,126 @@
+{
+  "date": "2026-11-06",
+  "timezone": "America/Los_Angeles",
+  "branch": "codex/r4-07-delivery-services",
+  "base": "3bc2037c5a776018aee19a610a67890adeb71713",
+  "scope": "R4-07 scoped local two-scene publishing/application/gap/query, source and public-summary service exit; native form R4-08 pending",
+  "code_diff_sha256": "df4375e9ad07e15ba5cd29f785cd0730885e6431fa7e67259917661a2a76c583",
+  "code_diff_command": "git diff --binary 3bc2037c5a776018aee19a610a67890adeb71713 VALIDATED_HEAD -- apps packages database scripts",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS",
+      "files": 76,
+      "tests": 434,
+      "lint_types_build": true,
+      "local_log": "/private/tmp/abasong-r4-07-check.log"
+    },
+    "requests_database": {
+      "command": "./scripts/dev verify:requests-api",
+      "status": "PASS",
+      "checks": 509,
+      "delivery_additional_assertions": 88,
+      "upgrade_groups": 5,
+      "v2_storage_role_checks": 42,
+      "environment": "disposable_guarded_local_PostGIS",
+      "local_log": "/private/tmp/abasong-r4-07-requests.log",
+      "count_semantics": "combined_HTTP_PG_checks_and_assertions_not_509_independent_endpoints"
+    },
+    "library_database": {
+      "command": "./scripts/dev verify:library-api",
+      "status": "PASS",
+      "checks": 295,
+      "nearby_checks": 97,
+      "KMS": "synthetic_gateway_with_real_PG_no_AWS_calls",
+      "local_log": "/private/tmp/abasong-r4-07-library.log"
+    },
+    "imports_database": {
+      "command": "./scripts/dev verify:import-api",
+      "status": "PASS",
+      "checks": 124,
+      "expected_fault_injection": "P0001",
+      "local_log": "/private/tmp/abasong-r4-07-import.log"
+    },
+    "d0_migration": {
+      "command": "./scripts/dev db:verify",
+      "status": "PASS",
+      "migrations": 17,
+      "tables": 54,
+      "reset": false,
+      "local_log": "/private/tmp/abasong-r4-07-database.log"
+    },
+    "manifest": {
+      "command": "./scripts/dev cloud:preflight --manifest",
+      "status": "PASS",
+      "checksums": 17,
+      "network_or_database_writes": false
+    },
+    "secret_scan": {
+      "status": "PASS_staged_Gitleaks",
+      "command": ".tooling/security/gitleaks git . --pre-commit --staged --redact=100 --ignore-gitleaks-allow --no-banner",
+      "full_history": "current_exact_HEAD_CI_at_PR95_checks"
+    },
+    "ci": {
+      "status": "consult_latest_exact_HEAD_at_PR_checks",
+      "source": "https://github.com/olly888/abasong/pull/95/checks",
+      "code_commit": "3ca40c7cd971349425f97123e479bc31e0c3da0f",
+      "head_branch": "codex/r4-07-delivery-services",
+      "prior_PR94_green_is_current_proof": false,
+      "latest_head_results_recorded_in": "PR95 body"
+    }
+  },
+  "migration_sha256": {
+    "0016_pickup_address_provenance.sql": "76da7605c91f404ddf1ac8ec2c6284772bc7509734b59fb52f9e00159bc126df",
+    "0017_request_publishing_identity.sql": "ac9b12100da93cce9c23022ea3351ab6c6d8e27ab1a80831cc402304a085e52c",
+    "0015_delivery_request_v2.sql": "a03c730f0d18edb85a8db1ef2e22cdee4bb0bd01c4b4553a7c8c87fd29dc6c97"
+  },
+  "verified_behaviors": {
+    "v2_create_publish_both_scenes": true,
+    "legacy_list_default_preserved": true,
+    "v2_list_opt_in": true,
+    "day_filter_is_handoff_day_not_expiry_overlap": true,
+    "empty_draft_complete_and_publish": true,
+    "unknown_estimate_exact_transitions": true,
+    "estimate_not_hard_capacity_cap": true,
+    "application_does_not_decrement_gaps": true,
+    "future_arrival_after_discovery_expiry_allowed_while_open": true,
+    "whole_route_commitment_exact": true,
+    "same_version_race_one_success_one_conflict": true,
+    "create_publish_apply_idempotent": true,
+    "pickup_changes_keep_history_and_clear_stale_region": true,
+    "same_address_reuses_version_and_provider": true,
+    "provider_failure_mismatch_rollback_and_retry": true,
+    "expired_provider_point_hidden": true,
+    "invalid_source_reopen_rejected": true,
+    "publishing_identity_frozen": true,
+    "current_DSP_authority_still_checked": true,
+    "immutable_identity_DB_check": true,
+    "source_and_list_exclude_private_pickup": true,
+    "public_share_independent_allowlist": true,
+    "public_ended_summary_null": true,
+    "share_revoke_and_resolve_object_checks": true,
+    "missing_0017_ready_denied": true
+  },
+  "provider_transport": "compiled_production_MapboxNearbyProvider_redirected_only_in_test_child_to_localhost_fixture_no_real_provider_calls",
+  "limitations": {
+    "native_ui_changed": false,
+    "new_native_compilation": false,
+    "new_dual_native_acceptance": false,
+    "physical_iPhone": false,
+    "physical_Android": false,
+    "cloud_migration": false,
+    "cloud_resources_or_costs": false,
+    "real_account_grants": false,
+    "real_provider_calls": false,
+    "real_SMS_messages": false,
+    "public_share_receiver_deployed": false,
+    "whole_product_or_field_acceptance": false
+  },
+  "new_dependencies": false,
+  "task_register_rows": 22,
+  "human_participants": 0,
+  "current_batch_complete": true,
+  "next_dependent_task": "R4-08",
+  "pull_request": "https://github.com/olly888/abasong/pull/95",
+  "validated_code_commit": "3ca40c7cd971349425f97123e479bc31e0c3da0f"
+}

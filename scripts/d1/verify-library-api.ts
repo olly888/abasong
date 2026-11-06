@@ -170,6 +170,12 @@ async function main() {
         "utf8",
       ),
     );
+    await db.query(
+      readFileSync(
+        "database/migrations/0017_request_publishing_identity.sql",
+        "utf8",
+      ),
+    );
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,

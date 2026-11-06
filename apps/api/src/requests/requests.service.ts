@@ -20,7 +20,23 @@ import {
   validatePublishing,
 } from "./request-input";
 import { notifyRequestChange, safeRequestSnapshot } from "./request-events";
+import { MapboxNearbyProvider } from "../nearby/mapbox-nearby.provider";
+import {
+  calendarDate,
+  draftV2Input,
+  patchV2Input,
+  gapV2Input,
+} from "./request-v2-input";
+import {
+  appendPickup,
+  normalizeV2,
+  pickupView,
+  publishingIdentity,
+  v2Terms,
+} from "./request-v2-store";
 type S = components["schemas"];
+export type RequestView =
+  S["Request"] | S["RequestDetailV2"] | S["RequestSummaryV2"];
 export type RequestRow = Record<string, unknown> & {
   id: string;
   publisher_id: string;
@@ -64,6 +80,7 @@ export class RequestsService {
   constructor(
     @Inject(Database) private readonly db: Database,
     @Inject(ENVELOPE_CRYPTO) private readonly crypto: EnvelopeCrypto,
+    @Inject(MapboxNearbyProvider) private readonly maps: MapboxNearbyProvider,
   ) {}
   // Shared transaction and object checks for request/application services.
   async tx<T>(
@@ -103,6 +120,9 @@ export class RequestsService {
             ? "当前未开通报名资格"
             : "当前未开通发布资格",
         );
+      await c.query("SELECT set_config('abasong.actor_id',$1,true)", [
+        a.userId,
+      ]);
       const value = await fn(c);
       await c.query("COMMIT");
       return value;
@@ -122,14 +142,14 @@ export class RequestsService {
   ): Promise<Row> {
     const r = (
       await c.query<Row>(
-        `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.id=$1 AND r.request_schema_version=1 AND r.discarded_at IS NULL AND u.status='active' AND (r.publisher_id=$2 OR (r.status<>'draft' AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$2)))) ${lock ? "FOR UPDATE OF r" : ""}`,
+        `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.id=$1 AND r.discarded_at IS NULL AND u.status='active' AND (r.publisher_id=$2 OR (r.status<>'draft' AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$2)))) ${lock ? "FOR UPDATE OF r" : ""}`,
         [id, a.userId],
       )
     ).rows[0];
     if (!r || (owner && r.publisher_id !== a.userId)) throw missing();
     return r;
   }
-  async view(c: PoolClient, r: Row): Promise<S["Request"]> {
+  async view(c: PoolClient, r: Row, detail = true): Promise<RequestView> {
     const p = (
       await c.query(
         "SELECT user_id,display_name,bio,vehicle_type,experience FROM abasong.profiles WHERE user_id=$1",
@@ -153,7 +173,7 @@ export class RequestsService {
         r[k] instanceof Date ? (r[k] as Date).toISOString() : (r[k] ?? null),
       ]),
     );
-    return {
+    const result = {
       ...content,
       id: r.id,
       publisher: {
@@ -173,6 +193,28 @@ export class RequestsService {
       remaining_drivers: r.remaining_drivers ?? null,
       currency: "USD",
     } as S["Request"];
+    if (r.request_schema_version !== 2) return result;
+    const identity = r.publishing_identity as {
+      publisher_display_name: string;
+      organization: S["Organization"] | null;
+    } | null;
+    if (identity) {
+      result.publisher.display_name = identity.publisher_display_name;
+      result.organization = identity.organization;
+    }
+    const { private_payment_terms, ...summary } = result;
+    const v2 = {
+      ...summary,
+      ...Object.fromEntries(
+        v2Terms.map((k) => [
+          k,
+          k === "handoff_date" ? calendarDate(r[k]) : (r[k] ?? null),
+        ]),
+      ),
+    } as S["RequestSummaryV2"];
+    return detail
+      ? { ...v2, private_payment_terms, pickup: await pickupView(c, r) }
+      : v2;
   }
   private async input(
     c: PoolClient,
@@ -222,7 +264,10 @@ export class RequestsService {
         "INVALID_INPUT",
         "有效截止时间已过，请更新后保存",
       );
-    if ((data.kind ?? current?.kind) === "whole_route") {
+    if (
+      (data.kind ?? current?.kind) === "whole_route" &&
+      (data.request_schema_version ?? current?.request_schema_version) !== 2
+    ) {
       data.accepts_partial = false;
       if (data.parcel_count !== undefined || current?.parcel_count)
         data.minimum_parcels =
@@ -234,6 +279,7 @@ export class RequestsService {
     if (
       merged.minimum_parcels &&
       merged.parcel_count &&
+      merged.quantity_mode !== "estimate" &&
       Number(merged.minimum_parcels) > Number(merged.parcel_count)
     )
       throw new ApiError(400, "INVALID_INPUT", "最低承接量不能超过本次件数");
@@ -246,7 +292,7 @@ export class RequestsService {
     key: unknown,
     body: unknown,
     run: () => Promise<Row>,
-  ): Promise<S["Request"]> {
+  ): Promise<RequestView> {
     const k = requestId(key),
       retention = Number(process.env.IDEMPOTENCY_RETENTION_SECONDS);
     if (!Number.isSafeInteger(retention) || retention <= 0)
@@ -314,6 +360,13 @@ export class RequestsService {
     });
   }
   async create(a: VerifiedIdentity, body: unknown, key: unknown) {
+    if (
+      body &&
+      typeof body === "object" &&
+      "request_schema_version" in body &&
+      body.request_schema_version === 2
+    )
+      return this.createV2(a, body, key);
     const p = checked(draftInput, body);
     return this.tx(
       a,
@@ -333,14 +386,163 @@ export class RequestsService {
       "request.publish",
     );
   }
+  private normalizedV2(
+    p: Awaited<ReturnType<typeof normalizeV2>>,
+  ): Record<string, unknown> {
+    const { pickup, ...data } = p;
+    void pickup;
+    return data;
+  }
+  private async updateV2(
+    c: PoolClient,
+    id: string,
+    data: Record<string, unknown>,
+  ) {
+    const keys = Object.keys(data);
+    return (
+      await c.query<Row>(
+        `UPDATE abasong.requests SET ${keys.map((k, i) => `${k}=$${i + 2}`).join(",")},version=version+1,updated_at=now() WHERE id=$1 RETURNING *`,
+        [id, ...keys.map((k) => data[k])],
+      )
+    ).rows[0]!;
+  }
+  private async createV2(a: VerifiedIdentity, body: unknown, key: unknown) {
+    const p = checked(draftV2Input, body);
+    return this.tx(
+      a,
+      (c) =>
+        this.write(c, a, "request.create", key, p, async () => {
+          const { pickup, ...fields } = p;
+          const data = await this.input(
+            c,
+            {
+              ...fields,
+              kind:
+                p.scenario === "warehouse_shortage"
+                  ? "extra_drivers"
+                  : p.task_scope === "whole_route"
+                    ? "whole_route"
+                    : "partial_route",
+            },
+            { publisher_id: a.userId } as Row,
+          );
+          const keys = Object.keys(data);
+          const r = (
+            await c.query<Row>(
+              `INSERT INTO abasong.requests(publisher_id,${keys.join(",")}) VALUES($1,${keys.map((_, i) => `$${i + 2}`).join(",")}) RETURNING *`,
+              [a.userId, ...keys.map((k) => data[k])],
+            )
+          ).rows[0]!;
+          if (!pickup) return r;
+          const ref = await appendPickup(c, r, pickup, this.maps);
+          return (
+            await c.query<Row>(
+              "UPDATE abasong.requests SET pickup_kind=$2,pickup_address_version=$3 WHERE id=$1 RETURNING *",
+              [r.id, ref.pickup_kind, ref.pickup_address_version],
+            )
+          ).rows[0]!;
+        }),
+      "request.publish",
+    );
+  }
+  private async patchV2(
+    c: PoolClient,
+    a: VerifiedIdentity,
+    r: Row,
+    p: z.infer<typeof patchV2Input>,
+  ) {
+    const { pickup, expected_version, request_schema_version, ...fields } = p;
+    void expected_version;
+    void request_schema_version;
+    let data: Record<string, unknown> = await this.input(c, fields, r);
+    if (!Object.keys(data).length && pickup === undefined)
+      return this.view(c, r);
+    if (pickup !== undefined) {
+      Object.assign(data, await appendPickup(c, r, pickup, this.maps));
+      // A new pickup never silently retains a region derived for a previous address.
+      if (
+        !p.pickup_region_id &&
+        (data.pickup_kind !== r.pickup_kind ||
+          data.pickup_address_version !== r.pickup_address_version)
+      ) {
+        data.pickup_region_id = null;
+        data.pickup_area = null;
+      }
+    }
+    const merged = { ...r, ...data } as Row;
+    data.kind =
+      r.scenario === "warehouse_shortage"
+        ? "extra_drivers"
+        : merged.task_scope === "whole_route"
+          ? "whole_route"
+          : "partial_route";
+    if (r.status !== "draft") {
+      await publishingIdentity(c, r);
+      const normalized = await normalizeV2(
+        // Historical display identity is fixed; current authority is not.
+        c,
+        { ...merged, kind: data.kind } as Row,
+        (await c.query("SELECT now() AS clock")).rows[0].clock.getTime(),
+        !["starts_at", "handoff_date", "handoff_mode"].some((k) =>
+          Object.hasOwn(fields, k),
+        ),
+      );
+      const next = this.normalizedV2(normalized);
+      delete next.organization_id;
+      next.remaining_parcels =
+        merged.quantity_mode !== "exact"
+          ? null
+          : r.quantity_mode !== "exact" || merged.task_scope === "whole_route"
+            ? r.remaining_parcels === 0
+              ? 0
+              : normalized.parcel_count
+            : r.remaining_parcels;
+      next.remaining_drivers =
+        normalized.drivers_needed == null
+          ? null
+          : r.drivers_needed == null
+            ? normalized.drivers_needed
+            : r.remaining_drivers;
+      if (
+        next.remaining_parcels != null &&
+        Number(next.remaining_parcels) > Number(normalized.parcel_count)
+      )
+        throw new ApiError(409, "GAP_CONFLICT", "请先调整当前件数缺口");
+      if (
+        next.remaining_drivers != null &&
+        (normalized.drivers_needed == null ||
+          Number(next.remaining_drivers) > normalized.drivers_needed)
+      )
+        throw new ApiError(409, "GAP_CONFLICT", "请先调整当前人数缺口");
+      data = { ...data, ...next };
+      if (r.is_expired) data.status = "expired";
+    }
+    const row = await this.updateV2(c, r.id, data);
+    if (r.status !== "draft") {
+      await this.snapshot(c, row);
+      await notifyRequestChange(c, row.id, row.version, a.userId);
+    }
+    await c.query(
+      "INSERT INTO abasong.audit_events(actor_id,action,object_type,object_id,result) VALUES($1,'request.update','request',$2,'success')",
+      [a.userId, r.id],
+    );
+    return this.view(c, row);
+  }
   async patch(a: VerifiedIdentity, id: unknown, body: unknown) {
     const rid = requestId(id),
-      p = checked(patchInput, body);
+      p =
+        body && typeof body === "object" && "request_schema_version" in body
+          ? checked(patchV2Input, body)
+          : checked(patchInput, body);
     return this.tx(
       a,
       async (c) => {
         const r = await this.row(c, a, rid, true, true);
         if (r.version !== p.expected_version) throw conflict();
+        if (r.request_schema_version === 2)
+          return this.patchV2(c, a, r, checked(patchV2Input, body));
+        if ("request_schema_version" in p)
+          throw new ApiError(400, "INVALID_INPUT", "需求版本不一致");
         const data = await this.input(c, p, r),
           keys = Object.keys(data);
         if (!keys.length) return this.view(c, r);
@@ -403,7 +605,23 @@ export class RequestsService {
     );
   }
   private async snapshot(c: PoolClient, r: Row) {
-    const v = await this.view(c, r),
+    if (r.request_schema_version === 2) {
+      const v = await this.view(c, r, false);
+      const snapshot = safeRequestSnapshot({
+        ...v,
+        request_id: r.id,
+        pickup_address_version: r.pickup_address_version,
+        publisher_display_name: (v as S["RequestSummaryV2"]).publisher
+          .display_name,
+        organization_name: v.organization?.name ?? null,
+      });
+      await c.query(
+        "INSERT INTO abasong.request_versions(request_id,version,snapshot,actor_id) VALUES($1,$2,$3,$4)",
+        [r.id, r.version, snapshot, r.publisher_id],
+      );
+      return;
+    }
+    const v = (await this.view(c, r)) as S["Request"],
       fields = [
         "kind",
         "region_id",
@@ -457,6 +675,16 @@ export class RequestsService {
           const clock = (
             await c.query("SELECT now() AS clock")
           ).rows[0].clock.getTime();
+          if (r.request_schema_version === 2) {
+            const normalized = await normalizeV2(c, r, clock);
+            const next = await this.updateV2(c, r.id, {
+              ...this.normalizedV2(normalized),
+              status: "open",
+              publishing_identity: await publishingIdentity(c, r),
+            });
+            await this.snapshot(c, next);
+            return next;
+          }
           validatePublishing(
             Object.fromEntries(
               Object.entries(r).map(([k, v]) => [
@@ -522,6 +750,21 @@ export class RequestsService {
               "REQUEST_STATE_CONFLICT",
               "只能重开已结束的需求",
             );
+          if (r.request_schema_version === 2) {
+            const normalized = await normalizeV2(
+              c,
+              r,
+              (await c.query("SELECT now() AS clock")).rows[0].clock.getTime(),
+            );
+            const next = await this.updateV2(c, r.id, {
+              ...this.normalizedV2(normalized),
+              status: "open",
+              publishing_identity: await publishingIdentity(c, r),
+            });
+            await this.snapshot(c, next);
+            await notifyRequestChange(c, next.id, next.version, a.userId);
+            return next;
+          }
           validatePublishing(
             Object.fromEntries(
               Object.entries(r).map(([k, v]) => [
@@ -546,7 +789,10 @@ export class RequestsService {
   }
   async gap(a: VerifiedIdentity, id: unknown, body: unknown) {
     const rid = requestId(id),
-      p = checked(gapInput, body);
+      p =
+        body && typeof body === "object" && "request_schema_version" in body
+          ? checked(gapV2Input, body)
+          : checked(gapInput, body);
     return this.tx(a, async (c) => {
       const r = await this.row(c, a, rid, true, true);
       if (r.version !== p.expected_version) throw conflict();
@@ -556,17 +802,34 @@ export class RequestsService {
           "REQUEST_STATE_CONFLICT",
           "只能更新开放需求的缺口",
         );
+      if (r.request_schema_version === 2) {
+        const v = checked(gapV2Input, body);
+        if (
+          (r.quantity_mode !== "exact" &&
+            v.remaining_parcels !== undefined &&
+            v.remaining_parcels !== null) ||
+          (r.quantity_mode === "exact" && v.remaining_parcels === null)
+        )
+          throw new ApiError(
+            422,
+            "INVALID_CAPACITY",
+            "待确认或约数不能填写精确件数缺口",
+          );
+      } else if ("request_schema_version" in p)
+        throw new ApiError(400, "INVALID_INPUT", "需求版本不一致");
       for (const [value, total] of [
         [p.remaining_parcels, r.parcel_count],
         [p.remaining_drivers, r.drivers_needed],
       ])
         if (
           value !== undefined &&
+          value !== null &&
           (typeof total !== "number" || Number(value) > total)
         )
           throw new ApiError(400, "INVALID_INPUT", "缺口不能超过本次总量");
       if (
-        r.kind === "whole_route" &&
+        (r.kind === "whole_route" ||
+          (r.request_schema_version === 2 && r.task_scope === "whole_route")) &&
         p.remaining_parcels !== undefined &&
         p.remaining_parcels !== 0 &&
         p.remaining_parcels !== r.parcel_count
@@ -653,14 +916,14 @@ export class RequestsService {
     const rid = requestId(id);
     return this.tx(a, async (c) => this.view(c, await this.row(c, a, rid)));
   }
-  async list(
-    a: VerifiedIdentity,
-    query: unknown,
-    mine = false,
-  ): Promise<S["RequestPage"]> {
+  async list(a: VerifiedIdentity, query: unknown, mine = false) {
     const q = checked(
       mine
-        ? requestPageInput.pick({ cursor: true, limit: true })
+        ? requestPageInput.pick({
+            cursor: true,
+            limit: true,
+            request_schema_version: true,
+          })
         : requestPageInput,
       query,
     );
@@ -672,10 +935,14 @@ export class RequestsService {
       day?: string;
     };
     return this.tx(a, async (c) => {
-      if (q.cursor) await this.row(c, a, q.cursor, mine);
+      if (q.cursor) {
+        const cursor = await this.row(c, a, q.cursor, mine);
+        if (cursor.request_schema_version !== (q.request_schema_version ?? 1))
+          throw missing();
+      }
       const rows = (
         await c.query<Row>(
-          `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.request_schema_version=1 AND r.discarded_at IS NULL AND u.status='active' AND ($2::uuid IS NULL OR (r.created_at,r.id)<(SELECT created_at,id FROM abasong.requests WHERE id=$2)) AND ${mine ? "r.publisher_id=$1" : "r.status='open' AND r.expires_at>now() AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$1))"} AND ($3::uuid IS NULL OR r.region_id=$3) AND ($4::text IS NULL OR r.kind=$4) AND ($5::text IS NULL OR lower(r.carrier)=lower($5)) AND ($6::text IS NULL OR strpos(lower(concat_ws(' ',r.carrier,r.route_label,r.description,(SELECT label FROM abasong.regions WHERE id=r.region_id))),lower($6))>0) AND ($7::date IS NULL OR (r.starts_at<(($7::date+1)::timestamp AT TIME ZONE 'America/Los_Angeles') AND r.expires_at>($7::date::timestamp AT TIME ZONE 'America/Los_Angeles'))) ORDER BY r.created_at DESC,r.id DESC LIMIT $8`,
+          `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.request_schema_version=$9 AND r.discarded_at IS NULL AND u.status='active' AND ($2::uuid IS NULL OR (r.created_at,r.id)<(SELECT created_at,id FROM abasong.requests WHERE id=$2)) AND ${mine ? "r.publisher_id=$1" : "r.status='open' AND r.expires_at>now() AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$1))"} AND ($3::uuid IS NULL OR r.region_id=$3) AND ($4::text IS NULL OR r.kind=$4) AND ($5::text IS NULL OR lower(r.carrier)=lower($5)) AND ($6::text IS NULL OR strpos(lower(concat_ws(' ',r.carrier,r.route_label,r.description,(SELECT label FROM abasong.regions WHERE id=r.region_id))),lower($6))>0) AND ($7::date IS NULL OR CASE WHEN r.request_schema_version=2 THEN r.handoff_date=$7::date ELSE (r.starts_at<(($7::date+1)::timestamp AT TIME ZONE 'America/Los_Angeles') AND r.expires_at>($7::date::timestamp AT TIME ZONE 'America/Los_Angeles')) END) ORDER BY r.created_at DESC,r.id DESC LIMIT $8`,
           [
             a.userId,
             q.cursor ?? null,
@@ -685,12 +952,13 @@ export class RequestsService {
             filter.query ?? null,
             filter.day ?? null,
             q.limit + 1,
+            q.request_schema_version ?? 1,
           ],
         )
       ).rows;
       return {
         items: await Promise.all(
-          rows.slice(0, q.limit).map((r) => this.view(c, r)),
+          rows.slice(0, q.limit).map((r) => this.view(c, r, false)),
         ),
         next_cursor: rows.length > q.limit ? rows[q.limit - 1]!.id : null,
       };

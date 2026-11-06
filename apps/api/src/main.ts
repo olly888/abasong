@@ -113,7 +113,8 @@ async function main() {
   app.use((req: ApiRequest, res: Response, next: NextFunction) => {
     req.requestId = randomUUID();
     res.setHeader("X-Request-ID", req.requestId);
-    if (req.path.startsWith("/v1/")) res.setHeader("Cache-Control", "no-store");
+    if (req.path.startsWith("/v1/") || req.path.startsWith("/health/"))
+      res.setHeader("Cache-Control", "no-store");
     next();
   });
   if (runtime === "pilot-dev") app.use(cloudHttpProtection());

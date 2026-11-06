@@ -1,8 +1,14 @@
 # Abasong development status
 
-Updated 2026-11-05 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.34](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-05 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.35](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — R4-05 scoped local combined exit complete
+## Current delivery — R4-06 prepared contracts and local migrations complete
+
+Branch `codex/r4-06-delivery-contracts`, base822a9ecc / PR93 closure CI42177253758 SUCCESS. Added separate V2 two-scene/quantity/time/pickup models, strict input normalization, 0015/0016 incremental migrations and private address-version RLS/provenance checks. V1 endpoints remain strict and fenced from V2; R4-07 must connect transactions, applications, gaps, source snapshots and queries before enabling V2 routes. New address input distinguishes independent publisher text from Mapbox suggestions; provider-derived text also requires persistent licensing. No provider call or authorization from client declarations alone. Applied 0015 stays immutable; 0016 preserves unclassified history for owner audit without making it publishable.
+
+Final local engineering check76 files/429 tests, lint/types/build PASS. Isolated requests HTTP/PG315 PASS (5 upgrade groups,42 V2 storage/role checks plus V1/readiness regression), library295 and import124 PASS. Protected D0 now16 migrations/54 tables; local manifest16 checksums PASS. No cloud, qualification, external geocoding, dependency or native UI change; no new simulator/device acceptance claimed. Latest remote exact-head CI is tracked on this batch's PR, not inherited from PR93. See [R4-06 report](docs/technical/R4_06_两场景契约与迁移设计.md) and [machine evidence](docs/technical/R4_06_执行证据.json). Next: R4-07 service semantics; R4-08 native form/map/copy/navigation. B5/B6/release remain pending.
+
+## Previous delivery — R4-05 scoped local combined exit complete
 
 Branch `codex/r4-05-home-integration-acceptance`, base `7ac2d456739ea3fe04017ead1375bbf2d622d99d` / PR92 (CI42166384554 success). User authorized the planned R4-05 phase. Actual HomeApartmentContent integration exposed collaboration recenter clearing apartment reading, stale automatic mode return, public reading context lost on route blur, and Android carousel remount before native content layout. Fixed mode-specific recenter/resume, account-scoped public ID/viewport memory without code bodies, consumed home params, late-response guard and post-layout carousel alignment. DEV-only combined lab uses actual home/form/discovery components with memory data and synthetic foreground fixes.
 
@@ -38,7 +44,7 @@ Historical next step was R4-03 (now implemented above); latest documentation-onl
 |---|---|---|
 | Apartments | Continuous foreground location,200m discovery, independent carousel, search/highlight/house numbers, read states/feedback/contribution/correction; R4 distance contract and compact shared card components | Scoped R4-01/02 verified; unified direct address form R4-03 scoped native checks complete. R4-1 scoped local combined exit now complete; real-account/field evidence remains B6 |
 | Collaboration | Regional map/list/filter, minimum profiles, single availability interval, version/expiry | Common three-variant carousel, region query distinct from selection and camera memory scoped verified; two-scene pickup/date/quantity semantics remain R4-06 onward |
-| Publish/application | Actual local services, idempotency/version/source conversation/manual close | Warehouse full address and map/copy/navigation; exact/estimated/unknown; arrival/completion/expiry separation. New contracts/migration needed, not UI-only |
+| Publish/application | Actual local services, idempotency/version/source conversation/manual close | Warehouse full address and map/copy/navigation; exact/estimated/unknown; arrival/completion/expiry separation. R4-06 models/local migrations prepared; V2 service/native still R4-07/08, not UI-only |
 | Availability | Cross-midnight conversion and disabled short-circuit already implemented | Today/tomorrow interactions, clear end-date/cancel/errors; reuse for My switch |
 | Imports/correction/messages | Existing batch confirmation/retry, own correction/no normal withdrawal, message retry/read watermarks | Protect and adjust only affected target states; do not recreate services |
 | My/team | Minimal display name/bootstrap, old menu and organization linkage | New My grouping/switch, profile/experience/voluntary contacts, own minimal DSP team and source snapshots |
@@ -55,7 +61,7 @@ Documentation/task/link/JS syntax validation is recorded in [baseline report](de
 ## Next execution
 
 1. R4-01 distance code and R4-02 representative dual-native observations are complete. R4-03 direct contribution form is also scoped verified. R4-04 collaboration carousel/filter/camera and R4-05 scoped local combined exit are complete. Android two-group owner confirmation is recorded; these gestures do not need repeating.
-2. R4-06–10: versioned two-scene/pickup/quantity/date contracts and incremental migration, services/application semantics, native form/preview/details/navigation, availability interaction and dual-native exit.
+2. R4-06 contracts/local migrations are prepared and verified; V2 endpoints remain disabled. Next R4-07 services/application/gap/query semantics, then R4-08 native form/preview/details/navigation, R4-09 availability and R4-10 dual-native exit.
 3. R4-11–13: protect imports/correction/application/messages and close core differences with exact evidence, then B5 profile/My→own team→circle text/replies→private images→invitation.
 
 `development_ready=true` now authorizes controlled **R4-2 implementation** after scoped local R4-1 exit. It does not mean full product, physical field or release acceptance. `b5_ready=false`, `release_ready=false`. D14 is umbrella, D22 overlaps D05/D06, D23 overlaps D01; no duplicate counts. D19 cancelled, D24 apartment list P1.7-person usability can run alongside independent local tasks; real-account/KMS/push/independent bundle/physical and field evidence remain B6, not waived or claimed complete. Follow existing issue mapping; do not bulk merge open PRs or close tasks from this audit alone.

@@ -122,7 +122,7 @@ export class RequestsService {
   ): Promise<Row> {
     const r = (
       await c.query<Row>(
-        `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.id=$1 AND r.discarded_at IS NULL AND u.status='active' AND (r.publisher_id=$2 OR (r.status<>'draft' AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$2)))) ${lock ? "FOR UPDATE OF r" : ""}`,
+        `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.id=$1 AND r.request_schema_version=1 AND r.discarded_at IS NULL AND u.status='active' AND (r.publisher_id=$2 OR (r.status<>'draft' AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$2)))) ${lock ? "FOR UPDATE OF r" : ""}`,
         [id, a.userId],
       )
     ).rows[0];
@@ -675,7 +675,7 @@ export class RequestsService {
       if (q.cursor) await this.row(c, a, q.cursor, mine);
       const rows = (
         await c.query<Row>(
-          `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.discarded_at IS NULL AND u.status='active' AND ($2::uuid IS NULL OR (r.created_at,r.id)<(SELECT created_at,id FROM abasong.requests WHERE id=$2)) AND ${mine ? "r.publisher_id=$1" : "r.status='open' AND r.expires_at>now() AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$1))"} AND ($3::uuid IS NULL OR r.region_id=$3) AND ($4::text IS NULL OR r.kind=$4) AND ($5::text IS NULL OR lower(r.carrier)=lower($5)) AND ($6::text IS NULL OR strpos(lower(concat_ws(' ',r.carrier,r.route_label,r.description,(SELECT label FROM abasong.regions WHERE id=r.region_id))),lower($6))>0) AND ($7::date IS NULL OR (r.starts_at<(($7::date+1)::timestamp AT TIME ZONE 'America/Los_Angeles') AND r.expires_at>($7::date::timestamp AT TIME ZONE 'America/Los_Angeles'))) ORDER BY r.created_at DESC,r.id DESC LIMIT $8`,
+          `SELECT r.*,(r.status='open' AND r.expires_at<=now()) AS is_expired FROM abasong.requests r JOIN abasong.users u ON u.id=r.publisher_id WHERE r.request_schema_version=1 AND r.discarded_at IS NULL AND u.status='active' AND ($2::uuid IS NULL OR (r.created_at,r.id)<(SELECT created_at,id FROM abasong.requests WHERE id=$2)) AND ${mine ? "r.publisher_id=$1" : "r.status='open' AND r.expires_at>now() AND NOT EXISTS(SELECT 1 FROM abasong.blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=r.publisher_id) OR (b.blocker_id=r.publisher_id AND b.blocked_id=$1))"} AND ($3::uuid IS NULL OR r.region_id=$3) AND ($4::text IS NULL OR r.kind=$4) AND ($5::text IS NULL OR lower(r.carrier)=lower($5)) AND ($6::text IS NULL OR strpos(lower(concat_ws(' ',r.carrier,r.route_label,r.description,(SELECT label FROM abasong.regions WHERE id=r.region_id))),lower($6))>0) AND ($7::date IS NULL OR (r.starts_at<(($7::date+1)::timestamp AT TIME ZONE 'America/Los_Angeles') AND r.expires_at>($7::date::timestamp AT TIME ZONE 'America/Los_Angeles'))) ORDER BY r.created_at DESC,r.id DESC LIMIT $8`,
           [
             a.userId,
             q.cursor ?? null,

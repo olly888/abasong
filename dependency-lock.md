@@ -1,5 +1,7 @@
 # D0 依赖与运行时基线
 
+2026-11-05 R4-06：没有新增包、原生模块、SDK或锁文件变更。复用Node24 Intl处理America/Los_Angeles日期及23/25小时日边界；契约校验复用现有openapi-typescript。生成器新增只读`--json`路径仅需Python3标准库，不给CI增加PyYAML安装依赖；默认YAML生成仍沿用既有环境。0015新增一张受控仓库地址版本表，0016补齐地址文字持久来源，D0为16迁移/54表；V2模型本批准备、端点接通属于R4-07。未调用云库、地理供应商或新增付费资源。
+
 2026-11-04体验升级方案：保留现有RN/Expo/Mapbox、NestJS/PostGIS、KMS/outbox及令牌生成链。本轮仅文档，无安装/版本/锁文件变更；不引入H3、Redis、Kafka、微服务或新地图SDK。区域几何、全量发现、私人偏好和机会通知为后续明确增量，不因方案存在自动部署或开通付费。见[架构增量](docs/technical/V12.1_地图协作架构增量方案.md)。
 
 2026-11-04 B4：无新npm依赖/原生模块/字体/SDK/DDL，单一pnpm及Pods锁不变。复用现有Mapbox PointAnnotation、系统DateTimePicker/Switch、RN列表和Nest/pg/Zod。D0仍14迁移/53表；复用availability/availability_regions及公开Region display_point，不上传司机GPS。原生实际渲染现有开发壳＋新JS，不声称本批重编译二进制。

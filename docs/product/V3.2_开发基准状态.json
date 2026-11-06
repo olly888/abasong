@@ -375,6 +375,9 @@
     "public_share_receiver_deployed": false,
     "native_ui_changed": false,
     "new_native_acceptance": false,
-    "next_task": "R4-08"
+    "next_task": "R4-08",
+    "pull_request": "https://github.com/olly888/abasong/pull/95",
+    "ci_source": "https://github.com/olly888/abasong/pull/95/checks",
+    "validated_code_commit": "3ca40c7cd971349425f97123e479bc31e0c3da0f"
   }
 }

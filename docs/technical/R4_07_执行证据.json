@@ -58,11 +58,15 @@
     "secret_scan": {
       "status": "PASS_staged_Gitleaks",
       "command": ".tooling/security/gitleaks git . --pre-commit --staged --redact=100 --ignore-gitleaks-allow --no-banner",
-      "full_history": "pending_current_exact_HEAD_CI"
+      "full_history": "current_exact_HEAD_CI_at_PR95_checks"
     },
     "ci": {
-      "status": "pending_current_exact_HEAD",
-      "prior_PR94_green_is_current_proof": false
+      "status": "consult_latest_exact_HEAD_at_PR_checks",
+      "source": "https://github.com/olly888/abasong/pull/95/checks",
+      "code_commit": "3ca40c7cd971349425f97123e479bc31e0c3da0f",
+      "head_branch": "codex/r4-07-delivery-services",
+      "prior_PR94_green_is_current_proof": false,
+      "latest_head_results_recorded_in": "PR95 body"
     }
   },
   "migration_sha256": {
@@ -116,5 +120,7 @@
   "task_register_rows": 22,
   "human_participants": 0,
   "current_batch_complete": true,
-  "next_dependent_task": "R4-08"
+  "next_dependent_task": "R4-08",
+  "pull_request": "https://github.com/olly888/abasong/pull/95",
+  "validated_code_commit": "3ca40c7cd971349425f97123e479bc31e0c3da0f"
 }

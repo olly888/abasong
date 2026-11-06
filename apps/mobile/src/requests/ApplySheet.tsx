@@ -8,7 +8,10 @@ import { ActionButton, FormError } from "../auth/AuthControls";
 import { ApplicationFields } from "./ApplicationFields";
 import { dataRequest } from "../apartments/client";
 import { AccountError } from "../auth/api-client";
-import { localDateTime, laInstant, type DeliveryRequest } from "./presentation";
+import { type DeliveryRequest } from "./presentation";
+import { initialApplication, applicationInput } from "./application-input";
+import type { ContributionRequest } from "../apartments/contribution-address-search";
+import { useCallback } from "react";
 import { requestStyles as s, RequestSheet } from "./RequestUi";
 export function ApplySheet({
   request: r,
@@ -21,17 +24,51 @@ export function ApplySheet({
   onClose: () => void;
   onRefresh: () => void;
 }) {
-  const { session } = useAuth(),
-    initial = localDateTime(
-      new Date(
-        Math.max(Date.now() + 15 * 60000, Date.parse(r.starts_at ?? "")),
-      ).toISOString(),
-    );
+  const { session } = useAuth();
+  const transport: ContributionRequest = useCallback(
+    (path, options) => {
+      if (!session) return Promise.reject(new Error("请先登录"));
+      return dataRequest(session, path, options);
+    },
+    [session?.access_token],
+  );
+  return (
+    <ApplicationSheet
+      request={r}
+      regionLabel={regionLabel}
+      transport={transport}
+      onClose={onClose}
+      onRefresh={onRefresh}
+      onApplied={(result) => {
+        onClose();
+        onRefresh();
+        router.push({
+          pathname: "/conversations/[id]",
+          params: { id: result.conversation_id },
+        });
+      }}
+    />
+  );
+}
+export function ApplicationSheet({
+  request: r,
+  regionLabel,
+  transport,
+  onClose,
+  onRefresh,
+  onApplied,
+}: {
+  request: DeliveryRequest;
+  regionLabel?: string;
+  transport: ContributionRequest;
+  onClose: () => void;
+  onRefresh: () => void;
+  onApplied: (a: components["schemas"]["Application"]) => void;
+}) {
+  const initial = initialApplication(r);
   const [date, setDate] = useState(initial.date),
     [time, setTime] = useState(initial.time),
-    [capacity, setCapacity] = useState(
-      r.accepts_partial ? "" : String(r.remaining_parcels ?? ""),
-    ),
+    [capacity, setCapacity] = useState(initial.capacity),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
     [changed, setChanged] = useState(false);
@@ -46,33 +83,21 @@ export function ApplySheet({
     };
   }, []);
   async function apply() {
-    if (!session || lock.current) return;
+    if (lock.current) return;
     lock.current = true;
     setBusy(true);
     setError(null);
     try {
-      if (delivery && (!/^\d+$/.test(capacity) || Number(capacity) < 1))
-        throw new Error("请填写本次可接件数");
-      const body = {
-        expected_arrival_at: laInstant(date, time),
-        observed_request_version: r.version,
-        ...(delivery ? { capacity_parcels: Number(capacity) } : {}),
-      };
+      const body = applicationInput(r, date, time, capacity);
       const signature = JSON.stringify(body);
       if (attempt.current.signature !== signature)
         attempt.current = { signature, key: randomUUID() };
-      const result = await dataRequest<components["schemas"]["Application"]>(
-        session,
+      const result = await transport<components["schemas"]["Application"]>(
         `/v1/requests/${r.id}/applications`,
         { method: "POST", body, key: attempt.current.key },
       );
       if (!mounted.current) return;
-      onClose();
-      onRefresh();
-      router.push({
-        pathname: "/conversations/[id]",
-        params: { id: result.conversation_id },
-      });
+      onApplied(result);
     } catch (e) {
       if (
         mounted.current &&
@@ -95,7 +120,7 @@ export function ApplySheet({
         if (!lock.current) onClose();
       }}
     >
-      <Text style={s.headline}>{delivery ? "报名支援" : "我能帮忙"}</Text>
+      <Text style={s.headline}>{delivery ? "报名接活" : "我能帮忙"}</Text>
       <ApplicationFields
         request={r}
         regionLabel={regionLabel}

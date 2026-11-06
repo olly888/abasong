@@ -2,7 +2,13 @@ import { Text, View } from "react-native";
 import { tokens } from "@abasong/ui";
 import { Field } from "../auth/AuthControls";
 import { NativeDateField } from "../ui/NativeDateField";
-import { kindLabels, requestPrice, type DeliveryRequest } from "./presentation";
+import {
+  requestTitle,
+  requestQuantity,
+  requestPrice,
+  exactQuantity,
+  type DeliveryRequest,
+} from "./presentation";
 
 export function ApplicationFields({
   request: r,
@@ -39,7 +45,7 @@ export function ApplicationFields({
         <Text
           style={{ fontSize: 17, fontWeight: "600", color: tokens.color.ink }}
         >
-          {regionLabel || kindLabels[r.kind]}
+          {regionLabel || requestTitle(r)}
         </Text>
         {delivery ? (
           <>
@@ -69,7 +75,7 @@ export function ApplicationFields({
                 color: tokens.color.textSecondary,
               }}
             >
-              剩余 {r.remaining_parcels} 件
+              {requestQuantity(r)}
               {r.minimum_parcels ? ` · 最低 ${r.minimum_parcels} 件` : ""}
             </Text>
           </>
@@ -92,11 +98,17 @@ export function ApplicationFields({
       />
       {delivery ? (
         <Field
-          label={r.accepts_partial ? "本次可接件数" : "整批件数"}
+          label={
+            !exactQuantity(r)
+              ? "本次可接件数（选填）"
+              : r.accepts_partial
+                ? "本次可接件数"
+                : "整批件数"
+          }
           value={capacity}
           onChangeText={onCapacity}
           keyboardType="number-pad"
-          editable={!disabled && r.accepts_partial}
+          editable={!disabled && (r.accepts_partial || !exactQuantity(r))}
         />
       ) : null}
     </View>

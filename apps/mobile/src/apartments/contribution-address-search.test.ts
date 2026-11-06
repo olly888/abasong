@@ -7,6 +7,25 @@ import {
   type ContributionRequest,
 } from "./contribution-address-search";
 type S = components["schemas"];
+it("warehouse search uses only provider APIs and the selected suggestion session", async () => {
+  const request = vi.fn(async (path: string) =>
+    path.endsWith("/suggest")
+      ? { items: [suggestion], attribution: "TEST" }
+      : detail,
+  );
+  const search = createContributionAddressSearch(
+    request as ContributionRequest,
+    () => "TEST-session",
+    Date.now,
+    false,
+  );
+  const choices = (await search.search("2445"))!;
+  await search.retrieve({ kind: "address", suggestion }, choices);
+  expect(request.mock.calls.map(([p]) => p)).toEqual([
+    "/v1/search/addresses/suggest",
+    "/v1/search/addresses/retrieve",
+  ]);
+});
 const address = {
   address_line1: "2445 E Del Mar Blvd",
   city: "Pasadena",

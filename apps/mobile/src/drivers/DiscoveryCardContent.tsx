@@ -3,7 +3,8 @@ import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { typeStyles } from "../ui/foundation";
 import {
-  kindLabels,
+  requestTitle,
+  requestQuantity,
   requestPrice,
   requestTime,
 } from "../requests/presentation";
@@ -27,7 +28,7 @@ export function DiscoveryCardContent(p: {
     return (
       <View style={s.body}>
         <View style={s.row}>
-          <Text style={[typeStyles.metadata, s.tag]}>{kindLabels[r.kind]}</Text>
+          <Text style={[typeStyles.metadata, s.tag]}>{requestTitle(r)}</Text>
           <Text style={[typeStyles.metadata, s.shrink]}>
             {requestTime(r.starts_at)}
           </Text>
@@ -38,9 +39,7 @@ export function DiscoveryCardContent(p: {
         </View>
         {delivery ? (
           <Text style={typeStyles.body}>
-            {r.parcel_count !== null
-              ? `${r.remaining_parcels ?? r.parcel_count} 件`
-              : "件数联系确认"}
+            {requestQuantity(r)}
             {r.drivers_needed !== null
               ? ` · 需 ${r.remaining_drivers ?? r.drivers_needed} 人`
               : ""}

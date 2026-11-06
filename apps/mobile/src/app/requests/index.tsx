@@ -7,7 +7,7 @@ import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
 import { StatusPanel } from "../../ui/Feedback";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate, RequestCard } from "../../requests/RequestUi";
-import type { DeliveryRequest } from "../../requests/presentation";
+import type { DeliverySummary } from "../../requests/presentation";
 export default function Requests() {
   return (
     <RequestGate>
@@ -18,7 +18,7 @@ export default function Requests() {
 function List() {
   const { session } = useAuth(),
     mine = useLocalSearchParams<{ mine?: string }>().mine === "1";
-  const [rows, setRows] = useState<DeliveryRequest[]>([]),
+  const [rows, setRows] = useState<DeliverySummary[]>([]),
     [regions, setRegions] = useState<Record<string, string>>({}),
     [cursor, setCursor] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
@@ -31,9 +31,9 @@ function List() {
     setError(null);
     try {
       const [page, regionPage] = await Promise.all([
-        dataRequest<components["schemas"]["RequestPage"]>(
+        dataRequest<components["schemas"]["RequestPageV2"]>(
           session,
-          `/v1/${mine ? "me/" : ""}requests?limit=20${next ? "&cursor=" + encodeURIComponent(next) : ""}`,
+          `/v1/${mine ? "me/" : ""}requests?request_schema_version=2&limit=20${next ? "&cursor=" + encodeURIComponent(next) : ""}`,
           { signal },
         ),
         dataRequest<components["schemas"]["RegionPage"]>(
@@ -73,7 +73,7 @@ function List() {
     }, [session?.access_token, mine]),
   );
   return (
-    <AuthPage compact title={mine ? "我的发布" : "临时配送支援"}>
+    <AuthPage compact title={mine ? "我的发布" : "配送需求"}>
       <ActionButton
         label="＋ 发需求"
         onPress={() => router.push("/requests/new")}
@@ -93,7 +93,7 @@ function List() {
       {!busy && !error && !rows.length ? (
         <StatusPanel
           state="empty"
-          title={mine ? "还没有发布的需求" : "暂无开放的临时支援需求"}
+          title={mine ? "还没有发布的需求" : "暂无开放的配送需求"}
         />
       ) : null}
       <View style={{ gap: 12 }}>

@@ -1,5 +1,5 @@
 import type { components } from "@abasong/contracts";
-import type { DeliveryRequest } from "../requests/presentation";
+import type { DeliverySummary } from "../requests/presentation";
 import type { MapCameraSnapshot } from "../components/map-camera";
 type S = components["schemas"];
 export type SupportMode = "找活" | "找人";
@@ -10,7 +10,7 @@ export type Filters = {
   kind: string;
 };
 export type DiscoveryItem =
-  | { kind: "request"; request: DeliveryRequest }
+  | { kind: "request"; request: DeliverySummary }
   | { kind: "driver"; driver: S["Driver"] };
 export type DiscoveryView = {
   filters: Filters;
@@ -110,6 +110,7 @@ export function filterDiscovery(view: DiscoveryView, filters: Filters) {
 }
 export function discoveryPath(mode: SupportMode, f: Filters, cursor?: string) {
   const q = new URLSearchParams({ limit: "20" });
+  if (mode === "找活") q.set("request_schema_version", "2");
   if (f.region) q.set("region_id", f.region);
   if (f.text.trim())
     q.set(mode === "找活" ? "query" : "carrier", f.text.trim());

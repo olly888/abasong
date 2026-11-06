@@ -3,22 +3,26 @@ import { Text } from "react-native";
 import { Field, ActionButton, FormError } from "../auth/AuthControls";
 import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
-import type { DeliveryRequest } from "./presentation";
+import { AccountError } from "../auth/api-client";
+import { exactQuantity, isV2, type DeliveryRequest } from "./presentation";
 import { requestStyles as s, RequestSheet } from "./RequestUi";
 export function GapSheet({
   request: r,
   onClose,
   onSaved,
+  onRefresh,
 }: {
   request: DeliveryRequest;
   onClose: () => void;
   onSaved: (r: DeliveryRequest) => void;
+  onRefresh: () => void;
 }) {
   const { session } = useAuth(),
     [quantity, setQuantity] = useState(String(r.remaining_parcels ?? 0)),
     [drivers, setDrivers] = useState(String(r.remaining_drivers ?? 0)),
     [error, setError] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
+    [changed, setChanged] = useState(false),
     lock = useRef(false);
   const mounted = useRef(true);
   useEffect(() => {
@@ -45,7 +49,8 @@ export function GapSheet({
           method: "PATCH",
           body: {
             expected_version: r.version,
-            ...(r.parcel_count !== null
+            ...(isV2(r) ? { request_schema_version: 2 } : {}),
+            ...(exactQuantity(r) && r.parcel_count !== null
               ? { remaining_parcels: n(quantity) }
               : {}),
             ...(r.drivers_needed !== null
@@ -58,6 +63,12 @@ export function GapSheet({
       onSaved(result);
       onClose();
     } catch (e) {
+      if (
+        mounted.current &&
+        e instanceof AccountError &&
+        ["VERSION_CONFLICT", "REQUEST_ENDED"].includes(e.code)
+      )
+        setChanged(true);
       if (mounted.current)
         setError(e instanceof Error ? e.message : "缺口保存失败");
     } finally {
@@ -72,7 +83,7 @@ export function GapSheet({
       }}
     >
       <Text style={s.headline}>更新剩余缺口</Text>
-      {r.parcel_count !== null ? (
+      {exactQuantity(r) && r.parcel_count !== null ? (
         <Field
           label="剩余件数"
           value={quantity}
@@ -91,7 +102,21 @@ export function GapSheet({
         />
       ) : null}
       <FormError message={error} />
-      <ActionButton label="保存缺口" busy={busy} onPress={() => void save()} />
+      {changed ? (
+        <ActionButton
+          label="查看当前需求"
+          onPress={() => {
+            onClose();
+            onRefresh();
+          }}
+        />
+      ) : (
+        <ActionButton
+          label="保存缺口"
+          busy={busy}
+          onPress={() => void save()}
+        />
+      )}
       <ActionButton label="取消" secondary disabled={busy} onPress={onClose} />
     </RequestSheet>
   );

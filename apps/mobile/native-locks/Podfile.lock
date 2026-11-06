@@ -130,6 +130,8 @@ PODS:
     - ExpoModulesCore
   - ExpoAsset (58.0.19):
     - ExpoModulesCore
+  - ExpoClipboard (58.0.4):
+    - ExpoModulesCore
   - ExpoCrypto (58.0.7):
     - ExpoModulesCore
   - ExpoDomWebView (58.0.2):
@@ -2363,6 +2365,7 @@ DEPENDENCIES:
   - "expo-dev-menu-interface (from `../../../node_modules/.pnpm/expo-dev-menu-interface@58.0.1_expo@58.0.21/node_modules/expo-dev-menu-interface/ios`)"
   - "ExpoApplication (from `../../../node_modules/.pnpm/expo-application@58.1.2_expo@58.0.21/node_modules/expo-application/ios`)"
   - "ExpoAsset (from `../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios`)"
+  - "ExpoClipboard (from `../../../node_modules/.pnpm/expo-clipboard@58.0.4_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._d4c7e3a7257926110fef02f900d2f709/node_modules/expo-clipboard/ios`)"
   - "ExpoCrypto (from `../../../node_modules/.pnpm/expo-crypto@58.0.7_expo@58.0.21/node_modules/expo-crypto/ios`)"
   - "ExpoDomWebView (from `../../../node_modules/.pnpm/@expo+dom-webview@58.0.2_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._a76539e429313ec048a33d27eca11ecc/node_modules/@expo/dom-webview/ios`)"
   - "ExpoFileSystem (from `../../../node_modules/.pnpm/expo-file-system@58.0.13_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._f2f9e22a94091a38903293dfa24f5a53/node_modules/expo-file-system/ios/ExpoFileSystem.podspec`)"
@@ -2510,6 +2513,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-application@58.1.2_expo@58.0.21/node_modules/expo-application/ios"
   ExpoAsset:
     :path: "../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios"
+  ExpoClipboard:
+    :path: "../../../node_modules/.pnpm/expo-clipboard@58.0.4_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._d4c7e3a7257926110fef02f900d2f709/node_modules/expo-clipboard/ios"
   ExpoCrypto:
     :path: "../../../node_modules/.pnpm/expo-crypto@58.0.7_expo@58.0.21/node_modules/expo-crypto/ios"
   ExpoDomWebView:
@@ -2748,6 +2753,7 @@ SPEC CHECKSUMS:
   expo-dev-menu-interface: d304e400271187edf1534704a4a05dcc140076e2
   ExpoApplication: c83355b2f69f996b5d26b64fef39228e7f1e1208
   ExpoAsset: 9c966d4d2c67a13de7d449561558f782df1c1787
+  ExpoClipboard: 244adf0a38b60ec7105e217042dd266a722f5a5e
   ExpoCrypto: 33ede543a3747abbef071c3bd747135ccc4e4fd5
   ExpoDomWebView: b2a6d681b9d34c23b1f584321386ca8da1d36afb
   ExpoFileSystem: b619d80b490c53117a9a9c976021a4ce5a9da440

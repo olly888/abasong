@@ -4,7 +4,7 @@
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_09_implemented_automated_PASS_native_supplement_pending_unlock",
+  "scope": "R4_09_implemented_automated_PASS_ios_supplement_PASS_Android_owner_pending",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
@@ -418,7 +418,7 @@
     "evidence": "../technical/R4_09_执行证据.json",
     "branch": "codex/r4-09-availability-window",
     "base": "587b6c00b491049ff7a5ffff4fad79ffa8b72a1a",
-    "status": "implemented_native_supplement_pending_unlock",
+    "status": "implemented_ios_supplement_PASS_Android_owner_pending",
     "current_batch_complete": false,
     "engineering_files": 79,
     "engineering_tests": 470,
@@ -441,6 +441,7 @@
       "run_id": 42295105317,
       "head_sha": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
       "conclusion": "success"
-    }
+    },
+    "ios_native_supplement": "PASS_picker_cancel_dirty_cancel_save_retry_conflict_region_failure_expired_close"
   }
 }

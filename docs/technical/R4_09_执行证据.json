@@ -49,7 +49,14 @@
     "ios": [
       "today/tomorrow shifts both start and overnight end date; saved summary unchanged",
       "compact date/time rows and fixed operations observed",
-      "native end-date picker opens"
+      "native end-date picker opens",
+      "native date/time cancellation keeps values",
+      "dirty cancel continue keeps tomorrow/overnight dates; discard returns original saved period with0writes",
+      "first save fails retaining tomorrow draft, explicit retry succeeds with2attempts",
+      "409 disables stale form and requires confirmed reload; reads capacity80 and current date; subsequent save succeeds",
+      "region list failure still permits minimal close with1write",
+      "failed close keeps prior saved summary, explicit retry closes with2attempts",
+      "expired period initializes off and closes without renewing"
     ],
     "android": [
       "tomorrow shifts overnight end date; saved summary unchanged",
@@ -57,16 +64,24 @@
       "brand track/white native thumb observed"
     ],
     "pending": [
-      "native picker cancel",
-      "draft cancel",
-      "failed save retry",
-      "region failure minimal close",
-      "version conflict explicit reload"
+      "Android draft cancel / failed-save retry / version-conflict reload / region failure close"
     ],
-    "blocked_observation": "Mac locked; user unlock requested; no blocked gesture counted as pass",
+    "blocked_observation": "Android mirror click noWindowsAvailable; owner supplementary groups requested; iOS controls working",
     "physical_device_acceptance": false,
     "full_native_HTTP_combined_exit": "R4-10_pending",
-    "software_keyboard_matrix": "R4-10_pending"
+    "software_keyboard_matrix": "R4-10_pending",
+    "android_owner_requests": [
+      {
+        "scope": "dirty_cancel_and_failed_save_retry",
+        "status": "pending",
+        "source": "current_turn_async_supplement_question_1"
+      },
+      {
+        "scope": "version_conflict_reload_and_region_failure_close",
+        "status": "pending",
+        "source": "current_turn_async_supplement_question_2"
+      }
+    ]
   },
   "artifacts": [
     {
@@ -76,6 +91,14 @@
     {
       "path": "artifacts/r4-09/ios-current.png",
       "sha256": "53ab0759d69c501b3c6d9882caca13c1e72bce26b66d51636151f82c342b5757"
+    },
+    {
+      "path": "artifacts/r4-09/ios-close-failure.png",
+      "sha256": "5e2e3fbea2fcbfff245f308be95631ea18312a8a10f9637015516eed125f4aca"
+    },
+    {
+      "path": "artifacts/r4-09/ios-close-retry.png",
+      "sha256": "8c488e378ece8ecf61e8cd722e880645e1baf80ecbefd7c9384e5dd5b67cf65b"
     }
   ],
   "boundaries": {
@@ -107,5 +130,11 @@
   "pull_request": "https://github.com/olly888/abasong/pull/97",
   "validated_code_commit": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
   "code_diff_sha256": "54b267aa3487c53babc23cd8716d181716e194b1a03bed8cbbc83d86eed95a26",
-  "code_diff_command": "git diff --binary 587b6c00b491049ff7a5ffff4fad79ffa8b72a1a VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml"
+  "code_diff_command": "git diff --binary 587b6c00b491049ff7a5ffff4fad79ffa8b72a1a VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml",
+  "latest_document_closure_ci": {
+    "run_id": 42295772587,
+    "head_sha": "492e17ef8c02d80babe9f6ff35b3cfbd41caa157",
+    "status": "PASS"
+  },
+  "next_plan": "R4_10_本地原生业务组合验收方案.md"
 }

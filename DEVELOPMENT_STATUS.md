@@ -2,9 +2,11 @@
 
 Updated 2026-11-07 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.47](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B6-02 pilot upgrade and business acceptance
+## Current delivery — B6-03 independent iPhone pilot
 
-DevWest is at V12.0022 after all 13 authorized migrations. Fingerprints for the five existing business rows matched. All 57 business tables force RLS, and all three restricted runtime logins passed verified TLS and grant checks. The existing `us-west-1` API and worker run the exact scanned images from `cb8cde2`; both tasks and the API load balancer target are healthy, the new worker reached its database, and public live/ready probes return 200. Two-account business/KMS acceptance and the native field build are pending. Participant recruiting remains deferred at 0/7. See the [B6-02 execution record](docs/technical/B6-02_云内测升级预检.md).
+DevWest is at V12.0022 and the updated North California API and worker are healthy. B6-02 passed 23 live business checks with two distinct SMS-authenticated accounts, including contribution, cross-account read and feedback, owner correction, idempotent replay, and private library/import isolation. Five persisted envelopes matched the configured AWS KMS key. The two accounts were denied access after revocation. The synthetic objects were removed and the public sample and audit trail were retained. See the [B6-02 execution record](docs/technical/B6-02_云内测升级预检.md).
+
+The independent iPhone Release `com.abasong.pilot` compiled and passed signature verification. Its embedded business bundle contains the fixed HTTPS API and DevWest Auth endpoints. The current personal-team build uses local notifications without APNs. Its provisioning profile covers the previously tested iPhone 13 Pro, which is currently disconnected. Installation and cellular cold launch remain pending. Participant recruiting remains deferred at 0/7.
 
 ## Previous delivery — B6-01 test preparation
 

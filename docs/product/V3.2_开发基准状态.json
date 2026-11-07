@@ -255,18 +255,30 @@
     "authorized_images_received": 0
   },
   "b6_02": {
-    "status": "cloud_upgrade_runtime_verified_real_account_acceptance_pending",
+    "status": "real_two_account_kms_revocation_and_cleanup_verified",
     "preflight": "../technical/B6-02_云内测升级预检.md",
     "cloud_schema": "V12.0022",
     "candidate_schema": "V12.0022",
     "migrations_rehearsed": 13,
     "migrations_applied": 13,
     "cloud_runtime_verified": true,
-    "real_accounts_and_kms_verified": false
+    "real_accounts_and_kms_verified": true,
+    "live_business_checks": 23,
+    "post_revocation_accounts_denied": 2,
+    "synthetic_cleanup_verified": true
+  },
+  "b6_03": {
+    "status": "ios_signed_release_ready_awaiting_provisioned_device",
+    "ios_bundle_identifier": "com.abasong.pilot",
+    "ios_native_compiled": true,
+    "ios_signed": true,
+    "ios_installed": false,
+    "cellular_cold_launch_verified": false,
+    "remote_push_verified": false
   },
   "controlled_implementation": {
     "eligible_batches": [],
-    "next_task": "B6-02",
+    "next_task": "B6-03",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,

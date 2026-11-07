@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { withEntitlementsPlist } from "expo/config-plugins";
 export const PILOT_API = "https://api-dev.abasong.com";
 export const PILOT_AUTH = "https://mxlmemaunzoramgemiju.supabase.co";
 
@@ -47,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     };
   if (profile === "pilot-dev") {
     validatePilotEnvironment(process.env);
-    return {
+    const pilot: ExpoConfig = {
       ...base,
       scheme: "abasong-pilot",
       updates: { ...base.updates, enabled: false },
@@ -69,6 +70,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
       extra: { ...base.extra, buildEnvironment: "pilot-dev" },
     };
+    if (process.env.EXPO_PUBLIC_EXPO_PROJECT_ID) return pilot;
+    pilot.plugins = pilot.plugins?.map((plugin) =>
+      Array.isArray(plugin) && plugin[0] === "expo-notifications"
+        ? [plugin[0], { ...plugin[1], enableRemoteNotifications: false }]
+        : plugin,
+    );
+    // Non-clean prebuild can inherit the development app's APNs entitlement.
+    return withEntitlementsPlist(pilot, (config) => {
+      delete config.modResults["aps-environment"];
+      return config;
+    });
   }
   if (profile !== "field-review")
     throw new Error("Unknown Abasong build profile");

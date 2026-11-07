@@ -84,6 +84,17 @@ async function main() {
   try {
     prepared = true;
     run("./scripts/dev", prebuild);
+    const entitlements = JSON.parse(
+      run("plutil", [
+        "-convert",
+        "json",
+        "-o",
+        "-",
+        "apps/mobile/ios/Abasong/Abasong.entitlements",
+      ]),
+    );
+    if (Object.hasOwn(entitlements, "aps-environment"))
+      throw new Error("Unexpected APNs entitlement in local pilot build");
     const args = [
       "-workspace",
       "apps/mobile/ios/Abasong.xcworkspace",
@@ -185,6 +196,7 @@ async function main() {
         bundle_id: "com.abasong.pilot",
         app,
         embedded_business_js: true,
+        remote_push_configured: false,
         bundle_bytes: bundle.length,
         bundle_sha256: createHash("sha256").update(bundle).digest("hex"),
         fixed_https: PILOT_API,

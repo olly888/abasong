@@ -34,6 +34,16 @@ it("pilot uses separate identities, public cloud configuration and no cleartext 
     NSAllowsArbitraryLoads: false,
     NSAllowsLocalNetworking: false,
   });
+  expect(c.plugins).toContainEqual([
+    "expo-notifications",
+    expect.objectContaining({ enableRemoteNotifications: false }),
+  ]);
+  process.env.EXPO_PUBLIC_EXPO_PROJECT_ID =
+    "11111111-1111-4111-8111-111111111111";
+  expect(resolved().plugins).not.toContainEqual([
+    "expo-notifications",
+    expect.objectContaining({ enableRemoteNotifications: false }),
+  ]);
 });
 it("normal and field-review identities remain independent", () => {
   delete process.env.ABASONG_BUILD_PROFILE;

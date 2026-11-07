@@ -5,7 +5,14 @@ import {
   type ServerResponse,
 } from "node:http";
 import { randomBytes, randomUUID } from "node:crypto";
-import { readFileSync, writeFileSync, mkdirSync, chmodSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { parseEnv } from "node:util";
 import { resolve } from "node:path";
 import {
@@ -13,6 +20,7 @@ import {
   PILOT_API,
   validatePilotEnvironment,
 } from "../../apps/mobile/app.config";
+import { readAcceptanceSession } from "./pilot-admission";
 
 const origin = "http://127.0.0.1:8785";
 export function allowedLocalRequest(
@@ -116,6 +124,13 @@ async function upstream(
     throw new Error(`Upstream ${response.status}`);
   return JSON.parse(Buffer.from(bytes).toString());
 }
+function signedInUser(role: "A" | "B") {
+  try {
+    return readAcceptanceSession(role).user_id;
+  } catch {
+    return null;
+  }
+}
 function main() {
   if (process.argv.slice(2).join() !== "--start")
     throw new Error("Explicit local login start required");
@@ -130,19 +145,10 @@ function main() {
   const out = resolve(".tooling/cloud-runtime/acceptance");
   mkdirSync(out, { recursive: true, mode: 0o700 });
   chmodSync(out, 0o700);
-  const states = new Map<
-    string,
-    {
-      phone?: string;
-      sent?: number;
-      sends: number;
-      signed: boolean;
-      user?: string;
-    }
-  >([
-    ["A", { sends: 0, signed: false }],
-    ["B", { sends: 0, signed: false }],
-  ]);
+  const states: Record<
+    "A" | "B",
+    { phone?: string; sent?: number; sends: number }
+  > = { A: { sends: 0 }, B: { sends: 0 } };
   const expires = Date.now() + 3600000;
   let busy = false;
   const server = createServer(
@@ -177,8 +183,8 @@ function main() {
         if (req.method === "GET") {
           if (req.url === "/state") {
             reply(200, {
-              A: states.get("A")!.signed,
-              B: states.get("B")!.signed,
+              A: Boolean(signedInUser("A")),
+              B: Boolean(signedInUser("B")),
             });
             return;
           }
@@ -201,8 +207,8 @@ function main() {
           const body = await jsonBody(req),
             role = body.account;
           if (role !== "A" && role !== "B") throw new Error("Account required");
-          const state = states.get(role)!;
-          if (state.signed) throw new Error("Already signed");
+          const state = states[role];
+          if (signedInUser(role)) throw new Error("Already signed");
           if (req.url === "/send") {
             if (
               Object.keys(body).sort().join() !== "account,phone" ||
@@ -235,11 +241,7 @@ function main() {
                 type: "sms",
               }),
             );
-            if (
-              [...states.values()].some(
-                (s) => s.signed && s.user === verified.user_id,
-              )
-            )
+            if (signedInUser(role === "A" ? "B" : "A") === verified.user_id)
               throw new Error("Two different accounts required");
             const me = await upstream(
               PILOT_API + "/v1/me/bootstrap",
@@ -253,13 +255,17 @@ function main() {
               !me.profile
             )
               throw new Error("Business identity mismatch");
-            writeFileSync(
-              resolve(out, `account-${role}.json`),
-              JSON.stringify(verified),
-              { mode: 0o600, flag: "wx" },
-            );
-            state.signed = true;
-            state.user = verified.user_id;
+            const staged = resolve(out, `account-${role}.${randomUUID()}.tmp`);
+            writeFileSync(staged, JSON.stringify(verified), {
+              mode: 0o600,
+              flag: "wx",
+            });
+            try {
+              renameSync(staged, resolve(out, `account-${role}.json`));
+            } finally {
+              rmSync(staged, { force: true });
+            }
+            state.sends = 0;
             delete state.phone;
             reply(200, { ok: true });
           }

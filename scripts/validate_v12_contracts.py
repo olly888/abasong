@@ -35,8 +35,14 @@ for path,method,op in operations:
         for status,response in op['responses'].items():
             if status.startswith('2'):assert 'Cache-Control' in response['headers']
     if method in ('post','put','patch') and 'requestBody' in op:
-        name=op['requestBody']['content']['application/json']['schema']['$ref'].split('/')[-1]
-        assert closed_input(contract['components']['schemas'][name]),name
+        content=op['requestBody']['content']
+        if op['operationId']=='uploadCircleMedia':
+            assert set(content)=={'application/octet-stream'}
+            assert content['application/octet-stream']['schema']=={'type':'string','format':'binary'}
+            assert op['requestBody']['required'] and {'410','413'}.issubset(op['responses'])
+        else:
+            name=content['application/json']['schema']['$ref'].split('/')[-1]
+            assert closed_input(contract['components']['schemas'][name]),name
 for forbidden in ('/payments','/wallet','/settlement','/pod','/handoff/confirm','/dispatch'):
     assert not any(forbidden in path for path in contract['paths'])
 for n in ('AccessRecord','Apartment','Request','Profile','Message','Driver'):
@@ -46,6 +52,17 @@ assert contract['components']['schemas']['ProfilePatch']['properties']['experien
 assert 'source' not in contract['components']['schemas']['ExperienceInput']['properties']
 assert 'client_event_id' in contract['components']['schemas']['FeedbackInput']['required']
 assert contract['info']['version']=='12.1.0'
+media_read=next(op for _,_,op in operations if op['operationId']=='readCircleMedia')['responses']['200']
+assert set(media_read['content'])=={'image/jpeg'}
+assert media_read['headers']['Cache-Control']['schema']['enum']==['private, no-store']
+media_ids=contract['components']['schemas']['PostInput']['properties']['media_ids']
+assert media_ids['maxItems']==3 and media_ids['uniqueItems']
+assert set(contract['components']['schemas']['CommentInput']['properties'])=={'body'}
+media_sql=(ROOT/'database/migrations/0022_circle_media.sql').read_text()
+media_parsed=parse_sql(media_sql)
+assert {stmt.stmt.relation.relname for stmt in media_parsed if isinstance(stmt.stmt,ast.CreateStmt)}=={'circle_media'}
+assert "'V12.0022'" in media_sql and 'FORCE ROW LEVEL SECURITY' in media_sql
+
 for name in ('RequestDraftInput','RequestPatch','Request','RequestVersion','PublicRequestSummary'):
     assert not {'engagement_type','training_available','trial_policy','trial_terms','cooperation_schedule','start_arrangement'}.intersection(contract['components']['schemas'][name]['properties'])
 assert 'expected_arrival_at' in contract['components']['schemas']['ApplyInput']['required']
@@ -140,7 +157,7 @@ for path in mds:
         link=unquote(urlsplit(link).path) if not link.startswith(('http://','https://','mailto:')) else link
         if link and not link.startswith(('http://','https://','mailto:')) and not (path.parent/link).exists():missing.append([str(path.relative_to(ROOT)),link])
 assert not missing,missing
-result={'date':'2026-11-06','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0009':{'top_level_parse':'passed','statements':len(kms_parsed),'database_execution':'see A2 isolated KMS service verification'},
+result={'date':'2026-11-06','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0022':{'top_level_parse':'passed','statements':len(media_parsed),'database_execution':'see B5-04 isolated media verification'},'incremental_migration_0009':{'top_level_parse':'passed','statements':len(kms_parsed),'database_execution':'see A2 isolated KMS service verification'},
         'incremental_migration_0008':{'top_level_parse':'passed','statements':len(source_parsed),'database_execution':'see D1 contribution source verification record'},'incremental_migration_0007':{'top_level_parse':'passed','statements':len(nearby_parsed),'database_execution':'see D1 nearby cards verification record'},'incremental_migration_0006':{'top_level_parse':'passed','statements':len(direct_parsed),'database_execution':'see D1 direct contribution verification record'},'incremental_migration_0005':{'top_level_parse':'passed','statements':len(arrival_parsed),'database_execution':'see D1 home arrival verification record'},'incremental_migration_0004':{'top_level_parse':'passed','statements':len(batch_parsed),'database_execution':'see D1 import batch verification record'},'incremental_migration_0003':{'top_level_parse':'passed','statements':len(spatial_parsed),'database_execution':'see D1 arrival verification record'},'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed_current_documents_archival_snapshots_excluded','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
 (ROOT/'docs/technical/V12_静态校验结果.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(result,ensure_ascii=False,indent=2))

@@ -1,3 +1,4 @@
+import type { BusinessRequestOptions } from "../profile/profile-session";
 import { Platform } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../auth/supabase";
@@ -48,12 +49,7 @@ async function boundedRefresh<T>(
 export async function dataRequest<T>(
   session: Session,
   path: string,
-  options: {
-    method?: string;
-    body?: unknown;
-    key?: string;
-    signal?: AbortSignal;
-  } = {},
+  options: BusinessRequestOptions = {},
 ): Promise<T> {
   if (!__DEV__ && !base.startsWith("https://"))
     throw new AccountError(503, "API_NOT_CONFIGURED", "资料服务暂不可用");
@@ -65,24 +61,41 @@ export async function dataRequest<T>(
       abort = () => controller.abort();
     options.signal?.addEventListener("abort", abort, { once: true });
     if (options.signal?.aborted) abort();
-    const timer = setTimeout(() => {
-      timedOut = true;
-      abort();
-    }, 10000);
+    const timer = setTimeout(
+      () => {
+        timedOut = true;
+        abort();
+      },
+      options.raw ? 25000 : 10000,
+    );
     try {
-      const response = await fetch(base + path, {
+      const transport =
+        (options.raw || options.acceptJpeg) && Platform.OS !== "web"
+          ? (await import("expo/fetch")).fetch
+          : fetch;
+      const response = await transport(base + path, {
         method: options.method ?? "GET",
         headers: {
           Authorization: `Bearer ${token}`,
-          ...(options.body !== undefined
-            ? { "Content-Type": "application/json" }
-            : {}),
+          ...(options.raw
+            ? { "Content-Type": "application/octet-stream" }
+            : options.body !== undefined
+              ? { "Content-Type": "application/json" }
+              : {}),
           ...(options.key ? { "Idempotency-Key": options.key } : {}),
         },
         body:
-          options.body === undefined ? undefined : JSON.stringify(options.body),
+          options.raw ??
+          (options.body === undefined
+            ? undefined
+            : JSON.stringify(options.body)),
         signal: controller.signal,
       });
+      if (response.ok && options.acceptJpeg) {
+        if (response.headers.get("Content-Type") !== "image/jpeg")
+          throw new AccountError(503, "MEDIA_UNAVAILABLE", "图片暂时无法加载");
+        return (await response.arrayBuffer()) as T;
+      }
       const value = await response.json();
       if (!response.ok)
         throw new AccountError(

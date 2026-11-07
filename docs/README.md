@@ -1,8 +1,8 @@
 # Abasong 研发文档入口
 
-更新 2026-11-06。当前按[总计划 1.45](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-03 司机圈文字动态、回复与通知](technical/B5_03_司机圈文字动态回复与通知实施验收.md)已完成隔离 API、权限及双端代表场景；本机 D0 为 21 次迁移、56 张表。下一批 B5-04 私有图片。云端与发布条件按后续验收执行。
+更新 2026-11-06。当前按[总计划 1.46](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-04 司机圈私有图片](technical/B5_04_司机圈私有图片实施验收.md)已接入选图、拍照、上传重试和鉴权阅读。本地 D0 为 22 次迁移、57 张表。下一批 B5-05 邀请司机。
 
-[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。文档收尾不改代码指纹，最新提交仍查[PR102 Checks](https://github.com/olly888/abasong/pull/102/checks)。D0为19迁移55表，无云变更；真实观察0/7，云业务KMS/两真实账号/推送/独立包/真实图质量及物理现场仍B6。
+[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。真人观察仍为 0/7。云业务、真实推送、独立包和现场验收按 B6 推进。
 
 原型入口：[首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)、[两场景发布](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[我的](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=me)。产品确认只覆盖主要体验，原型图不代表App已更新。当前和目标依据[可开发基准](Abasong_V3.2_可开发与可验收基线.md)；之前全文保留在[审查前档案](archive/app-alignment-audit-20261105/README.md)。
 

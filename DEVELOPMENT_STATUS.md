@@ -1,8 +1,12 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.45](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.46](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B5-03 scoped local driver circle
+## Current delivery — B5-04 scoped local private driver circle images
+
+Branch `codex/b5-04-circle-photos`, base `bfa1979` / PR104. C01–03/G03 now support 0–3 ordered photos, picker/camera, local preview, retry, and authenticated post image reads. Replies remain text. Local migration 0022 brings D0 to 22 versions / 57 forced-RLS tables. Engineering 500 and isolated HTTP/PG 620 checks pass, including 41 media HTTP checks. Native iOS and Android representative flows used synthetic photos and the existing dev containers. Physical camera, two-finger gesture checks and actual cloud storage remain separate. [Report](docs/technical/B5_04_司机圈私有图片实施验收.md). Next: B5-05 invitations.
+
+## Previous delivery — B5-03 scoped local driver circle
 
 Branch `codex/b5-03-circle-text`, base `c7d5906` / PR103. Native text feed, posts, replies, existing Inbox notifications, own deletion, reports and block controls are connected to the authenticated API. Local D0 now has 21 migrations / 56 forced-RLS tables. iOS and Android simulator verification used isolated HTTP/PG and two synthetic actors, including response-loss retries in both directions and removal of inaccessible notices. Fixture cleanup verified 0 databases / 0 roles. Engineering 500, requests 577, library 295 and import 124 checks pass. [Implementation and scoped evidence](docs/technical/B5_03_司机圈文字动态回复与通知实施验收.md). Next: B5-04 private post images. B6 external delivery and human testing remain separate.
 

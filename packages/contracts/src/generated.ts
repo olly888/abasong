@@ -1003,11 +1003,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 互助文字与同ID需求卡 */
+        /** 互助文字、受控图片与同ID需求卡 */
         get: operations["listPosts"];
         put?: never;
-        /** 创建文字动态；不许夹带门码/住户信息 */
+        /** 创建文字动态及最多3张本人已上传图片；不许夹带门码/住户信息 */
         post: operations["createPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/circle-media/{upload_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 本人上传单张静态图片，最多5 MiB，编号重试复用；返回内部媒体ID与有效期 */
+        put: operations["uploadCircleMedia"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/posts/{post_id}/media/{media_id}/{variant}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 每次检查动态、图片绑定和双向屏蔽后返回JPEG */
+        get: operations["readCircleMedia"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2336,6 +2370,21 @@ export interface components {
             region_id?: string;
             /** @enum {string} */
             topic?: "delivery_question" | "experience" | "on_the_road";
+            media_ids?: string[];
+        };
+        CircleMedia: {
+            /** Format: uuid */
+            id: string;
+            width: number;
+            height: number;
+        };
+        CircleMediaUpload: {
+            /** Format: uuid */
+            id: string;
+            width: number;
+            height: number;
+            /** Format: date-time */
+            expires_at: string;
         };
         CircleAuthor: {
             /** Format: uuid */
@@ -2390,6 +2439,7 @@ export interface components {
             region: components["schemas"]["ProfileRegion"] | (never | null);
             has_request: boolean;
             request: components["schemas"]["CircleRequestSummary"] | (never | null);
+            media: components["schemas"]["CircleMedia"][];
             reply_count: number;
             /** Format: date-time */
             created_at: string;
@@ -10742,6 +10792,226 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Post"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    uploadCircleMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CircleMediaUpload"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 待发布上传已过期 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 图片超过5 MiB */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    readCircleMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+                media_id: string;
+                variant: "thumb" | "full";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
                 };
             };
             /** @description 输入或跨字段约束错误 */

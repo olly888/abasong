@@ -4,15 +4,20 @@
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
-    "paths": 94,
-    "operations": 119,
-    "schemas": 172,
+    "paths": 96,
+    "operations": 121,
+    "schemas": 174,
     "spec_validation": "passed"
   },
   "sql": {
     "top_level_parse": "passed",
     "statements": 79,
     "tables": 45,
+    "incremental_migration_0022": {
+      "top_level_parse": "passed",
+      "statements": 13,
+      "database_execution": "see B5-04 isolated media verification"
+    },
     "incremental_migration_0009": {
       "top_level_parse": "passed",
       "statements": 7,

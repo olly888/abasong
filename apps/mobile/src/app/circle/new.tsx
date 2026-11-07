@@ -9,6 +9,7 @@ function Composer() {
   const request = useBusinessRequest();
   return session ? (
     <CircleComposer
+      key={session.user.id}
       request={request}
       actor={session.user.id}
       onBack={backToCircle}

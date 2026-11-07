@@ -112,12 +112,14 @@ obj('ReadInput',{'last_read_sequence':integer(0)},['last_read_sequence'])
 obj('ContactInput',{'private_note':string(300)})
 out('Contact',{'profile':ref('Profile'),'private_note':string(300,nullable=True)})
 circle_topic=enum('delivery_question','experience','on_the_road')
-obj('PostInput',{'body':string(2000,minLength=1),'request_id':uid,'region_id':uid,'topic':circle_topic},['body'])
+obj('PostInput',{'body':string(2000,minLength=1),'request_id':uid,'region_id':uid,'topic':circle_topic,'media_ids':{**arr(uid),'maxItems':3,'uniqueItems':True}},['body'])
+out('CircleMedia',{'id':uid,'width':integer(1,maximum=2048),'height':integer(1,maximum=2048)})
+out('CircleMediaUpload',{**S['CircleMedia']['properties'],'expires_at':dt})
 out('CircleAuthor',{'user_id':uid,'display_name':string(60)})
 out('BlockedUser',{'user_id':uid,'display_name':string(60),'created_at':dt})
 page('BlockedUserPage','BlockedUser')
 out('CircleRequestSummary',{'id':uid,'kind':S['Request']['properties']['kind'],'status':S['Request']['properties']['status'],'scenario':dict(enum('warehouse_shortage','delivery_handoff'),nullable=True),'region_label':string(120,nullable=True),'pickup_region_label':string(120,nullable=True),'price_unit':S['Request']['properties']['price_unit'],'price_cents':integer(0,nullable=True),'starts_at':nullable_dt,'handoff_date':{'type':'string','format':'date','nullable':True},'handoff_mode':dict(enum('asap','scheduled'),nullable=True),'quantity_mode':dict(enum('exact','estimate','unknown'),nullable=True),'parcel_count':integer(0,nullable=True),'drivers_needed':integer(0,nullable=True),'remaining_parcels':integer(0,nullable=True),'remaining_drivers':integer(0,nullable=True)})
-out('Post',{'id':uid,'author':ref('CircleAuthor'),'body':string(2000),'topic':dict(circle_topic,nullable=True),'region':{'allOf':[ref('ProfileRegion')],'nullable':True},'has_request':boolean,'request':{'allOf':[ref('CircleRequestSummary')],'nullable':True},'reply_count':integer(0),'created_at':dt})
+out('Post',{'id':uid,'author':ref('CircleAuthor'),'body':string(2000),'topic':dict(circle_topic,nullable=True),'region':{'allOf':[ref('ProfileRegion')],'nullable':True},'has_request':boolean,'request':{'allOf':[ref('CircleRequestSummary')],'nullable':True},'media':{**arr(ref('CircleMedia')),'maxItems':3},'reply_count':integer(0),'created_at':dt})
 obj('CommentInput',{'body':string(1000,minLength=1)},['body'])
 out('Comment',{'id':uid,'post_id':uid,'author':ref('CircleAuthor'),'body':string(1000),'created_at':dt})
 out('Notification',{'id':uid,'kind':string(80),'object_type':string(60),'object_id':uid,'read_at':nullable_dt,'created_at':dt})
@@ -268,8 +270,20 @@ op('/v1/me/contacts/{user_id}','delete','deleteContact','删除本人常联系')
 op('/v1/me/blocks','get','listBlockedUsers','仅返回本人屏蔽的账号与最小显示信息','BlockedUserPage',list_query=True)
 op('/v1/me/blocks/{user_id}','put','blockUser','本人屏蔽；阻止新私聊/报名/通知')
 op('/v1/me/blocks/{user_id}','delete','unblockUser','解除本人屏蔽')
-op('/v1/posts','get','listPosts','互助文字与同ID需求卡','PostPage',list_query=True)
-op('/v1/posts','post','createPost','创建文字动态；不许夹带门码/住户信息','Post','PostInput',code=201,idem=True)
+op('/v1/posts','get','listPosts','互助文字、受控图片与同ID需求卡','PostPage',list_query=True)
+op('/v1/posts','post','createPost','创建文字动态及最多3张本人已上传图片；不许夹带门码/住户信息','Post','PostInput',code=201,idem=True)
+media_upload='/v1/me/circle-media/{upload_id}'
+op(media_upload,'put','uploadCircleMedia','本人上传单张静态图片，最多5 MiB，编号重试复用；返回内部媒体ID与有效期','CircleMediaUpload',sensitive=True)
+upload_op=paths[media_upload]['put']
+upload_op['requestBody']={'required':True,'content':{'application/octet-stream':{'schema':{'type':'string','format':'binary'}}}}
+for status,description in [('410','待发布上传已过期'),('413','图片超过5 MiB')]:
+ upload_op['responses'][status]={'description':description,'content':{'application/json':{'schema':ref('Error')}}}
+media_read='/v1/posts/{post_id}/media/{media_id}/{variant}'
+op(media_read,'get','readCircleMedia','每次检查动态、图片绑定和双向屏蔽后返回JPEG','CircleMedia',sensitive=True)
+read_op=paths[media_read]['get']
+read_op['parameters'][-1]['schema']=enum('thumb','full')
+read_op['responses']['200']['content']={'image/jpeg':{'schema':{'type':'string','format':'binary'}}}
+read_op['responses']['200']['headers']['Cache-Control']['schema']['enum']=['private, no-store']
 op('/v1/posts/{post_id}','get','getPost','可见动态详情；引用需求按当前权限返回','Post')
 op('/v1/posts/{post_id}','delete','removePost','仅作者软删除；重复删除同一对象安全')
 op('/v1/posts/{post_id}/comments','get','listComments','可见动态基础回复','CommentPage',list_query=True)

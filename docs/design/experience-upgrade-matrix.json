@@ -368,7 +368,8 @@
         "UX12"
       ],
       "implementation_dependency": "D15_D17_private_media_upload_read_lifecycle",
-      "prototype_status": "photos_implemented_synthetic_native_pending",
+      "prototype_status": "photos_implemented_synthetic",
+      "app_status": "B5_04_scoped_local_private_media_dual_native_verified",
       "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {

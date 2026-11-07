@@ -3,7 +3,16 @@ import { createServer, type IncomingMessage } from "node:http";
 import { once } from "node:events";
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
-import { readFileSync, readdirSync, mkdirSync, writeFileSync } from "node:fs";
+import {
+  readFileSync,
+  readdirSync,
+  mkdirSync,
+  writeFileSync,
+  mkdtempSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { parseEnv } from "node:util";
 import { setTimeout as pause } from "node:timers/promises";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
@@ -112,9 +121,13 @@ async function main() {
     createdRole = false,
     stopping = false;
   let lifetime: ReturnType<typeof setTimeout> | undefined;
+  const mediaDir =
+    scenario === "circle"
+      ? mkdtempSync(join(tmpdir(), "abasong-circle-native-"))
+      : undefined;
   const artifactBatch =
     scenario === "circle"
-      ? "b5-03"
+      ? "b5-04"
       : verify === "team"
         ? "b5-02"
         : verify === "profile"
@@ -149,7 +162,7 @@ async function main() {
   };
   const port = 3028;
   let apiPort = 0;
-  let fault: { operation: string; after: boolean } | null = null;
+  let fault: { operation: string; after: boolean; skip: number } | null = null;
   const tokens: Record<string, string> = {};
   const broker = createServer(async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
@@ -268,11 +281,17 @@ async function main() {
             "profile",
             "team",
             "circle_post",
+            "circle_upload",
+            "circle_image",
             "circle_reply",
             "availability",
           ].includes(String(b.operation))
         ) {
-          fault = { operation: String(b.operation), after: b.after === true };
+          fault = {
+            operation: String(b.operation),
+            after: b.after === true,
+            skip: b.skip === 1 ? 1 : 0,
+          };
           return reply(200, { armed: true });
         }
         if (
@@ -334,8 +353,10 @@ async function main() {
         return reply(401, { code: "TEST_ACTOR_REQUIRED" });
       const hit =
         fault && fixtureFaultMatch(fault.operation, req.method!, req.url!);
-      const activeFault = hit ? fault : null;
-      if (hit) fault = null;
+      const activeFault = hit && fault?.skip === 0 ? fault : null;
+      if (activeFault) fault = null;
+      else if (hit && fault) fault.skip--;
+      const binary = req.headers["content-type"] === "application/octet-stream";
       const lost = () =>
         reply(503, {
           code: "TEST_RESPONSE_UNCONFIRMED",
@@ -344,12 +365,16 @@ async function main() {
       if (activeFault && !activeFault.after) return lost();
       const payload = ["GET", "HEAD"].includes(req.method!)
         ? undefined
-        : await body(req);
+        : binary
+          ? await readBody(req, 5 * 1024 * 1024)
+          : await body(req);
       const response = await fetch(`http://127.0.0.1:${apiPort}` + req.url, {
         method: req.method,
         headers: {
           Authorization: "Bearer " + tokens[actor],
-          "Content-Type": "application/json",
+          "Content-Type": binary
+            ? "application/octet-stream"
+            : "application/json",
           ...(req.headers["idempotency-key"]
             ? { "Idempotency-Key": String(req.headers["idempotency-key"]) }
             : {}),
@@ -357,9 +382,13 @@ async function main() {
         body: payload,
         signal: AbortSignal.timeout(12000),
       });
-      const value = await response.text();
+      const value = Buffer.from(await response.arrayBuffer());
       if (activeFault && response.ok) return lost();
-      res.writeHead(response.status);
+      res.writeHead(response.status, {
+        "Content-Type":
+          response.headers.get("content-type") ?? "application/json",
+        "Cache-Control": "no-store",
+      });
       res.end(value);
     } catch {
       reply(503, {
@@ -392,6 +421,7 @@ async function main() {
       await admin.query(`DROP ROLE ${role}`);
     }
     await admin.end();
+    if (mediaDir) rmSync(mediaDir, { recursive: true, force: true });
     recordResources(true);
     console.log(
       "Native TEST fixture stopped; disposable database/role cleaned.",
@@ -467,6 +497,7 @@ async function main() {
           ...process.env,
           ...env,
           NODE_ENV: "test",
+          ...(mediaDir ? { CIRCLE_MEDIA_DIRECTORY: mediaDir } : {}),
           ABASONG_ENV: "test",
           DATA_ENCRYPTION_PROVIDER: "local-development",
           LOCAL_DATA_KEK: randomBytes(32).toString("hex"),
@@ -557,15 +588,18 @@ async function main() {
   }
 }
 async function body(req: IncomingMessage) {
+  return (await readBody(req, 32768)).toString("utf8");
+}
+async function readBody(req: IncomingMessage, limit: number) {
   const parts: Buffer[] = [];
   let size = 0;
   for await (const chunk of req) {
     const bytes = Buffer.from(chunk);
     size += bytes.length;
-    if (size > 32768) throw new Error("body too large");
+    if (size > limit) throw new Error("body too large");
     parts.push(bytes);
   }
-  return Buffer.concat(parts).toString("utf8");
+  return Buffer.concat(parts);
 }
 void main().catch(() => {
   console.error("Native TEST fixture failed; private details omitted.");

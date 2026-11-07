@@ -17,12 +17,19 @@ export function fixtureRequestAllowed(
   )
     return false;
   if (!["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method)) return false;
+  const [pathname] = path.split("?");
+  const binaryUpload =
+    scenario === "circle" &&
+    method === "PUT" &&
+    /^\/v1\/me\/circle-media\/[a-f0-9-]{36}$/.test(pathname ?? "");
+  if (binaryUpload && h["content-type"] !== "application/octet-stream")
+    return false;
   if (
+    !binaryUpload &&
     method !== "GET" &&
     !String(h["content-type"]).startsWith("application/json")
   )
     return false;
-  const [pathname] = path.split("?");
   const deliveryPath =
     /^\/v1\/(requests|regions|drivers|conversations|applications)(\/[a-z0-9-]+)*$/i.test(
       pathname ?? "",
@@ -38,6 +45,7 @@ export function fixtureRequestAllowed(
       pathname ?? "",
     );
   const circlePath =
+    binaryUpload ||
     /^\/v1\/(posts|comments|reports)(\/[a-z0-9-]+)*$/.test(pathname ?? "") ||
     /^\/v1\/me\/(posts|notifications|inbox-summary|blocks)(\/[a-z0-9-]+)*$/.test(
       pathname ?? "",
@@ -79,6 +87,15 @@ export function fixtureFaultMatch(
     return method === "PATCH" && path === "/v1/me/profile";
   if (operation === "availability")
     return method === "PUT" && path === "/v1/me/availability";
+  if (operation === "circle_upload")
+    return (
+      method === "PUT" && /^\/v1\/me\/circle-media\/[a-f0-9-]{36}$/.test(path)
+    );
+  if (operation === "circle_image")
+    return (
+      method === "GET" &&
+      /^\/v1\/posts\/[a-f0-9-]{36}\/media\/[a-f0-9-]{36}\/full$/.test(path)
+    );
   if (method !== "POST") return false;
   if (operation === "circle_post") return path === "/v1/posts";
   if (operation === "circle_reply")

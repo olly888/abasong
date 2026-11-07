@@ -5,14 +5,17 @@ export type ProfileFields = Omit<
   S["ProfilePatch"],
   "expected_version" | "close_availability_expected_version"
 >;
+export type BusinessRequestOptions = {
+  method?: string;
+  body?: unknown;
+  key?: string;
+  signal?: AbortSignal;
+  raw?: ArrayBuffer;
+  acceptJpeg?: boolean;
+};
 export type ProfileRequest = <T>(
   path: string,
-  options?: {
-    method?: string;
-    body?: unknown;
-    key?: string;
-    signal?: AbortSignal;
-  },
+  options?: BusinessRequestOptions,
 ) => Promise<T>;
 export const profileFields = (p: SelfProfile): ProfileFields => ({
   display_name: p.profile.display_name,

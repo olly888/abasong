@@ -2,7 +2,11 @@
 
 Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.47](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B5-05 scoped local driver invitation
+## Current delivery — B6-01 test preparation
+
+The [B6-01 facilitator pack](docs/usability/B6-01_可用性与现场测试执行包.md) is ready with recruitment copy, public sites, and separate field and OCR sheets. The 390px prototype home rendered successfully and both pilot-dev health endpoints returned HTTP 200. Participant sessions are 0/7, field trials are 0 and authorized screenshot intake is 0. Start with one driver and one DSP. Business-device preflight and admission are still required before scheduling the full door-side flow.
+
+## Previous delivery — B5-05 scoped local driver invitation
 
 Branch `codex/b5-05-driver-invite`, base `fa3787f` / PR105. My → Invite Driver, save-only photos, system sharing, copy and an anonymous static recipient page are implemented against U15/X02 and V3.2. Both simulators exercised the synthetic flow; actual photo storage/QR and iOS add-only denial were checked. Normal builds keep distribution closed and the release export check excludes the fixture. [Report](docs/technical/B5_05_邀请司机与接收页实施验收.md). No new API, DB, account grant, production domain or distribution. Next: B6 validation as external prerequisites become available; release remains pending.
 

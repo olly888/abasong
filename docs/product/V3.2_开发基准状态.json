@@ -10,7 +10,7 @@
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
     "requirements": "scoped",
     "core_prototype": "owner_main_flow_accepted_not_native",
-    "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
+    "human_usability": "B6_01_facilitator_pack_prepared_sessions_not_scheduled",
     "baseline_documents": "R4_13_closed_unlisted_batch_and_consolidated_core_differences",
     "implementation": "R4_01_to_13_and_B5_01_to_04_scoped_local_exit_PASS",
     "circle_prototype": "text_implementation_local_HTTP_DB_dual_native_PASS",
@@ -244,6 +244,15 @@
     "status": "scoped_local_dual_native_and_recipient_page_verified",
     "report": "../technical/B5_05_邀请司机与接收页实施验收.md",
     "real_distribution": false
+  },
+  "b6_01": {
+    "status": "prepared_waiting_for_participants_authorized_samples_and_field_preflight",
+    "facilitator_pack": "../usability/B6-01_可用性与现场测试执行包.md",
+    "field_template": "../usability/B6-01_现场记录模板.csv",
+    "ocr_template": "../usability/B6-01_OCR记录模板.csv",
+    "participants_completed": 0,
+    "field_trials_completed": 0,
+    "authorized_images_received": 0
   },
   "controlled_implementation": {
     "eligible_batches": [],

@@ -4,15 +4,15 @@
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_13_local_HTTP_and_dual_native_PASS_latest_CI_closure_pending",
+  "scope": "R4_scoped_local_core_exit_PASS_controlled_B5_01_eligible",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
     "requirements": "scoped",
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
-    "baseline_documents": "R4_13_unlisted_batch_contract_and_core_differences_consolidated",
-    "implementation": "R4_01_to_13_scoped_local_native_PASS_latest_CI_closure_pending",
+    "baseline_documents": "R4_13_closed_unlisted_batch_and_consolidated_core_differences",
+    "implementation": "R4_01_to_13_scoped_local_native_and_exact_code_CI_PASS_B5_01_next",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -29,12 +29,11 @@
     "results_required_for_usability_acceptance": true
   },
   "development_ready": true,
-  "b5_ready": false,
+  "b5_ready": true,
   "pending": [
-    "R4_P0_implementation_and_dual_native_acceptance",
+    "B5_minimal_profile_team_circle_media_and_invitation",
     "human_task_observation",
-    "B6_real_cloud_and_field_evidence",
-    "D08_B05_unlisted_batch_structured_address_and_commit_contract_before_B5"
+    "B6_real_image_quality_cloud_accounts_push_package_and_field"
   ],
   "evidence": "../research/Abasong_竞品与替代方案证据表_2026-11-05.md",
   "requirements": "V3.2_首版需求缺口与范围裁决.md",
@@ -207,7 +206,7 @@
     "combined_report": "../technical/R4_10_本地原生业务组合实施验收.md"
   },
   "release_ready": false,
-  "readiness_scope": "controlled_R4_3_after_scoped_R4_2_exit_not_normal_login_physical_or_release_acceptance",
+  "readiness_scope": "controlled_B5_01_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
   "owner_review": {
     "status": "main_flows_accepted",
     "date": "2026-11-05",
@@ -218,9 +217,9 @@
   },
   "controlled_implementation": {
     "eligible_batches": [
-      "R4-3"
+      "B5-01"
     ],
-    "next_task": "R4-12",
+    "next_task": "B5-01",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -682,8 +681,8 @@
     "date": "2026-11-06",
     "base": "35b16444a49ec2ae535f23351d365de111c2a8a3",
     "branch": "codex/r4-13-unlisted-import-closure",
-    "status": "local_API_PG_and_scoped_dual_native_PASS_latest_CI_closure_pending",
-    "scoped_batch_complete": false,
+    "status": "scoped_local_core_and_dual_native_exit_PASS",
+    "scoped_batch_complete": true,
     "report": "../technical/R4_13_核心差异关闭与未收录截图方案.md",
     "engineering": {
       "files": 85,
@@ -729,7 +728,7 @@
     "D0_migrations": 17,
     "D0_tables": 54,
     "human_participants": 0,
-    "b5_ready": false,
+    "b5_ready": true,
     "release_ready": false,
     "cleanup": {
       "HTTP_runner": "PASS_owned_footprint_restored",
@@ -740,10 +739,10 @@
       }
     },
     "secret_scans": {
-      "staged": "PASS_initial_implementation",
-      "all_history": "PASS_initial_implementation_and_CI_full_history"
+      "staged": "PASS",
+      "all_history": "PASS_local_and_remote_exact_code_head"
     },
-    "latest_commit_CI": "must_verify_new_head_after_final_display_copy_and_document_closure",
+    "latest_commit_CI": "document_only_closure_must_independently_pass_PR101_checks_no_old_CI_substitution",
     "code_fingerprints": [
       {
         "path": ".github/workflows/ci.yml",
@@ -842,10 +841,10 @@
     "pull_request": "https://github.com/olly888/abasong/pull/101",
     "ci_source": "https://github.com/olly888/abasong/pull/101/checks",
     "implementation_ci": {
-      "head_sha": "216e44bb3d38311252fa4b0f008e484bc8be8d15",
-      "run_id": 42327440399,
+      "head_sha": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+      "run_id": 42328650702,
       "conclusion": "success",
-      "url": "https://github.com/olly888/abasong/actions/runs/42327440399"
+      "url": "https://github.com/olly888/abasong/actions/runs/42328650702"
     },
     "artifacts": [
       "artifacts/r4-13/ios-partial-failure.png",
@@ -858,6 +857,13 @@
       "artifacts/r4-13/native-live-summary.json",
       "artifacts/r4-13/final-test-footprint.json"
     ],
+    "next_task": "B5-01",
+    "readiness_scope": "controlled_B5_01_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
+    "validated_code_commit": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+    "closed_core_gaps": [
+      "D08-B05-unlisted-batch-address"
+    ],
+    "open_local_R4_core_P0": [],
     "evidence": "../technical/R4_13_执行证据.json"
   }
 }

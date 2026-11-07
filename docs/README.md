@@ -1,8 +1,8 @@
 # Abasong 研发文档入口
 
-更新2026-11-06。当前按[总计划1.42](Abasong_V12.1_项目开发与验收总计划.md)推进。[R4-13](technical/R4_13_核心差异关闭与未收录截图方案.md)已补未收录截图的结构化地址、先许可后持久化、部分失败和同公寓回程；工程85文件492测试、新链路41断言/183 HTTP、导入124及私人库295通过。iOS实际200重试与999改204通过；Android实际220重试/回程、999改204及清理通过，最新提交CI收尾中。B5仍待本地核心出口，不等于发布就绪。
+更新2026-11-06。当前按[总计划1.42](Abasong_V12.1_项目开发与验收总计划.md)推进。[R4-13](technical/R4_13_核心差异关闭与未收录截图方案.md)已完成未收录截图的结构化地址、许可先行、部分失败与同公寓回程。492工程测试、新链路41断言/183 HTTP、旧贡献27/75、导入124及私人库295、双端范围验收和清理0/0通过；实际代码f46dbb2的精确HEAD CI42328650702成功。R4本地核心出口关闭，下一批B5-01本人资料/“我的”，发布未就绪。
 
-[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。D0仍17迁移54表，无云变更；真实观察0/7，云业务KMS/两真实账号/远程推送/独立包/真实图质量及物理现场仍B6。
+[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。文档收尾不改代码指纹，最新提交仍查[PR101 Checks](https://github.com/olly888/abasong/pull/101/checks)。D0仍17迁移54表，无云变更；真实观察0/7，云业务KMS/两真实账号/推送/独立包/真实图质量及物理现场仍B6。
 
 原型入口：[首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)、[两场景发布](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[我的](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=me)。产品确认只覆盖主要体验，原型图不代表App已更新。当前和目标依据[可开发基准](Abasong_V3.2_可开发与可验收基线.md)；之前全文保留在[审查前档案](archive/app-alignment-audit-20261105/README.md)。
 

@@ -3,8 +3,8 @@
   "date": "2026-11-06",
   "base": "35b16444a49ec2ae535f23351d365de111c2a8a3",
   "branch": "codex/r4-13-unlisted-import-closure",
-  "status": "local_API_PG_and_scoped_dual_native_PASS_latest_CI_closure_pending",
-  "scoped_batch_complete": false,
+  "status": "scoped_local_core_and_dual_native_exit_PASS",
+  "scoped_batch_complete": true,
   "report": "R4_13_核心差异关闭与未收录截图方案.md",
   "engineering": {
     "files": 85,
@@ -50,7 +50,7 @@
   "D0_migrations": 17,
   "D0_tables": 54,
   "human_participants": 0,
-  "b5_ready": false,
+  "b5_ready": true,
   "release_ready": false,
   "cleanup": {
     "HTTP_runner": "PASS_owned_footprint_restored",
@@ -61,10 +61,10 @@
     }
   },
   "secret_scans": {
-    "staged": "PASS_initial_implementation",
-    "all_history": "PASS_initial_implementation_and_CI_full_history"
+    "staged": "PASS",
+    "all_history": "PASS_local_and_remote_exact_code_head"
   },
-  "latest_commit_CI": "must_verify_new_head_after_final_display_copy_and_document_closure",
+  "latest_commit_CI": "document_only_closure_must_independently_pass_PR101_checks_no_old_CI_substitution",
   "code_fingerprints": [
     {
       "path": ".github/workflows/ci.yml",
@@ -163,10 +163,10 @@
   "pull_request": "https://github.com/olly888/abasong/pull/101",
   "ci_source": "https://github.com/olly888/abasong/pull/101/checks",
   "implementation_ci": {
-    "head_sha": "216e44bb3d38311252fa4b0f008e484bc8be8d15",
-    "run_id": 42327440399,
+    "head_sha": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+    "run_id": 42328650702,
     "conclusion": "success",
-    "url": "https://github.com/olly888/abasong/actions/runs/42327440399"
+    "url": "https://github.com/olly888/abasong/actions/runs/42328650702"
   },
   "artifacts": [
     "artifacts/r4-13/ios-partial-failure.png",
@@ -178,5 +178,12 @@
     "artifacts/r4-13/android-final-review.png",
     "artifacts/r4-13/native-live-summary.json",
     "artifacts/r4-13/final-test-footprint.json"
-  ]
+  ],
+  "next_task": "B5-01",
+  "readiness_scope": "controlled_B5_01_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
+  "validated_code_commit": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+  "closed_core_gaps": [
+    "D08-B05-unlisted-batch-address"
+  ],
+  "open_local_R4_core_P0": []
 }

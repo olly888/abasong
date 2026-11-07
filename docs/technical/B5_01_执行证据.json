@@ -1,16 +1,195 @@
 {
- "batch":"B5-01",
- "date":"2026-11-06",
- "branch":"codex/b5-01-self-profile",
- "base":"17cc1d4fff78abf740e1701450062c0ec5088270",
- "status":"in_progress_final_native_and_CI",
- "engineering":{"files":87,"tests":500,"lint":"pass","types":"pass","build":"pass"},
- "http_pg":{"profile_assertions":28,"profile_calls":26,"requests_checks":519,"library_checks":295,"import_checks":124},
- "database":{"environment":"local_D0_only","migrations":19,"tables":55,"forced_RLS":"pass"},
- "native":{"ios":"scoped_PASS","android":"profile_keyboard_visual_PASS_final_off_pending","real_account":false,"physical_devices":false},
- "cleanup":"pending_native_fixture_shutdown",
- "cloud_mutation":false,
- "real_account_grants":false,
- "release_ready":false,
- "CI":"pending_exact_commit"
+  "batch": "B5-01",
+  "date": "2026-11-06",
+  "branch": "codex/b5-01-self-profile",
+  "base": "17cc1d4fff78abf740e1701450062c0ec5088270",
+  "status": "scoped_local_exit_PASS",
+  "engineering": {
+    "files": 87,
+    "tests": 500,
+    "lint": "pass",
+    "types": "pass",
+    "build": "pass"
+  },
+  "http_pg": {
+    "profile_assertions": 28,
+    "profile_calls": 26,
+    "requests_checks": 519,
+    "library_checks": 295,
+    "import_checks": 124
+  },
+  "database": {
+    "environment": "local_D0_only",
+    "migrations": 19,
+    "tables": 55,
+    "forced_RLS": "pass"
+  },
+  "native": {
+    "ios": "scoped_development_container_function_and_visual_PASS",
+    "android": "scoped_function_and_visual_PASS_owner_save_and_observed_keyboard_off_retry_contact_copy",
+    "real_account": false,
+    "physical_devices": false,
+    "android_supplement_verified_profile_version": 3,
+    "android_supplement_verified_name": "TEST-B5-Android",
+    "android_observed_availability_version": 4,
+    "android_observed_final_enabled": false
+  },
+  "cleanup": {
+    "fixture": "stopped",
+    "disposable_databases": 0,
+    "disposable_roles": 0,
+    "normal_preview": "restored"
+  },
+  "cloud_mutation": false,
+  "real_account_grants": false,
+  "release_ready": false,
+  "CI": {
+    "source_run_id": 42333171347,
+    "source_conclusion": "success",
+    "latest_document_commit": "independently_check_PR102_checks"
+  },
+  "source_commit": "e6e55ab727c48fd8d3f5383dfbb3b678867bef89",
+  "source_sha256": [
+    {
+      "file": ".github/workflows/ci.yml",
+      "sha256": "0e86db075f5a22a3a1d6c0ac871ea99c2e2100e47267d131f765277050edb08f"
+    },
+    {
+      "file": "apps/api/src/main.ts",
+      "sha256": "e07c691b7ea4519804afc2862b855d6138f42ea39d728e43807268ec09146503"
+    },
+    {
+      "file": "apps/api/src/me/me.controller.ts",
+      "sha256": "fa19deb45272cfe46f7cd2a0c2f1e17618d1ac58aa75dc5359acda2034afeeef"
+    },
+    {
+      "file": "apps/api/src/me/self-profile.service.ts",
+      "sha256": "057212032199fdcff9c8fcbeeb71ed47a39ae1c5256204b47746f53d37eb0474"
+    },
+    {
+      "file": "apps/api/src/me/self-profile.test.ts",
+      "sha256": "980972bea75deda8bf8ed3de0e21f7f25c230714a138895e983df3136639f854"
+    },
+    {
+      "file": "apps/api/src/requests/drivers.service.ts",
+      "sha256": "48df6ddde26c028d6309a01b44b51e43f767604bc15482870a4dc667662ed62f"
+    },
+    {
+      "file": "apps/mobile/src/app/(tabs)/profile.tsx",
+      "sha256": "96ed888d0f626c5ec6558d2afa117014529bfb3e7be87ec4cd3f44624e66b3f9"
+    },
+    {
+      "file": "apps/mobile/src/app/account/availability.tsx",
+      "sha256": "cf831e1ff81d3cec21994ae788d825f5583e6c5f0ce7b4886221a9479a644284"
+    },
+    {
+      "file": "apps/mobile/src/app/account/profile.tsx",
+      "sha256": "05f5b3b9edb7c54c122897e93ca0b0a5bc31b15ba7b624afa03db292c672420a"
+    },
+    {
+      "file": "apps/mobile/src/app/conversations/[id].tsx",
+      "sha256": "3e909f39aacfe5f76348a93547fc7f6857b6501a9c731513d332ef78468ead92"
+    },
+    {
+      "file": "apps/mobile/src/app/self-profile-lab.tsx",
+      "sha256": "3ece6aa727440dd4326d085397b48e083d8e5fef783262bf4adc680fb4ae01ed"
+    },
+    {
+      "file": "apps/mobile/src/auth/AuthProvider.tsx",
+      "sha256": "8b6fb104d0c1d05c3fae4e66547835203f2ce21d9a695899828adc6e706428b0"
+    },
+    {
+      "file": "apps/mobile/src/design/SelfProfileLab.tsx",
+      "sha256": "d2f9ef06036ea1610844cbf9b2549d1a5dc35392181a7ff8decdc70dbf58af63"
+    },
+    {
+      "file": "apps/mobile/src/drivers/AvailabilityFlow.tsx",
+      "sha256": "87dc72a2747178c9e107361b1c446427f3aa4d80ec07121e25afb84107c21de2"
+    },
+    {
+      "file": "apps/mobile/src/drivers/DriverProfileView.tsx",
+      "sha256": "e60c81c92f6d1adafa11b843bf7ce927d567727835e843a7a00b61af7ca44616"
+    },
+    {
+      "file": "apps/mobile/src/messages/ConversationLayout.tsx",
+      "sha256": "ad1b1d03cfc5f0030e325757a01827322987f4516bb468330b658f29150f07c1"
+    },
+    {
+      "file": "apps/mobile/src/profile/MyAccount.tsx",
+      "sha256": "6f4aa5c590e34de21d4935b4d999ca7b494d1207b61e818891b432bcf5819c42"
+    },
+    {
+      "file": "apps/mobile/src/profile/MyContactSheet.tsx",
+      "sha256": "24946b5d58b235c3e14bf1307e3ef9e5de5dd94194fa93be4fb020c88dc95a93"
+    },
+    {
+      "file": "apps/mobile/src/profile/ProfileEditor.tsx",
+      "sha256": "4556000b31cf932ca2976dcb11862cd3a4221167a11aa681e3127856d1179616"
+    },
+    {
+      "file": "apps/mobile/src/profile/profile-session.test.ts",
+      "sha256": "9a8c87d06f2c0f5203402ffe44455c0b1fa853ea5109e0f9e6bc5c5d6111c281"
+    },
+    {
+      "file": "apps/mobile/src/profile/profile-session.ts",
+      "sha256": "21704b140bb5c6fbd372100693bdbd2958c79b0d7a28433b5ba8b8b646905a31"
+    },
+    {
+      "file": "database/migrations/0018_self_profiles.sql",
+      "sha256": "26286ac362789f8cca93f5726aad382b84544e2353c3b7743db3ed67b4e82b6b"
+    },
+    {
+      "file": "database/migrations/0019_profile_availability_intent.sql",
+      "sha256": "969bf2b5dc3be7ffb9c5afa3466dec46c16e33e24e2708865a00b339e89680a1"
+    },
+    {
+      "file": "packages/contracts/src/generated.ts",
+      "sha256": "c817021cd549c641152d82210053b2fba7e20ae9fb929334b9f44f8c9d00f2d7"
+    },
+    {
+      "file": "packages/contracts/src/schema-versions.ts",
+      "sha256": "26b0e678c1aace2948d4bd97a39871b98cd96647ade7f1fbadd129d11eda8b18"
+    },
+    {
+      "file": "scripts/d0/verify-database.ts",
+      "sha256": "0ba5f65468d8d053a25a546729c636d1a4e28076ab79c27ed103ce3ba0effc92"
+    },
+    {
+      "file": "scripts/d1/native-exit-fixture.ts",
+      "sha256": "7c398ad47715a81c29fc40642f1a368529cedfc69fbdc22df5ff8204430e78d7"
+    },
+    {
+      "file": "scripts/d1/native-exit-guard.ts",
+      "sha256": "48d58610a1e3c7555554437a164177e71b7badc89fb505a2b6749a2dba6f320b"
+    },
+    {
+      "file": "scripts/d1/run-native-exit.ts",
+      "sha256": "95a199dd1d00f7f72ed145b98940c69a728e420d251319d3000b3d8dd587bc9f"
+    },
+    {
+      "file": "scripts/d1/verify-import-api.ts",
+      "sha256": "37f07eb18cc80cd7bbac23f7c16069db06d69b3882c9539afc49a1e1821e42b1"
+    },
+    {
+      "file": "scripts/d1/verify-library-api.ts",
+      "sha256": "9ee53171193e51e00103054b340b30b131b24aac5fe772e1d5ed738e5bf3f01e"
+    },
+    {
+      "file": "scripts/d1/verify-requests-api.ts",
+      "sha256": "dcc570c8ae2e635c81576be1e2333a5638fd678e91165c49fd17aedf56e8bd66"
+    },
+    {
+      "file": "scripts/d1/verify-self-profile.ts",
+      "sha256": "5e696d1ee08b61f25ba8588d5d01661ebb6e641e7ee3d18896ec6bdb5709c2af"
+    },
+    {
+      "file": "scripts/generate_v12_openapi.py",
+      "sha256": "47782acb3d657a89f0e3e00c9e1439353931587e3e853b1a462b1679f59ec74c"
+    }
+  ],
+  "screenshots_local_ignored_sha256": {
+    "artifacts/b5-01/android-contact-final.png": "52e8562657093ab3e08730fa7092d0a87640f998e2c5211b786978908997e876",
+    "artifacts/b5-01/android-my-final.png": "a96cebdfdb12a7cdf6a6434b18e6f97820699950165213872a51d72da715a6c8",
+    "artifacts/b5-01/ios-my-final.png": "afd86ad9329e90defef11e2cefee8749768c73a31bd4808cf94937deb7a475d3"
+  }
 }

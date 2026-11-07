@@ -394,8 +394,10 @@
         "UX13"
       ],
       "implementation_dependency": "D18_profile_purpose_and_availability_switch_not_grant",
-      "prototype_status": "account_implemented_synthetic_native_service_pending",
-      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
+      "prototype_status": "owner_target_accepted",
+      "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance",
+      "implementation_status": "B5_01_scoped_local_native_and_code_CI_PASS",
+      "implementation_report": "../technical/B5_01_本人资料与我的实施验收.md"
     },
     {
       "id": "UP16",
@@ -572,6 +574,11 @@
     "report": "../technical/R4_01_距离契约与公寓卡片实施验收.md",
     "whole_app_migrated": false,
     "final_native_checks": "scoped_dual_development_client_failure_retry_denied_and_final_carousel_PASS",
-    "collaboration_carousel": "pending_R4-04"
+    "collaboration_carousel": "scoped_R4_04_05_PASS",
+    "self_profile": {
+      "status": "B5_01_scoped_local_PASS",
+      "report": "../technical/B5_01_本人资料与我的实施验收.md",
+      "team_and_invitation": "pending_separate_batches"
+    }
   }
 }

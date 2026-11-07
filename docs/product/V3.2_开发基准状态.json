@@ -2,9 +2,9 @@
   "version": "V3.2-B5-01-self-profile",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
-  "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
+  "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_and_B5_01",
   "prototype": "3.2-r3-delivery",
-  "scope": "B5_01_local_implementation_final_native_CI_pending",
+  "scope": "B5_01_scoped_local_exit_PASS_controlled_B5_02_eligible",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
@@ -12,10 +12,10 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "R4_13_closed_unlisted_batch_and_consolidated_core_differences",
-    "implementation": "R4_01_to_13_scoped_local_native_and_exact_code_CI_PASS_B5_01_next",
+    "implementation": "R4_01_to_13_and_B5_01_scoped_local_exit_PASS",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
-    "my_account": "self_profile_local_implemented_team_invitation_deferred",
+    "my_account": "self_profile_My_switch_contact_scoped_local_PASS_team_and_invite_pending",
     "invitation_prototype": "owner_main_flow_review_recorded_native_distribution_pending",
     "delivery_prototype": "owner_main_flow_accepted_R4_08_native_representative_checks_not_full_usability"
   },
@@ -31,7 +31,7 @@
   "development_ready": true,
   "b5_ready": true,
   "pending": [
-    "B5_minimal_profile_team_circle_media_and_invitation",
+    "B5_own_team_circle_media_and_invitation",
     "human_task_observation",
     "B6_real_image_quality_cloud_accounts_push_package_and_field"
   ],
@@ -217,9 +217,9 @@
   },
   "controlled_implementation": {
     "eligible_batches": [
-      "B5-01"
+      "B5-02"
     ],
-    "next_task": "B5-01",
+    "next_task": "B5-02",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,
@@ -869,8 +869,11 @@
   "b5_self_profile": {
     "report": "../technical/B5_01_本人资料与我的实施验收.md",
     "evidence": "../technical/B5_01_执行证据.json",
-    "status": "final_native_CI_pending",
+    "status": "scoped_local_exit_PASS",
     "real_accounts": false,
-    "cloud_changes": false
+    "cloud_changes": false,
+    "source_commit": "e6e55ab727c48fd8d3f5383dfbb3b678867bef89",
+    "source_CI": 42333171347,
+    "cleanup": "0_disposable_databases_and_roles"
   }
 }

@@ -4,7 +4,7 @@ Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](�
 
 ## Current delivery — B5-04 scoped local private driver circle images
 
-Branch `codex/b5-04-circle-photos`, base `bfa1979` / PR104. C01–03/G03 now support 0–3 ordered photos, picker/camera, local preview, retry, and authenticated post image reads. Replies remain text. Local migration 0022 brings D0 to 22 versions / 57 forced-RLS tables. Engineering 500 and isolated HTTP/PG 619 checks pass, including 40 media HTTP checks. Native iOS and Android representative flows used synthetic photos and the existing dev containers. Physical camera, two-finger gesture checks and actual cloud storage remain separate. [Report](docs/technical/B5_04_司机圈私有图片实施验收.md). Next: B5-05 invitations.
+Branch `codex/b5-04-circle-photos`, base `bfa1979` / PR104. C01–03/G03 now support 0–3 ordered photos, picker/camera, local preview, retry, and authenticated post image reads. Replies remain text. Local migration 0022 brings D0 to 22 versions / 57 forced-RLS tables. Engineering 500 and isolated HTTP/PG 620 checks pass, including 41 media HTTP checks. Native iOS and Android representative flows used synthetic photos and the existing dev containers. Physical camera, two-finger gesture checks and actual cloud storage remain separate. [Report](docs/technical/B5_04_司机圈私有图片实施验收.md). Next: B5-05 invitations.
 
 ## Previous delivery — B5-03 scoped local driver circle
 

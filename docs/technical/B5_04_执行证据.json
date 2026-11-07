@@ -3,8 +3,8 @@
   "migration": 22,
   "forced_rls_tables": 57,
   "engineering_tests": 500,
-  "request_checks": 619,
-  "media_http_checks": 40,
+  "request_checks": 620,
+  "media_http_checks": 41,
   "ios_physical_camera_verified": false,
   "cloud_bucket_created": false,
   "screenshots": [

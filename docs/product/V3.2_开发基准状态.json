@@ -237,7 +237,7 @@
     "report": "../technical/B5_04_司机圈私有图片实施验收.md",
     "migration": "V12.0022",
     "contract_paths": 96,
-    "media_http_checks": 40,
+    "media_http_checks": 41,
     "physical_or_cloud_acceptance": false
   },
   "controlled_implementation": {

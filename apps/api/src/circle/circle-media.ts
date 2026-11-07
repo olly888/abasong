@@ -33,16 +33,24 @@ function uploadView(r: MediaRow & { width: number; height: number }) {
     expires_at: r.expires_at.toISOString(),
   } satisfies components["schemas"]["CircleMediaUpload"];
 }
-function validSignature(data: Buffer) {
+const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+function supportedImage(data: Buffer) {
+  if (data.subarray(0, 8).equals(pngSignature)) {
+    // libvips can decode the first frame of APNG without reporting pages.
+    // Check PNG chunk boundaries and reject the animation control chunk.
+    for (let offset = 8; offset + 12 <= data.length;) {
+      if (data.toString("ascii", offset + 4, offset + 8) === "acTL")
+        return false;
+      offset += data.readUInt32BE(offset) + 12;
+    }
+    return true;
+  }
   return (
     (data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) ||
-    data
-      .subarray(0, 8)
-      .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ||
     (data.toString("ascii", 0, 4) === "RIFF" &&
       data.toString("ascii", 8, 12) === "WEBP") ||
-    // The native picker converts HEIC when supported. Sharp will still verify
-    // the actual ISO image format and report an unreadable codec if unavailable.
+    // The native picker converts HEIC when supported. Sharp verifies the
+    // ISO image format and rejects formats the runtime cannot decode.
     (data.toString("ascii", 4, 8) === "ftyp" &&
       ["heic", "heix", "hevc", "mif1", "avif"].includes(
         data.toString("ascii", 8, 12),
@@ -52,7 +60,6 @@ function validSignature(data: Buffer) {
 
 let activeDecodes = 0;
 async function normalize(data: Buffer) {
-  if (!validSignature(data)) throw invalidImage();
   if (activeDecodes >= 3)
     throw new ApiError(503, "MEDIA_BUSY", "图片处理繁忙，请重试");
   activeDecodes++;
@@ -133,7 +140,7 @@ export class CircleMediaService {
       throw new ApiError(503, "MEDIA_UNAVAILABLE", "图片服务暂不可用");
     const attempt = requestId(uploadId);
     if (!data.length || data.length > mediaBytesLimit) throw invalidImage();
-    if (!validSignature(data)) throw invalidImage();
+    if (!supportedImage(data)) throw invalidImage();
     const digest = createHash("sha256").update(data).digest();
     const row = await this.requests.tx(actor, async (c) => {
       // Serialize creation of a user's pending uploads, including the quota.

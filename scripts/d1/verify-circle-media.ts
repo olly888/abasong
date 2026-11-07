@@ -100,6 +100,14 @@ export async function verifyCircleMedia({
     ).json()) as S["CircleMediaUpload"];
   await put(first, 401, "");
   await put(Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>"), 422);
+  // Synthetic two-frame 12x12 APNG; libvips alone sees only one frame.
+  await put(
+    Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAACGFjVEwAAAACAAAAAPONk3AAAAAaZmNUTAAAAAAAAAAMAAAADAAAAAAAAAAAAAEACgAAkVrS4wAAABdJREFUeJxj/M9AGDARoYZhVBEDnYMAAM/gARck8m3VAAAAGmZjVEwAAAABAAAADAAAAAwAAAAAAAAAAAABAAoAAAopODcAAAAcZmRBVAAAAAJ4nGNkaGAgCJgIK2EYVcRA7yAAAPOMAJjEfaJcAAAAAElFTkSuQmCC",
+      "base64",
+    ),
+    422,
+  );
   await put(first.subarray(0, 100), 422);
   await put(new Uint8Array(5 * 1024 * 1024 + 1), 413);
   const attempt = randomUUID();

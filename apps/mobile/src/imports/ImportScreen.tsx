@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import type { Session as AuthSession } from "@supabase/supabase-js";
 import {
   ActivityIndicator,
   Alert,
@@ -41,6 +48,8 @@ import { ServerDraft } from "./server-draft";
 import { exitImport } from "./navigation";
 import { createImageCache } from "./storage";
 import { keepImportSession } from "./session-gate";
+import { createReviewSearch } from "./review-search";
+import type { ContributionRequest } from "../apartments/contribution-address-search";
 type S = components["schemas"];
 const issueLabels: Record<string, string> = {
   missing_address: "缺少地址",
@@ -52,32 +61,8 @@ const issueLabels: Record<string, string> = {
   duplicate: "存在重复资料",
   unsupported_method: "暂不支持此进入方式",
 };
-export type Source = {
-  width?: number;
-  height?: number;
-  bytes?: number;
-  mime?: "image/png" | "image/jpeg" | "image/heic";
-  id: string;
-  uri: string;
-  state: "selected" | "processing" | "recognized" | "failed";
-  error?: string;
-};
-export type Candidate = {
-  id: string;
-  sourceId: string;
-  address: string;
-  value: string;
-  scope: string;
-  issues: string[];
-  target: S["Apartment"] | null;
-  selected: boolean;
-  revision: number;
-  privateId?: string;
-  privateVersion?: number;
-  shared?: boolean;
-  status?: "private_saved" | "pending" | "active" | "same_value" | "failed";
-  error?: string;
-};
+export type { Candidate, Source } from "./types";
+import type { Candidate, Source } from "./types";
 function dispose(uri: string) {
   // Never delete a photo-library original or arbitrary URI.
   try {
@@ -116,7 +101,11 @@ export default function ImportScreen() {
         accessibilityElementsHidden={covered}
         importantForAccessibility={covered ? "no-hide-descendants" : "auto"}
       >
-        <Session key={auth.session!.user.id} />
+        <ImportSession
+          key={auth.session!.user.id}
+          session={auth.session!}
+          canContribute={!!auth.me?.capabilities.includes("access.contribute")}
+        />
       </View>
       {covered && (
         <View style={StyleSheet.absoluteFill} pointerEvents="auto">
@@ -130,13 +119,25 @@ export default function ImportScreen() {
     </View>
   );
 }
-function Session() {
-  const auth = useAuth(),
-    session = auth.session!;
+export function ImportSession(p: {
+  session: AuthSession;
+  canContribute: boolean;
+  transport?: ContributionRequest;
+  testControls?: ReactNode;
+  initialReview?: { sources: Source[]; rows: Candidate[] };
+  onCompleted?: (rows: Candidate[]) => void;
+}) {
+  const { session } = p;
+  const latest = useRef(p);
+  latest.current = p;
   const params = useLocalSearchParams<{ mode?: string }>();
-  const [sources, setSources] = useState<Source[]>([]),
-    [rows, setRows] = useState<Candidate[]>([]),
-    [stage, setStage] = useState<"select" | "review" | "result">("select"),
+  const [sources, setSources] = useState<Source[]>(
+      p.initialReview?.sources ?? [],
+    ),
+    [rows, setRows] = useState<Candidate[]>(p.initialReview?.rows ?? []),
+    [stage, setStage] = useState<"select" | "review" | "result">(
+      p.initialReview ? "review" : "select",
+    ),
     [mode, setMode] = useState<"private_only" | "private_and_share">(
       params.mode === "private" ? "private_only" : "private_and_share",
     ),
@@ -159,12 +160,18 @@ function Session() {
     abort = useRef(new AbortController()),
     allUris = useRef(new Set<string>()),
     rowsRef = useRef(rows),
-    searchGeneration = useRef(0);
+    reviewSearch = useRef(
+      createReviewSearch((path, options) => request(path, options)),
+    );
   rowsRef.current = rows;
   useEffect(() => {
     live.current = true;
     abort.current = new AbortController();
-    server.current = new ServerDraft(session, abort.current.signal);
+    server.current = new ServerDraft(
+      session,
+      abort.current.signal,
+      (path, options) => request(path, options),
+    );
     return () => {
       live.current = false;
       abort.current.abort();
@@ -173,13 +180,17 @@ function Session() {
       allUris.current.clear();
       cache.current?.dispose();
       cache.current = null;
+      reviewSearch.current.cancel();
     };
   }, []);
   const request = <T,>(
     path: string,
     options: Parameters<typeof dataRequest>[2] = {},
   ) =>
-    dataRequest<T>(session, path, {
+    (
+      latest.current.transport ??
+      ((path, options) => dataRequest(latest.current.session, path, options))
+    )<T>(path, {
       ...options,
       signal: options.signal ?? abort.current.signal,
     });
@@ -405,7 +416,11 @@ function Session() {
       dispose(source.uri);
       allUris.current.delete(source.uri);
     }
-    server.current = new ServerDraft(session, abort.current.signal);
+    server.current = new ServerDraft(
+      session,
+      abort.current.signal,
+      (path, options) => request(path, options),
+    );
     setSources(
       remaining.map((s) => ({ ...s, state: "selected", error: undefined })),
     );
@@ -415,23 +430,26 @@ function Session() {
     setStage("select");
     setError(null);
   }
+  function clearSearch() {
+    reviewSearch.current.cancel();
+    setMatches([]);
+    setSearchBusy(false);
+  }
   async function search() {
-    if (query.trim().length < 2 || searchBusy) return;
-    const version = ++searchGeneration.current;
+    if (!editing || query.trim().length < 2 || searchBusy) return;
     setSearchBusy(true);
     setError(null);
     try {
-      const page = await request<S["ApartmentPage"]>(
-        "/v1/apartments?query=" + encodeURIComponent(query.trim()),
-      );
-      if (live.current && version === searchGeneration.current)
-        setMatches(page.items);
-    } catch {
-      if (live.current && version === searchGeneration.current)
-        setError("搜索失败，请重试");
-    } finally {
-      if (live.current && version === searchGeneration.current)
+      const result = await reviewSearch.current.search(editing, query);
+      if (live.current && result) {
+        setMatches(result.items);
         setSearchBusy(false);
+      }
+    } catch {
+      if (live.current) {
+        setError("搜索失败，请重试");
+        setSearchBusy(false);
+      }
     }
   }
   const exitPromptOpen = useRef(false);
@@ -469,8 +487,8 @@ function Session() {
     if (processing) recognitionAbort.current?.abort();
     else if (running.current) return;
     else if (editing) {
+      clearSearch();
       setEditing(null);
-      setMatches([]);
     } else if (stage === "review" && !locked) setStage("select");
     else leave();
   }
@@ -612,8 +630,8 @@ function Session() {
             <ActionButton
               label="完成核对"
               onPress={() => {
+                clearSearch();
                 setEditing(null);
-                setMatches([]);
               }}
             />
           ) : stage === "select" ? (
@@ -642,8 +660,7 @@ function Session() {
                     </Text>
                     {!locked ? <Text style={styles.link}>更改</Text> : null}
                   </Pressable>
-                  {mode === "private_and_share" &&
-                  !auth.me?.capabilities.includes("access.contribute") ? (
+                  {mode === "private_and_share" && !p.canContribute ? (
                     <Text style={styles.error}>共享资格待核验</Text>
                   ) : null}
                   {pending.length ? (
@@ -677,15 +694,15 @@ function Session() {
                   (stage !== "result" &&
                     (!pending.length ||
                       !attested ||
-                      (mode === "private_and_share" &&
-                        !auth.me?.capabilities.includes(
-                          "access.contribute",
-                        )))) ||
+                      (mode === "private_and_share" && !p.canContribute))) ||
                   (stage === "result" && pending.length > 0 && !attested)
                 }
                 onPress={() =>
                   stage === "result" && !pending.length
-                    ? leave()
+                    ? p.onCompleted &&
+                      !hasUnsubmittedImportWork(rows, sources, mode)
+                      ? p.onCompleted(rows)
+                      : leave()
                     : void submit()
                 }
               />
@@ -694,6 +711,7 @@ function Session() {
         </View>
       }
     >
+      {p.testControls}
       {stage === "select" ? (
         <>
           <View style={styles.scopeRow}>
@@ -764,10 +782,8 @@ function Session() {
           <SearchBox
             value={query}
             onChange={(v) => {
-              searchGeneration.current++;
-              setSearchBusy(false);
+              clearSearch();
               setQuery(v);
-              setMatches([]);
             }}
             busy={searchBusy}
             onSearch={() => void search()}
@@ -783,7 +799,7 @@ function Session() {
                   target: p,
                   address: `${p.address_line1}, ${p.city}, ${p.state}${p.postal_code ? " " + p.postal_code : ""}`,
                 });
-                setMatches([]);
+                clearSearch();
               }}
             />
           ))}
@@ -815,8 +831,8 @@ function Session() {
             style={styles.check}
             onPress={() => {
               setRows((old) => old.filter((x) => x.id !== editor.id));
+              clearSearch();
               setEditing(null);
-              setMatches([]);
               setAttested(false);
             }}
           >
@@ -860,6 +876,7 @@ function Session() {
                       ),
                     );
                     setRows((old) => [...old, r]);
+                    clearSearch();
                     setEditing(r.id);
                     setQuery("");
                   }}
@@ -937,9 +954,9 @@ function Session() {
                       disabled={busy}
                       style={styles.check}
                       onPress={() => {
+                        clearSearch();
                         setEditing(r.id);
                         setQuery(r.address.split(",")[0]);
-                        setMatches([]);
                       }}
                     >
                       <Text style={styles.link}>编辑</Text>

@@ -81,14 +81,22 @@ export function extractCandidates(input: OcrLine[]): Extracted[] {
         issues.push("请核对字符");
       let address = addr?.text.trim() ?? "";
       if (addr) {
-        const city = lines.find(
+        const cities = lines.filter(
           (l) =>
             l.y > addr.y &&
             l.y < line.y &&
             l.y - addr.y < 0.07 &&
             Math.abs(l.x - addr.x) < 0.12 &&
+            overlaps(l, addr) &&
             /,?\s[A-Z]{2}\s+\d{5}(?:-\d{4})?\s*$/.test(l.text),
         );
+        const distinct = [
+          ...new Map(
+            cities.map((l) => [l.text.trim().toLowerCase(), l]),
+          ).values(),
+        ];
+        const city = distinct.length === 1 ? distinct[0] : undefined;
+        if (distinct.length > 1) issues.push("地址对应不明");
         if (city) {
           address += ", " + city.text.trim();
           if (

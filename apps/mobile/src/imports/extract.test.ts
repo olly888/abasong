@@ -141,3 +141,15 @@ describe("conservative on-device screenshot field association", () => {
     }
   });
 });
+
+it("keeps conflicting city lines unresolved rather than attaching the first city", () => {
+  const result = extractCandidates([
+    line("100 Example Ave", 0.1),
+    line("Test City, CA 90001", 0.12),
+    line("Other City, CA 90002", 0.14),
+    line("Gate code: *0012#", 0.18),
+  ])[0];
+  expect(result.value).toBe("*0012#");
+  expect(result.address).toBe("100 Example Ave");
+  expect(result.issues).toContain("地址对应不明");
+});

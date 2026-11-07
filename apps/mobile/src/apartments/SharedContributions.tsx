@@ -13,6 +13,7 @@ import { ActionButton, FormError } from "../auth/AuthControls";
 import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "./client";
 import { AddressLine } from "./AddressLine";
+import { visibleContributionValue } from "./contribution-visibility";
 type S = components["schemas"];
 type Row = {
   source: S["ContributionSummary"];
@@ -182,6 +183,7 @@ export function SharedContributionCard({
   onCorrect: () => void;
   onMap: () => void;
 }) {
+  const visibleValue = visibleContributionValue(s, canRead, value);
   return (
     <View style={styles.card}>
       <View style={styles.heading}>
@@ -189,9 +191,9 @@ export function SharedContributionCard({
         <Text style={styles.muted}>{s.scope_label}</Text>
       </View>
       <AddressLine line={s.address_label} compact />
-      {value ? (
+      {visibleValue ? (
         <Text selectable style={styles.code}>
-          {value}
+          {visibleValue}
         </Text>
       ) : s.status === "active" ? (
         <Text style={styles.muted}>

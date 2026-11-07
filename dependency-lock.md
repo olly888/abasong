@@ -170,3 +170,5 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 2026-11-05 R4-04：无新增依赖、原生模块、契约、DDL或云变更。复用现有MapCardFrame/MapCardCarousel、RNMapbox10.3.16的相机事件/setCamera与PointAnnotation.refresh；中心/zoom/heading/pitch仅保存当前账号会话内存，不上传司机GPS。测试适配器/内存详情不作为业务导航或权限实现，原生编译与现场仍分栏。
 
 - 2026-11-06 R4-10：不新增依赖/原生模块；提取既有消息与缺口控制器的传输适配以接真实隔离HTTP，原路由鉴权适配保留。临时工具仅监听回环，短期JWT与密钥不进App/Metro/日志，不改云或D0防护。
+
+- 2026-11-06 R4-11：无新增依赖/原生模块/权限/锁文件/契约/迁移。复用Expo58选图和既有原生OCR；导入状态控制器分出纯传输核心及原鉴权适配，错误类保持兼容导出。纠正复用PageFrame/Controls固定底部主操作。loopback测试工具以独立contribution场景限定路径及合成身份，不扩大普通API权限，不写云或真实D0资格。

@@ -3,7 +3,7 @@
   "date": "2026-11-06",
   "base": "35b16444a49ec2ae535f23351d365de111c2a8a3",
   "branch": "codex/r4-13-unlisted-import-closure",
-  "status": "implemented_local_HTTP_dual_native_final_supplement_pending",
+  "status": "local_API_PG_and_scoped_dual_native_PASS_latest_CI_closure_pending",
   "scoped_batch_complete": false,
   "report": "R4_13_核心差异关闭与未收录截图方案.md",
   "engineering": {
@@ -22,7 +22,7 @@
   "library_HTTP_PG": 295,
   "native": {
     "ios": "PASS_actual_components_200_partial_failure_retry_return_999_to_204_reconfirmation_return",
-    "android": "PASS_actual_220_partial_failure_retry_return_999_failure_and_reopen_editor_204_supplement_pending",
+    "android": "PASS_actual_220_partial_failure_retry_return_999_rejection_reopen_204_catalog_selection_reconfirm_and_return",
     "android_initial_feedback": "normal_but_current_screen_and_zero_write_counts_conflicted_not_counted_as_pass",
     "android_recovery": "tool_restarted_preconfirmed_synthetic_220_and_verified_actual_writes_no_handtyped_or_OCR_quality_claim",
     "normal_route_real_accounts": false,
@@ -30,7 +30,10 @@
     "new_binary_compilation": false,
     "Hermes_export": "PASS_ios_android",
     "prototype": "actual_browser_B05_no_full_dropdown_missing_city_blocks_literal_preserved_shared_1610_return_recenter_excludes_unlocated_candidate",
-    "prototype_full_old_10_check_rerun": false
+    "prototype_full_old_10_check_rerun": false,
+    "android_owner_reference": "call_a1772a6134814b97a51b900894d45380:0",
+    "android_owner_result": "normal_followed_by_observed_204_same_value_result_and_204_return",
+    "final_visual": "PASS_both_address_first_single_line_group_without_duplicate_address_row_and_intact_literal"
   },
   "new_contracts": {
     "confirmed_address": "optional_nullable_candidate_edit_and_candidate",
@@ -51,13 +54,17 @@
   "release_ready": false,
   "cleanup": {
     "HTTP_runner": "PASS_owned_footprint_restored",
-    "live_fixture": "active_for_native_TEST_2h_max_then_owned_cleanup"
+    "live_fixture": "stopped_owned_resources_cleaned",
+    "final_remaining_counts": {
+      "databases": 0,
+      "roles": 0
+    }
   },
   "secret_scans": {
-    "staged": "pending",
-    "all_history": "pending"
+    "staged": "PASS_initial_implementation",
+    "all_history": "PASS_initial_implementation_and_CI_full_history"
   },
-  "latest_commit_CI": "pending_first_R4_13_commit",
+  "latest_commit_CI": "must_verify_new_head_after_final_display_copy_and_document_closure",
   "code_fingerprints": [
     {
       "path": ".github/workflows/ci.yml",
@@ -89,7 +96,7 @@
     },
     {
       "path": "apps/mobile/src/imports/ImportScreen.tsx",
-      "sha256": "34d10bc5273726c91a400949368dbdd986fd0eb0abf479fb97e5c01b20ff1874"
+      "sha256": "3c808dcfd5c74edff8457eee418b1fc4c031aee4e769cd6ec15f3fed20da9d08"
     },
     {
       "path": "apps/mobile/src/imports/candidate-address.test.ts",
@@ -147,5 +154,29 @@
       "path": "scripts/validate_v12_contracts.py",
       "sha256": "e390187c024146a799b30db0d02f05df44e6ceb7562cb9068f229fa55b59d60f"
     }
+  ],
+  "known_contribution_HTTP": {
+    "assertions": 27,
+    "calls": 75,
+    "status": "PASS"
+  },
+  "pull_request": "https://github.com/olly888/abasong/pull/101",
+  "ci_source": "https://github.com/olly888/abasong/pull/101/checks",
+  "implementation_ci": {
+    "head_sha": "216e44bb3d38311252fa4b0f008e484bc8be8d15",
+    "run_id": 42327440399,
+    "conclusion": "success",
+    "url": "https://github.com/olly888/abasong/actions/runs/42327440399"
+  },
+  "artifacts": [
+    "artifacts/r4-13/ios-partial-failure.png",
+    "artifacts/r4-13/ios-return-200.png",
+    "artifacts/r4-13/ios-corrected-204.png",
+    "artifacts/r4-13/android-partial-failure.png",
+    "artifacts/r4-13/android-return-204.png",
+    "artifacts/r4-13/ios-final-review.png",
+    "artifacts/r4-13/android-final-review.png",
+    "artifacts/r4-13/native-live-summary.json",
+    "artifacts/r4-13/final-test-footprint.json"
   ]
 }

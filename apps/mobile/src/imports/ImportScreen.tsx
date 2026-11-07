@@ -53,7 +53,7 @@ import type { ContributionRequest } from "../apartments/contribution-address-sea
 type S = components["schemas"];
 const issueLabels: Record<string, string> = {
   missing_address: "缺少地址",
-  missing_value: "缺少密码",
+  missing_value: "缺少门禁码",
   ambiguous_pair: "地址与密码对应不明",
   uncertain_characters: "请核对字符",
   uncertain_address: "请核对地址",
@@ -697,7 +697,7 @@ export function ImportSession(p: {
             <Text style={styles.label}>
               {sources.length
                 ? `已选 ${sources.length} 张`
-                : "添加公寓地址和密码截图"}
+                : "添加公寓地址和门禁码截图"}
             </Text>
             {sources.length > 0 && sources.length < 10 ? (
               <Pressable
@@ -787,7 +787,7 @@ export function ImportSession(p: {
             }}
           />
           <Field
-            label="密码"
+            label="门禁码"
             value={editor.value}
             maxLength={32}
             editable={!editor.privateId}
@@ -867,14 +867,11 @@ export function ImportSession(p: {
           {rows.map((r, index) => (
             <View key={r.id} style={styles.card}>
               <Text style={styles.label}>
-                {r.target?.name ?? (r.address || `待核对 ${index + 1}`)}
+                {r.target
+                  ? importAddressLabel(r.target)
+                  : r.address || `待核对 ${index + 1}`}
               </Text>
-              {r.target ? (
-                <Text style={styles.meta}>
-                  {r.target.address_line1}, {r.target.city}, {r.target.state}
-                </Text>
-              ) : null}
-              <Text style={styles.code}>{r.value || "缺少密码"}</Text>
+              <Text style={styles.code}>{r.value || "缺少门禁码"}</Text>
               {r.scope && r.scope !== "门别未注明" ? (
                 <Text style={styles.meta}>{r.scope}</Text>
               ) : null}

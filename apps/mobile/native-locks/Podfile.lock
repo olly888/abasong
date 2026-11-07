@@ -128,7 +128,7 @@ PODS:
     - Yoga
   - ExpoApplication (58.1.2):
     - ExpoModulesCore
-  - ExpoAsset (58.0.19):
+  - ExpoAsset (58.0.20):
     - ExpoModulesCore
   - ExpoClipboard (58.0.4):
     - ExpoModulesCore
@@ -151,6 +151,9 @@ PODS:
   - ExpoLocation (58.0.20):
     - ExpoModulesCore
   - ExpoLogBox (58.0.13):
+    - React-Core
+  - ExpoMediaLibrary (58.0.13):
+    - ExpoModulesCore
     - React-Core
   - ExpoModulesCore (58.0.28):
     - ExpoModulesJSI
@@ -2364,7 +2367,7 @@ DEPENDENCIES:
   - "expo-dev-menu (from `../../../node_modules/.pnpm/expo-dev-menu@58.0.12_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._eb7beae99f123e52ba350a1315beccc9/node_modules/expo-dev-menu`)"
   - "expo-dev-menu-interface (from `../../../node_modules/.pnpm/expo-dev-menu-interface@58.0.1_expo@58.0.21/node_modules/expo-dev-menu-interface/ios`)"
   - "ExpoApplication (from `../../../node_modules/.pnpm/expo-application@58.1.2_expo@58.0.21/node_modules/expo-application/ios`)"
-  - "ExpoAsset (from `../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios`)"
+  - "ExpoAsset (from `../../../node_modules/.pnpm/expo-asset@58.0.20_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_cf131353fd26a80141f7de2975c208e3/node_modules/expo-asset/ios`)"
   - "ExpoClipboard (from `../../../node_modules/.pnpm/expo-clipboard@58.0.4_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._d4c7e3a7257926110fef02f900d2f709/node_modules/expo-clipboard/ios`)"
   - "ExpoCrypto (from `../../../node_modules/.pnpm/expo-crypto@58.0.7_expo@58.0.21/node_modules/expo-crypto/ios`)"
   - "ExpoDomWebView (from `../../../node_modules/.pnpm/@expo+dom-webview@58.0.2_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0._a76539e429313ec048a33d27eca11ecc/node_modules/@expo/dom-webview/ios`)"
@@ -2376,6 +2379,7 @@ DEPENDENCIES:
   - "ExpoLinking (from `../../../node_modules/.pnpm/expo-linking@58.0.15_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_65b0cc8048d4d1be05d6378be3becf3f/node_modules/expo-linking/ios`)"
   - "ExpoLocation (from `../../../node_modules/.pnpm/expo-location@58.0.20_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._b9dff5934e8ab920c56177bffdf558d3/node_modules/expo-location/ios`)"
   - "ExpoLogBox (from `../../../node_modules/.pnpm/@expo+log-box@58.0.13_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._0a1337488de8a47291f05ddbd29a2c49/node_modules/@expo/log-box`)"
+  - "ExpoMediaLibrary (from `../../../node_modules/.pnpm/expo-media-library@58.0.13_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@_47adf49551ea72ddb7bd82d1bb41215c/node_modules/expo-media-library/ios/ExpoMediaLibrary.podspec`)"
   - "ExpoModulesCore (from `../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core/ExpoModulesCore.podspec`)"
   - "ExpoModulesJSI (from `../../../node_modules/.pnpm/expo-modules-jsi@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@types+react@19.3.0_react@19.3.0_/node_modules/expo-modules-jsi/apple`)"
   - "ExpoModulesWorklets (from `../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core/ExpoModulesWorklets.podspec`)"
@@ -2512,7 +2516,7 @@ EXTERNAL SOURCES:
   ExpoApplication:
     :path: "../../../node_modules/.pnpm/expo-application@58.1.2_expo@58.0.21/node_modules/expo-application/ios"
   ExpoAsset:
-    :path: "../../../node_modules/.pnpm/expo-asset@58.0.19_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_891f4585dff41995d2f9b5bdad70887f/node_modules/expo-asset/ios"
+    :path: "../../../node_modules/.pnpm/expo-asset@58.0.20_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88.1_@_cf131353fd26a80141f7de2975c208e3/node_modules/expo-asset/ios"
   ExpoClipboard:
     :path: "../../../node_modules/.pnpm/expo-clipboard@58.0.4_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._d4c7e3a7257926110fef02f900d2f709/node_modules/expo-clipboard/ios"
   ExpoCrypto:
@@ -2535,6 +2539,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-location@58.0.20_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._b9dff5934e8ab920c56177bffdf558d3/node_modules/expo-location/ios"
   ExpoLogBox:
     :path: "../../../node_modules/.pnpm/@expo+log-box@58.0.13_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@0.88._0a1337488de8a47291f05ddbd29a2c49/node_modules/@expo/log-box"
+  ExpoMediaLibrary:
+    :podspec: "../../../node_modules/.pnpm/expo-media-library@58.0.13_expo@58.0.21_react-native@0.88.1_@react-native+metro-config@_47adf49551ea72ddb7bd82d1bb41215c/node_modules/expo-media-library/ios/ExpoMediaLibrary.podspec"
   ExpoModulesCore:
     :podspec: "../../../node_modules/.pnpm/expo-modules-core@58.0.28_react-native-worklets@0.13.0_@babel+core@7.29.7_@react-native_e87d2229fcb877ef6ed72f09babdc6c6/node_modules/expo-modules-core/ExpoModulesCore.podspec"
   ExpoModulesJSI:
@@ -2752,7 +2758,7 @@ SPEC CHECKSUMS:
   expo-dev-menu: 6b2030d709633f4b0aa58bfeca54b612235e5a4c
   expo-dev-menu-interface: d304e400271187edf1534704a4a05dcc140076e2
   ExpoApplication: c83355b2f69f996b5d26b64fef39228e7f1e1208
-  ExpoAsset: 9c966d4d2c67a13de7d449561558f782df1c1787
+  ExpoAsset: c080026976ef8f00dca12c4958c658b2ebd4d4e0
   ExpoClipboard: 244adf0a38b60ec7105e217042dd266a722f5a5e
   ExpoCrypto: 33ede543a3747abbef071c3bd747135ccc4e4fd5
   ExpoDomWebView: b2a6d681b9d34c23b1f584321386ca8da1d36afb
@@ -2764,6 +2770,7 @@ SPEC CHECKSUMS:
   ExpoLinking: c4c98c2c889e183ab2cdd95c5d0739a3e187e6c0
   ExpoLocation: 743cb999a9e622b6cdb76298cd3dee0956e221f1
   ExpoLogBox: 624d64042d73abe0dc230a24b1a9f835adb2cec9
+  ExpoMediaLibrary: 378277a96cb72d49a7c21dddefdbfa69d734506f
   ExpoModulesCore: 4babbfafe12ae8e11d54768c4f9d148040542994
   ExpoModulesJSI: 0c41d2327b3002cc736e81465a3e5e55b6d93b94
   ExpoModulesWorklets: e010ffcda2ad799980848396501c9cd2bea18ef5

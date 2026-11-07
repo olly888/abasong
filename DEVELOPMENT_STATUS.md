@@ -1,10 +1,14 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.46](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.47](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B5-04 scoped local private driver circle images
+## Current delivery — B5-05 scoped local driver invitation
 
-Branch `codex/b5-04-circle-photos`, base `bfa1979` / PR104. C01–03/G03 now support 0–3 ordered photos, picker/camera, local preview, retry, and authenticated post image reads. Replies remain text. Local migration 0022 brings D0 to 22 versions / 57 forced-RLS tables. Engineering 500 and isolated HTTP/PG 620 checks pass, including 41 media HTTP checks. Native iOS and Android representative flows used synthetic photos and the existing dev containers. Physical camera, two-finger gesture checks and actual cloud storage remain separate. [Report](docs/technical/B5_04_司机圈私有图片实施验收.md). Next: B5-05 invitations.
+Branch `codex/b5-05-driver-invite`, base `fa3787f` / PR105. My → Invite Driver, save-only photos, system sharing, copy and an anonymous static recipient page are implemented against U15/X02 and V3.2. Both simulators exercised the synthetic flow; actual photo storage/QR and iOS add-only denial were checked. Normal builds keep distribution closed and the release export check excludes the fixture. [Report](docs/technical/B5_05_邀请司机与接收页实施验收.md). No new API, DB, account grant, production domain or distribution. Next: B6 validation as external prerequisites become available; release remains pending.
+
+## Previous delivery — B5-04 scoped local private driver circle images
+
+Branch `codex/b5-04-circle-photos`, base `bfa1979` / PR104. C01–03/G03 now support 0–3 ordered photos, picker/camera, local preview, retry, and authenticated post image reads. Replies remain text. Local migration 0022 brings D0 to 22 versions / 57 forced-RLS tables. Engineering 500 and isolated HTTP/PG 620 checks pass, including 41 media HTTP checks. Native iOS and Android representative flows used synthetic photos and the existing dev containers. Physical camera, two-finger gesture checks and actual cloud storage remain separate. [Report](docs/technical/B5_04_司机圈私有图片实施验收.md). B5-05 has since been completed locally.
 
 ## Previous delivery — B5-03 scoped local driver circle
 
@@ -121,7 +125,6 @@ Documentation/task/link/JS syntax validation is recorded in [baseline report](de
 ## Next execution
 
 1. R4-01–13 scoped local core exits and exact code CI are verified; reports preserve each batch's evidence and limits. Do not repeat unchanged map gestures or rebuild completed services.
-2. Start **B5-01** on its own `codex/` branch: minimal editable self profile/experience/voluntary contacts and the approved My menu, with the compact switch reusing the existing one-window availability flow. Contract/authorization precede new forms.
-3. Continue B5-04 private images→B5-05 invitations after the B5-03 local text exit; B6 external/human validation can be arranged alongside independent local work.
+2. B5-01–05 have scoped local reports. For B6, arrange participant testing, real dual-account/cloud checks, independent package and physical distribution separately.
 
 `development_ready=true` and `b5_ready=true` authorize this controlled local scope; they do not certify the full product, normal-login/physical field or release readiness. `release_ready=false`. D14 is an umbrella, D22 overlaps D05/06, D23 overlaps D01; no duplicate counts. D19 cancelled, D24 P1. Do not bulk merge the PR stack or close issues from document status alone.

@@ -8,10 +8,19 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.abasong.mobile"
+      "bundleIdentifier": "com.abasong.mobile",
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "将 Abasong 邀请图保存到你的照片。"
+      }
     },
     "android": {
-      "package": "com.abasong.mobile"
+      "package": "com.abasong.mobile",
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -32,6 +41,14 @@
           "photosPermission": "选择需要整理的公寓截图，或要随司机圈动态发布的照片。",
           "cameraPermission": "拍摄配送现场照片，或在手机上识别面单地址以查找公寓。",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "选择需要整理的公寓截图，或要随司机圈动态发布的照片。",
+          "savePhotosPermission": "将 Abasong 邀请图保存到你的照片。",
+          "granularPermissions": []
         }
       ],
       [

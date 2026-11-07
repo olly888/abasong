@@ -1,0 +1,9 @@
+{
+  "firstLine": "到了公寓进不去？",
+  "secondLine": "先看看同行共享的",
+  "highlight": "门禁码。",
+  "benefits": ["附近查码", "便捷共享", "找活找人"],
+  "source": "门禁资料由同行共享，覆盖持续积累。",
+  "scan": "扫码了解 Abasong",
+  "scanCaption": "分享给跑同一区域的同行"
+}

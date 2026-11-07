@@ -1,3 +1,5 @@
+import { checked } from "./request-input";
+import { ApiError } from "../common/api-error";
 import { z } from "zod";
 const uuid = z.uuid().transform((x) => x.toLowerCase());
 export const sendInput = z.discriminatedUnion("kind", [
@@ -45,3 +47,17 @@ export const preferenceInput = z
 export const pageCursor = z
   .object({ at: z.iso.datetime({ offset: true }), id: uuid })
   .strict();
+
+export function inboxCursor(query: unknown) {
+  const q = checked(inboxQuery, query);
+  if (!q.cursor) return { limit: q.limit, after: undefined };
+  try {
+    const after = checked(
+      pageCursor,
+      JSON.parse(Buffer.from(q.cursor, "base64url").toString("utf8")),
+    );
+    return { limit: q.limit, after };
+  } catch {
+    throw new ApiError(400, "INVALID_INPUT", "列表位置有误");
+  }
+}

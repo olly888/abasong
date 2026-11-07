@@ -7,7 +7,7 @@ export function fixtureRequestAllowed(
   h: IncomingHttpHeaders,
   path: string,
   method: string,
-  scenario: "delivery" | "contribution" = "delivery",
+  scenario: "delivery" | "contribution" | "circle" = "delivery",
 ) {
   if (h.origin || h.referer || h["sec-fetch-site"]) return false;
   if (
@@ -37,8 +37,18 @@ export function fixtureRequestAllowed(
     /^\/v1\/me\/(contributions|apartment-library|private-access-records|import-policy|import-batches)(\/[a-z0-9-]+)*$/i.test(
       pathname ?? "",
     );
+  const circlePath =
+    /^\/v1\/(posts|comments|reports)(\/[a-z0-9-]+)*$/.test(pathname ?? "") ||
+    /^\/v1\/me\/(posts|notifications|inbox-summary|blocks)(\/[a-z0-9-]+)*$/.test(
+      pathname ?? "",
+    ) ||
+    deliveryPath;
   const businessPath =
-    scenario === "contribution" ? contributionPath : deliveryPath;
+    scenario === "contribution"
+      ? contributionPath
+      : scenario === "circle"
+        ? circlePath
+        : deliveryPath;
   return (
     (businessPath && /^\/v1\/[a-z0-9/?%_=,&.-]+$/i.test(path)) ||
     [
@@ -70,6 +80,9 @@ export function fixtureFaultMatch(
   if (operation === "availability")
     return method === "PUT" && path === "/v1/me/availability";
   if (method !== "POST") return false;
+  if (operation === "circle_post") return path === "/v1/posts";
+  if (operation === "circle_reply")
+    return /^\/v1\/posts\/[a-f0-9-]{36}\/comments$/.test(path);
   if (operation === "contribute")
     return /^\/v1\/apartments\/[a-f0-9-]{36}\/access-records$/.test(path);
   if (operation === "correct")

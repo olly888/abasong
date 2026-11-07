@@ -185,3 +185,7 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 ## 2026-11-06 B5-02 本人 DSP 团队
 
 沿用 Expo 58、React Native、现有剪贴板、共用组件及 EnvelopeCrypto；无新增依赖、锁文件、原生模块或系统权限。0020 仅应用本机 D0（20 迁移、56 表），独立加密业务联系方式，云环境未改。见[实施验收](docs/technical/B5_02_本人DSP团队与发布身份实施验收.md)。
+
+## 2026-11-06 B5-03 司机圈文字动态与通知
+
+沿用 Expo 58、React Native、Expo Router、现有消息与推送接口、pg 和 V3 共用组件。未新增依赖、锁文件、原生模块或系统权限。0021 已应用本机 D0，21 次迁移、56 张表。见[实施验收](docs/technical/B5_03_司机圈文字动态回复与通知实施验收.md)。

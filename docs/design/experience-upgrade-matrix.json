@@ -336,6 +336,7 @@
       ],
       "implementation_dependency": "native_post_comment_service_summary_permissions_reply_notifications_B5",
       "prototype_status": "circle_implemented_synthetic_owner_main_flow_review_recorded",
+      "app_status": "B5_03_scoped_local_circle_text_dual_native_verified",
       "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {

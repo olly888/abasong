@@ -24,7 +24,7 @@ import {
 // to the fixed disposable API. No login bypass is added to the business server.
 async function main() {
   const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
-  assert(["delivery", "contribution"].includes(scenario));
+  assert(["delivery", "contribution", "circle"].includes(scenario));
   const verify = process.env.ABASONG_NATIVE_EXIT_VERIFY ?? "default";
   assert(
     ["default", "collaboration", "unlisted", "profile", "team"].includes(
@@ -113,17 +113,19 @@ async function main() {
     stopping = false;
   let lifetime: ReturnType<typeof setTimeout> | undefined;
   const artifactBatch =
-    verify === "team"
-      ? "b5-02"
-      : verify === "profile"
-        ? "b5-01"
-        : verify === "unlisted"
-          ? "r4-13"
-          : scenario === "contribution"
-            ? "r4-11"
-            : verify === "collaboration"
-              ? "r4-12"
-              : "r4-10";
+    scenario === "circle"
+      ? "b5-03"
+      : verify === "team"
+        ? "b5-02"
+        : verify === "profile"
+          ? "b5-01"
+          : verify === "unlisted"
+            ? "r4-13"
+            : scenario === "contribution"
+              ? "r4-11"
+              : verify === "collaboration"
+                ? "r4-12"
+                : "r4-10";
   const resourceFile = `artifacts/${artifactBatch}/test-resources/${name}.json`;
   const recordResources = (cleaned = false) => {
     mkdirSync(`artifacts/${artifactBatch}/test-resources`, { recursive: true });
@@ -161,7 +163,7 @@ async function main() {
         req.headers,
         req.url ?? "",
         req.method ?? "",
-        scenario as "delivery" | "contribution",
+        scenario as "delivery" | "contribution" | "circle",
       )
     )
       return reply(403, {
@@ -240,7 +242,7 @@ async function main() {
         ).rows;
         const counts = (
           await db!.query(
-            "SELECT (SELECT count(*)::int FROM abasong.apartments) apartments,(SELECT count(*)::int FROM abasong.requests) requests,(SELECT count(*)::int FROM abasong.applications) applications,(SELECT count(*)::int FROM abasong.messages WHERE kind='text') messages,(SELECT count(*)::int FROM abasong.conversations) conversations,(SELECT count(*)::int FROM abasong.access_records) access_records,(SELECT count(*)::int FROM abasong.access_contribution_sources) contribution_sources,(SELECT count(*)::int FROM abasong.personal_access_records) private_records",
+            "SELECT (SELECT count(*)::int FROM abasong.apartments) apartments,(SELECT count(*)::int FROM abasong.requests) requests,(SELECT count(*)::int FROM abasong.applications) applications,(SELECT count(*)::int FROM abasong.messages WHERE kind='text') messages,(SELECT count(*)::int FROM abasong.conversations) conversations,(SELECT count(*)::int FROM abasong.access_records) access_records,(SELECT count(*)::int FROM abasong.access_contribution_sources) contribution_sources,(SELECT count(*)::int FROM abasong.personal_access_records) private_records,(SELECT count(*)::int FROM abasong.posts WHERE status='visible') circle_posts,(SELECT count(*)::int FROM abasong.comments WHERE status='visible') circle_comments,(SELECT count(*)::int FROM abasong.notifications WHERE kind='circle_reply') circle_notifications",
           )
         ).rows[0];
         return reply(200, {
@@ -265,6 +267,8 @@ async function main() {
             "import_commit",
             "profile",
             "team",
+            "circle_post",
+            "circle_reply",
             "availability",
           ].includes(String(b.operation))
         ) {

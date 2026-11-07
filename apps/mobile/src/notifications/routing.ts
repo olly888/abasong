@@ -18,6 +18,8 @@ export function notificationTarget(data: unknown, userId: string | null) {
       pathname: "/conversations/[id]" as const,
       params: { id: p.object_id },
     };
+  if (p.kind === "post")
+    return { pathname: "/circle/[id]" as const, params: { id: p.object_id } };
   if (p.kind === "request")
     return { pathname: "/requests/[id]" as const, params: { id: p.object_id } };
   return null;

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { View } from "react-native";
+import { View, type ViewProps } from "react-native";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { useAuth } from "../../auth/AuthProvider";
@@ -7,17 +7,60 @@ import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
 import { StatusPanel } from "../../ui/Feedback";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate, RequestCard } from "../../requests/RequestUi";
+import { CircleFeed } from "../../circle/CircleFeed";
+import { useBusinessRequest } from "../../auth/useBusinessRequest";
+import {
+  openPost,
+  openAuthor,
+  openCircleRequest,
+} from "../../circle/navigation";
 import type { DeliverySummary } from "../../requests/presentation";
 export default function Requests() {
   return (
     <RequestGate>
-      <List />
+      <RequestLists />
     </RequestGate>
   );
 }
-function List() {
-  const { session } = useAuth(),
-    mine = useLocalSearchParams<{ mine?: string }>().mine === "1";
+function RequestLists() {
+  const mine = useLocalSearchParams<{ mine?: string }>().mine === "1";
+  const [section, setSection] = useState<"requests" | "posts">("requests");
+  const request = useBusinessRequest();
+  const tabs = mine ? (
+    <View style={{ flexDirection: "row", justifyContent: "center", gap: 20 }}>
+      <ActionButton
+        label="配送需求"
+        variant={section === "requests" ? "secondary" : "text"}
+        onPress={() => setSection("requests")}
+      />
+      <ActionButton
+        label="动态"
+        variant={section === "posts" ? "secondary" : "text"}
+        onPress={() => setSection("posts")}
+      />
+    </View>
+  ) : undefined;
+  return mine && section === "posts" ? (
+    <CircleFeed
+      request={request}
+      mine
+      header={tabs}
+      onBack={() =>
+        router.canGoBack() ? router.back() : router.replace("/profile")
+      }
+      onPublish={() => router.push("/circle/new")}
+      onNewRequest={() => router.push("/requests/new")}
+      onOpen={openPost}
+      onAuthor={openAuthor}
+      onRequest={openCircleRequest}
+    />
+  ) : (
+    <List mine={mine} tabs={tabs} />
+  );
+}
+
+function List({ mine, tabs }: { mine: boolean; tabs?: ViewProps["children"] }) {
+  const { session } = useAuth();
   const [rows, setRows] = useState<DeliverySummary[]>([]),
     [regions, setRegions] = useState<Record<string, string>>({}),
     [cursor, setCursor] = useState<string | null>(null),
@@ -74,6 +117,7 @@ function List() {
   );
   return (
     <AuthPage compact title={mine ? "我的发布" : "配送需求"}>
+      {tabs}
       <ActionButton
         label="＋ 发需求"
         onPress={() => router.push("/requests/new")}

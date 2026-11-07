@@ -1,7 +1,7 @@
 export type PushData = {
   version: 1;
   owner_id: string;
-  kind: "conversation" | "request";
+  kind: "conversation" | "request" | "post";
   object_id: string;
 };
 export type PushPayload = { title: string; body: string; data: PushData };

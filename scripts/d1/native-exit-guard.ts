@@ -47,6 +47,15 @@ export function fixtureFaultMatch(
   method: string,
   path: string,
 ) {
+  if (operation === "read")
+    return (
+      method === "PUT" &&
+      /^\/v1\/conversations\/[a-f0-9-]{36}\/read$/.test(path)
+    );
+  if (operation === "conversation")
+    return (
+      method === "GET" && /^\/v1\/conversations\/[a-f0-9-]{36}$/.test(path)
+    );
   if (method !== "POST") return false;
   if (operation === "contribute")
     return /^\/v1\/apartments\/[a-f0-9-]{36}\/access-records$/.test(path);

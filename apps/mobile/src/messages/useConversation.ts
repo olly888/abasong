@@ -7,11 +7,14 @@ import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
 import { AccountError } from "../auth/api-client";
+import { createConversationAccess } from "./access-gate";
 import {
   updateMessageLog,
   pendingAfterRead,
   retryInput,
   visibleWatermark,
+  redactSourceMessages,
+  requiresSourceRefresh,
   type Conversation,
   type Message,
   type PendingMessage,
@@ -45,6 +48,7 @@ export function useConversationData(
     [error, setError] = useState<string | null>(null),
     [busy, setBusy] = useState(true),
     [loadingOlder, setLoadingOlder] = useState(false),
+    [permissionReady, setPermissionReady] = useState(false),
     [cursor, setCursor] = useState<string | null>(null);
   const scope = useRef(0),
     live = useRef(false),
@@ -59,14 +63,22 @@ export function useConversationData(
     readTarget = useRef(0),
     readAck = useRef(0),
     syncedSequence = useRef(0),
-    readBusy = useRef(false),
+    readBusy = useRef<number | null>(null),
+    access = useRef(createConversationAccess()),
     readTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   currentRows.current = messages;
   currentConversation.current = conversation;
   useEffect(() => {
-    const sub = AppState.addEventListener("change", (x) =>
-      setForeground(x === "active"),
-    );
+    const sub = AppState.addEventListener("change", (x) => {
+      if (x !== "active") {
+        live.current = false;
+        access.current.invalidate();
+        setPermissionReady(false);
+        controllers.current.forEach((c) => c.abort());
+        clearTimeout(readTimer.current);
+      }
+      setForeground(x === "active");
+    });
     return () => sub.remove();
   }, []);
   const valid = (g: number) => live.current && g === scope.current;
@@ -90,28 +102,40 @@ export function useConversationData(
       ),
     );
     setMessages(next.messages);
-    setPending((old) => pendingAfterRead(old, items, userId));
+    setPending((old) =>
+      pendingAfterRead(
+        old,
+        items.filter((m) => m.conversation_id === id),
+        userId,
+      ),
+    );
   };
   function failed(e: unknown, g: number) {
     if (!valid(g)) return;
+    access.current.revoke(g);
+    setPermissionReady(false);
     setError(e instanceof Error ? e.message : "消息暂时无法加载");
     if (e instanceof AccountError && [401, 403, 404].includes(e.status)) {
       setConversation(null);
+      currentConversation.current = null;
+      currentRows.current = [];
       setMessages([]);
       setPending([]);
       setDraft("");
       draftRef.current = "";
+      setCursor(null);
+      syncedSequence.current = 0;
     }
   }
   const markRead = async (g: number) => {
     if (
       !userId ||
       !valid(g) ||
-      readBusy.current ||
+      readBusy.current === g ||
       readTarget.current <= readAck.current
     )
       return;
-    readBusy.current = true;
+    readBusy.current = g;
     const target = readTarget.current,
       c = new AbortController();
     controllers.current.add(c);
@@ -126,7 +150,7 @@ export function useConversationData(
       /* Keep the target for the next foreground poll. Never fake acknowledgement. */
     } finally {
       controllers.current.delete(c);
-      readBusy.current = false;
+      if (readBusy.current === g) readBusy.current = null;
     }
   };
   const markReadRef = useRef(markRead);
@@ -150,14 +174,34 @@ export function useConversationData(
         ]);
         if (!valid(g)) return;
         if (meta.status === "rejected") throw meta.reason;
+        const recheckSources = requiresSourceRefresh(
+          currentConversation.current,
+          meta.value,
+        );
+        access.current.accept(g, meta.value.can_send);
+        setPermissionReady(true);
+        currentConversation.current = meta.value;
         setConversation(meta.value);
+        if (!meta.value.can_send || !meta.value.last_request_snapshot) {
+          currentRows.current = redactSourceMessages(currentRows.current);
+          setMessages(currentRows.current);
+        }
         readAck.current = Math.max(
           readAck.current,
           meta.value.my_last_read_sequence,
         );
         if (page.status === "rejected") throw page.reason;
-        accept(page.value.items, "feed");
-        if (!after) setCursor(page.value.next_cursor);
+        let feed = page.value;
+        if (recheckSources) {
+          feed = await request<S["MessagePage"]>(
+            `/v1/conversations/${id}/messages?limit=40&before_sequence=${Number.MAX_SAFE_INTEGER}`,
+            { signal: c.signal },
+          );
+          if (!valid(g)) return;
+          syncedSequence.current = 0;
+        }
+        accept(feed.items, "feed");
+        if (!after || recheckSources) setCursor(feed.next_cursor);
         setError(null);
         void markReadRef.current(g);
       } catch (e) {
@@ -173,13 +217,21 @@ export function useConversationData(
   useFocusEffect(
     useCallback(() => {
       if (!foreground) return;
-      const g = ++scope.current;
+      const g = access.current.begin();
+      scope.current = g;
       live.current = true;
+      setPermissionReady(false);
+      // Retained text is readable history; source cards require a fresh check.
+      currentRows.current = redactSourceMessages(currentRows.current);
+      setMessages(currentRows.current);
+      syncedSequence.current = 0;
       setBusy(true);
       void refresh(g);
       const timer = setInterval(() => void refresh(g), 4000);
       return () => {
         live.current = false;
+        access.current.invalidate();
+        setPermissionReady(false);
         scope.current++;
         clearInterval(timer);
         clearTimeout(readTimer.current);
@@ -197,6 +249,7 @@ export function useConversationData(
     if (
       !userId ||
       !live.current ||
+      !access.current.canSend(scope.current) ||
       !currentConversation.current?.can_send ||
       sending.current.has(p.id)
     )
@@ -232,8 +285,15 @@ export function useConversationData(
               : m,
           ),
         );
-        if (e instanceof AccountError && [401, 403, 404].includes(e.status))
+        if (e instanceof AccountError && [401, 403, 404].includes(e.status)) {
+          access.current.revoke(g);
+          setPermissionReady(false);
+          if (e.code === "CONVERSATION_READ_ONLY") {
+            currentRows.current = redactSourceMessages(currentRows.current);
+            setMessages(currentRows.current);
+          }
           void refresh(g);
+        }
       }
     } finally {
       controllers.current.delete(c);
@@ -246,6 +306,7 @@ export function useConversationData(
       !text ||
       text.length > 2000 ||
       !currentConversation.current?.can_send ||
+      !access.current.canSend(scope.current) ||
       !live.current
     )
       return;
@@ -307,7 +368,12 @@ export function useConversationData(
     loadingOlder,
     hasOlder: !!cursor,
     userId,
-    canSend: !!conversation?.can_send && foreground,
+    canSend: permissionReady && !!conversation?.can_send && foreground,
+    readOnlyReason: !permissionReady
+      ? error
+        ? "会话暂不可用，请重新加载"
+        : "正在更新会话…"
+      : undefined,
     onDraft: (v: string) => {
       draftRef.current = v;
       setDraft(v);

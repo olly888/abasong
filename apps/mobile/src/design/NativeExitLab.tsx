@@ -417,7 +417,12 @@ function ExitChat({
       <ChatComposer
         {...p}
         readOnlyReason={
-          !p.conversation ? (p.busy ? "正在加载…" : "会话暂不可用") : undefined
+          p.readOnlyReason ??
+          (!p.conversation
+            ? p.busy
+              ? "正在加载…"
+              : "会话暂不可用"
+            : undefined)
         }
       />
     </ConversationLayout>

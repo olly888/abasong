@@ -11,6 +11,9 @@ import { childRunning } from "./native-exit-guard";
 async function main() {
   const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
   assert(["delivery", "contribution"].includes(scenario));
+  const verify = process.env.ABASONG_NATIVE_EXIT_VERIFY ?? "default";
+  assert(["default", "collaboration"].includes(verify));
+  assert(verify !== "collaboration" || scenario === "delivery");
   const env = parseEnv(readFileSync(".env", "utf8"));
   const admin = new Client({
     connectionString: localTarget(env.DATABASE_ADMIN_URL).href,
@@ -65,7 +68,9 @@ async function main() {
         "tsx",
         scenario === "contribution"
           ? "scripts/d1/verify-native-contribution.ts"
-          : "scripts/d1/verify-native-exit.ts",
+          : verify === "collaboration"
+            ? "scripts/d1/verify-native-collaboration.ts"
+            : "scripts/d1/verify-native-exit.ts",
       ],
       { stdio: "inherit" },
     );

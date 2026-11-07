@@ -1,10 +1,10 @@
 {
-  "version": "V3.2-R4-11-scoped-protection",
+  "version": "V3.2-R4-12-protection",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_11_recorded_apartment_protection_verified_D08_unlisted_batch_pending",
+  "scope": "R4_12_scoped_local_dual_native_verified_R4_13_next",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
@@ -12,7 +12,7 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "R4_11_current_import_rules_consolidated_D08_explicit_P0_gap",
-    "implementation": "R4_01_to_10_scoped_exit_R4_11_protection_verified_R4_12_next",
+    "implementation": "R4_01_to_12_scoped_exit_R4_13_P0_closure_next",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
     "my_account": "simplified_synthetic_only_native_service_pending",
@@ -612,5 +612,64 @@
       "staged": "PASS",
       "all_history": "PASS"
     }
+  },
+  "r4_collaboration_protection": {
+    "version": "R4-12-collaboration-protection",
+    "date": "2026-11-06",
+    "base": "4855e8e765508ae5cb2f0f64e92f01594ade0cb9",
+    "branch": "codex/r4-12-messaging-protection",
+    "status": "scoped_local_HTTP_dual_native_protection_PASS",
+    "scoped_batch_complete": true,
+    "report": "../technical/R4_12_报名来源消息与关闭保护验收.md",
+    "engineering": {
+      "files": 84,
+      "tests": 488,
+      "lint_types_build": "PASS"
+    },
+    "requests_HTTP_PG": 515,
+    "mobile_core_HTTP": {
+      "assertions": 37,
+      "calls": 44,
+      "status": "PASS",
+      "real_API_PG": true
+    },
+    "native": {
+      "ios": "PASS_representative_actual_components_real_HTTP",
+      "ios_foreground_background": "PASS_background_block_resume_and_recovery",
+      "android": "PASS_observed_conflict_uncertain_form_found_detail_and_owner_two_groups",
+      "normal_route_real_account": false,
+      "physical_acceptance": false,
+      "new_binary_compilation": false,
+      "Hermes_export": "PASS_ios_android",
+      "prototype": "P08_M02_opened_and_visual_hierarchy_compared",
+      "android_owner_reference": "call_c6341bb037e941c98efe3962e76d64b0:0,1",
+      "android_owner_result": "normal_both_groups"
+    },
+    "cleanup": {
+      "runner": "PASS_footprint_restored",
+      "occupied_port": "PASS_existing_listener_untouched",
+      "live_fixture": "stopped_and_owned_resources_cleaned",
+      "final_remaining_counts": {
+        "databases": 0,
+        "roles": 0
+      }
+    },
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "D0_migrations": 17,
+    "D0_tables": 54,
+    "b5_ready": false,
+    "release_ready": false,
+    "human_participants": 0,
+    "next_task": "R4-13",
+    "open_P0": [
+      "D08-B05-unlisted-batch-address"
+    ],
+    "pull_request": null,
+    "ci_source": "pending_current_head",
+    "evidence": "../technical/R4_12_执行证据.json"
   }
 }

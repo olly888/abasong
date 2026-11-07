@@ -25,6 +25,9 @@ import {
 async function main() {
   const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
   assert(["delivery", "contribution"].includes(scenario));
+  const verify = process.env.ABASONG_NATIVE_EXIT_VERIFY ?? "default";
+  assert(["default", "collaboration"].includes(verify));
+  assert(verify !== "collaboration" || scenario === "delivery");
   let apartments: string[] = [];
   const env = parseEnv(readFileSync(".env", "utf8")),
     adminUrl = localTarget(env.DATABASE_ADMIN_URL),
@@ -94,10 +97,10 @@ async function main() {
     createdRole = false,
     stopping = false;
   let lifetime: ReturnType<typeof setTimeout> | undefined;
-  const resourceFile = `artifacts/${scenario === "contribution" ? "r4-11" : "r4-10"}/test-resources/${name}.json`;
+  const resourceFile = `artifacts/${scenario === "contribution" ? "r4-11" : verify === "collaboration" ? "r4-12" : "r4-10"}/test-resources/${name}.json`;
   const recordResources = (cleaned = false) => {
     mkdirSync(
-      `artifacts/${scenario === "contribution" ? "r4-11" : "r4-10"}/test-resources`,
+      `artifacts/${scenario === "contribution" ? "r4-11" : verify === "collaboration" ? "r4-12" : "r4-10"}/test-resources`,
       { recursive: true },
     );
     writeFileSync(
@@ -175,6 +178,8 @@ async function main() {
             "publish",
             "apply",
             "message",
+            "read",
+            "conversation",
             "contribute",
             "correct",
             "import_commit",
@@ -189,6 +194,24 @@ async function main() {
           typeof b.enabled === "boolean"
         ) {
           await toggleContributionFailure(db!, b.enabled);
+          return reply(200, { enabled: b.enabled });
+        }
+        if (
+          scenario === "delivery" &&
+          verify === "collaboration" &&
+          b.action === "block" &&
+          typeof b.enabled === "boolean"
+        ) {
+          if (b.enabled)
+            await db!.query(
+              "INSERT INTO abasong.blocks(blocker_id,blocked_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
+              [owner, driver],
+            );
+          else
+            await db!.query(
+              "DELETE FROM abasong.blocks WHERE blocker_id=$1 AND blocked_id=$2",
+              [owner, driver],
+            );
           return reply(200, { enabled: b.enabled });
         }
         if (b.action === "qualification" && typeof b.enabled === "boolean") {

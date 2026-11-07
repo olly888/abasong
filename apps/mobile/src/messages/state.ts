@@ -35,6 +35,24 @@ export type PendingMessage = {
   status: "sending" | "failed";
   error?: string;
 };
+export function redactSourceMessages(rows: Message[]) {
+  return rows.map((m) =>
+    m.kind === "request_card"
+      ? { ...m, request_snapshot: null, request_region_label: null }
+      : m,
+  );
+}
+export function requiresSourceRefresh(
+  previous: Conversation | null,
+  next: Conversation,
+) {
+  return (
+    !!previous &&
+    next.can_send &&
+    (!previous.can_send ||
+      (!previous.last_request_snapshot && !!next.last_request_snapshot))
+  );
+}
 export function mergeMessages(
   conversationId: string,
   current: Message[],

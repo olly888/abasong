@@ -448,7 +448,8 @@
         "UX15"
       ],
       "implementation_dependency": "D20_own_team_opt_in_contact_source_snapshot",
-      "prototype_status": "account_implemented_synthetic_native_service_pending",
+      "prototype_status": "account_implemented_synthetic",
+      "app_status": "B5_02_scoped_local_native_and_service",
       "owner_main_flow_review": "recorded_20261105_not_item_level_native_acceptance"
     },
     {

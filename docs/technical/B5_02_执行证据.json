@@ -1,0 +1,83 @@
+{
+  "batch": "B5-02",
+  "date": "2026-11-06",
+  "scope": "local_only_native_development_containers_and_synthetic_identities",
+  "contract": {
+    "paths": 93,
+    "operations": 118,
+    "schemas": 168,
+    "static_validation": "passed"
+  },
+  "checks": {
+    "engineering_files": 87,
+    "engineering_tests": 500,
+    "request_http_db": 548,
+    "team_assertions_in_request_suite": 27,
+    "library_http_db": 295,
+    "import_http_db": 124,
+    "d0_migrations": 20,
+    "d0_tables": 56,
+    "ios_hermes_export": "passed",
+    "android_hermes_export": "passed"
+  },
+  "observed_native": {
+    "ios": [
+      "create_team_from_draft",
+      "lost_response_retains_inputs",
+      "retry_returns_to_same_draft",
+      "new_team_selected_with_warehouse_quantity_and_price",
+      "publish_succeeded",
+      "old_snapshot_and_current_renamed_team",
+      "contact_visible_then_block_hides",
+      "disable_contact_share"
+    ],
+    "android": [
+      "my_team_entry",
+      "native_team_form",
+      "keyboard_focus_rename_and_share_saved",
+      "select_team_and_review",
+      "publish_succeeded",
+      "authorized_contact_sheet",
+      "iOS_sharing_disabled_hides_open_contact_sheet"
+    ]
+  },
+  "native_isolated_db_before_cleanup": {
+    "published_requests": 2,
+    "messages": 0
+  },
+  "native_cleanup": {
+    "disposable_databases": 0,
+    "disposable_roles": 0
+  },
+  "screenshots_local_only": [
+    {
+      "file": "artifacts/b5-02/android/contact-revoked.png",
+      "sha256": "16ca38551f90dbca136eb3535140cbac2f67a8c98fc6caa565c820692c8a52c3"
+    },
+    {
+      "file": "artifacts/b5-02/android/publish-review.png",
+      "sha256": "64b77d4f7d1961f3c3206dc9e31a7639a57323110f8287f80b0902f59bf22168"
+    },
+    {
+      "file": "artifacts/b5-02/android/shared-contact.png",
+      "sha256": "4b5972f3406632ab835b957364500d3c0b4d1e5880e3f3a349cfa14139ee12f7"
+    },
+    {
+      "file": "artifacts/b5-02/ios/historical-identity.png",
+      "sha256": "2a8abf0a730b9d935c055b79a397744dfcc98e97620aef7dbe27021e4b6be722"
+    },
+    {
+      "file": "artifacts/b5-02/ios/published-default-private.png",
+      "sha256": "2b7c1de34b13121bab4bc95462f48f6f2cf129953ae79dc16a5ce55b1aad9fa6"
+    },
+    {
+      "file": "artifacts/b5-02/ios/shared-contact.png",
+      "sha256": "ca3ac718c76598f0786c252d01389e2f6ac761ce4a2f16bc0985c54bffa1bfa8"
+    },
+    {
+      "file": "artifacts/b5-02/ios/team-save-retry.png",
+      "sha256": "4680f4ed08cf4c6186e6aaf3bdf6e54f0f1f50f99573ec65beb76aa74370b565"
+    }
+  ],
+  "physical_devices_and_cloud": "not_run"
+}

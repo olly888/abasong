@@ -41,6 +41,8 @@ import { NestFactory } from "@nestjs/core";
 import { randomUUID } from "node:crypto";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Database } from "./database/database.service";
+import { TeamController } from "./me/team.controller";
+import { TeamService } from "./me/team.service";
 import { MeController } from "./me/me.controller";
 import { SelfProfileService } from "./me/self-profile.service";
 import { MeService } from "./me/me.service";
@@ -72,6 +74,7 @@ class HealthController {
   controllers: [
     HealthController,
     MeController,
+    TeamController,
     ApartmentsController,
     ImportsController,
     SearchController,
@@ -88,6 +91,7 @@ class HealthController {
     { provide: ENVELOPE_CRYPTO, useFactory: createEnvelope },
     Database,
     MeService,
+    TeamService,
     SelfProfileService,
     TokenVerifier,
     IdentityGuard,

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
-import { router, usePreventRemove } from "expo-router";
+import { router, useFocusEffect, usePreventRemove } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
@@ -17,9 +17,13 @@ import {
   type DeliveryFields,
   type Scenario,
 } from "./delivery-fields";
-import { createDeliveryWriter } from "./delivery-writer";
+import { ownTeam, teamError, type OwnTeamSummary } from "../teams/team-client";
+import {
+  createDeliveryWriter,
+  type DeliveryTeamIntent,
+} from "./delivery-writer";
 import { DeliveryForm } from "./DeliveryForm";
-import { requestStyles as s } from "./RequestUi";
+import { Choice, requestStyles as s } from "./RequestUi";
 import {
   requestPrice,
   scenarioLabels,
@@ -34,6 +38,7 @@ export function DeliveryEditor({
   copy = false,
   onDone,
   onReload,
+  onOpenTeam,
   testNotice,
   testControls,
 }: {
@@ -44,6 +49,7 @@ export function DeliveryEditor({
   copy?: boolean;
   onDone: (r: S["RequestDetailV2"], published: boolean) => void;
   onReload: () => void;
+  onOpenTeam?: () => void;
   testNotice?: string;
   testControls?: React.ReactNode;
 }) {
@@ -116,10 +122,59 @@ export function DeliveryEditor({
     setError(null);
   };
   const published = !copy && initial?.status !== "draft" && !!initial;
+  const [team, setTeam] = useState<OwnTeamSummary | null>(null);
+  const [teamId, setTeamId] = useState(
+    !copy ? (initial?.organization?.id ?? "") : "",
+  );
+  const [teamState, setTeamState] = useState<"loading" | "loaded" | "error">(
+    "loading",
+  );
+  const pendingTeam = useRef(false);
+  const teamLoad = useRef<AbortController | null>(null);
+  const reviewedTeam = useRef<DeliveryTeamIntent | undefined>(undefined);
+  const teamEnabled = !!onOpenTeam && !published;
+  const loadTeam = useCallback(async () => {
+    if (!teamEnabled) return;
+    teamLoad.current?.abort();
+    const c = new AbortController();
+    teamLoad.current = c;
+    setTeamState("loading");
+    try {
+      const t = await ownTeam<OwnTeamSummary>(request, c.signal, true);
+      if (c.signal.aborted) return;
+      setTeam(t);
+      setTeamState("loaded");
+      if (pendingTeam.current && t?.can_represent) {
+        setTeamId(t.team.id);
+        setDirty(true);
+      }
+      pendingTeam.current = false;
+    } catch {
+      if (!c.signal.aborted) setTeamState("error");
+    }
+  }, [request, teamEnabled]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadTeam();
+      return () => teamLoad.current?.abort();
+    }, [loadTeam]),
+  );
+  function teamChoice(): DeliveryTeamIntent | undefined {
+    if (!teamEnabled) return undefined;
+    if (!teamId) return null;
+    if (
+      teamState !== "loaded" ||
+      !team?.can_represent ||
+      team.team.id !== teamId
+    )
+      throw new Error("当前团队不能代表发布，请检查团队资料或选择个人");
+    return { id: team.team.id, version: team.version, name: team.team.name };
+  }
   function check() {
     if (!scenario) return;
     try {
       deliveryInput(scenario, form, true, writer.current());
+      reviewedTeam.current = teamChoice();
       Keyboard.dismiss();
       setError(null);
       setReview(true);
@@ -137,6 +192,7 @@ export function DeliveryEditor({
       const result = await writer.save(
         deliveryInput(scenario, form, publish, writer.current()),
         publish,
+        publish ? reviewedTeam.current : teamChoice(),
       );
       if (!mounted.current) return;
       leaving.current = true;
@@ -147,6 +203,13 @@ export function DeliveryEditor({
       if (!mounted.current) return;
       if (e instanceof AccountError && e.code === "VERSION_CONFLICT")
         setConflict(true);
+      if (
+        teamError(e, "TEAM_CHANGED") ||
+        teamError(e, "ORGANIZATION_REQUIRED")
+      ) {
+        setReview(false);
+        void loadTeam();
+      }
       setError(e instanceof Error ? e.message : "保存失败，填写内容已保留");
     } finally {
       lock.current = false;
@@ -269,20 +332,67 @@ export function DeliveryEditor({
     >
       {testControls}
       {testNotice ? <Text style={s.secondary}>{testNotice}</Text> : null}
-      <View
-        style={{
-          padding: 14,
-          backgroundColor: tokens.color.surfaceMuted,
-          borderRadius: 12,
-        }}
-      >
-        <Text style={s.secondary}>
-          发布身份 ·{" "}
-          {initial?.organization && !copy
-            ? initial.organization.name
-            : identity}
-        </Text>
-      </View>
+      {teamEnabled && !review ? (
+        <View style={{ gap: 6 }}>
+          <Choice
+            label="发布身份"
+            value={teamId}
+            disabled={busy || conflict}
+            options={[
+              ["", "个人"],
+              ...(teamState === "loaded" && team?.can_represent
+                ? [[team.team.id, `代表 ${team.team.name}`] as const]
+                : []),
+            ]}
+            onChange={(id) => {
+              setTeamId(id);
+              setDirty(true);
+              setError(null);
+            }}
+          />
+          {teamId && !team?.can_represent && teamState === "loaded" ? (
+            <Text style={s.secondary}>原团队不可用，请重新选择发布身份</Text>
+          ) : null}
+          {teamState === "error" ? (
+            <ActionButton
+              label="重新读取团队资料"
+              variant="text"
+              onPress={() => void loadTeam()}
+            />
+          ) : null}
+          {teamState === "loading" ? (
+            <Text style={s.secondary}>正在读取团队资料…</Text>
+          ) : null}
+          {teamState === "loaded" && !team?.can_represent ? (
+            <ActionButton
+              label={team ? "查看团队资料" : "添加团队资料"}
+              variant="text"
+              disabled={busy || conflict}
+              onPress={() => {
+                pendingTeam.current = !team;
+                onOpenTeam?.();
+              }}
+            />
+          ) : null}
+        </View>
+      ) : (
+        <View
+          style={{
+            padding: 14,
+            backgroundColor: tokens.color.surfaceMuted,
+            borderRadius: 12,
+          }}
+        >
+          <Text style={s.secondary}>
+            发布身份 ·{" "}
+            {published
+              ? (initial.organization?.name ?? initial.publisher.display_name)
+              : review && teamEnabled
+                ? (reviewedTeam.current?.name ?? "个人")
+                : identity}
+          </Text>
+        </View>
+      )}
       {review ? (
         <View style={{ gap: 24 }}>
           <Text style={s.headline}>{scenarioLabels[scenario]}</Text>

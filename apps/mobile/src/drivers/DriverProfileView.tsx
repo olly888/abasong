@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Text, View } from "react-native";
 import type { components } from "@abasong/contracts";
 import { PageFrame } from "../ui/PageFrame";
@@ -12,6 +13,7 @@ export function DriverProfileView(p: {
   canContact: boolean;
   onContact: () => void;
   onReload: () => void;
+  team?: ReactNode;
   onBack?: () => void;
 }) {
   const d = p.driver;
@@ -69,6 +71,7 @@ export function DriverProfileView(p: {
           ) : (
             <Text style={typeStyles.secondary}>暂未填写配送经验</Text>
           )}
+          {p.team}
         </>
       )}
     </PageFrame>

@@ -215,9 +215,17 @@ it("V1 stays strict; V2 patch cannot change source, scene or optimistic version 
   expect(() =>
     checked(patchInput, { expected_version: 1, quantity_mode: "unknown" }),
   ).toThrow();
+  for (const organization_id of [full().region_id, null])
+    expect(
+      checked(patchV2Input, {
+        request_schema_version: 2,
+        expected_version: 1,
+        organization_id,
+      }),
+    ).toMatchObject({ organization_id });
   for (const extra of [
     { scenario: "delivery_handoff" },
-    { organization_id: full().region_id },
+    { organization_id: "invalid-team-id" },
     { expected_version: 2147483647 },
   ])
     expect(() =>

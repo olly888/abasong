@@ -137,7 +137,7 @@ export class RequestSharesService {
           org_name: string | null;
         }
       >(
-        `SELECT r.*,g.label AS region_label,p.display_name AS public_name,o.name AS org_name,
+        `SELECT r.*,g.label AS region_label,p.display_name AS public_name,COALESCE(o.legacy_name,o.name) AS org_name,
       (s.expires_at<=now() OR r.status<>'open' OR r.expires_at<=now()) AS share_ended
       FROM abasong.request_shares s JOIN abasong.requests r ON r.id=s.request_id JOIN abasong.users u ON u.id=r.publisher_id
       JOIN abasong.profiles p ON p.user_id=r.publisher_id JOIN abasong.regions g ON g.id=r.region_id LEFT JOIN abasong.organizations o ON o.id=r.organization_id

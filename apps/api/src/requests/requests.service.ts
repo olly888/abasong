@@ -157,14 +157,20 @@ export class RequestsService {
       )
     ).rows[0];
     if (!p) throw missing();
-    const organization = r.organization_id
-      ? (
-          await c.query(
-            "SELECT id,name,contact_user_id,verification_status FROM abasong.organizations WHERE id=$1",
-            [r.organization_id],
-          )
-        ).rows[0]
-      : null;
+    const identity = r.publishing_identity as {
+      publisher_display_name: string;
+      organization: S["Organization"] | null;
+    } | null;
+    const organization = identity
+      ? identity.organization
+      : r.organization_id
+        ? (
+            await c.query(
+              "SELECT id,CASE WHEN $2 THEN name ELSE COALESCE(legacy_name,name) END AS name,contact_user_id,CASE WHEN $2 THEN verification_status ELSE COALESCE(legacy_verification_status,verification_status) END AS verification_status FROM abasong.organizations WHERE id=$1",
+              [r.organization_id, r.status === "draft"],
+            )
+          ).rows[0]
+        : null;
     const status =
       r.status === "open" && r.is_expired === true ? "expired" : r.status;
     const content = Object.fromEntries(
@@ -178,6 +184,7 @@ export class RequestsService {
       id: r.id,
       publisher: {
         ...p,
+        display_name: identity?.publisher_display_name ?? p.display_name,
         experience: p.experience.map((e: Record<string, unknown>) => ({
           carrier: e.carrier,
           region_label: e.region_label,
@@ -194,14 +201,6 @@ export class RequestsService {
       currency: "USD",
     } as S["Request"];
     if (r.request_schema_version !== 2) return result;
-    const identity = r.publishing_identity as {
-      publisher_display_name: string;
-      organization: S["Organization"] | null;
-    } | null;
-    if (identity) {
-      result.publisher.display_name = identity.publisher_display_name;
-      result.organization = identity.organization;
-    }
     const { private_payment_terms, ...summary } = result;
     const v2 = {
       ...summary,
@@ -239,7 +238,7 @@ export class RequestsService {
     if (data.organization_id) {
       const org = (
         await c.query(
-          "SELECT id FROM abasong.organizations WHERE id=$1 AND contact_user_id=$2 AND verification_status<>'rejected'",
+          "SELECT id FROM abasong.organizations WHERE id=$1 AND contact_user_id=$2 AND active AND verification_status<>'rejected'",
           [data.organization_id, current?.publisher_id],
         )
       ).rows[0];
@@ -454,6 +453,12 @@ export class RequestsService {
     const { pickup, expected_version, request_schema_version, ...fields } = p;
     void expected_version;
     void request_schema_version;
+    if (r.status !== "draft" && fields.organization_id !== undefined)
+      throw new ApiError(
+        409,
+        "PUBLISHING_IDENTITY_LOCKED",
+        "已发布需求不能更换发布身份",
+      );
     let data: Record<string, unknown> = await this.input(c, fields, r);
     if (!Object.keys(data).length && pickup === undefined)
       return this.view(c, r);
@@ -659,7 +664,17 @@ export class RequestsService {
   }
   async publish(a: VerifiedIdentity, id: unknown, body: unknown, key: unknown) {
     const rid = requestId(id),
-      p = checked(versionInput, body);
+      p = checked(
+        versionInput.extend({
+          expected_team_version: z
+            .number()
+            .int()
+            .min(0)
+            .max(2147483647)
+            .optional(),
+        }),
+        body,
+      );
     return this.tx(
       a,
       (c) =>
@@ -680,7 +695,11 @@ export class RequestsService {
             const next = await this.updateV2(c, r.id, {
               ...this.normalizedV2(normalized),
               status: "open",
-              publishing_identity: await publishingIdentity(c, r),
+              publishing_identity: await publishingIdentity(
+                c,
+                r,
+                p.expected_team_version,
+              ),
             });
             await this.snapshot(c, next);
             return next;
@@ -696,8 +715,8 @@ export class RequestsService {
           );
           const next = (
             await c.query<Row>(
-              "UPDATE abasong.requests SET status='open',remaining_parcels=parcel_count,remaining_drivers=drivers_needed,version=version+1,updated_at=now() WHERE id=$1 RETURNING *",
-              [rid],
+              "UPDATE abasong.requests SET status='open',remaining_parcels=parcel_count,remaining_drivers=drivers_needed,version=version+1,updated_at=now(),publishing_identity=$2 WHERE id=$1 RETURNING *",
+              [rid, await publishingIdentity(c, r, p.expected_team_version)],
             )
           ).rows[0]!;
           await this.snapshot(c, next);

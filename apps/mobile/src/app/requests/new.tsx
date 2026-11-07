@@ -88,6 +88,7 @@ function Form() {
       initial={initial}
       copy={!!params.copy}
       identity={me?.profile.display_name ?? "本人"}
+      onOpenTeam={() => router.push("/account/team")}
       onReload={() => setRevision((n) => n + 1)}
       onDone={(r) =>
         router.replace({ pathname: "/requests/[id]", params: { id: r.id } })

@@ -1,6 +1,11 @@
 import type { components } from "@abasong/contracts";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
 type S = components["schemas"];
+export type DeliveryTeamIntent = {
+  id: string;
+  version: number;
+  name: string;
+} | null;
 // One writer per open editor. Retries after a lost create/publish response use
 // the same idempotency key; a successful create isn't repeated after publish fails.
 export function createDeliveryWriter(
@@ -17,17 +22,25 @@ export function createDeliveryWriter(
   };
   return {
     current: () => current,
-    async save(body: S["RequestDraftInputV2"], publish: boolean) {
-      const signature = JSON.stringify(body);
+    async save(
+      body: S["RequestDraftInputV2"],
+      publish: boolean,
+      team?: DeliveryTeamIntent,
+    ) {
+      const draftFields =
+        team === undefined || (current && current.status !== "draft")
+          ? body
+          : { ...body, organization_id: team?.id ?? null };
+      const signature = JSON.stringify(draftFields);
       if (savedSignature !== signature) {
         if (!current)
           current = await request<S["RequestDetailV2"]>("/v1/requests", {
             method: "POST",
-            body,
+            body: team === null ? body : draftFields,
             key: key("create:" + signature),
           });
         else {
-          const { scenario: _scenario, ...fields } = body;
+          const { scenario: _scenario, ...fields } = draftFields;
           void _scenario;
           // Leave unchanged schedule fields out so the service preserves the original start.
           const sameStart =
@@ -61,8 +74,13 @@ export function createDeliveryWriter(
           `/v1/requests/${current!.id}/publish`,
           {
             method: "POST",
-            body: { expected_version: current!.version },
-            key: key(`publish:${current!.id}:${current!.version}`),
+            body: {
+              expected_version: current!.version,
+              ...(team ? { expected_team_version: team.version } : {}),
+            },
+            key: key(
+              `publish:${current!.id}:${current!.version}:${team?.version ?? ""}`,
+            ),
           },
         );
       return current!;

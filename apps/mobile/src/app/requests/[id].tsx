@@ -163,7 +163,14 @@ function Detail() {
             <ActionButton
               label="确认发布"
               busy={busy}
-              onPress={() => void action("publish")}
+              onPress={() => {
+                if ("request_schema_version" in r && r.organization)
+                  router.push({
+                    pathname: "/requests/new",
+                    params: { edit: r.id },
+                  });
+                else void action("publish");
+              }}
             />
             <View style={s.row}>
               <View style={{ flex: 1 }}>

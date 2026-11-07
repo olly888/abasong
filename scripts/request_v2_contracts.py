@@ -37,7 +37,7 @@ def add_request_v2_contracts(S, obj, out, ref, string, enum, integer, uid, dt, b
     obj('RequestDraftInputV2', {'request_schema_version': schema_version, 'scenario': scene,
                               'organization_id': uid, **fields}, ['request_schema_version', 'scenario'])
     obj('RequestPatchV2', {'request_schema_version': schema_version,
-                          'expected_version': integer(1, maximum=2147483646), **fields},
+                          'expected_version': integer(1, maximum=2147483646), 'organization_id': nullable(uid), **fields},
         ['request_schema_version', 'expected_version'])
     obj('GapInputV2', {'request_schema_version': schema_version,
                        'expected_version': integer(1, maximum=2147483646),

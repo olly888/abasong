@@ -26,10 +26,12 @@ import { typeStyles } from "../ui/foundation";
 import { availabilitySummary } from "../drivers/availability-fields";
 import { availabilityConflict } from "../drivers/availability-session";
 import type { ProfileRequest, SelfProfile } from "./profile-session";
+import { ownTeam, type OwnTeamSummary } from "../teams/team-client";
 type A = components["schemas"]["Availability"];
 export function MyAccount({
   request,
   onProfile,
+  onTeam,
   onAvailability,
   onShare,
   onMenu,
@@ -37,6 +39,7 @@ export function MyAccount({
 }: {
   request: ProfileRequest;
   onProfile: () => void;
+  onTeam?: () => void;
   onAvailability: (enable: boolean) => void;
   onShare: () => void;
   onMenu: (
@@ -45,6 +48,7 @@ export function MyAccount({
   testControls?: ReactNode;
 }) {
   const [profile, setProfile] = useState<SelfProfile | null>(null),
+    [team, setTeam] = useState<OwnTeamSummary | null>(null),
     [availability, setAvailability] = useState<A | null>(null),
     [ready, setReady] = useState(false),
     [error, setError] = useState<string | null>(null),
@@ -55,6 +59,7 @@ export function MyAccount({
   const controller = useRef<AbortController | null>(null),
     visible = useRef(false),
     working = useRef(false);
+  const showTeam = !!onTeam;
   const load = useCallback(async () => {
     controller.current?.abort();
     const c = new AbortController();
@@ -62,14 +67,16 @@ export function MyAccount({
     setReady(false);
     setError(null);
     setProfileError(null);
-    const [p, a] = await Promise.allSettled([
+    const [p, a, t] = await Promise.allSettled([
       request<SelfProfile>("/v1/me/profile", { signal: c.signal }),
       request<A>("/v1/me/availability", { signal: c.signal }).catch((e) => {
         if (e?.status === 404 && e?.code === "NOT_FOUND") return null;
         throw e;
       }),
+      showTeam ? ownTeam<OwnTeamSummary>(request, c.signal, true) : null,
     ]);
     if (c.signal.aborted || !visible.current) return;
+    setTeam(t.status === "fulfilled" ? t.value : null);
     if (p.status === "fulfilled") setProfile(p.value);
     else {
       setProfile(null);
@@ -83,7 +90,7 @@ export function MyAccount({
       setAvailability(null);
       setError("接活状态暂时无法读取");
     }
-  }, [request]);
+  }, [request, showTeam]);
   useFocusEffect(
     useCallback(() => {
       visible.current = true;
@@ -292,6 +299,16 @@ export function MyAccount({
             onPress={() => onMenu("applications")}
           />
         </View>
+        {onTeam && (team || profile?.purposes.includes("dsp")) ? (
+          <View style={group}>
+            <ListRow
+              title="我的团队"
+              subtitle={team?.team.name ?? "添加团队资料"}
+              icon="people"
+              onPress={onTeam}
+            />
+          </View>
+        ) : null}
         <View style={group}>
           <ListRow
             title="设置"

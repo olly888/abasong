@@ -4,9 +4,9 @@
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
-    "paths": 88,
-    "operations": 113,
-    "schemas": 163,
+    "paths": 93,
+    "operations": 118,
+    "schemas": 168,
     "spec_validation": "passed"
   },
   "sql": {

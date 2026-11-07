@@ -42,6 +42,7 @@ export default function Profile() {
         request={request}
         onProfile={() => router.push("/account/profile")}
         onTeam={() => router.push("/account/team")}
+        onInvite={() => router.push("/account/invite")}
         onAvailability={(enable) =>
           router.push({
             pathname: "/account/availability",

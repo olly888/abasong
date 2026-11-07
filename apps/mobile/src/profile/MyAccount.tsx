@@ -32,6 +32,7 @@ export function MyAccount({
   request,
   onProfile,
   onTeam,
+  onInvite,
   onAvailability,
   onShare,
   onMenu,
@@ -40,6 +41,7 @@ export function MyAccount({
   request: ProfileRequest;
   onProfile: () => void;
   onTeam?: () => void;
+  onInvite?: () => void;
   onAvailability: (enable: boolean) => void;
   onShare: () => void;
   onMenu: (
@@ -60,6 +62,7 @@ export function MyAccount({
     visible = useRef(false),
     working = useRef(false);
   const showTeam = !!onTeam;
+  const showTeamRow = !!(onTeam && (team || profile?.purposes.includes("dsp")));
   const load = useCallback(async () => {
     controller.current?.abort();
     const c = new AbortController();
@@ -299,14 +302,19 @@ export function MyAccount({
             onPress={() => onMenu("applications")}
           />
         </View>
-        {onTeam && (team || profile?.purposes.includes("dsp")) ? (
+        {onInvite || showTeamRow ? (
           <View style={group}>
-            <ListRow
-              title="我的团队"
-              subtitle={team?.team.name ?? "添加团队资料"}
-              icon="people"
-              onPress={onTeam}
-            />
+            {onInvite ? (
+              <ListRow title="邀请司机" icon="people" onPress={onInvite} />
+            ) : null}
+            {showTeamRow && onTeam ? (
+              <ListRow
+                title="我的团队"
+                subtitle={team?.team.name ?? "添加团队资料"}
+                icon="people"
+                onPress={onTeam}
+              />
+            ) : null}
           </View>
         ) : null}
         <View style={group}>

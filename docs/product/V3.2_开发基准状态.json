@@ -1,5 +1,5 @@
 {
-  "version": "V3.2-B5-04-circle-photos",
+  "version": "V3.2-B5-05-driver-invite",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_and_B5_01_to_04",
@@ -240,11 +240,14 @@
     "media_http_checks": 41,
     "physical_or_cloud_acceptance": false
   },
+  "b5_invitation": {
+    "status": "scoped_local_dual_native_and_recipient_page_verified",
+    "report": "../technical/B5_05_邀请司机与接收页实施验收.md",
+    "real_distribution": false
+  },
   "controlled_implementation": {
-    "eligible_batches": [
-      "B5-05"
-    ],
-    "next_task": "B5-05",
+    "eligible_batches": [],
+    "next_task": "B6-01",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,

@@ -193,3 +193,9 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 ## 2026-11-06 B5-04 司机圈私有图片
 
 服务端固定 sharp 0.35.5 解码、转正、缩放及重新编码，AWS SDK S3 3.1161.0 用于云端私有桶适配，锁文件已同步。客户端沿用 Expo 58 ImagePicker、FileSystem、fetch 与状态栏模块；未新增移动端依赖或系统权限，更新既有权限用途文案。0022 仅在本机 D0 与隔离验证应用。见[实施验收](docs/technical/B5_04_司机圈私有图片实施验收.md)。
+
+## 2026-11-06 B5-05 邀请司机
+
+- Expo SDK 58：以 `expo install` 解析并锁定 `expo-asset@58.0.20`（将已有传递依赖升级并声明为直接依赖）和 `expo-media-library@58.0.13`。更新 pnpm lock 与 iOS Podfile.lock。
+- MediaLibrary 仅用于邀请图新增；iOS `addOnly`，Android 10+ MediaStore，Android 13+ 图像/视频/音频及部分媒体读取权限均从合并清单移除。既有照片选择仍使用系统选择器。
+- 系统分享、剪贴板、临时文件继续复用现有能力。海报生成脚本的 Pillow/qrcode 只用于本机生成合成素材，不进入 App 或运行服务。

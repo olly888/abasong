@@ -50,6 +50,7 @@ export function PageFrame({
   compact = false,
   footer,
   headerRight,
+  backgroundColor = tokens.color.surface,
 }: {
   title: string;
   subtitle?: string;
@@ -58,6 +59,7 @@ export function PageFrame({
   compact?: boolean;
   footer?: ReactNode;
   headerRight?: ReactNode;
+  backgroundColor?: string;
 }) {
   const frame = useRef<ComponentRef<typeof View>>(null),
     [keyboardOffset, setKeyboardOffset] = useState(0);
@@ -65,7 +67,7 @@ export function PageFrame({
     onBack ??
     (() => (router.canGoBack() ? router.back() : router.replace("/profile")));
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: tokens.color.surface }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor }}>
       <View
         ref={frame}
         style={{ flex: 1 }}

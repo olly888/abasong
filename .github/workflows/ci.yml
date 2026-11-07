@@ -75,6 +75,8 @@ jobs:
         run: ./scripts/dev --filter @abasong/mobile exec expo export --platform ios --output-dir dist/ios
       - name: Bundle Android JavaScript
         run: ./scripts/dev --filter @abasong/mobile exec expo export --platform android --output-dir dist/android
+      - name: Exclude local invitation links and assets from release exports
+        run: ./scripts/dev exec node scripts/preview/verify-invite-release.mjs apps/mobile/dist/ios apps/mobile/dist/android
       - name: Stop isolated database
         if: always()
         run: ./scripts/dev db:down

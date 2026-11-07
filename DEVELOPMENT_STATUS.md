@@ -6,7 +6,7 @@ Updated 2026-11-07 (America/Los_Angeles). Current sources: [product baseline](�
 
 DevWest is at V12.0022 and the updated North California API and worker are healthy. B6-02 passed 23 live business checks with two distinct SMS-authenticated accounts, including contribution, cross-account read and feedback, owner correction, idempotent replay, and private library/import isolation. Five persisted envelopes matched the configured AWS KMS key. The two accounts were denied access after revocation. The synthetic objects were removed and the public sample and audit trail were retained. See the [B6-02 execution record](docs/technical/B6-02_云内测升级预检.md).
 
-The signed independent iPhone Release `com.abasong.pilot` is installed on the provisioned iPhone 13 Pro. The device inventory confirmed installation and iOS accepted the launch request. Its embedded business bundle contains the fixed HTTPS API and DevWest Auth endpoints. The current personal-team build uses local notifications. Cellular-only cold launch and authenticated account loading await on-device confirmation. Participant recruiting remains deferred at 0/7.
+The signed independent iPhone Release `com.abasong.pilot` is installed on the provisioned iPhone 13 Pro. The device inventory confirmed installation and iOS accepted the launch request. With USB disconnected and Wi-Fi off, the operator confirmed cellular cold launch, SMS sign-in, and account loading in the My tab. The current personal-team build uses local notifications. Field location and apartment workflows, remote push, and Android hardware validation are pending. Participant recruiting remains deferred at 0/7.
 
 ## Previous delivery — B6-01 test preparation
 

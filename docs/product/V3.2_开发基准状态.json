@@ -268,13 +268,16 @@
     "synthetic_cleanup_verified": true
   },
   "b6_03": {
-    "status": "ios_installed_awaiting_cellular_validation",
+    "status": "ios_cellular_cold_launch_login_and_account_verified",
     "ios_bundle_identifier": "com.abasong.pilot",
     "ios_native_compiled": true,
     "ios_signed": true,
     "ios_installed": true,
     "ios_launch_request_accepted": true,
-    "cellular_cold_launch_verified": false,
+    "cellular_cold_launch_verified": true,
+    "cellular_sms_login_verified": true,
+    "cellular_account_load_verified": true,
+    "cellular_verification_source": "operator_reported_on_physical_iphone",
     "remote_push_verified": false
   },
   "controlled_implementation": {

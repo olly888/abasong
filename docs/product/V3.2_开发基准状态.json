@@ -598,8 +598,19 @@
       }
     ],
     "next_task": "R4-12",
-    "pull_request": null,
-    "ci_source": "pending_current_head",
-    "evidence": "../technical/R4_11_执行证据.json"
+    "pull_request": "https://github.com/olly888/abasong/pull/99",
+    "ci_source": "https://github.com/olly888/abasong/pull/99/checks",
+    "evidence": "../technical/R4_11_执行证据.json",
+    "validated_code_commit": "6d66281d0d4f4f439324efa793846d4079319b39",
+    "implementation_ci": {
+      "run_id": 42315086377,
+      "head_sha": "6d66281d0d4f4f439324efa793846d4079319b39",
+      "conclusion": "success",
+      "url": "https://github.com/olly888/abasong/actions/runs/42315086377"
+    },
+    "secret_scans": {
+      "staged": "PASS",
+      "all_history": "PASS"
+    }
   }
 }

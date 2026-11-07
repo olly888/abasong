@@ -268,11 +268,12 @@
     "synthetic_cleanup_verified": true
   },
   "b6_03": {
-    "status": "ios_signed_release_ready_awaiting_provisioned_device",
+    "status": "ios_installed_awaiting_cellular_validation",
     "ios_bundle_identifier": "com.abasong.pilot",
     "ios_native_compiled": true,
     "ios_signed": true,
-    "ios_installed": false,
+    "ios_installed": true,
+    "ios_launch_request_accepted": true,
     "cellular_cold_launch_verified": false,
     "remote_push_verified": false
   },

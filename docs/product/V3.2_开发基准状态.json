@@ -255,11 +255,13 @@
     "authorized_images_received": 0
   },
   "b6_02": {
-    "status": "local_upgrade_rehearsal_verified_cloud_update_pending",
+    "status": "cloud_upgrade_runtime_verified_real_account_acceptance_pending",
     "preflight": "../technical/B6-02_云内测升级预检.md",
-    "cloud_schema": "V12.0009",
+    "cloud_schema": "V12.0022",
     "candidate_schema": "V12.0022",
     "migrations_rehearsed": 13,
+    "migrations_applied": 13,
+    "cloud_runtime_verified": true,
     "real_accounts_and_kms_verified": false
   },
   "controlled_implementation": {

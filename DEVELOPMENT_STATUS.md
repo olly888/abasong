@@ -2,9 +2,9 @@
 
 Updated 2026-11-07 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.47](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B6-02 authorized pilot upgrade
+## Current delivery — B6-02 pilot upgrade and business acceptance
 
-Participant recruiting remains deferred at 0/7. The user authorized DevWest migrations 0010–0022 and the existing `us-west-1` pilot API and worker image update. DevWest remains at V12.0009. The actual business snapshot was restored and compared before and after all 13 migrations in a disposable local database. The prior rehearsal also verified 57 forced-RLS tables and restricted secret grants. Independent pilot JS preparation and invitation asset isolation passed. AWS operator session renewal is pending. The cloud update, real two-account KMS flow and native field build remain pending. See [B6-02 execution record](docs/technical/B6-02_云内测升级预检.md).
+DevWest is at V12.0022 after all 13 authorized migrations. Fingerprints for the five existing business rows matched. All 57 business tables force RLS, and all three restricted runtime logins passed verified TLS and grant checks. The existing `us-west-1` API and worker run the exact scanned images from `cb8cde2`; both tasks and the API load balancer target are healthy, the new worker reached its database, and public live/ready probes return 200. Two-account business/KMS acceptance and the native field build are pending. Participant recruiting remains deferred at 0/7. See the [B6-02 execution record](docs/technical/B6-02_云内测升级预检.md).
 
 ## Previous delivery — B6-01 test preparation
 

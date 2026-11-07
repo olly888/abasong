@@ -1,4 +1,4 @@
-FROM node:24.22.1-bookworm-slim@sha256:be8204d4bd327363357f532187b752ff62759c31bedf98e9e18fc08c9cbd605c AS build
+FROM node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS build
 WORKDIR /workspace
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .npmrc ./
@@ -17,7 +17,7 @@ RUN pnpm --filter @abasong/contracts --filter @abasong/runtime build \
     && pnpm --filter @abasong/api deploy --prod --legacy /out/api \
     && pnpm --filter @abasong/worker deploy --prod --legacy /out/worker
 
-FROM node:24.22.1-bookworm-slim@sha256:be8204d4bd327363357f532187b752ff62759c31bedf98e9e18fc08c9cbd605c AS runtime
+FROM node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS runtime
 # No privileged mount helpers; gettext cannot select attacker-controlled catalogs.
 RUN find / -xdev -type f -perm /6000 -exec chmod a-s {} +
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 LANGUAGE=""

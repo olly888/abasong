@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Text } from "react-native";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
@@ -9,7 +9,8 @@ import { ApplicationFields } from "./ApplicationFields";
 import { dataRequest } from "../apartments/client";
 import { AccountError } from "../auth/api-client";
 import { type DeliveryRequest } from "./presentation";
-import { initialApplication, applicationInput } from "./application-input";
+import { initialApplication } from "./application-input";
+import { createApplicationAttempt } from "./application-attempt";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
 import { useCallback } from "react";
 import { requestStyles as s, RequestSheet } from "./RequestUi";
@@ -57,6 +58,7 @@ export function ApplicationSheet({
   onClose,
   onRefresh,
   onApplied,
+  testControls,
 }: {
   request: DeliveryRequest;
   regionLabel?: string;
@@ -64,16 +66,28 @@ export function ApplicationSheet({
   onClose: () => void;
   onRefresh: () => void;
   onApplied: (a: components["schemas"]["Application"]) => void;
+  testControls?: ReactNode;
 }) {
-  const initial = initialApplication(r);
+  const observed = useRef(r).current;
+  const initial = initialApplication(observed);
   const [date, setDate] = useState(initial.date),
     [time, setTime] = useState(initial.time),
     [capacity, setCapacity] = useState(initial.capacity),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
-    [changed, setChanged] = useState(false);
+    [conflict, setConflict] = useState(false);
+  const changed =
+    conflict || observed.id !== r.id || observed.version !== r.version;
+  const latest = useRef(transport);
+  latest.current = transport;
   const lock = useRef(false),
-    attempt = useRef({ signature: "", key: randomUUID() });
+    attempt = useRef(
+      createApplicationAttempt(
+        observed,
+        (path, options) => latest.current(path, options),
+        randomUUID,
+      ),
+    );
   const delivery = !["vehicle_help", "other_help"].includes(r.kind);
   const mounted = useRef(true);
   useEffect(() => {
@@ -83,21 +97,14 @@ export function ApplicationSheet({
     };
   }, []);
   async function apply() {
-    if (lock.current) return;
+    if (lock.current || changed) return;
     lock.current = true;
     setBusy(true);
     setError(null);
     try {
-      const body = applicationInput(r, date, time, capacity);
-      const signature = JSON.stringify(body);
-      if (attempt.current.signature !== signature)
-        attempt.current = { signature, key: randomUUID() };
-      const result = await transport<components["schemas"]["Application"]>(
-        `/v1/requests/${r.id}/applications`,
-        { method: "POST", body, key: attempt.current.key },
-      );
+      const result = await attempt.current(r, date, time, capacity);
       if (!mounted.current) return;
-      onApplied(result);
+      if (result) onApplied(result);
     } catch (e) {
       if (
         mounted.current &&
@@ -106,7 +113,7 @@ export function ApplicationSheet({
           e.code,
         )
       )
-        setChanged(true);
+        setConflict(true);
       if (mounted.current)
         setError(e instanceof Error ? e.message : "报名失败，请重试");
     } finally {
@@ -120,19 +127,24 @@ export function ApplicationSheet({
         if (!lock.current) onClose();
       }}
     >
+      {testControls}
       <Text style={s.headline}>{delivery ? "报名接活" : "我能帮忙"}</Text>
       <ApplicationFields
-        request={r}
+        request={observed}
         regionLabel={regionLabel}
         date={date}
         time={time}
         capacity={capacity}
-        disabled={busy}
+        disabled={busy || changed}
         onDate={setDate}
         onTime={setTime}
         onCapacity={setCapacity}
       />
-      <FormError message={error} />
+      <FormError
+        message={
+          error ?? (changed ? "需求条件已更新，请查看当前需求后重新报名" : null)
+        }
+      />
       {changed ? (
         <ActionButton
           label="查看当前需求"

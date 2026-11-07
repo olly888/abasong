@@ -116,3 +116,47 @@ it("does not skip peer sequence 11 when the own send response 12 arrives first",
   state = updateMessageLog("one", state, [row(1)], "history");
   expect(state.synced).toBe(12);
 });
+
+it("redacts cached source snapshots before revalidation without removing readable text history", async () => {
+  const { redactSourceMessages } = await import("./state");
+  const card = {
+    ...row(1),
+    kind: "request_card" as const,
+    request_snapshot: {
+      request_id: "TEST-private",
+    } as Message["request_snapshot"],
+    request_region_label: "TEST region",
+  };
+  const text = row(2);
+  const next = redactSourceMessages([card, text]);
+  expect(next[0]?.request_snapshot).toBeNull();
+  expect(next[0]?.request_region_label).toBeNull();
+  expect(next[1]).toBe(text);
+  expect(card.request_snapshot).not.toBeNull();
+});
+
+it("refetches source cards after restored authority rather than trusting hidden cached snapshots", async () => {
+  const { requiresSourceRefresh } = await import("./state");
+  const base = {
+    can_send: true,
+    last_request_snapshot: { request_id: "TEST" },
+  } as import("./state").Conversation;
+  expect(requiresSourceRefresh(null, base)).toBe(false);
+  expect(requiresSourceRefresh(base, base)).toBe(false);
+  expect(
+    requiresSourceRefresh(
+      { ...base, can_send: false, last_request_snapshot: null },
+      base,
+    ),
+  ).toBe(true);
+  expect(
+    requiresSourceRefresh({ ...base, last_request_snapshot: null }, base),
+  ).toBe(true);
+  expect(
+    requiresSourceRefresh(base, {
+      ...base,
+      can_send: false,
+      last_request_snapshot: null,
+    }),
+  ).toBe(false);
+});

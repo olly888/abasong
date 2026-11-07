@@ -27,7 +27,12 @@ function Chat({ id }: { id: string }) {
       <ChatComposer
         {...p}
         readOnlyReason={
-          !p.conversation ? (p.busy ? "正在加载…" : "消息暂不可用") : undefined
+          p.readOnlyReason ??
+          (!p.conversation
+            ? p.busy
+              ? "正在加载…"
+              : "消息暂不可用"
+            : undefined)
         }
       />
     </ConversationLayout>

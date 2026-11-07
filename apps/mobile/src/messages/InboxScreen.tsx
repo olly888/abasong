@@ -8,6 +8,7 @@ import { AuthPage, ActionButton, FormError } from "../auth/AuthControls";
 import { dataRequest } from "../apartments/client";
 import { ConversationRows, NotificationRows } from "./MessageViews";
 import { StatusPanel } from "../ui/Feedback";
+import { AccountError } from "../auth/api-client";
 type S = components["schemas"];
 export default function InboxScreen() {
   const { session } = useAuth(),
@@ -78,8 +79,15 @@ export default function InboxScreen() {
               : (page as S["NotificationPage"]).items,
           );
       } catch (e) {
-        if (!c.signal.aborted && active.current && g === scope.current)
+        if (!c.signal.aborted && active.current && g === scope.current) {
+          if (e instanceof AccountError && [401, 403, 404].includes(e.status)) {
+            setConversations([]);
+            setNotifications([]);
+            setSummary(null);
+            setCursor(null);
+          }
           setError(e instanceof Error ? e.message : "消息暂时无法加载");
+        }
       } finally {
         if (loading.current === g) loading.current = null;
         if (active.current && g === scope.current) setBusy(false);

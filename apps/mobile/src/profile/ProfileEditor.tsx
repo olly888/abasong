@@ -38,12 +38,14 @@ export function ProfileEditor({
   owner,
   onBack,
   onSaved,
+  onTeam,
   testControls,
 }: {
   request: ProfileRequest;
   owner: string;
   onBack: () => void;
   onSaved: (p: SelfProfile) => void;
+  onTeam?: () => void;
   testControls?: ReactNode;
 }) {
   const availability = useRef<components["schemas"]["Availability"] | null>(
@@ -496,6 +498,14 @@ export function ProfileEditor({
               </>
             ) : null}
           </View>
+          {onTeam ? (
+            <ActionButton
+              label="团队资料（DSP）"
+              variant="text"
+              disabled={busy}
+              onPress={onTeam}
+            />
+          ) : null}
         </>
       )}
     </PageFrame>

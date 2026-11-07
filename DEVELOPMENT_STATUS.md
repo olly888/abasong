@@ -1,14 +1,18 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.43](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.44](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B5-01 scoped local profile/My exit complete; B5-02 next
+## Current delivery — B5-02 scoped local DSP team implementation
+
+Branch `codex/b5-02-dsp-team`, base `1277818` / PR102. One owner-managed DSP team per unified account, private by default; optionally share the separate encrypted business contact in an authorized detail. Draft team creation returns to the same form; owner edits, contact changes and deactivation do not rewrite published identity. No membership, payment, or capability grants. Local D0: 20 migrations / 56 tables. [Implementation and scoped evidence](docs/technical/B5_02_本人DSP团队与发布身份实施验收.md). Next: B5-03 text circle/replies; B6 and human0/7 remain separate.
+
+## Previous delivery — B5-01 scoped local profile/My exit complete
 
 Branch `codex/b5-01-self-profile`, base17cc1d4 / PR101. Self profile/experience, owner-only encrypted optional phone/WeChat, My grouping and compact single-window availability switch are implemented. Purposes never grant capabilities or DSP authority; no Auth phone is copied. Explicit simultaneous close uses version checks in the profile transaction. New0018/0019 bring local D0 to19 migrations/55 tables; no cloud changes or real-account grants.
 
 Current checks:500 engineering tests/lint/types/build; profile28 assertions/26 actual HTTP-PG calls; requests519/library295/import124 and D0/RLS PASS. iOS representative native profile/draft/conflict/retry/contact/switch paths observed. Android profile/keyboard/layout and actual TEST-B5-Android version3 verified after specific owner supplement; initial no-write feedback was not counted. Android off-failure retained state, native keyboard-focus retry→off/version4 and owner contact copy observed. Fixture stopped; final disposable database/role counts0/0. Actual codee6e55ab passes exact-head CI42333171347 on [draft PR102](https://github.com/olly888/abasong/pull/102). Closing documentation changes no code fingerprints; independently track its latest [PR102 Checks](https://github.com/olly888/abasong/pull/102/checks). No merge/deploy. [Report](docs/technical/B5_01_本人资料与我的实施验收.md) / [evidence](docs/technical/B5_01_执行证据.json).
 
-Next: B5-02 own DSP team. Team/members, circle/media/invitation remain their own batches; human0/7 and B6/release status unchanged.
+B5-01 historical handoff: B5-02 own DSP team; no release acceptance.
 
 ## Previous delivery — R4-13 scoped local core exit complete
 

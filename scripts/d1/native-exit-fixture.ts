@@ -26,7 +26,11 @@ async function main() {
   const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
   assert(["delivery", "contribution"].includes(scenario));
   const verify = process.env.ABASONG_NATIVE_EXIT_VERIFY ?? "default";
-  assert(["default", "collaboration", "unlisted", "profile"].includes(verify));
+  assert(
+    ["default", "collaboration", "unlisted", "profile", "team"].includes(
+      verify,
+    ),
+  );
   assert(verify !== "unlisted" || scenario === "contribution");
   assert(verify !== "collaboration" || scenario === "delivery");
   let apartments: string[] = [];
@@ -109,15 +113,17 @@ async function main() {
     stopping = false;
   let lifetime: ReturnType<typeof setTimeout> | undefined;
   const artifactBatch =
-    verify === "profile"
-      ? "b5-01"
-      : verify === "unlisted"
-        ? "r4-13"
-        : scenario === "contribution"
-          ? "r4-11"
-          : verify === "collaboration"
-            ? "r4-12"
-            : "r4-10";
+    verify === "team"
+      ? "b5-02"
+      : verify === "profile"
+        ? "b5-01"
+        : verify === "unlisted"
+          ? "r4-13"
+          : scenario === "contribution"
+            ? "r4-11"
+            : verify === "collaboration"
+              ? "r4-12"
+              : "r4-10";
   const resourceFile = `artifacts/${artifactBatch}/test-resources/${name}.json`;
   const recordResources = (cleaned = false) => {
     mkdirSync(`artifacts/${artifactBatch}/test-resources`, { recursive: true });
@@ -171,6 +177,7 @@ async function main() {
           pickup,
           isolated: true,
           scenario,
+          verify,
           apartments,
           run_id: process.env.ABASONG_NATIVE_EXIT_RUN ?? null,
         });
@@ -257,6 +264,7 @@ async function main() {
             "correct",
             "import_commit",
             "profile",
+            "team",
             "availability",
           ].includes(String(b.operation))
         ) {
@@ -292,7 +300,7 @@ async function main() {
         }
         if (
           scenario === "delivery" &&
-          verify === "collaboration" &&
+          (verify === "collaboration" || verify === "team") &&
           b.action === "block" &&
           typeof b.enabled === "boolean"
         ) {
@@ -487,6 +495,31 @@ async function main() {
       await pause(100);
     }
     assert(ready);
+    if (verify === "team") {
+      const url = `http://127.0.0.1:${apiPort}/v1/me/profile`;
+      const headers = {
+        Authorization: "Bearer " + tokens.owner,
+        "Content-Type": "application/json",
+      };
+      const current = await fetch(url, { headers });
+      assert.equal(current.status, 200, "TEST profile read");
+      const profile = (await current.json()) as { version: number };
+      const updated = await fetch(url, {
+        method: "PATCH",
+        headers: { ...headers, "Idempotency-Key": randomUUID() },
+        body: JSON.stringify({
+          expected_version: profile.version,
+          display_name: "TEST 发布人",
+          bio: "",
+          vehicle_type: "",
+          experience: [],
+          purposes: ["dsp"],
+          familiar_region_ids: [],
+          private_contact: { phone: "", wechat: "" },
+        }),
+      });
+      assert.equal(updated.status, 200, "TEST profile seed");
+    }
     broker.listen(port, "127.0.0.1");
     await once(broker, "listening");
     console.log(

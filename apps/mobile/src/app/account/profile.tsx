@@ -25,9 +25,10 @@ function Editor() {
       request={request}
       owner={auth.session!.user.id}
       onBack={back}
-      onSaved={() => {
+      onTeam={() => router.push("/account/team")}
+      onSaved={(saved) => {
+        auth.applySavedProfile(saved.profile);
         back();
-        auth.retryAccount();
       }}
     />
   );

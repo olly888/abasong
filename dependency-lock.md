@@ -181,3 +181,7 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 ## 2026-11-06 B5-01 本人资料与我的
 
 沿用Expo58.0.21/RN0.88.1、已有expo-router/crypto/clipboard及V3 tokens，无依赖升级、新原生模块或权限。电话/微信使用既有EnvelopeCrypto与单独owner RLS表；选择用途不授能力。0018/0019只应用本地D0，19迁移55表；未修改云库/费用/账号资格。熟悉区域是声明资料，不是GPS。团队、媒体及邀请按后续批次，保留历史表不删常联系数据。依据及检查见[B5-01报告](docs/technical/B5_01_本人资料与我的实施验收.md)。
+
+## 2026-11-06 B5-02 本人 DSP 团队
+
+沿用 Expo 58、React Native、现有剪贴板、共用组件及 EnvelopeCrypto；无新增依赖、锁文件、原生模块或系统权限。0020 仅应用本机 D0（20 迁移、56 表），独立加密业务联系方式，云环境未改。见[实施验收](docs/technical/B5_02_本人DSP团队与发布身份实施验收.md)。

@@ -41,6 +41,7 @@ export default function Profile() {
         key={auth.session.user.id}
         request={request}
         onProfile={() => router.push("/account/profile")}
+        onTeam={() => router.push("/account/team")}
         onAvailability={(enable) =>
           router.push({
             pathname: "/account/availability",

@@ -211,7 +211,11 @@ export async function normalizeV2(
       : undefined,
   );
 }
-export async function publishingIdentity(c: PoolClient, r: RequestRow) {
+export async function publishingIdentity(
+  c: PoolClient,
+  r: RequestRow,
+  teamVersion?: number,
+) {
   const p = (
     await c.query(
       "SELECT display_name FROM abasong.profiles WHERE user_id=$1",
@@ -222,13 +226,31 @@ export async function publishingIdentity(c: PoolClient, r: RequestRow) {
   const org = r.organization_id
     ? (
         await c.query(
-          "SELECT id,name,contact_user_id,verification_status FROM abasong.organizations WHERE id=$1 AND contact_user_id=$2 AND verification_status<>'rejected' FOR SHARE",
+          `SELECT id,name,contact_user_id,verification_status,profile_version FROM abasong.organizations WHERE id=$1 AND contact_user_id=$2 AND active AND verification_status<>'rejected' FOR SHARE`,
           [r.organization_id, r.publisher_id],
         )
       ).rows[0]
     : null;
   if (r.organization_id && !org)
     throw new ApiError(403, "ORGANIZATION_REQUIRED", "不能代表这个DSP团队发布");
+  if (teamVersion !== undefined && org?.profile_version !== teamVersion)
+    throw new ApiError(
+      409,
+      "TEAM_CHANGED",
+      "团队资料已更新，请重新核对发布身份",
+    );
   if (r.publishing_identity) return r.publishing_identity;
-  return { publisher_display_name: p.display_name, organization: org };
+  // Existing already-published legacy rows cannot acquire a fabricated publish-time identity.
+  if (r.status !== "draft") return null;
+  return {
+    publisher_display_name: p.display_name,
+    organization: org
+      ? {
+          id: org.id,
+          name: org.name,
+          contact_user_id: org.contact_user_id,
+          verification_status: org.verification_status,
+        }
+      : null,
+  };
 }

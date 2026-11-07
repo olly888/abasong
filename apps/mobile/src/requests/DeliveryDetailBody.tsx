@@ -10,6 +10,7 @@ import {
   type DeliveryRequest,
 } from "./presentation";
 import { requestStyles as s } from "./RequestUi";
+import { RelatedTeam } from "../teams/RelatedTeam";
 import { WarehousePickup } from "./WarehousePickup";
 export function DeliveryDetailBody({
   request: r,
@@ -137,6 +138,13 @@ export function DeliveryDetailBody({
       ) : null}
       {detail("说明", r.description)}
       {detail("需求有效至", r.expires_at ? requestTime(r.expires_at) : null)}
+      {r.organization && r.status !== "draft" ? (
+        <RelatedTeam
+          key={r.id}
+          path={`/v1/requests/${r.id}/team`}
+          request={transport}
+        />
+      ) : null}
     </View>
   );
 }

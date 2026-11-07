@@ -27,7 +27,7 @@ export function fixtureRequestAllowed(
     /^\/v1\/(requests|regions|drivers|conversations|applications)(\/[a-z0-9-]+)*$/i.test(
       pathname ?? "",
     ) ||
-    /^\/v1\/me\/(requests|applications|availability|profile)$/.test(
+    /^\/v1\/me\/(requests|applications|availability|profile|organization(?:\/summary)?)$/.test(
       pathname ?? "",
     );
   const contributionPath =
@@ -63,6 +63,8 @@ export function fixtureFaultMatch(
     return (
       method === "GET" && /^\/v1\/conversations\/[a-f0-9-]{36}$/.test(path)
     );
+  if (operation === "team")
+    return method === "PUT" && path === "/v1/me/organization";
   if (operation === "profile")
     return method === "PATCH" && path === "/v1/me/profile";
   if (operation === "availability")

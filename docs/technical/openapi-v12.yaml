@@ -500,7 +500,7 @@ paths:
   /v1/me/organization:
     put:
       operationId: putMyOrganization
-      summary: 最小组织来源；不允许自选审核状态
+      summary: 本人团队，版本和幂等保护；用途不授权发布
       tags:
       - me
       responses:
@@ -510,10 +510,16 @@ paths:
             X-Request-ID:
               schema: *id001
               description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Organization'
+                $ref: '#/components/schemas/OwnTeam'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -562,15 +568,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *id001
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/OrganizationInput'
+      x-sensitive-response: true
     get:
       operationId: getMyOrganization
-      summary: 本人最小组织来源；未设置返回404
+      summary: 本人团队及选填业务联系方式；未设置返回404
       tags:
       - me
       responses:
@@ -580,10 +592,16 @@ paths:
             X-Request-ID:
               schema: *id001
               description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Organization'
+                $ref: '#/components/schemas/OwnTeam'
         '400':
           description: 输入或跨字段约束错误
           content:
@@ -632,6 +650,366 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      x-sensitive-response: true
+  /v1/me/organization/summary:
+    get:
+      operationId: getMyOrganizationSummary
+      summary: 本人团队与发布选择，无联系方式正文
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnTeamSummary'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/requests/{request_id}/team:
+    get:
+      operationId: getRequestTeam
+      summary: 登录对象详情内的当前团队资料；不含联系方式正文
+      tags:
+      - requests
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamSummary'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: request_id
+        in: path
+        required: true
+        schema: *id001
+  /v1/requests/{request_id}/team/contact:
+    get:
+      operationId: getRequestTeamContact
+      summary: 再次验证对象权限和当前自愿开放，未开放返回404
+      tags:
+      - requests
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamContact'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: request_id
+        in: path
+        required: true
+        schema: *id001
+      x-sensitive-response: true
+  /v1/drivers/{user_id}/team:
+    get:
+      operationId: getDriverTeam
+      summary: 登录对象详情内的当前团队资料；不含联系方式正文
+      tags:
+      - drivers
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamSummary'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema: *id001
+  /v1/drivers/{user_id}/team/contact:
+    get:
+      operationId: getDriverTeamContact
+      summary: 再次验证对象权限和当前自愿开放，未开放返回404
+      tags:
+      - drivers
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamContact'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema: *id001
+      x-sensitive-response: true
   /v1/config:
     get:
       operationId: getPublicConfig
@@ -3275,7 +3653,7 @@ paths:
   /v1/requests/{request_id}/publish:
     post:
       operationId: publishRequest
-      summary: 完整字段/时间/接手条件检查后发布
+      summary: 核对字段及可选团队版本，冻结发布身份
       tags:
       - requests
       responses:
@@ -3351,7 +3729,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VersionInput'
+              $ref: '#/components/schemas/PublishInput'
       x-required-capabilities:
       - request.publish
   /v1/requests/{request_id}/close:
@@ -9295,16 +9673,134 @@ components:
       - name
       - contact_user_id
       - verification_status
+    TeamSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 120
+        contact_display_name:
+          type: string
+          maxLength: 60
+        carriers:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          maxItems: 8
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileRegion'
+          maxItems: 5
+        contact_available:
+          type: boolean
+      required:
+      - id
+      - name
+      - contact_display_name
+      - carriers
+      - regions
+      - contact_available
+    OwnTeamSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        team:
+          $ref: '#/components/schemas/TeamSummary'
+        version:
+          type: integer
+          minimum: 0
+        active:
+          type: boolean
+        can_represent:
+          type: boolean
+      required:
+      - team
+      - version
+      - active
+      - can_represent
+    OwnTeam:
+      type: object
+      additionalProperties: false
+      properties:
+        team:
+          $ref: '#/components/schemas/TeamSummary'
+        version:
+          type: integer
+          minimum: 0
+        active:
+          type: boolean
+        can_represent:
+          type: boolean
+        contact_shared:
+          type: boolean
+        business_contact:
+          $ref: '#/components/schemas/PrivateContact'
+      required:
+      - team
+      - version
+      - active
+      - can_represent
+      - contact_shared
+      - business_contact
     OrganizationInput:
       type: object
       additionalProperties: false
       properties:
+        expected_version:
+          type: integer
+          minimum: 0
+          maximum: 2147483646
         name:
           type: string
           maxLength: 120
           minLength: 1
+        carriers:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+            minLength: 1
+          maxItems: 8
+          uniqueItems: true
+        region_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 5
+          uniqueItems: true
+        active:
+          type: boolean
+        contact_shared:
+          type: boolean
+        business_contact:
+          $ref: '#/components/schemas/PrivateContact'
       required:
+      - expected_version
       - name
+      - carriers
+      - region_ids
+      - active
+      - contact_shared
+      - business_contact
+    TeamContact:
+      type: object
+      additionalProperties: false
+      properties:
+        team_id:
+          type: string
+          format: uuid
+        business_contact:
+          $ref: '#/components/schemas/PrivateContact'
+      required:
+      - team_id
+      - business_contact
     Apartment:
       type: object
       additionalProperties: false
@@ -10264,6 +10760,18 @@ components:
         pickup_region_id:
           type: string
           format: uuid
+      required:
+      - expected_version
+    PublishInput:
+      type: object
+      additionalProperties: false
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        expected_team_version:
+          type: integer
+          minimum: 0
       required:
       - expected_version
     VersionInput:
@@ -11875,6 +12383,10 @@ components:
           type: integer
           minimum: 1
           maximum: 2147483646
+        organization_id:
+          type: string
+          format: uuid
+          nullable: true
         region_id:
           type: string
           format: uuid

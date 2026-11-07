@@ -1,5 +1,5 @@
 {
-  "version": "V3.2-B5-01-self-profile",
+  "version": "V3.2-B5-02-dsp-team",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_and_B5_01",
@@ -206,7 +206,7 @@
     "combined_report": "../technical/R4_10_本地原生业务组合实施验收.md"
   },
   "release_ready": false,
-  "readiness_scope": "controlled_B5_01_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
+  "readiness_scope": "controlled_B5_03_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
   "owner_review": {
     "status": "main_flows_accepted",
     "date": "2026-11-05",
@@ -215,11 +215,19 @@
     "native_acceptance": false,
     "human_test_participants_added": 0
   },
+  "b5_team": {
+    "status": "scoped_local_team_HTTP_DB_native_verified",
+    "report": "../technical/B5_02_本人DSP团队与发布身份实施验收.md",
+    "migration": "V12.0020",
+    "contract_paths": 93,
+    "team_http_db_assertions": 27,
+    "physical_or_cloud_acceptance": false
+  },
   "controlled_implementation": {
     "eligible_batches": [
-      "B5-02"
+      "B5-03"
     ],
-    "next_task": "B5-02",
+    "next_task": "B5-03",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,

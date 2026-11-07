@@ -38,6 +38,7 @@ type AuthValue = State & {
   completeProfile: (name: string, key: string) => Promise<void>;
   signOut: () => Promise<void>;
   retryAccount: () => void;
+  applySavedProfile: (profile: Me['profile']) => void;
 };
 const Context = createContext<AuthValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -258,6 +259,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyCode,
         completeProfile,
         signOut,
+        applySavedProfile: (profile) => {
+          // A successful self-edit refreshes only the matching profile. Keep
+          // parent forms mounted when returning from a nested profile editor.
+          setState((current) =>
+            current.phase === 'ready' &&
+            current.me?.user_id === profile.user_id &&
+            current.session?.user.id === profile.user_id
+              ? { ...current, me: { ...current.me, profile } }
+              : current,
+          );
+        },
         retryAccount: () => {
           setState((current) => ({
             ...current,

@@ -6,6 +6,8 @@ import { useAuth } from "../../auth/AuthProvider";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate } from "../../requests/RequestUi";
 import { DriverProfileView } from "../../drivers/DriverProfileView";
+import { RelatedTeam } from "../../teams/RelatedTeam";
+import type { TeamRequest } from "../../teams/team-client";
 type S = components["schemas"];
 export default function Driver() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +25,10 @@ function Profile({ id }: { id: string }) {
     scope = useRef(0),
     working = useRef(false),
     key = useRef(randomUUID());
+  const request: TeamRequest = useCallback(
+    (path, options) => dataRequest(session!, path, options),
+    [session?.access_token],
+  );
   const load = useCallback(async () => {
     if (!session) return;
     const g = ++scope.current;
@@ -74,6 +80,15 @@ function Profile({ id }: { id: string }) {
     <DriverProfileView
       {...{ driver, busy, error }}
       canContact={!!driver && id !== session?.user.id}
+      team={
+        driver ? (
+          <RelatedTeam
+            key={id}
+            path={`/v1/drivers/${id}/team`}
+            request={request}
+          />
+        ) : null
+      }
       onContact={() => void contact()}
       onReload={() => void load()}
     />

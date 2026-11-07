@@ -1,5 +1,6 @@
 import { verifyDrivers } from "./verify-drivers";
 import { verifyPush } from "./verify-push";
+import { verifyTeamServices } from "./verify-team-services";
 import { verifyDeliveryServices } from "./verify-delivery-services";
 import {
   verifyV2Upgrade,
@@ -261,6 +262,7 @@ async function main() {
       "V12.0017",
       "V12.0018",
       "V12.0019",
+      "V12.0020",
     ]) {
       const missingVersion = (
         await db.query(
@@ -282,7 +284,7 @@ async function main() {
       await request("/health/ready", "GET", undefined, 200);
     }
     console.log(
-      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015–0019 readiness denied.`,
+      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015–0020 readiness denied.`,
     );
     await request("/v1/requests", "GET", "", 401);
     await request(
@@ -1746,6 +1748,16 @@ async function main() {
       providerCalls: () => providerCalls,
     });
     checks += deliveryAssertions;
+    checks += await verifyTeamServices({
+      db,
+      http: request,
+      auth,
+      other,
+      noRights,
+      owner,
+      reader,
+      region,
+    });
     await db.query(
       "UPDATE abasong.users SET session_invalid_before=now() WHERE id=$1",
       [owner],

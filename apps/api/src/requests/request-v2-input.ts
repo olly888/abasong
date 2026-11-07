@@ -84,6 +84,7 @@ export const patchV2Input = z
   .object({
     request_schema_version: z.literal(2),
     expected_version: count.max(2147483646),
+    organization_id: id.nullable().optional(),
     ...fields,
   })
   .strict();

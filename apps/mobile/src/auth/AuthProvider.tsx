@@ -1,3 +1,4 @@
+import { clearProfileDraft } from "../profile/profile-session";
 import { preparePushLogout } from "../notifications/registration";
 import {
   createContext,
@@ -58,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (ignoreSessionEvents.current) return;
     if (session) setRetry((value) => value + 1);
     if (owner.current !== (session?.user.id ?? null)) {
+      clearProfileDraft();
       identityVersion.current++;
       owner.current = session?.user.id ?? null;
       setPendingPhone(null);
@@ -217,6 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((current) => ({ ...current, phase: 'ready', me, error: null }));
   }
   async function signOut() {
+    clearProfileDraft();
     if (signingOut.current) return;
     signingOut.current = true;
     ignoreSessionEvents.current = true;

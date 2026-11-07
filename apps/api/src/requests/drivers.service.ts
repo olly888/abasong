@@ -157,6 +157,12 @@ export class DriversService {
         [ids],
       )
     ).rows;
+    const familiar = (
+      await c.query(
+        "SELECT id,label FROM abasong.regions WHERE id=ANY($1::uuid[]) ORDER BY label",
+        [Array.from(new Set(rows.flatMap((r) => r.familiar_region_ids ?? [])))],
+      )
+    ).rows;
     const now = Date.now();
     return ids.flatMap((id) => {
       const r = rows.find((x) => x.user_id === id);
@@ -181,6 +187,9 @@ export class DriversService {
             display_name: r.display_name,
             bio: r.bio,
             vehicle_type: r.vehicle_type,
+            familiar_regions: familiar.filter((x) =>
+              r.familiar_region_ids.includes(x.id),
+            ),
             experience: (Array.isArray(r.experience) ? r.experience : [])
               .slice(0, 20)
               .map((x: Record<string, unknown>) => ({

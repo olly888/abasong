@@ -176,3 +176,8 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 2026-11-06 R4-12：无新增依赖/SDK/原生模块、权限、契约、迁移或云资源。复用现有Expo58、React/RN、crypto/pg及V3.2共用组件；抽出报名幂等尝试与会话生命周期发送门控。现有loopback独立TEST工具新增collaboration验证入口，仍拒绝非D0管理目标/外部origin，合成JWT与加密密钥留服务进程；结束清理自有随机库/角色。真实账号及云服务不变。
 
 2026-11-06 R4-13：无新增应用依赖、SDK、原生模块、系统权限或锁文件；复用现有Mapbox永久地理编码、Nest/pg/EnvelopeCrypto和统一ContributionAddressField。临时Python契约验证虚拟环境仅在/private/tmp，不改变全局Python及工程依赖。确认新地图地址先取得持久化许可再写加密草稿；服务端证据不入公开DTO；D0仍17迁移54表，无云变更。
+
+
+## 2026-11-06 B5-01 本人资料与我的
+
+沿用Expo58.0.21/RN0.88.1、已有expo-router/crypto/clipboard及V3 tokens，无依赖升级、新原生模块或权限。电话/微信使用既有EnvelopeCrypto与单独owner RLS表；选择用途不授能力。0018/0019只应用本地D0，19迁移55表；未修改云库/费用/账号资格。熟悉区域是声明资料，不是GPS。团队、媒体及邀请按后续批次，保留历史表不删常联系数据。依据及检查见[B5-01报告](docs/technical/B5_01_本人资料与我的实施验收.md)。

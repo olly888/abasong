@@ -5,8 +5,8 @@
     "version": "3.0.3",
     "contract_version": "12.1.0",
     "paths": 88,
-    "operations": 112,
-    "schemas": 160,
+    "operations": 113,
+    "schemas": 163,
     "spec_validation": "passed"
   },
   "sql": {

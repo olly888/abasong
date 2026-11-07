@@ -1,8 +1,16 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.42](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.43](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — R4-13 scoped local core exit complete; B5-01 next
+## Current delivery — B5-01 owner profile/My implementation; final native/CI in progress
+
+Branch `codex/b5-01-self-profile`, base17cc1d4 / PR101. Self profile/experience, owner-only encrypted optional phone/WeChat, My grouping and compact single-window availability switch are implemented. Purposes never grant capabilities or DSP authority; no Auth phone is copied. Explicit simultaneous close uses version checks in the profile transaction. New0018/0019 bring local D0 to19 migrations/55 tables; no cloud changes or real-account grants.
+
+Current checks:500 engineering tests/lint/types/build; profile28 assertions/26 actual HTTP-PG calls; requests519/library295/import124 and D0/RLS PASS. iOS representative native profile/draft/conflict/retry/contact/switch paths observed. Android profile/keyboard/layout and actual TEST-B5-Android version3 verified after specific owner supplement; initial no-write feedback was not counted. Final Android off retry, cleanup and exact latest-head CI pending. [Report](docs/technical/B5_01_本人资料与我的实施验收.md) / [evidence](docs/technical/B5_01_执行证据.json).
+
+Next after scoped closure: B5-02 own DSP team. Team/members, circle/media/invitation remain their own batches; human0/7 and B6/release status unchanged.
+
+## Previous delivery — R4-13 scoped local core exit complete
 
 [Draft PR101](https://github.com/olly888/abasong/pull/101), branch `codex/r4-13-unlisted-import-closure`, base35b1644 / PR100. D08 unlisted screenshot addresses use the shared field; licensed identity verification precedes encrypted candidate persistence, raw source text stays independent, server-only evidence never enters DTOs, per-row failures/retries retain exact intent, and durable apartment IDs determine return. Final review lists prioritize addresses without duplicate rows.
 

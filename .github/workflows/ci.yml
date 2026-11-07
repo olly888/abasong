@@ -58,6 +58,8 @@ jobs:
           ABASONG_NATIVE_EXIT_SCENARIO=contribution ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
           ABASONG_NATIVE_EXIT_VERIFY=collaboration ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
           ABASONG_NATIVE_EXIT_SCENARIO=contribution ABASONG_NATIVE_EXIT_VERIFY=unlisted ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
+      - name: Verify owner profile privacy and availability consent
+        run: ABASONG_NATIVE_EXIT_VERIFY=profile ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
       - run: ./scripts/dev verify:library-api
       - run: ./scripts/dev verify:import-api
       - run: ./scripts/dev verify:access-ranking

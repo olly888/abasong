@@ -26,7 +26,7 @@ async function main() {
   const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
   assert(["delivery", "contribution"].includes(scenario));
   const verify = process.env.ABASONG_NATIVE_EXIT_VERIFY ?? "default";
-  assert(["default", "collaboration", "unlisted"].includes(verify));
+  assert(["default", "collaboration", "unlisted", "profile"].includes(verify));
   assert(verify !== "unlisted" || scenario === "contribution");
   assert(verify !== "collaboration" || scenario === "delivery");
   let apartments: string[] = [];
@@ -109,13 +109,15 @@ async function main() {
     stopping = false;
   let lifetime: ReturnType<typeof setTimeout> | undefined;
   const artifactBatch =
-    verify === "unlisted"
-      ? "r4-13"
-      : scenario === "contribution"
-        ? "r4-11"
-        : verify === "collaboration"
-          ? "r4-12"
-          : "r4-10";
+    verify === "profile"
+      ? "b5-01"
+      : verify === "unlisted"
+        ? "r4-13"
+        : scenario === "contribution"
+          ? "r4-11"
+          : verify === "collaboration"
+            ? "r4-12"
+            : "r4-10";
   const resourceFile = `artifacts/${artifactBatch}/test-resources/${name}.json`;
   const recordResources = (cleaned = false) => {
     mkdirSync(`artifacts/${artifactBatch}/test-resources`, { recursive: true });
@@ -172,6 +174,57 @@ async function main() {
           apartments,
           run_id: process.env.ABASONG_NATIVE_EXIT_RUN ?? null,
         });
+      if (
+        verify === "profile" &&
+        req.url === "/fixture/profile-checks" &&
+        req.method === "GET"
+      ) {
+        const record = (
+          await db!.query(
+            "SELECT contact_payload FROM abasong.self_profiles WHERE user_id=$1",
+            [owner],
+          )
+        ).rows[0];
+        const encrypted = JSON.stringify(record?.contact_payload ?? {});
+        let ownerRls = false;
+        await db!.query("BEGIN");
+        try {
+          await db!.query("SET LOCAL ROLE abasong_sensitive");
+          await db!.query("SELECT set_config('abasong.actor_id',$1,true)", [
+            driver,
+          ]);
+          const other = (
+            await db!.query(
+              "SELECT user_id FROM abasong.self_profiles WHERE user_id=$1",
+              [owner],
+            )
+          ).rowCount;
+          const updated = (
+            await db!.query(
+              "UPDATE abasong.profiles SET display_name='forbidden' WHERE user_id=$1",
+              [owner],
+            )
+          ).rowCount;
+          ownerRls = other === 0 && updated === 0;
+        } finally {
+          await db!.query("ROLLBACK");
+        }
+        const caps = (
+          await db!.query(
+            "SELECT capability FROM abasong.capabilities WHERE user_id=$1",
+            [owner],
+          )
+        ).rows;
+        return reply(200, {
+          isolated_contact:
+            record &&
+            !encrypted.includes("TEST-private-owner") &&
+            !encrypted.includes("202 555"),
+          owner_rls: ownerRls,
+          no_extra_caps:
+            caps.length === 1 && caps[0].capability === "request.publish",
+        });
+      }
       if (req.url === "/fixture/snapshot" && req.method === "GET") {
         const rows = (
           await db!.query(
@@ -203,6 +256,8 @@ async function main() {
             "contribute",
             "correct",
             "import_commit",
+            "profile",
+            "availability",
           ].includes(String(b.operation))
         ) {
           fault = { operation: String(b.operation), after: b.after === true };

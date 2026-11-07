@@ -255,7 +255,13 @@ async function main() {
       { request_schema_version: 2, scenario: "warehouse_shortage" },
       randomUUID(),
     );
-    for (const required of ["V12.0015", "V12.0016", "V12.0017"]) {
+    for (const required of [
+      "V12.0015",
+      "V12.0016",
+      "V12.0017",
+      "V12.0018",
+      "V12.0019",
+    ]) {
       const missingVersion = (
         await db.query(
           "DELETE FROM abasong.schema_version WHERE version=$1 RETURNING version,applied_at",
@@ -276,7 +282,7 @@ async function main() {
       await request("/health/ready", "GET", undefined, 200);
     }
     console.log(
-      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015/0016/0017 readiness denied.`,
+      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015–0019 readiness denied.`,
     );
     await request("/v1/requests", "GET", "", 401);
     await request(

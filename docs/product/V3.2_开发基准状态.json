@@ -1,10 +1,10 @@
 {
-  "version": "V3.2-R4-13-unlisted-closure",
+  "version": "V3.2-B5-01-self-profile",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
   "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_home_contribution_and_delivery",
   "prototype": "3.2-r3-delivery",
-  "scope": "R4_scoped_local_core_exit_PASS_controlled_B5_01_eligible",
+  "scope": "B5_01_local_implementation_final_native_CI_pending",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
@@ -15,7 +15,7 @@
     "implementation": "R4_01_to_13_scoped_local_native_and_exact_code_CI_PASS_B5_01_next",
     "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
-    "my_account": "simplified_synthetic_only_native_service_pending",
+    "my_account": "self_profile_local_implemented_team_invitation_deferred",
     "invitation_prototype": "owner_main_flow_review_recorded_native_distribution_pending",
     "delivery_prototype": "owner_main_flow_accepted_R4_08_native_representative_checks_not_full_usability"
   },
@@ -865,5 +865,12 @@
     ],
     "open_local_R4_core_P0": [],
     "evidence": "../technical/R4_13_执行证据.json"
+  },
+  "b5_self_profile": {
+    "report": "../technical/B5_01_本人资料与我的实施验收.md",
+    "evidence": "../technical/B5_01_执行证据.json",
+    "status": "final_native_CI_pending",
+    "real_accounts": false,
+    "cloud_changes": false
   }
 }

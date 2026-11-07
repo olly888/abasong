@@ -1,0 +1,16 @@
+{
+ "batch":"B5-01",
+ "date":"2026-11-06",
+ "branch":"codex/b5-01-self-profile",
+ "base":"17cc1d4fff78abf740e1701450062c0ec5088270",
+ "status":"in_progress_final_native_and_CI",
+ "engineering":{"files":87,"tests":500,"lint":"pass","types":"pass","build":"pass"},
+ "http_pg":{"profile_assertions":28,"profile_calls":26,"requests_checks":519,"library_checks":295,"import_checks":124},
+ "database":{"environment":"local_D0_only","migrations":19,"tables":55,"forced_RLS":"pass"},
+ "native":{"ios":"scoped_PASS","android":"profile_keyboard_visual_PASS_final_off_pending","real_account":false,"physical_devices":false},
+ "cleanup":"pending_native_fixture_shutdown",
+ "cloud_mutation":false,
+ "real_account_grants":false,
+ "release_ready":false,
+ "CI":"pending_exact_commit"
+}

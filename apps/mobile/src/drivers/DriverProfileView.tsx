@@ -45,6 +45,12 @@ export function DriverProfileView(p: {
       ) : (
         <>
           <DriverSummary driver={d} />
+          {d.profile.familiar_regions?.length ? (
+            <Text style={typeStyles.secondary}>
+              熟悉区域：
+              {d.profile.familiar_regions.map((r) => r.label).join(" / ")}
+            </Text>
+          ) : null}
           {d.profile.bio ? (
             <Text style={typeStyles.body}>{d.profile.bio}</Text>
           ) : null}

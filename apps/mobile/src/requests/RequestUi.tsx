@@ -163,8 +163,8 @@ export const requestStyles = StyleSheet.create({
     gap: 12,
     backgroundColor: tokens.color.surface,
   },
-  status: { color: tokens.color.brandPrimary, fontSize: 13, fontWeight: "600" },
-  price: { color: tokens.color.brandPrimary, fontSize: 19, fontWeight: "700" },
+  status: { color: tokens.color.brandText, fontSize: 13, fontWeight: "600" },
+  price: { color: tokens.color.brandText, fontSize: 19, fontWeight: "700" },
   choices: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   choice: {
     paddingHorizontal: 14,
@@ -179,5 +179,5 @@ export const requestStyles = StyleSheet.create({
     backgroundColor: tokens.color.brandSurface,
   },
   choiceText: { fontSize: 14, color: tokens.color.textSecondary },
-  selectedText: { color: tokens.color.brandPrimary, fontWeight: "600" },
+  selectedText: { color: tokens.color.brandText, fontWeight: "600" },
 });

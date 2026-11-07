@@ -19,6 +19,8 @@ import {
   observationPoint,
   discoveryInput,
   matchesDistanceContext,
+  nearbyResultState,
+  type ProviderDiscoveryStatus,
   type DiscoveryObservation,
   type NearbySnapshot,
 } from "./nearby-policy";
@@ -44,7 +46,6 @@ import {
 import {
   AppState,
   Linking,
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -62,7 +63,8 @@ import { watchDevicePosition } from "./location-stream";
 import { serialLatest } from "./serial-latest";
 import { HomeArrivalPanel } from "./HomeArrivalPanel";
 import { MapTools } from "../components/HomeChrome";
-import { Icon } from "../ui/Icon";
+import { MapCardFrame } from "../ui/MapCardFrame";
+import { MapStatusRow } from "../ui/MapStatusRow";
 import { ApartmentSheet } from "./ApartmentSheet";
 import { useAuth } from "../auth/AuthProvider";
 import { AccountError } from "../auth/api-client";
@@ -142,26 +144,45 @@ export function HomeApartments({
   useEffect(() => {
     if (auth.phase !== "ready") clearSearchDestination();
   }, [auth.phase]);
-  if (!focused || !active || auth.phase !== "ready" || !auth.session)
+  if (!focused || !active || auth.phase !== "ready" || !auth.session) {
+    const signingIn = ["restoring", "loading-account", "signing-out"].includes(
+      auth.phase,
+    );
     return (
       <View style={styles.root}>
         <HomeMap />
         {toolbar}
-        <MapTools bottom={344} />
-        <View style={styles.panel}>
-          <View style={styles.handleSpace}>
-            <View style={styles.handle} />
-          </View>
-          <View style={{ paddingHorizontal: 22 }}>
-            <EmptyApartment
-              title="登录后使用公寓资料"
-              action="登录"
-              onPress={() => router.push("/auth/phone")}
-            />
-          </View>
-        </View>
+        {focused && active ? (
+          <MapCardFrame style={styles.statusPanel}>
+            {signingIn ? (
+              <MapStatusRow state="loading" title="正在确认登录" />
+            ) : auth.phase === "error" && auth.session ? (
+              <MapStatusRow
+                state="error"
+                title="账号资料暂时无法加载"
+                action={{ label: "重新加载", onPress: auth.retryAccount }}
+              />
+            ) : (
+              <MapStatusRow
+                state="unavailable"
+                title={
+                  mode === "公寓"
+                    ? "登录后使用公寓资料"
+                    : mode === "找活"
+                      ? "登录后查看配送需求"
+                      : "登录后查看可接活司机"
+                }
+                action={{
+                  label: "登录",
+                  onPress: () => router.push("/auth/phone"),
+                }}
+              />
+            )}
+          </MapCardFrame>
+        ) : null}
       </View>
     );
+  }
   return (
     <View style={styles.root}>
       <View
@@ -268,7 +289,7 @@ export function HomeApartmentContent({
     providerRef = useRef<NearbySnapshot | null>(null);
   const providerLast = useRef(0),
     providerEpoch = useRef(0),
-    providerStatus = useRef<"idle" | "loading" | "ok" | "unavailable">("idle");
+    providerStatus = useRef<ProviderDiscoveryStatus>("idle");
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"] | undefined>(
       readingMemory?.camera?.center,
@@ -382,14 +403,15 @@ export function HomeApartmentContent({
     if (modeRef.current !== "公寓" || manualLocked.current) return;
     setNearbyItems(items);
     setCandidates(items.flatMap((c) => (c.apartment ? [c.apartment] : [])));
+    const provider = providerStatus.current;
     setLookupState(
-      items.length
-        ? "nearby"
-        : providerStatus.current === "loading"
-          ? "loading"
-          : providerStatus.current === "unavailable"
-            ? "error"
-            : "empty",
+      nearbyResultState(
+        items.length > 0,
+        provider === "ok" &&
+          (!providerRef.current || providerRef.current.until <= Date.now())
+          ? "unavailable"
+          : provider,
+      ),
     );
     const current = selectionRef.current?.id ?? providerSelectionKey.current;
     if (
@@ -430,8 +452,20 @@ export function HomeApartmentContent({
         ),
       );
     // Reuse the unexpired in-memory provider response; no stationary 30s poll.
-    if (providerRef.current || Date.now() - providerLast.current < 30000)
+    if (providerRef.current) return;
+    if (Date.now() - providerLast.current < 30000) {
+      if (providerStatus.current === "idle" && latestObservation.current) {
+        providerStatus.current = "unavailable";
+        updateNearby(
+          nearbyFromSnapshots(
+            catalogRef.current,
+            null,
+            latestObservation.current,
+          ),
+        );
+      }
       return;
+    }
     providerLast.current = Date.now();
     providerStatus.current = "loading";
     if (latestObservation.current) {
@@ -602,7 +636,7 @@ export function HomeApartmentContent({
       invalidateAutomaticCard();
       setCandidates([]);
       setNearbyItems([]);
-      setLookupState("empty");
+      setLookupState("loading");
     };
     const fail = (reason: string) => {
       if (!valid()) return;
@@ -1339,137 +1373,50 @@ export function HomeApartmentContent({
           );
         })()
       ) : (
-        <View
-          onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
-          style={styles.panel}
+        <MapCardFrame
+          onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height + 12)}
+          style={styles.statusPanel}
         >
-          <View style={styles.handleSpace}>
-            <View style={styles.handle} />
-          </View>
-          <ScrollView contentContainerStyle={styles.inner}>
-            {error ? (
-              <Text accessibilityRole="alert" style={styles.error}>
-                {error}
-              </Text>
-            ) : null}
-            <HomeArrivalPanel
-              state={
-                locationNotice ? "location" : locating ? "loading" : lookupState
-              }
-              message={locationNotice ?? notice}
-              candidates={candidates}
-              onSelect={(p) => void select(p)}
-              onContribute={openContributionMenu}
-              onRetry={() =>
-                locationNotice
-                  ? blocked
-                    ? void openLocationSettings()
-                    : void locate(true)
-                  : (() => {
-                      providerLast.current = 0;
-                      providerStatus.current = "idle";
-                      void locate(false, false);
-                    })()
-              }
-              blocked={blocked}
-            />
-          </ScrollView>
-        </View>
+          {error ? (
+            <Text accessibilityRole="alert" style={styles.error}>
+              {error}
+            </Text>
+          ) : null}
+          <HomeArrivalPanel
+            state={
+              locationNotice ? "location" : locating ? "loading" : lookupState
+            }
+            message={locationNotice ?? notice}
+            candidates={candidates}
+            onSelect={(p) => void select(p)}
+            onContribute={openContributionMenu}
+            onRetry={() =>
+              locationNotice
+                ? blocked
+                  ? void openLocationSettings()
+                  : void locate(true)
+                : (() => {
+                    providerLast.current = 0;
+                    providerStatus.current = "idle";
+                    void locate(false, false);
+                  })()
+            }
+            blocked={blocked}
+          />
+        </MapCardFrame>
       )}
     </View>
   );
 }
-function EmptyApartment({
-  title,
-  action,
-  busy = false,
-  onPress,
-  onRetry,
-  retryLabel = "重新定位",
-}: {
-  title: string;
-  action: string;
-  busy?: boolean;
-  onPress: () => void;
-  onRetry?: () => void;
-  retryLabel?: string;
-}) {
-  return (
-    <View style={styles.mapEmpty}>
-      <View style={styles.emptyIcon}>
-        <Icon name="box" color="#6D829E" />
-      </View>
-      <Text style={styles.emptyHeading}>{title}</Text>
-      <Text style={styles.emptySubtitle}>也可以直接搜索地址。</Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: busy, busy }}
-        disabled={busy}
-        onPress={onPress}
-        style={styles.emptyAction}
-      >
-        {busy ? (
-          <ActivityIndicator color={tokens.color.ink} />
-        ) : (
-          <Text
-            style={{ fontSize: 16, fontWeight: "600", color: tokens.color.ink }}
-          >
-            {action}
-          </Text>
-        )}
-      </Pressable>
-      {onRetry ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={onRetry}
-          style={{ minHeight: 48, justifyContent: "center" }}
-        >
-          <Text style={styles.link}>{retryLabel}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
 const styles = StyleSheet.create({
-  mapEmpty: {
-    paddingVertical: 38,
-    paddingHorizontal: 16,
-    alignItems: "center",
-  },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 17,
-    backgroundColor: "#F1F4F8",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 15,
-  },
-  emptyHeading: {
-    fontSize: 19,
-    lineHeight: 26,
-    fontWeight: "600",
-    color: tokens.color.ink,
-    textAlign: "center",
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    lineHeight: 24,
-    color: tokens.color.textMuted,
-    marginTop: 10,
-    marginBottom: 18,
-    textAlign: "center",
-  },
-  emptyAction: {
-    minHeight: 52,
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: tokens.color.controlBorder,
-    alignSelf: "stretch",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+  statusPanel: {
+    position: "absolute",
+    left: tokens.space[16].value,
+    right: tokens.space[16].value,
+    bottom: tokens.space[12].value,
+    paddingHorizontal: tokens.space[16].value,
+    paddingVertical: tokens.space[4].value,
+    zIndex: 20,
   },
   root: { flex: 1 },
   panel: {
@@ -1523,7 +1470,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 8,
   },
-  link: { fontSize: 14, color: tokens.color.brandPrimary },
+  link: { fontSize: 14, color: tokens.color.brandText },
   record: {
     paddingTop: 12,
     paddingBottom: 15,

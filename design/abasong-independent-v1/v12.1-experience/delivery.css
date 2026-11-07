@@ -7,11 +7,11 @@
 .delivery-grid select { max-width: 100%; text-overflow: ellipsis; }
 .delivery-identity { margin: 0 0 20px; padding: 0 0 12px; border-bottom: 1px solid var(--ab-color-border); }
 .delivery-identity summary { margin: 0; justify-content: space-between; gap: 12px; min-height: 48px; color: var(--ab-color-ink); overflow-wrap: anywhere; }
-.delivery-identity summary span { color: var(--ab-color-brandPrimary); flex-shrink: 0; font-size: 14px; }
+.delivery-identity summary span { color: var(--ab-color-brandText); flex-shrink: 0; font-size: 14px; }
 .delivery-identity .account-publisher-options { padding-top: 8px; }
 .delivery-date-quick { display: flex; gap: 8px; margin: 0 0 12px; }
 .delivery-date-quick button { min-height: 48px; min-width: 70px; border-radius: 12px; border: 1px solid var(--ab-color-controlBorder); background: #fff; padding: 10px 16px; font-size: 14px; }
-.delivery-date-quick button.active { color: var(--ab-color-brandPrimary); border-color: var(--ab-color-brandPrimary); background: #edf4ff; }
+.delivery-date-quick button.active { color: var(--ab-color-brandText); border-color: var(--ab-color-brandPrimary); background: var(--ab-color-brandSurface); }
 .delivery-form .ex-segment { margin-bottom: 12px; }
 .delivery-asap { display: flex; gap: 10px; align-items: center; min-height: 48px; font-size: 14px; padding: 0; margin: -4px 0 8px; }
 .delivery-asap input { width: 20px; height: 20px; accent-color: var(--ab-color-brandPrimary); }
@@ -20,7 +20,7 @@
 .delivery-quantity-kind label { display: flex; gap: 6px; align-items: center; min-height: 48px; font-size: 14px; }
 .delivery-quantity-kind input { width: 18px; height: 18px; accent-color: var(--ab-color-brandPrimary); }
 .delivery-options { border-top: 1px solid var(--ab-color-border); padding-top: 6px; }
-.delivery-options > summary { font-size: 15px; color: var(--ab-color-brandPrimary); min-height: 48px; margin: 0; }
+.delivery-options > summary { font-size: 15px; color: var(--ab-color-brandText); min-height: 48px; margin: 0; }
 .delivery-options > div { padding-top: 14px; }
 .delivery-form input[readonly] { background: #f5f7fa; color: #686c73; }
 .delivery-scene-button { padding: 18px 0; gap: 14px; min-height: 84px; }

@@ -74,7 +74,7 @@ export function NativeDateField({
             accessibilityLabel={`清除${label}`}
             hitSlop={12}
           >
-            <Text style={{ fontSize: 14, color: tokens.color.brandPrimary }}>
+            <Text style={{ fontSize: 14, color: tokens.color.brandText }}>
               清除
             </Text>
           </Pressable>

@@ -237,7 +237,7 @@ export default function MessageLab() {
             onPress={fn as () => void}
             style={{ minHeight: 40, justifyContent: "center" }}
           >
-            <Text style={{ fontSize: 13, color: tokens.color.brandPrimary }}>
+            <Text style={{ fontSize: 13, color: tokens.color.brandText }}>
               {String(label)}
             </Text>
           </Pressable>

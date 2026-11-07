@@ -92,7 +92,7 @@ export default function SupportReview() {
             onPress={() => setApplying(true)}
             style={{ minHeight: 48, minWidth: 48, justifyContent: "center" }}
           >
-            <Text style={{ color: tokens.color.brandPrimary }}>报名</Text>
+            <Text style={{ color: tokens.color.brandText }}>报名</Text>
           </Pressable>
         }
         footer={

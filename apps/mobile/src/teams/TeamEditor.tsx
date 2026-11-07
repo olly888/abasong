@@ -200,7 +200,7 @@ export function TeamEditor({
       <Text
         style={[
           typeStyles.body,
-          { color: selected ? tokens.color.brandPrimary : tokens.color.ink },
+          { color: selected ? tokens.color.brandText : tokens.color.ink },
         ]}
       >
         {label}

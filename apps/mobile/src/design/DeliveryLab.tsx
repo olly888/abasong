@@ -229,7 +229,7 @@ function SceneBody({
       }
     >
       {controls}
-      <Text style={{ color: tokens.color.brandPrimary }}>
+      <Text style={{ color: tokens.color.brandText }}>
         TEST · {notice || scene} · 仅内存
       </Text>
       <DeliveryDetailBody

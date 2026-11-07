@@ -194,6 +194,7 @@ async function main() {
         target,
         configuration: "Release",
         bundle_id: "com.abasong.pilot",
+        build_number: plist.CFBundleVersion,
         app,
         embedded_business_js: true,
         remote_push_configured: false,

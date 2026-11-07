@@ -231,7 +231,7 @@ const s = StyleSheet.create({
   },
   body: { fontSize: 16, lineHeight: 26, color: tokens.color.ink },
   measure: { position: "absolute", left: 0, right: 0, opacity: 0 },
-  link: { fontSize: 14, fontWeight: "600", color: tokens.color.brandPrimary },
+  link: { fontSize: 14, fontWeight: "600", color: tokens.color.brandText },
   textButton: {
     minHeight: 48,
     alignSelf: "flex-start",

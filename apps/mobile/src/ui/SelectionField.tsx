@@ -163,7 +163,7 @@ export function SelectionField<T extends string>({
                       fontSize: 16,
                       color:
                         id === value
-                          ? tokens.color.brandPrimary
+                          ? tokens.color.brandText
                           : tokens.color.ink,
                     }}
                   >

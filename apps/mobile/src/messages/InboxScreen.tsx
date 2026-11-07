@@ -229,7 +229,7 @@ export function InboxContent({
                 fontWeight: t === tab ? "600" : "400",
                 color:
                   t === tab
-                    ? tokens.color.brandPrimary
+                    ? tokens.color.brandText
                     : tokens.color.textSecondary,
               }}
             >

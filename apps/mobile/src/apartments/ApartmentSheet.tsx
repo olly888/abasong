@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import {
-  ActivityIndicator,
   PanResponder,
   Pressable,
   ScrollView,
@@ -14,6 +13,7 @@ import { tokens } from "@abasong/ui";
 import { ActionButton } from "../auth/AuthControls";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/Primitives";
+import { MapStatusRow } from "../ui/MapStatusRow";
 import {
   anchorOffset,
   contributionMeta,
@@ -254,23 +254,17 @@ export function ApartmentSheet(p: SheetProps) {
           </View>
 
           {p.status === "loading" ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <ActivityIndicator color={tokens.color.brandPrimary} />
-              <Text style={styles.meta}>正在读取</Text>
-            </View>
+            <MapStatusRow state="loading" title="正在读取门禁码" />
           ) : null}
           {p.status === "denied" ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <Text style={styles.stateTitle}>暂未开通资料查看资格</Text>
-            </View>
+            <MapStatusRow state="unavailable" title="暂未开通资料查看资格" />
           ) : null}
           {p.status === "error" ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <Text accessibilityRole="alert" style={styles.body}>
-                暂时无法读取门禁码
-              </Text>
-              <ActionButton label="重新读取" onPress={p.onRetry} />
-            </View>
+            <MapStatusRow
+              state="error"
+              title="门禁码暂时无法加载"
+              action={{ label: "重新读取", onPress: p.onRetry }}
+            />
           ) : null}
           {p.expanded && p.error && p.status !== "error" ? (
             <Text accessibilityRole="alert" style={styles.error}>
@@ -278,12 +272,14 @@ export function ApartmentSheet(p: SheetProps) {
             </Text>
           ) : null}
           {canRead && !records.length ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <Text style={styles.stateTitle}>暂无共享门禁码</Text>
-              {!p.expanded ? (
-                <ActionButton label="添加门禁码" onPress={p.onAdd} />
-              ) : null}
-            </View>
+            <MapStatusRow
+              title="暂无共享门禁码"
+              action={
+                p.expanded
+                  ? undefined
+                  : { label: "添加门禁码", onPress: p.onAdd }
+              }
+            />
           ) : null}
           {canRead && !p.expanded && records[0] ? (
             <>
@@ -363,7 +359,7 @@ export function ApartmentSheet(p: SheetProps) {
                             fontSize: 14,
                             color:
                               r.my_feedback === v
-                                ? tokens.color.brandPrimary
+                                ? tokens.color.brandText
                                 : tokens.color.ink,
                           }}
                         >
@@ -484,9 +480,6 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.color.brandSurface,
     borderColor: tokens.color.brandPrimary,
   },
-  state: { paddingVertical: 20, gap: 14 },
-  compactState: { paddingVertical: 12, gap: 8 },
-  stateTitle: { fontSize: 22, fontWeight: "600", color: tokens.color.ink },
   linkRow: {
     minHeight: 44,
     flexDirection: "row",
@@ -495,7 +488,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 0,
   },
-  link: { fontSize: 14, color: tokens.color.brandPrimary },
+  link: { fontSize: 14, color: tokens.color.brandText },
   error: {
     fontSize: 14,
     lineHeight: 22,

@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     gap: 12,
     flexWrap: "wrap",
   },
-  status: { fontSize: 13, fontWeight: "600", color: tokens.color.brandPrimary },
+  status: { fontSize: 13, fontWeight: "600", color: tokens.color.brandText },
   muted: { fontSize: 13, color: tokens.color.textSecondary, lineHeight: 20 },
   code: { fontSize: 30, fontWeight: "700", color: tokens.color.ink },
   feedback: { flexDirection: "row", gap: 24, flexWrap: "wrap" },
@@ -271,6 +271,6 @@ const styles = StyleSheet.create({
   actionLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: tokens.color.brandPrimary,
+    color: tokens.color.brandText,
   },
 });

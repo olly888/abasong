@@ -4,6 +4,7 @@ import {
   distanceM,
   nearbyAtCurrentObservation,
   nearbyFromSnapshots,
+  nearbyResultState,
   withinNearbyRadius,
 } from "./nearby-policy";
 import {
@@ -248,4 +249,12 @@ it("rejects expired discovery data and preserves response identity while trimmin
       current,
     ),
   ).toBeNull();
+});
+
+it("only presents an empty result after the nearby provider has answered successfully", () => {
+  expect(nearbyResultState(false, "idle")).toBe("loading");
+  expect(nearbyResultState(false, "loading")).toBe("loading");
+  expect(nearbyResultState(false, "ok")).toBe("empty");
+  expect(nearbyResultState(false, "unavailable")).toBe("error");
+  expect(nearbyResultState(true, "unavailable")).toBe("nearby");
 });

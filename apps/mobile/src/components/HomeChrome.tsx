@@ -1,15 +1,12 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  View,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { tokens } from "@abasong/ui";
 import { useInboxCount } from "../messages/useInboxCount";
-import { Icon } from "../ui/Icon";
-export type HomeMode = "公寓" | "找活" | "找人";
+import { MapControl, MapModeSwitch, MapSearchButton } from "../ui/MapControls";
+
+const modes = ["公寓", "找活", "找人"] as const;
+export type HomeMode = (typeof modes)[number];
+
 export function HomeChrome({
   mode,
   onMode,
@@ -24,93 +21,40 @@ export function HomeChrome({
   onSearch?: () => void;
 }) {
   const unread = useInboxCount();
+  const apartment = mode === "公寓";
   return (
     <View style={styles.toolbar} pointerEvents="box-none">
       <View style={styles.searchRow}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            mode === "公寓" ? "搜索公寓或地址" : "搜索区域或承运商"
-          }
-          accessibilityState={{ disabled: mode !== "公寓" && !onSearch }}
-          disabled={mode !== "公寓" && !onSearch}
+        <MapSearchButton
+          label={apartment ? "搜索公寓或地址" : "搜索区域或承运商"}
+          disabled={!apartment && !onSearch}
           onPress={() =>
-            mode === "公寓" ? router.push("/apartments") : onSearch?.()
+            apartment ? router.push("/apartments") : onSearch?.()
           }
-          style={styles.search}
-        >
-          <Icon name="search" size={21} color={tokens.color.textSecondary} />
-          <Text style={styles.searchText}>
-            {mode === "公寓" ? "搜索公寓或地址" : "搜索区域或承运商"}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`消息${unread ? `，${unread}条未读` : ""}`}
+        />
+        <MapControl
+          icon="message"
+          label="消息"
           onPress={() => router.push("/inbox")}
-          style={styles.message}
-        >
-          <Icon name="message" />
-          {unread !== null && unread > 0 ? (
-            <View
-              style={{
-                position: "absolute",
-                right: 2,
-                top: 2,
-                minWidth: 19,
-                height: 19,
-                paddingHorizontal: 4,
-                borderRadius: 10,
-                backgroundColor: tokens.color.brandPrimary,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "600",
-                  color: tokens.color.onBrand,
-                }}
-              >
-                {unread > 99 ? "99+" : unread}
-              </Text>
-            </View>
-          ) : null}
-        </Pressable>
+          unread={unread ?? 0}
+        />
       </View>
       <View style={styles.modeRow}>
-        <View style={styles.tabs}>
-          {(["公寓", "找活", "找人"] as const).map((m) => (
-            <Pressable
-              key={m}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: mode === m }}
-              onPress={() => onMode(m)}
-              hitSlop={{ top: 4, bottom: 4 }}
-              style={[styles.tab, mode === m && styles.selected]}
-            >
-              <Text style={[styles.label, mode === m && styles.active]}>
-                {m}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        {mode !== "公寓" && onToggleList ? (
-          <Pressable
-            accessibilityRole="button"
+        <MapModeSwitch items={modes} selected={mode} onSelect={onMode} />
+        {!apartment && onToggleList ? (
+          <MapControl
+            icon={list ? "map" : "list"}
+            label={list ? "地图" : "列表"}
             accessibilityLabel={list ? "切换为地图" : "切换为列表"}
+            showLabel
             onPress={onToggleList}
-            style={styles.viewToggle}
-          >
-            <Icon name={list ? "map" : "list"} size={20} />
-            <Text style={styles.toggleLabel}>{list ? "地图" : "列表"}</Text>
-          </Pressable>
+          />
         ) : null}
       </View>
     </View>
   );
 }
+
 export function MapTools({
   bottom,
   locating = false,
@@ -123,138 +67,46 @@ export function MapTools({
   canRecenter?: boolean;
 }) {
   return (
-    <View style={[styles.tools, { bottom }]}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="发需求"
+    <View style={[styles.tools, { bottom }]} pointerEvents="box-none">
+      <MapControl
+        icon="plus"
+        label="发需求"
+        showLabel
+        primary
         onPress={() => router.push("/requests/new")}
-        style={styles.help}
-      >
-        <Icon name="plus" color={tokens.color.onBrand} size={20} />
-        <Text style={styles.helpText}>发需求</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="我的位置"
-        accessibilityState={{
-          disabled: (locating && !canRecenter) || !onLocate,
-          busy: locating,
-        }}
-        disabled={(locating && !canRecenter) || !onLocate}
+      />
+      <MapControl
+        icon="locate"
+        label="我的位置"
         onPress={onLocate}
-        style={styles.location}
-      >
-        {locating && !canRecenter ? (
-          <ActivityIndicator color={tokens.color.brandPrimary} />
-        ) : (
-          <Icon
-            name="locate"
-            color={locating ? tokens.color.textMuted : tokens.color.ink}
-          />
-        )}
-      </Pressable>
+        busy={locating}
+        disabled={(locating && !canRecenter) || !onLocate}
+      />
     </View>
   );
 }
-const shadow = {
-  shadowColor: "#172B4B",
-  shadowOpacity: 0.08,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 2 },
-  elevation: 3,
-};
+
 const styles = StyleSheet.create({
-  toolbar: { position: "absolute", top: 12, left: 16, right: 16, zIndex: 10 },
-  searchRow: { flexDirection: "row", gap: 8 },
-  search: {
-    flex: 1,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: tokens.color.surface,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    gap: 10,
-    ...shadow,
+  toolbar: {
+    position: "absolute",
+    top: tokens.space[12].value,
+    left: tokens.space[16].value,
+    right: tokens.space[16].value,
+    zIndex: 10,
   },
-  searchText: {
-    fontSize: 15,
-    color: tokens.color.textSecondary,
-    flexShrink: 1,
-  },
-  message: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: tokens.color.surface,
-    ...shadow,
-  },
+  searchRow: { flexDirection: "row", gap: tokens.space[8].value },
   modeRow: {
-    marginTop: 10,
+    marginTop: tokens.space[8].value,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 8,
+    gap: tokens.space[8].value,
   },
-  viewToggle: {
-    minHeight: 48,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: tokens.color.surface,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    ...shadow,
-  },
-  toggleLabel: { fontSize: 14, color: tokens.color.ink },
-  tabs: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    padding: 4,
-    gap: 2,
-    borderRadius: 13,
-    backgroundColor: tokens.color.surface,
-    ...shadow,
-  },
-  tab: {
-    minHeight: 40,
-    paddingHorizontal: 15,
-    borderRadius: 9,
-    justifyContent: "center",
-  },
-  unavailable: { opacity: 0.42 },
-  label: { fontSize: 15, color: tokens.color.textSecondary },
-  selected: { backgroundColor: tokens.color.brandSurface },
-  active: { color: tokens.color.brandPrimary, fontWeight: "600" },
   tools: {
     position: "absolute",
-    right: 16,
-    flexDirection: "column",
+    right: tokens.space[16].value,
     alignItems: "flex-end",
-    gap: 10,
+    gap: tokens.space[8].value,
     zIndex: 8,
   },
-  location: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 14,
-    backgroundColor: tokens.color.surface,
-    ...shadow,
-  },
-  help: {
-    height: 48,
-    paddingHorizontal: 17,
-    borderRadius: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: tokens.color.brandPrimary,
-    ...shadow,
-  },
-  helpText: { fontSize: 15, fontWeight: "600", color: tokens.color.onBrand },
 });

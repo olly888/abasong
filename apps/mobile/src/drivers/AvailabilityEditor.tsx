@@ -229,7 +229,7 @@ export function AvailabilityEditor(p: {
                             typeStyles.body,
                             {
                               color: selected
-                                ? tokens.color.brandPrimary
+                                ? tokens.color.brandText
                                 : tokens.color.ink,
                             },
                           ]}

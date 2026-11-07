@@ -268,8 +268,12 @@
     readCode(id);
     render();
   }
+  function hasNearbyCards() {
+    return !state.temporaryDestination && !["street", "house", "commercial", "unknown", "departure-pending", "nearby-error", "denied"].includes(state.scenario);
+  }
   function mapArtwork(mode = state.homeView, warehouse = null) {
     if (mode === "apartments" || warehouse) {
+      const activeApartment = !warehouse && hasNearbyCards() ? state.apt : null;
       const lots = [
         [142, 272, 82, 66, "a1", "1200"],
         [251, 193, 62, 70, "a2", "1228"],
@@ -282,7 +286,7 @@
         [233, 568, 62, 67, "", "1136"],
         [113, 573, 58, 56, "", "1168"],
       ];
-      return `<svg viewBox="0 0 390 720" preserveAspectRatio="none" aria-hidden="true"><rect width="390" height="720" fill="#EDEDEA"/><path d="M295 20h95v126h-95z" fill="#DCE7D8"/><path d="M-30 245 430 90M-30 429 430 276M-20 610 430 457M79-40 330 760M-88 8 155 760M267-60 518 720" fill="none" stroke="#D7DBDC" stroke-width="29"/><path d="M-30 245 430 90M-30 429 430 276M-20 610 430 457M79-40 330 760M-88 8 155 760M267-60 518 720" fill="none" stroke="#FFF" stroke-width="25"/>${lots.map(([x, y, w, h, id, n]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${!warehouse && id === state.apt ? "#C5DAF9" : "#DDDCD7"}" stroke="${!warehouse && id === state.apt ? "#1467D8" : "#D3D3CE"}" stroke-width="${id === state.apt ? 2 : 1}"/><text x="${x + w / 2}" y="${y + h / 2 + 5}" text-anchor="middle" class="ex-roof ${id === state.apt ? "active" : ""}">${warehouse ? "" : n}</text>`).join("")}<g fill="#737977" font-family="Arial" font-size="12"><text x="100" y="238" transform="rotate(-18 100 238)">${warehouse ? esc(warehouse.street || "取件街道") : "W Pine Ave"}</text><text x="270" y="429" transform="rotate(72 270 429)">S Grove St</text><text x="51" y="586" transform="rotate(-18 51 586)">W 8th St</text><text x="312" y="87" font-size="10">PARK</text></g></svg>`;
+      return `<svg viewBox="0 0 390 720" preserveAspectRatio="none" aria-hidden="true"><rect width="390" height="720" fill="#EDEDEA"/><path d="M295 20h95v126h-95z" fill="#DCE7D8"/><path d="M-30 245 430 90M-30 429 430 276M-20 610 430 457M79-40 330 760M-88 8 155 760M267-60 518 720" fill="none" stroke="#D7DBDC" stroke-width="29"/><path d="M-30 245 430 90M-30 429 430 276M-20 610 430 457M79-40 330 760M-88 8 155 760M267-60 518 720" fill="none" stroke="#FFF" stroke-width="25"/>${lots.map(([x, y, w, h, id, n]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${id === activeApartment ? "var(--ab-palette-blue-200)" : "#DDDCD7"}" stroke="${id === activeApartment ? "var(--ab-color-brandPrimary)" : "#D3D3CE"}" stroke-width="${id === activeApartment ? 2 : 1}"/><text x="${x + w / 2}" y="${y + h / 2 + 5}" text-anchor="middle" class="ex-roof ${id === activeApartment ? "active" : ""}">${warehouse ? "" : n}</text>`).join("")}<g fill="#737977" font-family="Arial" font-size="12"><text x="100" y="238" transform="rotate(-18 100 238)">${warehouse ? esc(warehouse.street || "取件街道") : "W Pine Ave"}</text><text x="270" y="429" transform="rotate(72 270 429)">S Grove St</text><text x="51" y="586" transform="rotate(-18 51 586)">W 8th St</text><text x="312" y="87" font-size="10">PARK</text></g></svg>`;
     }
     return `<svg viewBox="0 0 390 720" preserveAspectRatio="none" aria-hidden="true"><rect width="390" height="720" fill="#E9EDE9"/><path d="M0 0h390v145l-70-14-90 41-90-42L0 160z" fill="#D6E3D0"/><g stroke="#DCE0DC" stroke-width="7">${Array.from({ length: 9 }, (_, i) => `<path d="M${20 + i * 48} 150v570M-40 ${175 + i * 62}h500"/>`).join("")}</g><g stroke="#FFF" stroke-width="4">${Array.from({ length: 9 }, (_, i) => `<path d="M${20 + i * 48} 150v570M-40 ${175 + i * 62}h500"/>`).join("")}</g><path d="M-20 590Q100 390 260 280T430 220M-30 360Q160 370 200 480T400 640" fill="none" stroke="#D0D6D8" stroke-width="12"/><path d="M-20 590Q100 390 260 280T430 220M-30 360Q160 370 200 480T400 640" fill="none" stroke="#FFF" stroke-width="8"/><path d="m55 720 17-260 40-130-5-170" fill="none" stroke="#CBDCE8" stroke-width="9"/><g fill="#8C9690" font-family="Arial" font-size="10"><text x="18" y="270">LOS ANGELES</text><text x="270" y="178">SAN GABRIEL MOUNTAINS</text><text x="175" y="585">POMONA FWY</text><text x="305" y="665">CHINO HILLS</text></g></svg>`;
   }
@@ -298,7 +302,7 @@
   };
   function mapPins() {
     if (state.homeView === "apartments")
-      return model.apartments
+      return hasNearbyCards() ? model.apartments
         .slice(0, 3)
         .map((a, i) => {
           const [x, y] = [
@@ -308,7 +312,7 @@
           ][i];
           return `<button class="ex-building-hit" style="left:${x}%;top:${y}%" data-action="ex-apt" data-id="${a.id}" aria-label="选择公寓 ${esc(a.address)}" aria-pressed="${state.apt === a.id}"></button>`;
         })
-        .join("");
+        .join("") : "";
     if (ex.status[state.homeView] !== "ready") return "";
     const rs = results(),
       selected = selectedResult(),
@@ -340,14 +344,9 @@
     return `<div class="ex-map" data-ex-map aria-label="${state.homeView === "apartments" ? "公寓" : "服务区域"}地图"><div class="ex-map-world" style="transform:translate(${c.x}px,${c.y}px) scale(${c.zoom})">${mapArtwork()}${mapPins()}${state.scenario !== "denied" ? '<span class="ex-blue-dot" role="img" aria-label="本人位置"></span>' : ""}</div></div>`;
   }
   homeToolbar = () => {
-    const people = state.homeView === "people",
-      support = isSupport();
-    const title = support
-      ? people
-        ? "筛选服务区域、日期或经验"
-        : "筛选配送区域、日期或类型"
-      : "搜索门牌或街道";
-    return `<div class="home-toolbar ex-toolbar"><div class="search-row"><button class="search-trigger" data-action="search">${I(support ? "filter" : "search")}<span>${title}</span></button><button class="icon-btn message-trigger" data-action="inbox" aria-label="消息">${I("chat")}<i class="ex-unread"></i></button></div><div class="map-mode-row"><div class="view-tabs" role="tablist" aria-label="首页内容">${[
+    const support = isSupport();
+    const title = support ? "搜索区域或承运商" : "搜索公寓或地址";
+    return `<div class="home-toolbar ex-toolbar"><div class="search-row"><button class="search-trigger" data-action="search">${I("search")}<span>${title}</span></button><button class="icon-btn message-trigger" data-action="inbox" aria-label="消息">${I("chat")}<i class="ex-unread"></i></button></div><div class="map-mode-row"><div class="view-tabs" role="tablist" aria-label="首页内容">${[
       ["apartments", "公寓"],
       ["jobs", "找活"],
       ["people", "找人"],
@@ -360,18 +359,16 @@
         "",
       )}</div>${support ? `<button class="map-view-toggle" data-action="${state.homeList ? "return-map" : "map-list"}" aria-label="切换为${state.homeList ? "地图" : "列表"}">${I(state.homeList ? "map" : "list")}${state.homeList ? "地图" : "列表"}</button>` : ""}</div>${support ? supportSummary() : ""}</div>`;
   };
+  function hasSupportFilters(f) {
+    return Boolean(f.region || f.day || f.text.trim() || (state.homeView === "jobs" && f.kind));
+  }
   function supportSummary() {
-    const f = supportFilter(),
-      st = ex.status[state.homeView];
-    const count =
-      st === "ready"
-        ? `当前结果 · ${results().length}${state.homeView === "jobs" ? "条需求" : "位司机"}`
-        : st === "loading"
-          ? "正在加载"
-          : st === "error"
-            ? "暂时无法读取"
-            : "当前结果 · 0";
-    return `<div class="ex-query"><button data-action="search">${esc(f.region || "全部区域")}${I("down")}</button>${f.day ? `<span class="ex-filter-chip">${dayLabel(f.day)}</span>` : ""}${f.text ? `<span class="ex-filter-chip">${esc(f.text)}</span>` : ""}<span class="ex-result-count" aria-live="polite">${count}</span>${f.region || f.day || f.text || f.kind ? ib("clear-support-filters", "close", "清除筛选") : ""}</div>`;
+    const f = supportFilter();
+    const count = ex.status[state.homeView] === "ready" ? results().length : 0;
+    return `<div class="ex-query"><button data-action="search">${esc(f.region || "全部区域")}${I("down")}</button>${f.day ? `<span class="ex-filter-chip">${dayLabel(f.day)}</span>` : ""}${f.text ? `<span class="ex-filter-chip">${esc(f.text)}</span>` : ""}${count ? `<span class="ex-result-count" aria-live="polite">当前结果 · ${count}${state.homeView === "jobs" ? "条需求" : "位司机"}</span>` : ""}${count && hasSupportFilters(f) ? ib("clear-support-filters", "close", "清除筛选") : ""}</div>`;
+  }
+  function mapStatus(title, { state = "empty", action, label, floating = false } = {}) {
+    return `<div class="${floating ? "ex-floating ex-map-status " : ""}ex-status-row" data-status="${state}"><p role="${state === "error" ? "alert" : "status"}">${state === "loading" ? '<span class="ex-status-spinner" aria-hidden="true"></span>' : ""}${esc(title)}</p>${action ? btn(action, label, "ex-status-action") : ""}</div>`;
   }
   function distanceBadge(a) {
     const d = a.distance,
@@ -397,46 +394,42 @@
     if (!state.logged || !state.qualified)
       return (
         head +
-        `<p class="ex-card-state">${state.logged ? "暂未开通资料查看资格" : "登录后查看门禁码"}</p>${!state.logged ? btn("login-access", "登录", "text-btn") : ""}`
+        mapStatus(state.logged ? "暂未开通资料查看资格" : "登录后查看门禁码", { state: "unavailable", ...(state.logged ? {} : { action: "login-access", label: "登录" }) })
       );
     if (ex.code.status === "loading" || ex.code.id !== a.id)
       return (
-        head + '<div class="ex-skeleton" aria-label="正在读取门禁码"></div>'
+        head + mapStatus("正在读取门禁码", { state: "loading" })
       );
     if (ex.code.status === "error")
       return (
         head +
-        `<p class="ex-card-state">门禁码暂时无法加载</p>${btn("ex-retry-code", "重新读取", "text-btn")}`
+        mapStatus("门禁码暂时无法加载", { state: "error", action: "ex-retry-code", label: "重新读取" })
       );
     const codes = state.scenario === "empty" ? [] : rankCodes(a);
     if (!codes.length)
       return (
         head +
-        `<p class="ex-card-state">暂无共享门禁码</p>${btn("add-code", I("plus") + "添加门禁码", "ex-inline-add")}`
+        mapStatus("暂无共享门禁码", { action: "add-code", label: "添加门禁码" })
       );
     return `${head}<div class="delivery-code-line"><div class="ex-code">${esc(codes[0].value)}</div>${codes[0].scope ? `<span class="delivery-door">${esc(codes[0].scope)}</span>` : ""}</div><div class="ex-code-meta">${esc(contributionLabel(codes[0]))}</div><span class="ex-card-chevron" aria-hidden="true">${I("up")}</span>`;
   }
   function apartmentSurface() {
     if (state.temporaryDestination)
       return `<section class="ex-floating ex-address-card"><h2>${addressHTML(state.temporaryDestination.address)}</h2><p class="meta">暂未匹配到公寓资料</p>${btn("add-unknown-code", "添加门禁码", "button secondary")}</section>`;
-    if (
-      [
-        "street",
-        "house",
-        "commercial",
-        "departure-pending",
-        "unknown",
-      ].includes(state.scenario)
-    )
-      return `<div class="ex-quiet">${btn("lib-contribute", I("plus") + "共享门禁码", "ex-contribute")}</div>`;
+    if (["street", "house", "commercial", "unknown"].includes(state.scenario))
+      return mapStatus("附近未匹配到公寓", { floating: true, action: "lib-contribute", label: "共享门禁码" });
+    if (state.scenario === "departure-pending")
+      return mapStatus("正在查找公寓", { floating: true, state: "loading" });
+    if (state.scenario === "nearby-error")
+      return mapStatus("公寓资料暂时无法加载", { floating: true, state: "error", action: "ex-retry-nearby", label: "重新加载" });
     if (state.scenario === "denied")
-      return `<section class="ex-floating ex-address-card"><p>暂时无法获取位置</p>${btn("locate", "重试定位", "button secondary")}</section>`;
+      return mapStatus("暂时无法获取位置", { floating: true, state: "unavailable", action: "locate", label: "重试定位" });
     const a = getApt(),
       codes = state.scenario === "empty" ? [] : rankCodes(a);
     if (state.expanded && (!state.logged || !state.qualified))
       return `<section class="home-sheet ex-expanded ex-no-access" aria-label="公寓资料"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll"><div class="apartment-heading"><h2>${addressHTML(a.address, true)}</h2>${ib("collapse", "down", "收起门禁码记录")}</div><p>${state.logged ? "暂未开通资料查看资格" : "登录后查看门禁码"}</p>${state.logged ? "" : btn("login-access", "登录", "button")}</div></section>`;
     if (state.expanded)
-      return `<section class="home-sheet ex-expanded" aria-label="门禁码详情"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll" id="sheet-scroll"><div class="apartment-heading"><div class="address-heading"><h2>${addressHTML(a.address, true)}</h2><div class="address">${esc(a.address.split(",").slice(1).join(","))}</div><div class="address">${esc(a.name)}</div></div>${ib("collapse", "down", "收起门禁码记录")}</div>${btn("add-code", I("plus") + "添加门禁码", "button secondary")}${ex.code.status === "loading" || ex.code.id !== a.id ? '<div class="ex-skeleton" aria-label="正在读取门禁码"></div>' : ex.code.status === "error" ? `<div class="ex-error">门禁码暂时无法加载${btn("ex-retry-code", "重新读取", "text-btn")}</div>` : codes.map((c) => `<article class="code-record" data-record="${c.id}"><div class="ex-code">${esc(c.value)}</div><div class="scope">${esc(c.scope || "大门")}</div><div class="caption">${esc(contributionLabel(c))}</div><div class="feedback-row">${btn("vote", I("thumb") + "有用", "feedback-btn", `data-id="${c.id}" data-vote="useful" aria-pressed="${c.vote === "useful"}"`)}${btn("vote", "不能用", "feedback-btn", `data-id="${c.id}" data-vote="not_useful" aria-pressed="${c.vote === "not_useful"}"`)}</div></article>`).join("") || '<p class="ex-card-state">暂无共享门禁码</p>'}</div></section>`;
+      return `<section class="home-sheet ex-expanded" aria-label="门禁码详情"><button class="sheet-handle" data-action="collapse" aria-label="收起公寓卡片"></button><div class="ex-expanded-scroll" id="sheet-scroll"><div class="apartment-heading"><div class="address-heading"><h2>${addressHTML(a.address, true)}</h2><div class="address">${esc(a.address.split(",").slice(1).join(","))}</div><div class="address">${esc(a.name)}</div></div>${ib("collapse", "down", "收起门禁码记录")}</div>${btn("add-code", I("plus") + "添加门禁码", "button secondary")}${ex.code.status === "loading" || ex.code.id !== a.id ? mapStatus("正在读取门禁码", { state: "loading" }) : ex.code.status === "error" ? mapStatus("门禁码暂时无法加载", { state: "error", action: "ex-retry-code", label: "重新读取" }) : codes.map((c) => `<article class="code-record" data-record="${c.id}"><div class="ex-code">${esc(c.value)}</div><div class="scope">${esc(c.scope || "大门")}</div><div class="caption">${esc(contributionLabel(c))}</div><div class="feedback-row">${btn("vote", I("thumb") + "有用", "feedback-btn", `data-id="${c.id}" data-vote="useful" aria-pressed="${c.vote === "useful"}"`)}${btn("vote", "不能用", "feedback-btn", `data-id="${c.id}" data-vote="not_useful" aria-pressed="${c.vote === "not_useful"}"`)}</div></article>`).join("") || mapStatus("暂无共享门禁码")}</div></section>`;
     return mapCardCarousel(
       "apartments",
       model.apartments.filter((p) => p.nearby !== false || p.id === a.id),
@@ -465,20 +458,26 @@
     `<button class="driver-result-card ex-driver-card" data-action="driver" data-id="${d.id}"><div class="ex-driver-head">${avatar(d.id)}<div><b>${esc(d.name)}</b><span class="meta">${esc(driverTime(d))}</span></div>${I("chevron")}</div><span>${esc(regionsOf(d).join(" / "))}${d.capacity ? ` · 最多${d.capacity}件` : " · 件数联系商量"}</span><span class="meta">${esc(d.carrier)} · 自报经验</span></button>`;
   function supportSurface() {
     const st = ex.status[state.homeView],
-      people = state.homeView === "people";
+      people = state.homeView === "people",
+      subject = people ? "可接活司机" : "配送需求";
     if (st === "loading")
-      return `<section class="ex-floating ex-result-status" role="status"><div class="ex-skeleton"></div><p>正在加载${people ? "可接活声明" : "需求"}</p></section>`;
+      return mapStatus(`正在加载${subject}`, { floating: true, state: "loading" });
     if (st === "error")
-      return `<section class="ex-floating ex-result-status" role="alert"><h3>暂时无法读取，请重试</h3>${btn("ex-retry-support", "重新加载", "button secondary")}</section>`;
+      return mapStatus(`${subject}暂时无法加载`, { floating: true, state: "error", action: "ex-retry-support", label: "重新加载" });
     const r = st === "empty" ? null : selectedResult();
-    if (!r)
-      return `<section class="ex-floating ex-result-status"><h3>${people ? "暂无符合条件的可接活声明" : "该区域暂无符合条件的需求"}</h3>${btn("search", "调整筛选", "button secondary")}</section>`;
+    if (!r) {
+      const filtered = hasSupportFilters(supportFilter());
+      return mapStatus(filtered ? `没有符合筛选的${subject}` : people ? "暂无可接活司机" : "暂无开放配送需求", {
+        floating: true,
+        ...(filtered ? { action: "clear-support-filters", label: "清除筛选" } : {}),
+      });
+    }
     return mapCardCarousel(state.homeView, results(), r.id);
   }
   home = () => {
     const support = isSupport();
     if (state.homeList && support) return mapList();
-    return `<div class="root-content"><div class="home ex-home ${state.homeView} ${state.expanded ? "ex-is-expanded" : ""}">${mapLayer()}${homeToolbar()}<div class="ex-scale"><span>${support ? "1 km" : camera().zoom > 1.5 ? "20 m" : "50 m"}</span><i></i></div>${state.homeView === "people" ? btn("availability", I("plus") + "我能接活", "ex-availability") : ""}<div class="map-tools ex-map-tools">${ib("locate", "locate", "回到当前位置")}<button class="fab" data-action="publish">${I("plus")}发需求</button></div>${support ? supportSurface() : apartmentSurface()}</div></div>${bottomNav("home")}`;
+    return `<div class="root-content"><div class="home ex-home ${state.homeView} ${state.expanded ? "ex-is-expanded" : ""}">${mapLayer()}${homeToolbar()}<div class="ex-scale"><span>${support ? "1 km" : camera().zoom > 1.5 ? "20 m" : "50 m"}</span><i></i></div>${state.homeView === "people" ? btn("availability", I("plus") + "我能接活", "ex-availability") : ""}<div class="ex-bottom-layer"><div class="map-tools ex-map-tools">${ib("locate", "locate", "回到当前位置")}<button class="fab" data-action="publish">${I("plus")}发需求</button></div>${support ? supportSurface() : apartmentSurface()}</div></div></div>${bottomNav("home")}`;
   };
   mapList = () => {
     const people = state.homeView === "people",
@@ -672,6 +671,11 @@
         querySupport();
         return;
       }
+      case "ex-retry-nearby":
+        $("#scenario").value = "street";
+        state.scenario = "street";
+        render();
+        return;
       case "ex-retry-support":
         querySupport();
         return;

@@ -268,7 +268,7 @@
     "synthetic_cleanup_verified": true
   },
   "b6_03": {
-    "status": "ios_cellular_cold_launch_login_and_account_verified",
+    "status": "ios_cellular_apartment_and_west_covina_delivery_verified",
     "ios_bundle_identifier": "com.abasong.pilot",
     "ios_native_compiled": true,
     "ios_signed": true,
@@ -278,6 +278,51 @@
     "cellular_sms_login_verified": true,
     "cellular_account_load_verified": true,
     "cellular_verification_source": "operator_reported_on_physical_iphone",
+    "cellular_verified_build_number": "1",
+    "ios_v3_3_home_update": {
+      "build_number": "2",
+      "signed": true,
+      "installed_on_iphone_13_pro": true,
+      "launch_request": "accepted_after_reconnect",
+      "cellular_modes_verified": true,
+      "cellular_modes_scope": "empty_states_and_jobs_people_map_list_parity",
+      "cellular_modes_verification_source": "operator_reported_on_physical_iphone",
+      "cellular_apartment_search_card_and_code_verified": true,
+      "cellular_apartment_verification_source": "operator_reported_on_physical_iphone",
+      "cellular_apartment_fixture": "AP01_public_address_and_synthetic_access_record",
+      "cellular_apartment_fixture_cleanup_verified": true,
+      "cellular_apartment_contribution_verified": true,
+      "cellular_apartment_owner_correction_verified": true,
+      "cellular_apartment_return_to_original_card_verified": true,
+      "cellular_apartment_write_fixture_cleanup_verified": true,
+      "field_automatic_apartment_match_verified": false,
+      "field_automatic_apartment_match_status": "deferred_by_operator"
+    },
+    "west_covina_delivery": {
+      "scenario_count": 2,
+      "publisher_verification": "operator_on_physical_iphone_13_pro",
+      "applicant_verification": "real_sms_account_cloud_api",
+      "ended_requests_verified": 2,
+      "warehouse_gap_verified": 1,
+      "message_kms_envelopes_verified": 4,
+      "revocation_and_fixture_cleanup_verified": true
+    },
+    "distribution_preflight": {
+      "candidate_build_number": "2",
+      "rollback_build_number": "1",
+      "signatures_and_bundle_receipts_verified": true,
+      "device_rollback_rehearsed": false,
+      "provisioning_expires_at_los_angeles": "2026-11-14T11:25:00-08:00",
+      "archived_mobile_source_matches": 206,
+      "local_engineering_tests_passed": 510,
+      "local_requests_media_push_checks_passed": 620,
+      "android_native_distribution_verified": false,
+      "invite_release_isolation_verified": true,
+      "exact_candidate_remote_ci_verified": false,
+      "private_media_bound_in_deployed_template": false,
+      "push_enabled_in_deployed_template": false,
+      "distribution_invites_open": false
+    },
     "remote_push_verified": false
   },
   "controlled_implementation": {

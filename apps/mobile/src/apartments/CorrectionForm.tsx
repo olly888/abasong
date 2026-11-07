@@ -218,7 +218,7 @@ export function CorrectionForm(p: {
                 }}
               >
                 <Text
-                  style={{ fontSize: 24, color: tokens.color.brandPrimary }}
+                  style={{ fontSize: 24, color: tokens.color.brandText }}
                 >
                   {attested ? "☑" : "□"}
                 </Text>

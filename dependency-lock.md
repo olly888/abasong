@@ -1,5 +1,7 @@
 # D0 依赖与运行时基线
 
+2026-11-07 设计系统 V3.3：通过 Expo SDK 58 兼容安装并精确锁定 `react-native-svg 15.16.0`，pnpm 与 iOS CocoaPods 锁已同步。Lucide 1.70.0 仅选用所需的上游 SVG 路径，许可入库，原型与 App 由同一份映射生成。两端 Debug 模拟器包实际重编译。iOS 本地由供应商脚本恢复匹配的 React Native、Hermes、Expo Debug 预编译模块，再使用模拟器临时签名。
+
 2026-11-06 R4-09：无新增包、SDK、原生模块、迁移或锁变更。复用Expo58 Router及RN0.88 AppState/Switch、已安装DateTimePicker9.2.1和V3.2共用控件；时段仍为既有版本化PUT，关闭只提交开关及版本。仅刷新显示，不增加后台自动续期/定位/推送或云调用。
 
 2026-11-06 R4-08：通过 Expo58 `expo install` 安装并精确锁定 expo-clipboard 58.0.4，用于仓库完整地址原生复制；不读取既有剪贴板。复用现有 expo-linking58.0.15、RNMapbox10.3.16 及临时地址搜索会话；无新地图供应商、迁移或云资源。本批重新编译 iOS／Android 开发应用，实际结果见 R4-08 报告。

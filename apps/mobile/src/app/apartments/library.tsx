@@ -390,7 +390,7 @@ function LibraryContent() {
               style={[
                 styles.tabLabel,
                 tab === value && {
-                  color: tokens.color.brandPrimary,
+                  color: tokens.color.brandText,
                   fontWeight: "600",
                 },
               ]}
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   tabLabel: { fontSize: 15, color: tokens.color.textMuted },
   empty: { alignItems: "center", paddingVertical: 38, gap: 18 },
   inline: { minHeight: 48, alignItems: "center", justifyContent: "center" },
-  link: { fontSize: 14, color: tokens.color.brandPrimary },
+  link: { fontSize: 14, color: tokens.color.brandText },
   code: { fontSize: 30, fontWeight: "700", color: tokens.color.ink },
   label: { fontSize: 18, fontWeight: "600", color: tokens.color.ink },
   row: { flexDirection: "row", gap: 12, flexWrap: "wrap" },

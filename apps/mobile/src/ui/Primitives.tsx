@@ -149,7 +149,7 @@ export function SearchBox({
         backgroundColor: tokens.color.canvas,
         borderWidth: 1,
         borderColor: focused
-          ? tokens.color.brandPrimary
+          ? tokens.color.focus
           : tokens.color.controlBorder,
       }}
     >
@@ -165,7 +165,11 @@ export function SearchBox({
           justifyContent: "center",
         }}
       >
-        <Icon name="search" color={tokens.color.textSecondary} size={21} />
+        <Icon
+          name="search"
+          color={tokens.color.textSecondary}
+          size={tokens.size.iconSmall.value}
+        />
       </Pressable>
       <TextInput
         accessibilityLabel="搜索公寓或地址"

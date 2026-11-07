@@ -23,7 +23,8 @@ import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
 import HomeMap from "../components/HomeMap";
 import { MapTools } from "../components/HomeChrome";
-import { ActionButton, FormError } from "../ui/Controls";
+import { ActionButton } from "../ui/Controls";
+import { MapStatusRow } from "../ui/MapStatusRow";
 import { MapCardFrame } from "../ui/MapCardFrame";
 import { MapCardCarousel } from "../ui/MapCardCarousel";
 import { compactCardHeight, measuredCardHeight } from "../ui/map-card-layout";
@@ -36,6 +37,7 @@ import {
   areaMarkers,
   reconcileDiscovery,
   filterDiscovery,
+  defaultFilters,
   selectDiscoveryItem,
   discoveryFocusRegion,
   itemId,
@@ -277,6 +279,47 @@ function DiscoveryHome(p: CollaborationProps) {
     ...visible.map((r) => measurements[measureKey + ":" + itemId(r)] ?? 0),
   );
   const empty = !loading && !scopedError && !visible.length;
+  const filtered = Boolean(
+    filters.region ||
+    filters.day ||
+    filters.text.trim() ||
+    (p.mode === "找活" && filters.kind),
+  );
+  const subject = p.mode === "找活" ? "配送需求" : "可接活司机";
+  const statusRow = scopedError ? (
+    <MapStatusRow
+      state="error"
+      title={`${subject}暂时无法加载`}
+      action={{ label: "重新加载", onPress: () => void load() }}
+    />
+  ) : loading && !visible.length ? (
+    <MapStatusRow state="loading" title={`正在加载${subject}`} />
+  ) : empty ? (
+    <MapStatusRow
+      title={
+        filtered
+          ? `没有符合筛选的${subject}`
+          : p.mode === "找活"
+            ? "暂无开放配送需求"
+            : "暂无可接活司机"
+      }
+      action={
+        filtered
+          ? { label: "清除筛选", onPress: () => apply(defaultFilters()) }
+          : undefined
+      }
+    />
+  ) : null;
+  const statusCard = statusRow ? (
+    <MapCardFrame
+      onLayout={
+        p.list ? undefined : (e) => setHeight(e.nativeEvent.layout.height + 12)
+      }
+      style={[s.status, p.list ? s.listStatus : s.mapStatus]}
+    >
+      {statusRow}
+    </MapCardFrame>
+  ) : null;
   return (
     <View
       style={{ flex: 1 }}
@@ -335,7 +378,9 @@ function DiscoveryHome(p: CollaborationProps) {
           {regions.find((r) => r.id === filters.region)?.label ?? "全部区域"}
           {filters.day ? ` · ${filters.day}` : ""}
           {filters.text ? ` · ${filters.text}` : ""}
-          {` · 当前结果 ${loading || scopedError ? "—" : visible.length}`}
+          {!loading && !scopedError && visible.length > 0
+            ? ` · 当前结果 ${visible.length}`
+            : ""}
         </Text>
         {p.mode === "找人" ? (
           <ActionButton
@@ -368,34 +413,12 @@ function DiscoveryHome(p: CollaborationProps) {
           />
         </View>
       ) : null}
-      {scopedError || (loading && !visible.length) || empty ? (
-        <MapCardFrame
-          onLayout={(e) => {
-            if (!p.list) setHeight(e.nativeEvent.layout.height + 16);
-          }}
-          style={s.status}
-        >
-          {scopedError ? (
-            <>
-              <FormError message={scopedError} />
-              <ActionButton
-                label="重新加载"
-                busy={busy}
-                onPress={() => void load()}
-              />
-            </>
-          ) : loading ? (
-            <Text style={typeStyles.secondary}>
-              正在加载{p.mode === "找活" ? "配送需求" : "可接活声明"}
-            </Text>
-          ) : (
-            <Text style={typeStyles.body}>
-              {p.mode === "找活"
-                ? "当前筛选下暂无开放需求"
-                : "当前筛选下暂无可用司机"}
-            </Text>
-          )}
-        </MapCardFrame>
+      {statusCard ? (
+        p.list ? (
+          <View style={s.list}>{statusCard}</View>
+        ) : (
+          statusCard
+        )
       ) : p.list ? (
         <View style={s.list}>
           <ScrollView
@@ -416,7 +439,7 @@ function DiscoveryHome(p: CollaborationProps) {
                   borderWidth: 1,
                   borderColor:
                     itemId(r) === selectedId
-                      ? tokens.color.brandPrimary
+                      ? tokens.color.brandText
                       : tokens.color.border,
                 }}
               >
@@ -507,13 +530,16 @@ function DiscoveryHome(p: CollaborationProps) {
 const s = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 2, paddingBottom: 16, gap: 5 },
   status: {
-    position: "absolute",
-    bottom: 12,
-    left: 16,
-    right: 16,
-    padding: 18,
-    gap: 12,
+    paddingHorizontal: tokens.space[16].value,
+    paddingVertical: tokens.space[4].value,
   },
+  mapStatus: {
+    position: "absolute",
+    bottom: tokens.space[12].value,
+    left: tokens.space[16].value,
+    right: tokens.space[16].value,
+  },
+  listStatus: { margin: tokens.space[16].value },
   list: {
     position: "absolute",
     top: 192,

@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   initial: {
     fontSize: 24,
     fontWeight: "600",
-    color: tokens.color.brandPrimary,
+    color: tokens.color.brandText,
   },
   name: { fontSize: 24, fontWeight: "600", color: tokens.color.ink },
   secondary: {

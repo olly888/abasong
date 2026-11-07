@@ -1001,5 +1001,5 @@ const styles = StyleSheet.create({
     color: tokens.color.ink,
   },
   error: { fontSize: 14, color: tokens.color.danger },
-  link: { color: tokens.color.brandPrimary },
+  link: { color: tokens.color.brandText },
 });

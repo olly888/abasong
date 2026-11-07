@@ -19,6 +19,7 @@ import { tokens } from "@abasong/ui";
 import { ActionButton, FormError } from "../ui/Controls";
 import { metrics, typeStyles } from "../ui/foundation";
 import { Icon, type IconName } from "../ui/Icon";
+import { BrandWordmark } from "../ui/BrandWordmark";
 import { PageFrame } from "../ui/PageFrame";
 import type { getInviteKit } from "./invite-policy";
 import content from "./poster-content.json";
@@ -122,18 +123,7 @@ export function InviteDriver({ localPreview }: { localPreview: boolean }) {
     >
       <View style={s.stack}>
         <View style={s.poster}>
-          <View style={s.brand}>
-            <View
-              style={s.brandMark}
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-            >
-              <Text allowFontScaling={false} style={s.brandGlyph}>
-                a
-              </Text>
-            </View>
-            <Text style={s.wordmark}>abasong</Text>
-          </View>
+          <BrandWordmark />
           <Text accessibilityRole="header" style={s.headline}>
             {content.firstLine}
             {"\n"}
@@ -249,29 +239,8 @@ const s = StyleSheet.create({
     borderRadius: metrics.cardRadius,
     gap: 14,
   },
-  brand: { flexDirection: "row", alignItems: "center", gap: 9 },
-  brandMark: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    backgroundColor: tokens.color.brandPrimary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandGlyph: {
-    color: tokens.color.onBrand,
-    fontSize: 25,
-    fontWeight: "700",
-    lineHeight: 31,
-  },
-  wordmark: {
-    color: tokens.color.ink,
-    fontSize: 23,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
   headline: { ...typeStyles.title, fontWeight: "700", marginTop: 3 },
-  blue: { color: tokens.color.brandPrimary },
+  blue: { color: tokens.color.brandText },
   scene: { width: "100%", aspectRatio: 3.1 },
   benefits: {
     flexDirection: "row",

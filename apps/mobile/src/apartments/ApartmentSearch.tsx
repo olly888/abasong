@@ -322,7 +322,7 @@ export function ApartmentSearch({
               setPhotoBusy(null);
             }}
           >
-            <Text style={{ color: tokens.color.brandPrimary }}>取消识别</Text>
+            <Text style={{ color: tokens.color.brandText }}>取消识别</Text>
           </Pressable>
         </View>
       ) : null}
@@ -368,7 +368,7 @@ export function ApartmentSearch({
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: tokens.color.brandPrimary }}>重新拍照</Text>
+            <Text style={{ color: tokens.color.brandText }}>重新拍照</Text>
           </Pressable>
         </View>
       ) : null}
@@ -401,7 +401,7 @@ export function ApartmentSearch({
               setPhotoChoices([]);
             }}
           >
-            <Text style={{ color: tokens.color.brandPrimary }}>手动输入</Text>
+            <Text style={{ color: tokens.color.brandText }}>手动输入</Text>
           </Pressable>
         </View>
       ) : null}
@@ -423,7 +423,7 @@ export function ApartmentSearch({
           }}
           style={{ minHeight: 48, justifyContent: "center" }}
         >
-          <Text style={{ color: tokens.color.brandPrimary }}>重试搜索</Text>
+          <Text style={{ color: tokens.color.brandText }}>重试搜索</Text>
         </Pressable>
       ) : null}
       {searched && !results.length && !busy && !failed ? (

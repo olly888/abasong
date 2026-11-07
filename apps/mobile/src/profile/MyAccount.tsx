@@ -195,7 +195,7 @@ export function MyAccount({
                 style={{
                   fontSize: 24,
                   fontWeight: "600",
-                  color: tokens.color.brandPrimary,
+                  color: tokens.color.brandText,
                 }}
               >
                 {profile.profile.display_name.slice(0, 1)}
@@ -241,7 +241,7 @@ export function MyAccount({
                   <Text
                     style={[
                       typeStyles.secondary,
-                      { color: tokens.color.brandPrimary },
+                      { color: tokens.color.brandText },
                     ]}
                   >
                     {availabilitySummary(availability, clock)}

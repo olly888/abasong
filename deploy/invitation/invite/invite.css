@@ -1,10 +1,9 @@
 :root {
-  /* V3.2: ink, textSecondary, border, brandPrimary, brandSurface. */
-  --ink: #101114;
-  --muted: #53565b;
-  --border: #e3e4e6;
-  --brand: #1467d8;
-  --pale: #edf4ff;
+  --ink: var(--ab-color-ink);
+  --muted: var(--ab-color-textSecondary);
+  --border: var(--ab-color-border);
+  --brand: var(--ab-color-brandText);
+  --pale: var(--ab-color-brandSurface);
   color-scheme: light;
   color: var(--ink);
   background: white;
@@ -23,22 +22,10 @@ main {
   margin: auto;
   padding: 20px 20px 32px;
 }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 23px;
-  font-weight: 750;
-}
-.brand span {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  color: white;
-  background: var(--brand);
-  text-align: center;
-  font-size: 25px;
-  line-height: 30px;
+.brand img {
+  display: block;
+  margin: 14px;
+  height: auto;
 }
 h1 {
   font-size: 1.75rem;

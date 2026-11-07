@@ -1,6 +1,6 @@
 # Abasong 研发文档入口
 
-更新 2026-11-06。当前按[总计划 1.47](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-04 司机圈私有图片](technical/B5_04_司机圈私有图片实施验收.md)已接入选图、拍照、上传重试和鉴权阅读。本地 D0 为 22 次迁移、57 张表。[B5-05 邀请司机](technical/B5_05_邀请司机与接收页实施验收.md)完成双端本机核对，正式分发留在 B6-03。
+更新 2026-11-07。当前按[总计划 1.48](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-04 司机圈私有图片](technical/B5_04_司机圈私有图片实施验收.md)已接入选图、拍照、上传重试和鉴权阅读。本地 D0 为 22 次迁移、57 张表。[B5-05 邀请司机](technical/B5_05_邀请司机与接收页实施验收.md)完成双端本机核对，正式分发留在 B6-03。
 
 [22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。[B6-01 执行包](usability/B6-01_可用性与现场测试执行包.md)已备好招募、主持、现场与截图记录。真人观察仍为 0/7。云业务、真实推送、独立包和现场验收按 B6 推进。
 
@@ -51,7 +51,7 @@
 
 ## 设计与文案
 
-- **现行基础及组件：**[设计系统V3.1](design/Abasong_设计系统_V3.1_现行规范.md)、[令牌JSON](design/tokens-v3.json)；[逐页核对/未测记录](design/D2_设计系统收敛与逐页核对.md)。
+- **唯一现行设计系统** [V3.3](design/Abasong_设计系统_V3.3_现行规范.md)、[正式品牌原件](design/brand/README.md)、[令牌源](design/tokens-v3.json)、[图标源](design/icons-lucide.json)。[历史规范和逐页核对](design/D2_设计系统收敛与逐页核对.md)。
 - **目标原型：**[V3.2升级方案](design/Abasong_设计系统_V3.2_升级方案.md)、[文案与状态V1](design/Abasong_界面文案与状态规范_V1.md)、[升级追踪JSON](design/experience-upgrade-matrix.json)。启用范围以[R4报告](technical/R4_01_距离契约与公寓卡片实施验收.md)记录，不声明全App已迁移。
 - [UI样板证据](design/D2_UI样板对齐实施与验收.md)、[iOS框架评估](design/D2_UI对齐审查与iOS原生方案评估.md)。保持RN/Expo，局部系统原生控件，不全面改写SwiftUI。
 

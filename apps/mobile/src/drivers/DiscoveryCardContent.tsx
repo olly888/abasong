@@ -105,7 +105,7 @@ const s = StyleSheet.create({
     fontSize: 20,
     lineHeight: 26,
     fontWeight: "700",
-    color: tokens.color.brandPrimary,
+    color: tokens.color.brandText,
     flexShrink: 1,
   },
   tag: { color: tokens.color.textSecondary },
@@ -120,6 +120,6 @@ const s = StyleSheet.create({
   initial: {
     fontSize: 18,
     fontWeight: "600",
-    color: tokens.color.brandPrimary,
+    color: tokens.color.brandText,
   },
 });

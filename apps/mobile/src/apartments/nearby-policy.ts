@@ -2,6 +2,16 @@ import { addressIdentity } from "@abasong/contracts";
 import type { components } from "@abasong/contracts";
 import type { NearbyCardCandidate } from "./distance-presentation";
 type S = components["schemas"];
+export type ProviderDiscoveryStatus = "idle" | "loading" | "ok" | "unavailable";
+export function nearbyResultState(
+  hasCandidates: boolean,
+  provider: ProviderDiscoveryStatus,
+) {
+  if (hasCandidates) return "nearby";
+  if (provider === "ok") return "empty";
+  return provider === "unavailable" ? "error" : "loading";
+}
+
 function nearbyOrder(a: S["NearbyCandidate"], b: S["NearbyCandidate"]) {
   // Initial recommendations follow the same numeric distance as the card.
   // Stability after deliberate selection is handled by the reading lock.

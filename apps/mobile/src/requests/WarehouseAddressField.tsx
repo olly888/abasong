@@ -42,7 +42,7 @@ export function ConfirmRow({
         minHeight: 48,
       }}
     >
-      <Text style={{ color: tokens.color.brandPrimary, fontSize: 24 }}>
+      <Text style={{ color: tokens.color.brandText, fontSize: 24 }}>
         {checked ? "☑" : "□"}
       </Text>
       <Text style={[s.text, { flex: 1 }]}>{label}</Text>

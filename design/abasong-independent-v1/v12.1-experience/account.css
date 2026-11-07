@@ -145,7 +145,7 @@
   background: #b8bec8;
 }
 .account-availability-row > .switch.on:before {
-  background: #1467d8;
+  background: var(--ab-color-brandPrimary);
 }
 .account-availability-row > .switch:after {
   width: 22px;
@@ -157,7 +157,7 @@
   left: 27px;
 }
 .account-availability-row > .switch:focus-visible {
-  outline: 3px solid #1467d8;
+  outline: 3px solid var(--ab-color-brandPrimary);
   outline-offset: 6px;
 }
 .account-availability-error {
@@ -227,12 +227,12 @@
   background: white;
 }
 .account-options input:checked + span {
-  border-color: #1467d8;
-  background: #edf4ff;
-  color: #1467d8;
+  border-color: var(--ab-color-brandPrimary);
+  background: var(--ab-color-brandSurface);
+  color: var(--ab-color-brandText);
 }
 .account-options input:focus-visible + span {
-  outline: 2px solid #1467d8;
+  outline: 2px solid var(--ab-color-brandPrimary);
   outline-offset: 2px;
 }
 .account-options input:disabled + span {
@@ -368,9 +368,9 @@
   font-size: 14px;
 }
 .account-publisher-options > button.active {
-  color: #1467d8;
-  background: #edf4ff;
-  border-color: #1467d8;
+  color: var(--ab-color-brandText);
+  background: var(--ab-color-brandSurface);
+  border-color: var(--ab-color-brandPrimary);
 }
 .account-contact-dialog h2 {
   font-size: 18px;
@@ -455,6 +455,6 @@
   margin-top: 4px;
 }
 .code-address-options > button:focus-visible {
-  outline: 3px solid #1467d8;
+  outline: 3px solid var(--ab-color-brandPrimary);
   outline-offset: -3px;
 }

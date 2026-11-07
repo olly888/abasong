@@ -2,15 +2,13 @@
 .invite-scroll { padding: 0 20px 24px; background: var(--ab-color-surfaceMuted, #f6f7f9); }
 .invite-scroll > .page-head { background: var(--ab-color-surfaceMuted, #f6f7f9); }
 .invite-poster { margin: 16px 0; padding: 24px 20px 20px; border-radius: 16px; background: #fff; overflow: hidden; }
-.invite-brand { display: flex; gap: 9px; align-items: center; font-size: 23px; font-weight: 750; letter-spacing: -.5px; }
-.invite-brand .brand-symbol { width: 32px; height: 32px; font-size: 29px; border-radius: 9px; background: var(--ab-color-brandPrimary); color: #fff; flex-shrink: 0; text-align: center; line-height: 35px; }
 .invite-poster h2, .invite-receive h1 { font-size: 25px; line-height: 1.45; letter-spacing: -.4px; margin: 22px 0 14px; overflow-wrap: anywhere; }
 .invite-poster h2 span, .invite-receive h1 span { display: block; }
-.invite-poster h2 em, .invite-receive h1 em { font-style: normal; color: var(--ab-color-brandPrimary); }
+.invite-poster h2 em, .invite-receive h1 em { font-style: normal; color: var(--ab-color-brandText); }
 .invite-scene { width: 100%; height: 92px; display: block; margin: 6px 0 14px; }
 .invite-benefits { display: flex; justify-content: space-between; gap: 8px; color: var(--ab-color-ink); font-size: 14px; line-height: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--ab-color-border); flex-wrap: wrap; }
 .invite-benefits span { display: flex; align-items: center; gap: 4px; }
-.invite-benefits .icon { width: 17px; height: 17px; color: var(--ab-color-brandPrimary); }
+.invite-benefits .icon { width: 17px; height: 17px; color: var(--ab-color-brandText); }
 .invite-qr-row { display: flex; align-items: center; gap: 16px; padding-top: 18px; }
 .invite-qr { width: 112px; height: 112px; flex-shrink: 0; background: #fff; }
 .invite-qr-copy { min-width: 0; }
@@ -33,12 +31,11 @@
 .invite-preview-note { font-size: 12px !important; line-height: 20px !important; color: #686c73 !important; }
 .invite-receive { padding: 20px 20px 30px; }
 .invite-web-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.invite-web-header .invite-brand { font-size: 22px; }
 .invite-receive h1 { margin: 32px 0 12px; font-size: 28px; line-height: 1.4; }
 .invite-web-intro { font-size: 16px; line-height: 26px; color: #53565b; margin: 0; }
-.invite-receive .invite-scene { height: 120px; margin: 20px 0; background: #edf4ff; border-radius: 16px; }
+.invite-receive .invite-scene { height: 120px; margin: 20px 0; background: var(--ab-color-brandSurface); border-radius: 16px; }
 .invite-feature { display: flex; gap: 14px; margin: 20px 0; }
-.invite-feature > .icon { color: var(--ab-color-brandPrimary); flex-shrink: 0; margin-top: 1px; }
+.invite-feature > .icon { color: var(--ab-color-brandText); flex-shrink: 0; margin-top: 1px; }
 .invite-feature b { font-size: 16px; line-height: 24px; }
 .invite-feature p { margin: 3px 0 0; color: #686c73; font-size: 14px; line-height: 22px; }
 .invite-distribution { margin: 24px 0 16px; border-top: 1px solid var(--ab-color-border); padding-top: 20px; }

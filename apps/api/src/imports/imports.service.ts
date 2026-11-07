@@ -10,6 +10,10 @@ import { createEnvelope, ENVELOPE_CRYPTO } from "../encryption/provider";
 import type { EnvelopeCrypto } from "../encryption/envelope";
 import { ApartmentsService } from "../apartments/apartments.service";
 import { importPolicy } from "./import-policy";
+import { confirmedAddress } from "../nearby/nearby-input";
+import { NearbyService } from "../nearby/nearby.service";
+import { addressIdentity } from "@abasong/contracts";
+import type { PermanentAddress } from "../nearby/mapbox-nearby.provider";
 type S = components["schemas"];
 const id = z.string().uuid(),
   v = z.number().int().positive();
@@ -83,6 +87,7 @@ const edit = z
     expected_revision: v,
     address_text: clean(300).optional(),
     apartment_id: id.nullable().optional(),
+    confirmed_address: confirmedAddress.nullable().optional(),
     method: candidate.shape.method.optional(),
     value: clean(32).optional(),
     scope: scope.optional(),
@@ -143,11 +148,14 @@ type Plan = {
   entryKey: string;
   recordKey: string;
   shareKey: string;
+  apartmentId?: string;
   result: S["ImportCommitResult"];
 };
 type Body = {
   sources: Source[];
-  candidates: S["ImportCandidate"][];
+  candidates: (S["ImportCandidate"] & {
+    prepared_address?: PermanentAddress;
+  })[];
   plans: Record<string, Plan>;
   replays: Record<string, { hmac: string; ids: string[] }>;
 };
@@ -173,6 +181,7 @@ export class ImportsService {
     @Inject(ApartmentsService) private readonly apartments: ApartmentsService,
     @Inject(ENVELOPE_CRYPTO)
     private readonly crypto: EnvelopeCrypto = createEnvelope(),
+    @Inject(NearbyService) private readonly nearby?: NearbyService,
   ) {}
   private hash(body: unknown) {
     return createHmac("sha256", this.crypto.hmacKey("import-request"))
@@ -186,20 +195,7 @@ export class ImportsService {
       await c.query("SELECT set_config('abasong.actor_id',$1,true)", [
         a.userId,
       ]);
-      const u = (
-        await c.query(
-          "SELECT status,session_invalid_before FROM abasong.users WHERE id=$1",
-          [a.userId],
-        )
-      ).rows[0]!;
-      if (!u) throw missing();
-      if (u.status !== "active")
-        throw new ApiError(403, "ACCOUNT_UNAVAILABLE", "账号当前不可用");
-      if (
-        u.session_invalid_before &&
-        a.issuedAt * 1000 <= u.session_invalid_before.getTime()
-      )
-        throw new ApiError(401, "SESSION_REVOKED", "请重新登录");
+      await this.activeActor(c, a);
       const out = await run(c);
       await c.query("COMMIT");
       return out;
@@ -225,6 +221,22 @@ export class ImportsService {
     } finally {
       c.release();
     }
+  }
+  private async activeActor(c: PoolClient, a: VerifiedIdentity) {
+    const u = (
+      await c.query(
+        "SELECT status,session_invalid_before FROM abasong.users WHERE id=$1",
+        [a.userId],
+      )
+    ).rows[0]!;
+    if (!u) throw missing();
+    if (u.status !== "active")
+      throw new ApiError(403, "ACCOUNT_UNAVAILABLE", "账号当前不可用");
+    if (
+      u.session_invalid_before &&
+      a.issuedAt * 1000 <= u.session_invalid_before.getTime()
+    )
+      throw new ApiError(401, "SESSION_REVOKED", "请重新登录");
   }
   private async get(c: PoolClient, a: VerifiedIdentity, rid: string) {
     parse(id, rid);
@@ -360,6 +372,18 @@ export class ImportsService {
       x.method !== "keypad"
     )
       throw new ApiError(422, "IMPORT_REVIEW_REQUIRED", "请核对地址与密码");
+    if (x.confirmed_address) {
+      const address = parse(confirmedAddress, x.confirmed_address);
+      const normalize = (s: string) =>
+        s.toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
+      const label = `${address.address_line1}, ${address.city}, ${address.state}${address.postal_code ? " " + address.postal_code : ""}`;
+      if (x.apartment_id || normalize(x.address_text) !== normalize(label))
+        throw new ApiError(
+          422,
+          "IMPORT_ADDRESS_MISMATCH",
+          "地址与核对内容不一致",
+        );
+    }
     if (x.apartment_id) {
       const p = (
         await c.query(
@@ -635,7 +659,11 @@ export class ImportsService {
     x: S["ImportCandidate"],
   ): S["ImportCandidate"] {
     const plan = b.plans[x.id];
-    return { ...x, ...(plan ? { commit_result: plan.result } : {}) };
+    const view = { ...x } as S["ImportCandidate"] & {
+      prepared_address?: PermanentAddress;
+    };
+    delete view.prepared_address;
+    return { ...view, ...(plan ? { commit_result: plan.result } : {}) };
   }
   private sourceView(s: Source): S["ImportSource"] {
     return {
@@ -661,7 +689,9 @@ export class ImportsService {
       const replay = this.replay(b, "extract:" + sid, key, input);
       if (replay)
         return {
-          items: b.candidates.filter((x) => replay.includes(x.id)),
+          items: b.candidates
+            .filter((x) => replay.includes(x.id))
+            .map((x) => this.candidateView(b, x)),
           next_cursor: null,
         };
       this.writable(r);
@@ -705,7 +735,10 @@ export class ImportsService {
       b.replays["extract:" + sid + ":" + key]!.ids = rows.map((x) => x.id);
       r.state = "needs_review";
       await this.save(c, r, b);
-      return { items: rows, next_cursor: null };
+      return {
+        items: rows.map((x) => this.candidateView(b, x)),
+        next_cursor: null,
+      };
     });
   }
   async edit(
@@ -720,10 +753,26 @@ export class ImportsService {
       const r = await this.get(c, a, rid),
         b = await this.open(r),
         x = this.find(b, cid);
-      if (this.replay(b, "edit:" + cid, key, input)) return x;
+      if (this.replay(b, "edit:" + cid, key, input))
+        return this.candidateView(b, x);
       this.writable(r);
-      if (x.revision !== input.expected_revision || b.plans[cid])
+      const plan = b.plans[cid];
+      const repairable =
+        plan &&
+        r.state !== "submitting" &&
+        plan.result.private_status === "failed" &&
+        !plan.result.private_record_id &&
+        plan.result.share_status === "not_started";
+      if (x.revision !== input.expected_revision || (plan && !repairable))
         throw conflict();
+      if (repairable) delete b.plans[cid];
+      const previousProof = x.prepared_address;
+      if (
+        (input.address_text !== undefined &&
+          input.address_text !== x.address_text) ||
+        input.apartment_id
+      )
+        x.confirmed_address = null;
       Object.assign(
         x,
         Object.fromEntries(
@@ -732,6 +781,46 @@ export class ImportsService {
           ),
         ),
       );
+      if (x.apartment_id && x.confirmed_address)
+        throw new ApiError(400, "INVALID_INPUT", "请选择一个地址来源");
+      if (!x.confirmed_address) delete x.prepared_address;
+      else {
+        const address = x.confirmed_address;
+        const normalize = (v: string) =>
+          v.toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
+        const label = `${address.address_line1}, ${address.city}, ${address.state}${address.postal_code ? " " + address.postal_code : ""}`;
+        if (normalize(x.address_text) !== normalize(label))
+          throw new ApiError(
+            422,
+            "IMPORT_ADDRESS_MISMATCH",
+            "地址与核对内容不一致",
+          );
+        if (
+          !previousProof ||
+          addressIdentity(previousProof.address) !== addressIdentity(address) ||
+          previousProof.address.postal_code !== address.postal_code
+        ) {
+          const known = await this.apartments.confirmedAddressIdTx(c, address);
+          if (known) {
+            // Retain the confirmed identity so a later client save does not
+            // undo a server-normalized target. The catalog already has a
+            // persistable identity; no temporary provider result is retained.
+            delete x.prepared_address;
+          } else {
+            if (r.mode === "private_and_share") await this.cap(c, a);
+            if (!this.nearby)
+              throw new ApiError(
+                503,
+                "ADDRESS_STORAGE_UNAVAILABLE",
+                "新地址保存暂不可用",
+              );
+            const proof = await this.nearby.prepareImportAddress(a, address);
+            await this.activeActor(c, a);
+            if (r.mode === "private_and_share") await this.cap(c, a);
+            x.prepared_address = proof;
+          }
+        } else x.prepared_address = previousProof;
+      }
       x.revision++;
       x.confirmation_revision = null;
       x.state = input.removed ? "removed" : "needs_review";
@@ -739,10 +828,12 @@ export class ImportsService {
         ...x.issues.filter((issue) => reviewIssue.safeParse(issue).success),
         ...(!x.address_text ? ["missing_address" as const] : []),
         ...(!x.value ? ["missing_value" as const] : []),
-        ...(!x.apartment_id ? ["unmatched_apartment" as const] : []),
+        ...(!x.apartment_id && !x.confirmed_address
+          ? ["unmatched_apartment" as const]
+          : []),
       ];
       await this.save(c, r, b);
-      return x;
+      return this.candidateView(b, x);
     });
   }
   async confirm(a: VerifiedIdentity, rid: string, body: unknown, key: unknown) {
@@ -753,7 +844,9 @@ export class ImportsService {
       const replay = this.replay(b, "confirm", key, input);
       if (replay)
         return {
-          items: b.candidates.filter((x) => replay.includes(x.id)),
+          items: b.candidates
+            .filter((x) => replay.includes(x.id))
+            .map((x) => this.candidateView(b, x)),
           next_cursor: null,
         };
       this.writable(r);
@@ -777,7 +870,10 @@ export class ImportsService {
       }
       b.replays["confirm:" + key]!.ids = rows.map((x) => x.id);
       await this.save(c, r, b);
-      return { items: rows, next_cursor: null };
+      return {
+        items: rows.map((x) => this.candidateView(b, x)),
+        next_cursor: null,
+      };
     });
   }
   async confirmOne(
@@ -797,7 +893,8 @@ export class ImportsService {
       const r = await this.get(c, a, rid),
         b = await this.open(r),
         x = this.find(b, cid);
-      if (this.replay(b, "confirmOne:" + cid, key, input)) return x;
+      if (this.replay(b, "confirmOne:" + cid, key, input))
+        return this.candidateView(b, x);
       this.writable(r);
       if (x.revision !== input.expected_revision || b.plans[cid])
         throw conflict();
@@ -806,7 +903,7 @@ export class ImportsService {
       x.issues = withoutOcrHints(x.issues);
       x.confirmation_revision = x.revision;
       await this.save(c, r, b);
-      return x;
+      return this.candidateView(b, x);
     });
   }
   async cancel(a: VerifiedIdentity, rid: string, body: unknown, key: unknown) {
@@ -876,8 +973,18 @@ export class ImportsService {
       const r = await this.get(c, a, rid),
         b = await this.open(r),
         replay = this.replay(b, "commit", key, input);
-      if (replay)
+      if (replay) {
+        for (const i of input.items) {
+          const x = this.find(b, i.candidate_id),
+            p = b.plans[x.id];
+          if (
+            x.revision !== i.confirmed_revision ||
+            p?.clientId !== i.client_commit_id
+          )
+            throw conflict();
+        }
         return { ids: replay, generation: r.generation, replay: true };
+      }
       this.writable(r);
       this.revision(r, input.expected_batch_version);
       if (input.mode !== r.mode) throw conflict();
@@ -939,6 +1046,7 @@ export class ImportsService {
     });
     if (!prep.replay) {
       for (const cid of prep.ids) {
+        const expected = input.items.find((i) => i.candidate_id === cid)!;
         for (const phase of ["private", "share"] as const) {
           try {
             await this.tx(a, async (c) => {
@@ -947,16 +1055,35 @@ export class ImportsService {
               if (r.generation !== prep.generation || r.state === "cancelled")
                 return;
               const x = this.find(b, cid),
-                p = this.plan(b, cid),
-                out = p.result;
+                p = b.plans[cid];
+              if (
+                !p ||
+                x.revision !== expected.confirmed_revision ||
+                p.clientId !== expected.client_commit_id
+              )
+                return;
+              const out = p.result;
               if (phase === "private" && out.private_status !== "saved") {
                 await this.confirmable(c, x);
+                let aid = x.apartment_id ?? p.apartmentId;
+                if (
+                  !aid &&
+                  x.confirmed_address &&
+                  r.mode === "private_and_share"
+                ) {
+                  await this.cap(c, a);
+                  await this.activeActor(c, a);
+                  aid = await this.apartments.ensureConfirmedAddressTx(
+                    c,
+                    x.confirmed_address,
+                    x.prepared_address,
+                  );
+                  p.apartmentId = aid;
+                }
                 const entry = await this.apartments.createEntryTx(
                   c,
                   a,
-                  x.apartment_id
-                    ? { apartment_id: x.apartment_id }
-                    : { address: x.address_text },
+                  aid ? { apartment_id: aid } : { address: x.address_text },
                   p.entryKey,
                 );
                 const record = await this.apartments.createRecordTx(
@@ -967,6 +1094,7 @@ export class ImportsService {
                   p.recordKey,
                 );
                 out.private_status = "saved";
+                out.apartment_id = aid ?? null;
                 out.private_record_id = record.id;
                 out.error_code = null;
                 out.retryable = false;
@@ -976,7 +1104,8 @@ export class ImportsService {
                 out.private_status === "saved" &&
                 ["not_started", "failed"].includes(out.share_status)
               ) {
-                if (!x.apartment_id)
+                const aid = x.apartment_id ?? p.apartmentId;
+                if (!aid)
                   throw new ApiError(
                     422,
                     "APARTMENT_REVIEW_REQUIRED",
@@ -985,7 +1114,7 @@ export class ImportsService {
                 const result = await this.apartments.contributeImportTx(
                   c,
                   a,
-                  x.apartment_id,
+                  aid,
                   {
                     method: x.method,
                     value: x.value,
@@ -1020,7 +1149,14 @@ export class ImportsService {
                 b = await this.open(r);
               if (r.generation !== prep.generation || r.state === "cancelled")
                 return;
-              const p = this.plan(b, cid);
+              const p = b.plans[cid],
+                x = this.find(b, cid);
+              if (
+                !p ||
+                x.revision !== expected.confirmed_revision ||
+                p.clientId !== expected.client_commit_id
+              )
+                return;
               if (phase === "private") p.result.private_status = "failed";
               else if (
                 p.result.private_status === "saved" &&
@@ -1031,7 +1167,13 @@ export class ImportsService {
               p.result.error_code =
                 e instanceof ApiError ? e.code : "IMPORT_SAVE_UNAVAILABLE";
               p.result.retryable = !(
-                e instanceof ApiError && [400, 403, 404, 422].includes(e.status)
+                e instanceof ApiError &&
+                ([400, 403, 404, 422].includes(e.status) ||
+                  [
+                    "ADDRESS_CONFIRMATION_REQUIRED",
+                    "AMBIGUOUS_ADDRESS",
+                    "IMPORT_ADDRESS_MISMATCH",
+                  ].includes(e.code))
               );
               this.find(b, cid).state = "failed";
               await this.save(c, r, b);
@@ -1055,7 +1197,17 @@ export class ImportsService {
       }
       return {
         batch: this.view(r, b),
-        results: prep.ids.map((cid) => this.plan(b, cid).result),
+        results: prep.ids.map((cid) => {
+          const p = this.plan(b, cid),
+            x = this.find(b, cid),
+            expected = input.items.find((i) => i.candidate_id === cid)!;
+          if (
+            x.revision !== expected.confirmed_revision ||
+            p.clientId !== expected.client_commit_id
+          )
+            throw conflict();
+          return p.result;
+        }),
       };
     });
   }

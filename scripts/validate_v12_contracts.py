@@ -3,6 +3,7 @@ Requires PyYAML, pglast, openapi-spec-validator in the caller's Python environme
 """
 from pathlib import Path
 import json,re
+from urllib.parse import urlsplit,unquote
 import yaml
 from pglast import parse_sql, ast
 from openapi_spec_validator import validate_spec
@@ -17,6 +18,14 @@ validate_spec(contract)
 operations=[(path,method,op) for path,item in contract['paths'].items() for method,op in item.items()]
 ids=[op['operationId'] for _,_,op in operations]
 assert len(ids)==len(set(ids)), 'Duplicate operationId'
+def closed_input(schema):
+    if '$ref' in schema:
+        return closed_input(contract['components']['schemas'][schema['$ref'].split('/')[-1]])
+    if schema.get('additionalProperties') is False:
+        return True
+    if 'oneOf' in schema:
+        return all(closed_input(branch) for branch in schema['oneOf'])
+    return schema.get('additionalProperties') is False
 for path,method,op in operations:
     assert path.startswith('/v1/') or path=='/health/live'
     assert '401' in op['responses'] and '403' in op['responses'] and '404' in op['responses']
@@ -27,7 +36,7 @@ for path,method,op in operations:
             if status.startswith('2'):assert 'Cache-Control' in response['headers']
     if method in ('post','put','patch') and 'requestBody' in op:
         name=op['requestBody']['content']['application/json']['schema']['$ref'].split('/')[-1]
-        assert contract['components']['schemas'][name]['additionalProperties'] is False
+        assert closed_input(contract['components']['schemas'][name]),name
 for forbidden in ('/payments','/wallet','/settlement','/pod','/handoff/confirm','/dispatch'):
     assert not any(forbidden in path for path in contract['paths'])
 for n in ('AccessRecord','Apartment','Request','Profile','Message','Driver'):
@@ -42,7 +51,7 @@ for name in ('RequestDraftInput','RequestPatch','Request','RequestVersion','Publ
 assert 'expected_arrival_at' in contract['components']['schemas']['ApplyInput']['required']
 assert not contract['components']['schemas']['ApplyInput']['properties']['expected_arrival_at'].get('nullable',False)
 public_ops=[operation for path,method,operation in operations if operation.get('security')==[]]
-assert {op['operationId'] for op in public_ops}=={'healthLive','getPublicRequestShare'}
+assert {op['operationId'] for op in public_ops}=={'healthLive','getPublicRequestShare','revokeInstallation'}
 public_fields=contract['components']['schemas']['PublicRequestSummary']['properties']
 assert not {'publisher_id','user_id','phone','description','private_payment_terms','value','trial_terms','meeting_details'}.intersection(public_fields)
 resolver=RefResolver.from_schema(contract)
@@ -97,6 +106,10 @@ assert "'V12.0008'" in source_sql and 'FORCE ROW LEVEL SECURITY' in source_sql
 assert {'access_contribution_sources'}=={stmt.stmt.relation.relname for stmt in source_parsed if isinstance(stmt.stmt,ast.CreateStmt)}
 assert not {'withdrawMyContribution','withdrawAccess'}.intersection(ids)
 assert 'can_withdraw_record' not in contract['components']['schemas']['ContributionSummary']['properties']
+for name in ('ImportCandidateEdit','ImportCandidate'):
+    props=contract['components']['schemas'][name]['properties']
+    assert 'confirmed_address' in props and 'prepared_address' not in props
+assert 'apartment_id' in contract['components']['schemas']['ImportCommitResult']['properties']
 review_issues=contract['components']['schemas']['ImportDeviceCandidateInput']['properties']['review_issues']
 assert review_issues['maxItems']==3 and review_issues['uniqueItems'] is True
 assert set(review_issues['items']['enum'])=={'ambiguous_pair','uncertain_address','uncertain_characters'}
@@ -120,14 +133,14 @@ spatial_sql=(ROOT/'database/migrations/0003_apartment_buildings.sql').read_text(
 spatial_parsed=parse_sql(spatial_sql)
 assert 'apartment_buildings' in spatial_sql
 # Validate new local Markdown references. Actual browser/UI validation is separate.
-mds=list((ROOT/'docs').rglob('*.md'))+[ROOT/'产品基线.md']
+mds=[p for p in (ROOT/'docs').rglob('*.md') if 'archive' not in p.relative_to(ROOT/'docs').parts]+[ROOT/'产品基线.md']
 missing=[]
 for path in mds:
     for link in re.findall(r'\]\(([^)]+)\)',path.read_text()):
-        link=link.split('#')[0]
+        link=unquote(urlsplit(link).path) if not link.startswith(('http://','https://','mailto:')) else link
         if link and not link.startswith(('http://','https://','mailto:')) and not (path.parent/link).exists():missing.append([str(path.relative_to(ROOT)),link])
 assert not missing,missing
-result={'date':'2026-11-02','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0009':{'top_level_parse':'passed','statements':len(kms_parsed),'database_execution':'see A2 isolated KMS service verification'},
-        'incremental_migration_0008':{'top_level_parse':'passed','statements':len(source_parsed),'database_execution':'see D1 contribution source verification record'},'incremental_migration_0007':{'top_level_parse':'passed','statements':len(nearby_parsed),'database_execution':'see D1 nearby cards verification record'},'incremental_migration_0006':{'top_level_parse':'passed','statements':len(direct_parsed),'database_execution':'see D1 direct contribution verification record'},'incremental_migration_0005':{'top_level_parse':'passed','statements':len(arrival_parsed),'database_execution':'see D1 home arrival verification record'},'incremental_migration_0004':{'top_level_parse':'passed','statements':len(batch_parsed),'database_execution':'see D1 import batch verification record'},'incremental_migration_0003':{'top_level_parse':'passed','statements':len(spatial_parsed),'database_execution':'see D1 arrival verification record'},'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
+result={'date':'2026-11-06','baseline':'V12.1 temporary delivery support only','openapi':{'version':contract['openapi'],'contract_version':contract['info']['version'],'paths':len(contract['paths']),'operations':len(operations),'schemas':len(contract['components']['schemas']),'spec_validation':'passed'},'sql':{'top_level_parse':'passed','statements':len(parsed),'tables':len(tables),'incremental_migration_0009':{'top_level_parse':'passed','statements':len(kms_parsed),'database_execution':'see A2 isolated KMS service verification'},
+        'incremental_migration_0008':{'top_level_parse':'passed','statements':len(source_parsed),'database_execution':'see D1 contribution source verification record'},'incremental_migration_0007':{'top_level_parse':'passed','statements':len(nearby_parsed),'database_execution':'see D1 nearby cards verification record'},'incremental_migration_0006':{'top_level_parse':'passed','statements':len(direct_parsed),'database_execution':'see D1 direct contribution verification record'},'incremental_migration_0005':{'top_level_parse':'passed','statements':len(arrival_parsed),'database_execution':'see D1 home arrival verification record'},'incremental_migration_0004':{'top_level_parse':'passed','statements':len(batch_parsed),'database_execution':'see D1 import batch verification record'},'incremental_migration_0003':{'top_level_parse':'passed','statements':len(spatial_parsed),'database_execution':'see D1 arrival verification record'},'incremental_migration_0002':{'top_level_parse':'passed','tables':incremental_tables,'database_execution':'see D1 HTTP/local DB verification record'},'database_execution':'not_run','plpgsql_do_blocks_compiled':'not_run','postgis_and_role_integration':'not_run'},'page_spec':{'nodes':len(page_ids),'state_variants':sum(len(p['states']) for p in catalog['pages']),'action_targets_and_operations':'passed','no_recruitment_screens':'passed'},'local_doc_links':'passed_current_documents_archival_snapshots_excluded','structural_contract_checks':'passed','real_device_and_cloud_tests':'not_run'}
 (ROOT/'docs/technical/V12_静态校验结果.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps(result,ensure_ascii=False,indent=2))

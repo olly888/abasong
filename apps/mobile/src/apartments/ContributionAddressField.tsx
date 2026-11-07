@@ -26,6 +26,7 @@ const emptyAddress = (): S["SearchAddress"] => ({
 export function ContributionAddressField(p: {
   value: ContributionAddress;
   initialApartmentId?: string;
+  initialQuery?: string;
   isPrivate: boolean;
   disabled: boolean;
   request: ContributionRequest;
@@ -46,7 +47,7 @@ export function ContributionAddressField(p: {
   const [view, setView] = useState<"search" | "manual" | "chosen">(
       p.value.kind === "pending" ? "search" : "chosen",
     ),
-    [query, setQuery] = useState(""),
+    [query, setQuery] = useState(p.initialQuery ?? ""),
     [draft, setDraft] = useState(initial),
     [privateDraft, setPrivateDraft] = useState(privateAddressText(p.value)),
     [choices, setChoices] = useState<AddressChoices | null>(null),

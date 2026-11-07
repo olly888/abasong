@@ -1,8 +1,14 @@
 import type { components } from "@abasong/contracts";
 import { AccountError } from "../auth/errors";
-import type { Candidate, Source } from "./types";
+import type {
+  Candidate,
+  Source,
+  ImportPreparationFailure,
+  ImportOutcome,
+} from "./types";
 import { ocrReviewIssues } from "./review-issues";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
+import { canRepairImportResult } from "./candidate-address";
 type S = components["schemas"];
 type PendingGroup = {
   localIds: string[];
@@ -11,6 +17,13 @@ type PendingGroup = {
   extraction: S["ImportDeviceExtraction"];
   extractionKey: string;
   source?: S["ImportSource"];
+};
+type PendingEdit = {
+  addressPreparation?: boolean;
+  path: string;
+  body: unknown;
+  key: string;
+  accept: (value: unknown) => Promise<void> | void;
 };
 export class ImportDraft {
   batch: S["ImportBatch"] | null = null;
@@ -23,6 +36,8 @@ export class ImportDraft {
     key: string;
     accept: (value: unknown) => Promise<void> | void;
   } | null = null;
+  private candidateEdits = new Map<string, PendingEdit>();
+  private preparationFailures = new Map<string, ImportPreparationFailure>();
   private createId: string;
   private createKey: string;
   constructor(
@@ -67,6 +82,59 @@ export class ImportDraft {
   ) {
     this.pendingWrite = { path, body, accept, key: this.makeKey() };
     await this.flushWrite();
+  }
+  private preparationFailure(e: unknown): ImportPreparationFailure | null {
+    if (this.signal.aborted) return null;
+    if (e instanceof AccountError) {
+      if (
+        ![
+          "ADDRESS_STORAGE_UNAVAILABLE",
+          "ADDRESS_CONFIRMATION_REQUIRED",
+          "AMBIGUOUS_ADDRESS",
+          "IMPORT_ADDRESS_MISMATCH",
+          "ADDRESS_RATE_LIMITED",
+        ].includes(e.code) &&
+        e.status < 500
+      )
+        return null;
+      return {
+        stage: "address_preparation",
+        error_code: e.code,
+        retryable: e.status >= 500 || e.status === 429,
+      };
+    }
+    // Native fetch reports transport failures as Error; no server result or
+    // durable commit plan is invented for an address edit with unknown outcome.
+    if (e instanceof Error)
+      return {
+        stage: "address_preparation",
+        error_code: "NETWORK_UNAVAILABLE",
+        retryable: true,
+      };
+    return null;
+  }
+  private async flushCandidate(localId: string, tolerate: boolean) {
+    const pending = this.candidateEdits.get(localId);
+    if (!pending) return;
+    let value: unknown;
+    try {
+      value = await this.request(pending.path, {
+        method: "PATCH",
+        body: pending.body,
+        key: pending.key,
+      });
+    } catch (e) {
+      if (e instanceof AccountError && e.status >= 400 && e.status < 500)
+        this.candidateEdits.delete(localId);
+      const failure = this.preparationFailure(e);
+      if (!tolerate || !pending.addressPreparation || !failure) throw e;
+      this.preparationFailures.set(localId, failure);
+      return;
+    }
+    // Content/version conflicts in accept are never swallowed as a network
+    // failure. A retry resolves the original mutation before applying new edits.
+    await pending.accept(value);
+    this.candidateEdits.delete(localId);
   }
   private path() {
     if (!this.batch) throw new Error("请先保存导入草稿");
@@ -128,6 +196,8 @@ export class ImportDraft {
     this.rows.clear();
     this.pendingGroups.clear();
     this.pendingWrite = null;
+    this.candidateEdits.clear();
+    this.preparationFailures.clear();
     this.commitIds.clear();
     for (const r of rows) {
       this.rows.set(r.id, r);
@@ -140,7 +210,9 @@ export class ImportDraft {
     local: Candidate[],
     sources: Source[],
     mode: S["ImportBatch"]["mode"],
+    toleratePreparationFailures = false,
   ) {
+    this.preparationFailures.clear();
     if (!this.batch) {
       const policy = await this.request<S["ImportPolicy"]>(
         "/v1/me/import-policy",
@@ -160,6 +232,8 @@ export class ImportDraft {
       );
     }
     await this.flushWrite();
+    for (const localId of this.candidateEdits.keys())
+      await this.flushCandidate(localId, toleratePreparationFailures);
     await this.refresh();
     if (this.batch!.mode !== mode) {
       const before = new Map(this.rows);
@@ -178,6 +252,8 @@ export class ImportDraft {
               found.revision !== old.revision + 1 ||
               found.address_text !== old.address_text ||
               found.apartment_id !== old.apartment_id ||
+              JSON.stringify(found.confirmed_address ?? null) !==
+                JSON.stringify(old.confirmed_address ?? null) ||
               found.value !== old.value ||
               JSON.stringify(found.scope) !== JSON.stringify(old.scope)
             )
@@ -229,7 +305,9 @@ export class ImportDraft {
           expected_source_version: 1,
           recognizer_version: "device-ocr-driver-review-v2",
           candidates: items.map((r) => ({
-            address_text: r.address.trim(),
+            address_text: (
+              r.sourceAddress ?? (r.confirmedAddress ? "" : r.address)
+            ).trim(),
             value: r.value.trim(),
             method: "keypad",
             scope: { label: r.scope.trim() },
@@ -244,12 +322,13 @@ export class ImportDraft {
       await this.finishGroup(key, group);
     }
     for (const [localId, remote] of this.rows) {
+      if (this.preparationFailures.has(localId)) continue;
       const r = local.find((r) => r.id === localId);
-      if (remote.commit_result) continue;
       const data = r
         ? {
             address_text: r.address.trim(),
             apartment_id: r.target?.id ?? null,
+            confirmed_address: r.confirmedAddress ?? null,
             value: r.value.trim(),
             scope: { label: r.scope.trim() },
             removed: false,
@@ -259,19 +338,38 @@ export class ImportDraft {
         ? remote.state !== "removed"
         : remote.address_text !== data.address_text ||
           remote.apartment_id !== data.apartment_id ||
+          JSON.stringify(remote.confirmed_address ?? null) !==
+            JSON.stringify(data.confirmed_address ?? null) ||
           remote.value !== data.value ||
           remote.scope.label !== data.scope?.label ||
           remote.state === "removed";
+      if (
+        remote.commit_result &&
+        (!changed || !canRepairImportResult(remote.commit_result))
+      )
+        continue;
       if (changed) {
-        await this.write(
-          this.path() + "/candidates/" + remote.id,
-          { expected_revision: remote.revision, ...data },
-          (value) => {
+        this.candidateEdits.set(localId, {
+          addressPreparation: !!(
+            r?.confirmedAddress || remote.confirmed_address
+          ),
+          path: this.path() + "/candidates/" + remote.id,
+          body: { expected_revision: remote.revision, ...data },
+          key: this.makeKey(),
+          accept: (value) => {
             const updated = value as S["ImportCandidate"];
             if (updated.revision !== remote.revision + 1)
               throw new Error("草稿已在其他设备更新，请重新打开");
             this.rows.set(localId, updated);
+            this.commitIds.delete(localId);
           },
+        });
+        // Only address preparation may fail independently. Other edits retain
+        // fail-fast behavior and never turn a conflict into a partial success.
+        await this.flushCandidate(
+          localId,
+          toleratePreparationFailures &&
+            !!(r?.confirmedAddress || remote.confirmed_address),
         );
       }
     }
@@ -297,8 +395,18 @@ export class ImportDraft {
     sources: Source[],
     mode: S["ImportBatch"]["mode"],
   ) {
-    await this.save(local, sources, mode);
-    const confirm = selected
+    await this.save(local, sources, mode, true);
+    const eligible = selected.filter(
+      (r) => !this.preparationFailures.has(r.id),
+    );
+    const failed = selected
+      .filter((r) => this.preparationFailures.has(r.id))
+      .map((r) => ({
+        localId: r.id,
+        out: this.preparationFailures.get(r.id)! as ImportOutcome,
+      }));
+    if (!eligible.length) return failed;
+    const confirm = eligible
       .map((r) => this.rows.get(r.id)!)
       .filter((r) => !r.commit_result);
     if (confirm.length) {
@@ -324,7 +432,7 @@ export class ImportDraft {
       }
     }
     await this.refresh();
-    const items = selected.map((r) => {
+    const items = eligible.map((r) => {
       const x = this.rows.get(r.id)!;
       let cid = this.commitIds.get(r.id);
       if (!cid) {
@@ -351,9 +459,12 @@ export class ImportDraft {
       },
     );
     this.batch = result.batch;
-    return result.results.map((out) => ({
-      localId: [...this.rows].find(([, r]) => r.id === out.candidate_id)![0],
-      out,
-    }));
+    return [
+      ...result.results.map((out) => ({
+        localId: [...this.rows].find(([, r]) => r.id === out.candidate_id)![0],
+        out: out as ImportOutcome,
+      })),
+      ...failed,
+    ];
   }
 }

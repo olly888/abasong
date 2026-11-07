@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import type { components } from "../../packages/contracts/src/generated";
-import type { Candidate, Source } from "../../apps/mobile/src/imports/types";
+import type {
+  Candidate,
+  Source,
+  ImportOutcome,
+} from "../../apps/mobile/src/imports/types";
 import type { ContributionRequest } from "../../apps/mobile/src/apartments/contribution-address-search";
 import { ImportDraft } from "../../apps/mobile/src/imports/server-draft-core";
 import { AccountError } from "../../apps/mobile/src/auth/errors";
@@ -30,6 +34,10 @@ const transport =
     if (!r.ok) throw new AccountError(r.status, v.code, "TEST request failed");
     return v as T;
   };
+function committed(out: ImportOutcome) {
+  assert(!("stage" in out));
+  return out;
+}
 async function main() {
   const own = transport("owner"),
     other = transport("driver");
@@ -173,11 +181,11 @@ async function main() {
   });
   const partial = await draft.commit(rows, rows, sources, "private_and_share");
   check(
-    partial[0]!.out.share_status === "active" &&
-      partial[1]!.out.share_status === "failed",
+    committed(partial[0]!.out).share_status === "active" &&
+      committed(partial[1]!.out).share_status === "failed",
   );
-  check(partial.every((r) => r.out.private_status === "saved"));
-  const failed = partial[1]!.out.private_record_id;
+  check(partial.every((r) => committed(r.out).private_status === "saved"));
+  const failed = committed(partial[1]!.out).private_record_id;
   check((await snapshot()).private_records === begin.private_records + 2);
   check((await read(1)).items[0]?.value === "0018#");
   check((await read(2)).items.length === 0);
@@ -193,8 +201,8 @@ async function main() {
   );
   check(
     retried.length === 1 &&
-      retried[0]!.out.private_record_id === failed &&
-      retried[0]!.out.share_status === "active",
+      committed(retried[0]!.out).private_record_id === failed &&
+      committed(retried[0]!.out).share_status === "active",
   );
   check((await snapshot()).private_records === begin.private_records + 2);
   check((await read(2)).items[0]?.value === "*0020#");
@@ -216,7 +224,7 @@ async function main() {
     lostSources,
     "private_and_share",
   );
-  check(replay[0]!.out.share_status === "active");
+  check(committed(replay[0]!.out).share_status === "active");
   check((await snapshot()).private_records === count.private_records + 1);
   check((await read(1)).items.some((r) => r.value === "#0003*"));
   const wrong = new ImportDraft(own, new AbortController().signal, randomUUID);

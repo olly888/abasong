@@ -1,12 +1,12 @@
 {
-  "date": "2026-11-02",
+  "date": "2026-11-06",
   "baseline": "V12.1 temporary delivery support only",
   "openapi": {
     "version": "3.0.3",
     "contract_version": "12.1.0",
     "paths": 88,
-    "operations": 113,
-    "schemas": 136,
+    "operations": 112,
+    "schemas": 160,
     "spec_validation": "passed"
   },
   "sql": {
@@ -62,11 +62,11 @@
   },
   "page_spec": {
     "nodes": 39,
-    "state_variants": 302,
+    "state_variants": 387,
     "action_targets_and_operations": "passed",
     "no_recruitment_screens": "passed"
   },
-  "local_doc_links": "passed",
+  "local_doc_links": "passed_current_documents_archival_snapshots_excluded",
   "structural_contract_checks": "passed",
   "real_device_and_cloud_tests": "not_run"
 }

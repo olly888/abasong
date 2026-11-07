@@ -2986,6 +2986,7 @@ export interface components {
             address_text?: string;
             /** Format: uuid */
             apartment_id?: string | null;
+            confirmed_address?: components["schemas"]["SearchAddress"] | (never | null);
             /** @enum {string} */
             method?: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
             value?: string;
@@ -3008,6 +3009,7 @@ export interface components {
             /** @enum {string} */
             state: "needs_review" | "ready" | "removed" | "committed" | "failed";
             confirmation_revision: number | null;
+            confirmed_address?: components["schemas"]["SearchAddress"] | (never | null);
             commit_result?: components["schemas"]["ImportCommitResult"];
         };
         ImportCandidatePage: {
@@ -3061,6 +3063,8 @@ export interface components {
             contribution_id: string | null;
             error_code: string | null;
             retryable: boolean;
+            /** Format: uuid */
+            apartment_id?: string | null;
         };
         ImportCommitResponse: {
             batch: components["schemas"]["ImportBatch"];

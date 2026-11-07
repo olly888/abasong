@@ -13435,6 +13435,14 @@ components:
           type: string
           format: uuid
           nullable: true
+        confirmed_address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
         method:
           type: string
           enum:
@@ -13512,6 +13520,14 @@ components:
           type: integer
           minimum: 1
           nullable: true
+        confirmed_address:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/SearchAddress'
+          - type: object
+            nullable: true
+            enum:
+            - null
         commit_result:
           $ref: '#/components/schemas/ImportCommitResult'
       required:
@@ -13674,6 +13690,10 @@ components:
           nullable: true
         retryable:
           type: boolean
+        apartment_id:
+          type: string
+          format: uuid
+          nullable: true
       required:
       - candidate_id
       - confirmed_revision

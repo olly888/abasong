@@ -14,10 +14,12 @@ export async function restoreDraftView(
         id: item.id,
         sourceId: item.source_ids[0] ?? "",
         address: item.address_text,
+        sourceAddress: item.address_text,
         value: item.value,
         scope: item.scope.label ?? "门别未注明",
         issues: [...item.issues],
         target: null,
+        confirmedAddress: item.confirmed_address ?? null,
         selected: false,
         revision: item.revision,
       };
@@ -28,6 +30,7 @@ export async function restoreDraftView(
       const result = item.commit_result;
       if (result) {
         row.privateId = result.private_record_id ?? undefined;
+        row.sharedApartmentId = result.apartment_id ?? undefined;
         row.shared = ["active", "pending", "same_value"].includes(
           result.share_status,
         );

@@ -181,6 +181,7 @@ async function main() {
       "0019_profile_availability_intent.sql",
       "0020_dsp_team_profiles.sql",
       "0021_circle_text.sql",
+      "0022_circle_media.sql",
     ])
       await db.query(readFileSync("database/migrations/" + f, "utf8"));
     const password = randomBytes(24).toString("hex");

@@ -1,8 +1,10 @@
+import { purgeCircleMedia } from "./circle-cleanup.js";
 import { PushDispatcher } from "./push-dispatcher.js";
 import { ExpoPushProvider } from "./push-provider.js";
 import { Pool } from "pg";
 import {
   assertRuntimeEnvironment,
+  circleStorage,
   databaseConnectionOptions,
 } from "@abasong/runtime";
 import { heartbeatPath, writeHeartbeat } from "./heartbeat.js";
@@ -34,6 +36,7 @@ async function main() {
         )
       : null;
   const path = heartbeatPath();
+  const media = circleStorage("worker");
   let lastHealthy: boolean | undefined;
   // Disabled by default. Only explicit expo mode consumes supported push events.
   async function probe() {
@@ -46,6 +49,15 @@ async function main() {
       if (installed.rows[0]?.installed)
         await pool.query("SELECT abasong.purge_expired_import_drafts(100)");
       if (dispatcher) await dispatcher.tick();
+      if (
+        media &&
+        (
+          await pool.query(
+            "SELECT to_regclass('abasong.circle_media') IS NOT NULL AS installed",
+          )
+        ).rows[0]?.installed
+      )
+        await purgeCircleMedia(pool, media);
       healthy = true;
     } catch {
       // Do not emit raw database errors.

@@ -1259,7 +1259,8 @@
         "缩略图加载失败保留正文"
       ],
       "api_operations": [
-        "listPosts"
+        "listPosts",
+        "readCircleMedia"
       ],
       "requirements": [
         "V12-16",
@@ -1333,7 +1334,8 @@
         "getPost",
         "listComments",
         "createComment",
-        "removeComment"
+        "removeComment",
+        "readCircleMedia"
       ],
       "requirements": [
         "V12-16",
@@ -1392,7 +1394,8 @@
       ],
       "api_operations": [
         "createPost",
-        "listMyRequests"
+        "listMyRequests",
+        "uploadCircleMedia"
       ],
       "requirements": [
         "V12-16",

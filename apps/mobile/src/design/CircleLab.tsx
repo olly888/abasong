@@ -40,7 +40,7 @@ function Lab() {
     void request<Fixture>("/fixture", { signal: c.signal })
       .then((f) => {
         if (f.isolated && f.scenario === "circle") setFixture(f);
-        else setError("需要 B5-03 本机隔离服务");
+        else setError("需要 B5-04 本机隔离服务");
       })
       .catch(() => {
         if (!c.signal.aborted) setError("本机隔离服务未就绪");
@@ -61,11 +61,19 @@ function Lab() {
   const open = (id: string, comment?: string) =>
     router.push(link("detail", id, comment));
   const info = (label: string) => setNote(label);
-  const arm = async (operation: "circle_post" | "circle_reply") => {
+  const arm = async (
+    operation:
+      "circle_post" | "circle_reply" | "circle_upload" | "circle_image",
+  ) => {
     try {
       await request("/fixture/control", {
         method: "POST",
-        body: { action: "fault", operation, after: true },
+        body: {
+          action: "fault",
+          operation,
+          after: operation === "circle_post" || operation === "circle_reply",
+          skip: operation === "circle_upload" ? 1 : 0,
+        },
       });
       setNote("TEST · 已设一次响应丢失");
     } catch {
@@ -74,7 +82,7 @@ function Lab() {
   };
   if (!fixture)
     return (
-      <PageFrame compact title="TEST · B5-03">
+      <PageFrame compact title="TEST · B5-04">
         <FormError message={error} />
         <Text>仅本机隔离服务</Text>
       </PageFrame>
@@ -122,6 +130,16 @@ function Lab() {
             {note ? " · " + note : ""}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            <ActionButton
+              label="第二张上传失败"
+              variant="text"
+              onPress={() => void arm("circle_upload")}
+            />
+            <ActionButton
+              label="大图加载失败"
+              variant="text"
+              onPress={() => void arm("circle_image")}
+            />
             <ActionButton
               label={actor === "owner" ? "切换司机" : "切换发布人"}
               variant="text"

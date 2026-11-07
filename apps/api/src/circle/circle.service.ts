@@ -11,6 +11,9 @@ import { inboxCursor } from "../requests/messaging-input";
 import { requestId } from "../requests/request-input";
 import { RequestsService } from "../requests/requests.service";
 
+import { attachCircleMedia } from "./circle-media";
+import { notBlocked, postAuthor, visiblePost } from "./circle-visibility";
+
 type S = components["schemas"];
 const topic = z.enum(["delivery_question", "experience", "on_the_road"]);
 const textInput = (max: number) =>
@@ -36,6 +39,13 @@ const postInput = z
     request_id: z.uuid().optional(),
     region_id: z.uuid().optional(),
     topic: topic.optional(),
+    media_ids: z
+      .array(z.uuid())
+      .max(3)
+      .refine(
+        (ids) => new Set(ids.map((id) => id.toLowerCase())).size === ids.length,
+      )
+      .optional(),
   })
   .strict();
 const commentInput = z.object({ body: textInput(1000) }).strict();
@@ -69,15 +79,6 @@ function rejectAccessCode(body: string) {
 const unavailable = () =>
   new ApiError(404, "NOT_FOUND", "内容已删除或不可查看");
 
-function notBlocked(user: string) {
-  return `NOT EXISTS(SELECT 1 FROM abasong.blocks b
-    WHERE (b.blocker_id=$1 AND b.blocked_id=${user})
-       OR (b.blocker_id=${user} AND b.blocked_id=$1))`;
-}
-
-const postAuthor = `JOIN abasong.users pu ON pu.id=p.author_id AND pu.status='active'
-  JOIN abasong.profiles pp ON pp.user_id=p.author_id`;
-const visiblePost = `p.status='visible' AND ${notBlocked("p.author_id")}`;
 const commentAuthor = `JOIN abasong.users cu ON cu.id=c.author_id AND cu.status='active'
   JOIN abasong.profiles cp ON cp.user_id=c.author_id`;
 const visibleComment = `c.status='visible' AND ${notBlocked("c.author_id")}`;
@@ -94,6 +95,8 @@ const postSelect = `SELECT p.id,p.body,p.topic,p.created_at,
     'parcel_count',r.parcel_count,'drivers_needed',r.drivers_needed,
     'remaining_parcels',r.remaining_parcels,'remaining_drivers',r.remaining_drivers
   ) END request,
+  COALESCE((SELECT jsonb_agg(jsonb_build_object('id',m.id,'width',m.width,'height',m.height)
+    ORDER BY m.position) FROM abasong.circle_media m WHERE m.post_id=p.id),'[]'::jsonb) media,
   (SELECT count(*)::int FROM abasong.comments c ${commentAuthor}
     WHERE c.post_id=p.id AND ${visibleComment}) reply_count
   FROM abasong.posts p ${postAuthor}
@@ -257,6 +260,7 @@ export class CircleService {
               ],
             )
           ).rows[0]!;
+          await attachCircleMedia(c, actor.userId, id, input.media_ids ?? []);
           return { id, value: await this.post(c, actor, id) };
         },
         (id) => this.post(c, actor, id),

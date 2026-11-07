@@ -92,3 +92,6 @@ export function assertRuntimeEnvironment(
   }
   return "pilot-dev";
 }
+
+export { circleStorage } from "./circle-storage";
+export type { CircleStorage, CircleVariant } from "./circle-storage";

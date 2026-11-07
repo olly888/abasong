@@ -324,6 +324,7 @@ export function CircleDetail({
       ) : (
         <>
           <CirclePostCard
+            request={request}
             post={post}
             onAuthor={onAuthor}
             onRequest={onRequest}

@@ -10,16 +10,19 @@ import {
   scenarioLabels,
   statusLabels,
 } from "../requests/presentation";
-import { circleTopics, type Circle } from "./session";
+import { CirclePhotoGallery } from "./CirclePhotos";
+import { circleTopics, type Circle, type CircleRequest } from "./session";
 
 export function CirclePostCard({
   post,
+  request,
   onOpen,
   onAuthor,
   onRequest,
   onMore,
 }: {
   post: Circle["Post"];
+  request: CircleRequest;
   onOpen?: () => void;
   onAuthor: (id: string) => void;
   onRequest: (id: string) => void;
@@ -90,6 +93,9 @@ export function CirclePostCard({
           {post.body}
         </Text>
       )}
+      {post.media?.length ? (
+        <CirclePhotoGallery key={post.id} post={post} request={request} />
+      ) : null}
       {post.has_request ? (
         <CircleSource request={post.request} onOpen={onRequest} />
       ) : null}

@@ -97,6 +97,7 @@ export function CircleFeed({
 
   const item = ({ item: p }: ListRenderItemInfo<Circle["Post"]>) => (
     <CirclePostCard
+      request={request}
       post={p}
       onOpen={() => onOpen(p.id)}
       onAuthor={onAuthor}

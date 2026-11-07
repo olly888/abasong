@@ -5771,7 +5771,7 @@ paths:
   /v1/posts:
     get:
       operationId: listPosts
-      summary: 互助文字与同ID需求卡
+      summary: 互助文字、受控图片与同ID需求卡
       tags:
       - posts
       responses:
@@ -5850,7 +5850,7 @@ paths:
           default: 20
     post:
       operationId: createPost
-      summary: 创建文字动态；不许夹带门码/住户信息
+      summary: 创建文字动态及最多3张本人已上传图片；不许夹带门码/住户信息
       tags:
       - posts
       responses:
@@ -5923,6 +5923,192 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PostInput'
+  /v1/me/circle-media/{upload_id}:
+    put:
+      operationId: uploadCircleMedia
+      summary: 本人上传单张静态图片，最多5 MiB，编号重试复用；返回内部媒体ID与有效期
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+              description: 敏感响应不缓存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircleMediaUpload'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '410':
+          description: 待发布上传已过期
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: 图片超过5 MiB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema: *id001
+      x-sensitive-response: true
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+  /v1/posts/{post_id}/media/{media_id}/{variant}:
+    get:
+      operationId: readCircleMedia
+      summary: 每次检查动态、图片绑定和双向屏蔽后返回JPEG
+      tags:
+      - posts
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - private, no-store
+              description: 敏感响应不缓存
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema: *id001
+      - name: media_id
+        in: path
+        required: true
+        schema: *id001
+      - name: variant
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - thumb
+          - full
+      x-sensitive-response: true
   /v1/posts/{post_id}:
     get:
       operationId: getPost
@@ -11569,8 +11755,57 @@ components:
           - delivery_question
           - experience
           - on_the_road
+        media_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 3
+          uniqueItems: true
       required:
       - body
+    CircleMedia:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        width:
+          type: integer
+          minimum: 1
+          maximum: 2048
+        height:
+          type: integer
+          minimum: 1
+          maximum: 2048
+      required:
+      - id
+      - width
+      - height
+    CircleMediaUpload:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        width:
+          type: integer
+          minimum: 1
+          maximum: 2048
+        height:
+          type: integer
+          minimum: 1
+          maximum: 2048
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - width
+      - height
+      - expires_at
     CircleAuthor:
       type: object
       additionalProperties: false
@@ -11754,6 +11989,11 @@ components:
             nullable: true
             enum:
             - null
+        media:
+          type: array
+          items:
+            $ref: '#/components/schemas/CircleMedia'
+          maxItems: 3
         reply_count:
           type: integer
           minimum: 0
@@ -11768,6 +12008,7 @@ components:
       - region
       - has_request
       - request
+      - media
       - reply_count
       - created_at
     CommentInput:

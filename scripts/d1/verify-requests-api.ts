@@ -1,5 +1,6 @@
 import { verifyDrivers } from "./verify-drivers";
 import { verifyPush } from "./verify-push";
+import { verifyCircleMedia } from "./verify-circle-media";
 import { verifyCircleServices } from "./verify-circle-services";
 import { verifyTeamServices } from "./verify-team-services";
 import { verifyDeliveryServices } from "./verify-delivery-services";
@@ -13,7 +14,9 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync, readdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { parseEnv } from "node:util";
 import { setTimeout as pause } from "node:timers/promises";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
@@ -27,6 +30,7 @@ async function main() {
   assert.equal(adminUrl.username, "postgres");
   assert.equal(adminUrl.pathname, "/abasong_d0");
   assert.equal(runtime.username, "abasong_api_local");
+  const mediaDir = mkdtempSync(join(tmpdir(), "abasong-circle-api-"));
   const name = "abasong_d2_requests_test_" + randomBytes(8).toString("hex"),
     sensitiveRole = "abasong_message_test_" + randomBytes(8).toString("hex"),
     admin = new Client({ connectionString: adminUrl.href });
@@ -214,6 +218,7 @@ async function main() {
           DATA_ENCRYPTION_PROVIDER: "local-development",
           LOCAL_DATA_KEK: randomBytes(32).toString("hex"),
           DATABASE_URL: runtime.href,
+          CIRCLE_MEDIA_DIRECTORY: mediaDir,
           DATABASE_SENSITIVE_URL: sensitive.href,
           AUTH_ISSUER: issuer,
           AUTH_AUDIENCE: "authenticated",
@@ -265,6 +270,7 @@ async function main() {
       "V12.0019",
       "V12.0020",
       "V12.0021",
+      "V12.0022",
     ]) {
       const missingVersion = (
         await db.query(
@@ -286,7 +292,7 @@ async function main() {
       await request("/health/ready", "GET", undefined, 200);
     }
     console.log(
-      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015–0021 readiness denied.`,
+      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015–0022 readiness denied.`,
     );
     await request("/v1/requests", "GET", "", 401);
     await request(
@@ -1771,6 +1777,16 @@ async function main() {
       region,
       workerUrl: workerUrl.href,
     });
+    checks += await verifyCircleMedia({
+      db,
+      base: `http://127.0.0.1:${port}`,
+      auth,
+      other,
+      owner,
+      reader,
+      directory: mediaDir,
+      workerUrl: workerUrl.href,
+    });
     await db.query(
       "UPDATE abasong.users SET session_invalid_before=now() WHERE id=$1",
       [owner],
@@ -1806,6 +1822,7 @@ async function main() {
       await admin.query(`DROP ROLE ${sensitiveRole}`);
     }
     await admin.end();
+    rmSync(mediaDir, { recursive: true, force: true });
   }
 }
 void main().catch((error: unknown) => {

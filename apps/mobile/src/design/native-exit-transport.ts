@@ -1,4 +1,7 @@
-import type { ContributionRequest } from "../apartments/contribution-address-search";
+import type {
+  BusinessRequestOptions,
+  ProfileRequest,
+} from "../profile/profile-session";
 import { AccountError } from "../auth/api-client";
 export type ExitActor = "owner" | "driver";
 export type ExitFixture = {
@@ -11,18 +14,10 @@ export type ExitFixture = {
 export function nativeExitTransport(
   base: string,
   actor: ExitActor,
-): ContributionRequest {
+): ProfileRequest {
   if (!["http://127.0.0.1:3028", "http://10.0.2.2:3028"].includes(base))
     throw new Error("TEST 仅允许本机临时服务");
-  return async <T>(
-    path: string,
-    options?: {
-      method?: string;
-      body?: unknown;
-      key?: string;
-      signal?: AbortSignal;
-    },
-  ) => {
+  return async <T>(path: string, options?: BusinessRequestOptions) => {
     if (
       !(
         path.startsWith("/v1/") ||
@@ -37,19 +32,32 @@ export function nativeExitTransport(
     if (options?.signal?.aborted) c.abort();
     const timer = setTimeout(abort, 15000);
     try {
-      const r = await fetch(base + path, {
+      const transport =
+        options?.raw || options?.acceptJpeg
+          ? (await import("expo/fetch")).fetch
+          : fetch;
+      const r = await transport(base + path, {
         method: options?.method ?? "GET",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": options?.raw
+            ? "application/octet-stream"
+            : "application/json",
           "X-Abasong-Test-Actor": actor,
           ...(options?.key ? { "Idempotency-Key": options.key } : {}),
         },
         body:
-          options?.body === undefined
+          options?.raw ??
+          (options?.body === undefined
             ? undefined
-            : JSON.stringify(options.body),
+            : JSON.stringify(options.body)),
         signal: c.signal,
       });
+      if (
+        r.ok &&
+        options?.acceptJpeg &&
+        r.headers.get("Content-Type") === "image/jpeg"
+      )
+        return (await r.arrayBuffer()) as T;
       const value = await r.json();
       if (!r.ok)
         throw new AccountError(

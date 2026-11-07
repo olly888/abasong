@@ -1,0 +1,189 @@
+{
+  "version": "R4-13-unlisted-batch-closure",
+  "date": "2026-11-06",
+  "base": "35b16444a49ec2ae535f23351d365de111c2a8a3",
+  "branch": "codex/r4-13-unlisted-import-closure",
+  "status": "scoped_local_core_and_dual_native_exit_PASS",
+  "scoped_batch_complete": true,
+  "report": "R4_13_核心差异关闭与未收录截图方案.md",
+  "engineering": {
+    "files": 85,
+    "tests": 492,
+    "lint_types_build": "PASS"
+  },
+  "unlisted_HTTP_PG": {
+    "assertions": 41,
+    "calls": 183,
+    "status": "PASS",
+    "actual_API_PG": true,
+    "provider": "synthetic_not_live_Mapbox"
+  },
+  "import_HTTP_PG": 124,
+  "library_HTTP_PG": 295,
+  "native": {
+    "ios": "PASS_actual_components_200_partial_failure_retry_return_999_to_204_reconfirmation_return",
+    "android": "PASS_actual_220_partial_failure_retry_return_999_rejection_reopen_204_catalog_selection_reconfirm_and_return",
+    "android_initial_feedback": "normal_but_current_screen_and_zero_write_counts_conflicted_not_counted_as_pass",
+    "android_recovery": "tool_restarted_preconfirmed_synthetic_220_and_verified_actual_writes_no_handtyped_or_OCR_quality_claim",
+    "normal_route_real_accounts": false,
+    "physical_acceptance": false,
+    "new_binary_compilation": false,
+    "Hermes_export": "PASS_ios_android",
+    "prototype": "actual_browser_B05_no_full_dropdown_missing_city_blocks_literal_preserved_shared_1610_return_recenter_excludes_unlocated_candidate",
+    "prototype_full_old_10_check_rerun": false,
+    "android_owner_reference": "call_a1772a6134814b97a51b900894d45380:0",
+    "android_owner_result": "normal_followed_by_observed_204_same_value_result_and_204_return",
+    "final_visual": "PASS_both_address_first_single_line_group_without_duplicate_address_row_and_intact_literal"
+  },
+  "new_contracts": {
+    "confirmed_address": "optional_nullable_candidate_edit_and_candidate",
+    "apartment_id": "optional_nullable_commit_result",
+    "supplier_evidence": "server_only_encrypted_not_in_DTO",
+    "paths": 88,
+    "operations": 112,
+    "schemas": 160
+  },
+  "new_migrations": false,
+  "new_dependencies": false,
+  "cloud_changed": false,
+  "real_account_grants": false,
+  "D0_migrations": 17,
+  "D0_tables": 54,
+  "human_participants": 0,
+  "b5_ready": true,
+  "release_ready": false,
+  "cleanup": {
+    "HTTP_runner": "PASS_owned_footprint_restored",
+    "live_fixture": "stopped_owned_resources_cleaned",
+    "final_remaining_counts": {
+      "databases": 0,
+      "roles": 0
+    }
+  },
+  "secret_scans": {
+    "staged": "PASS",
+    "all_history": "PASS_local_and_remote_exact_code_head"
+  },
+  "latest_commit_CI": "document_only_closure_must_independently_pass_PR101_checks_no_old_CI_substitution",
+  "code_fingerprints": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "624a2d43c2cb78de53f08ab60452b1db719204d57a6cc672d30cb67e7ef5d3d8"
+    },
+    {
+      "path": "apps/api/src/apartments/apartments.service.ts",
+      "sha256": "c05da2c227fd102aa821bfe61400b59df8bfc4b8af4f5c26b6989eaeb28a9fd9"
+    },
+    {
+      "path": "apps/api/src/imports/imports.service.ts",
+      "sha256": "fc9f9c467c1a562ab365f80dc914bf703cd4c41d01140ba033b053b1d4098ae4"
+    },
+    {
+      "path": "apps/api/src/nearby/nearby.service.ts",
+      "sha256": "c87b657630c65e20cb51efb5e8ca3a9d5b6ca6e2787471c7f3ec2fe5c9c3e86a"
+    },
+    {
+      "path": "apps/mobile/src/apartments/ContributionAddressField.tsx",
+      "sha256": "e865e4941a81e42a9ba941ae588bfab726eb059ca3ed039c1449078d8987d772"
+    },
+    {
+      "path": "apps/mobile/src/app/unlisted-import-lab.tsx",
+      "sha256": "033b213da6b60e709454a7b91d27e153fc2d335bfbf28cb15bc0954fb6796431"
+    },
+    {
+      "path": "apps/mobile/src/design/UnlistedImportLab.tsx",
+      "sha256": "7a4c6350dadea24f993f102e62e94fac76a3184d60c183ad1d84af098fa676e4"
+    },
+    {
+      "path": "apps/mobile/src/imports/ImportScreen.tsx",
+      "sha256": "3c808dcfd5c74edff8457eee418b1fc4c031aee4e769cd6ec15f3fed20da9d08"
+    },
+    {
+      "path": "apps/mobile/src/imports/candidate-address.test.ts",
+      "sha256": "d7c8d55f8e0c6bdd8a81e859d4105e6f63d8c415c6ceb8a65051f3136643cc3b"
+    },
+    {
+      "path": "apps/mobile/src/imports/candidate-address.ts",
+      "sha256": "b06b12a3a3f98caa74f76e0d40f439d333541763ffe40df58e3044d9b3d13e01"
+    },
+    {
+      "path": "apps/mobile/src/imports/commit-patch.ts",
+      "sha256": "440bcb965fcdca25ba23f4be3a0487b16246b641f9bfe3713a5b063a5f72d05e"
+    },
+    {
+      "path": "apps/mobile/src/imports/restore-draft.ts",
+      "sha256": "a859e45973015649bf08ede0ad5c85ac7a0e56214606d8f7f252122004633606"
+    },
+    {
+      "path": "apps/mobile/src/imports/server-draft-core.ts",
+      "sha256": "17d85b7d32a6654d6f0d4f82f9a33c77ee0bd774aea1a26f91ae468605792e04"
+    },
+    {
+      "path": "apps/mobile/src/imports/server-draft.test.ts",
+      "sha256": "01c46048922d9b0485f4e128123b0a68ca127641a6ba158180936d0442a412a6"
+    },
+    {
+      "path": "apps/mobile/src/imports/types.ts",
+      "sha256": "7c61783f2a33121509aae501cea4e6bda7cda5f42807e2a62d9b455c38ab8b28"
+    },
+    {
+      "path": "packages/contracts/src/generated.ts",
+      "sha256": "e864e92f2094000d525aab5494a12ea653db87b828d1061344c7ba67774ccc8c"
+    },
+    {
+      "path": "scripts/d1/native-exit-fixture.ts",
+      "sha256": "e479ba85947c1c1e00cd6db01c00b9ffa1f7011362a47fd153cfc3e6b1ca7fab"
+    },
+    {
+      "path": "scripts/d1/run-native-exit.ts",
+      "sha256": "2582d1aefebdfaf8b16e8078c7641dc854778f6630b51260796b2d03245693ec"
+    },
+    {
+      "path": "scripts/d1/verify-native-contribution.ts",
+      "sha256": "0ebfb8b3062954418aabc83f999ccaa6f04a47d378bb9729194582042699bdb6"
+    },
+    {
+      "path": "scripts/d1/verify-unlisted-import.ts",
+      "sha256": "ba3b0ee883ad276a0880d62fc4d65a8e65ac3e2cb4a7573fa5c772b309d4f6d3"
+    },
+    {
+      "path": "scripts/import_contracts.py",
+      "sha256": "eb938185ac0aa539d466e55df6c8567e435f5f3b9712d9504bf2e3ee6ab91675"
+    },
+    {
+      "path": "scripts/validate_v12_contracts.py",
+      "sha256": "e390187c024146a799b30db0d02f05df44e6ceb7562cb9068f229fa55b59d60f"
+    }
+  ],
+  "known_contribution_HTTP": {
+    "assertions": 27,
+    "calls": 75,
+    "status": "PASS"
+  },
+  "pull_request": "https://github.com/olly888/abasong/pull/101",
+  "ci_source": "https://github.com/olly888/abasong/pull/101/checks",
+  "implementation_ci": {
+    "head_sha": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+    "run_id": 42328650702,
+    "conclusion": "success",
+    "url": "https://github.com/olly888/abasong/actions/runs/42328650702"
+  },
+  "artifacts": [
+    "artifacts/r4-13/ios-partial-failure.png",
+    "artifacts/r4-13/ios-return-200.png",
+    "artifacts/r4-13/ios-corrected-204.png",
+    "artifacts/r4-13/android-partial-failure.png",
+    "artifacts/r4-13/android-return-204.png",
+    "artifacts/r4-13/ios-final-review.png",
+    "artifacts/r4-13/android-final-review.png",
+    "artifacts/r4-13/native-live-summary.json",
+    "artifacts/r4-13/final-test-footprint.json"
+  ],
+  "next_task": "B5-01",
+  "readiness_scope": "controlled_B5_01_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
+  "validated_code_commit": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+  "closed_core_gaps": [
+    "D08-B05-unlisted-batch-address"
+  ],
+  "open_local_R4_core_P0": []
+}

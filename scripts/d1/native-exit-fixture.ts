@@ -26,9 +26,12 @@ async function main() {
   const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
   assert(["delivery", "contribution"].includes(scenario));
   const verify = process.env.ABASONG_NATIVE_EXIT_VERIFY ?? "default";
-  assert(["default", "collaboration"].includes(verify));
+  assert(["default", "collaboration", "unlisted"].includes(verify));
+  assert(verify !== "unlisted" || scenario === "contribution");
   assert(verify !== "collaboration" || scenario === "delivery");
   let apartments: string[] = [];
+  let addressStorage = true;
+  let providerCalls = 0;
   const env = parseEnv(readFileSync(".env", "utf8")),
     adminUrl = localTarget(env.DATABASE_ADMIN_URL),
     runtime = localTarget(env.DATABASE_URL),
@@ -52,9 +55,17 @@ async function main() {
   const provider = createServer((req, res) => {
     res.setHeader("Content-Type", "application/json");
     if (req.url?.startsWith("/mapbox-permanent?")) {
+      providerCalls++;
+      if (!addressStorage) {
+        res.writeHead(503);
+        res.end(JSON.stringify({ error: "TEST provider unavailable" }));
+        return;
+      }
       const query =
         new URL(req.url, "http://127.0.0.1").searchParams.get("q") ?? "";
-      const number = /^(100|200) TEST (Ave|Avenue)\b/i.exec(query)?.[1];
+      const number = /^(100|[23][0-9]{2}) TEST (Ave|Avenue)\b/i.exec(
+        query,
+      )?.[1];
       res.end(
         JSON.stringify({
           features: number
@@ -97,12 +108,17 @@ async function main() {
     createdRole = false,
     stopping = false;
   let lifetime: ReturnType<typeof setTimeout> | undefined;
-  const resourceFile = `artifacts/${scenario === "contribution" ? "r4-11" : verify === "collaboration" ? "r4-12" : "r4-10"}/test-resources/${name}.json`;
+  const artifactBatch =
+    verify === "unlisted"
+      ? "r4-13"
+      : scenario === "contribution"
+        ? "r4-11"
+        : verify === "collaboration"
+          ? "r4-12"
+          : "r4-10";
+  const resourceFile = `artifacts/${artifactBatch}/test-resources/${name}.json`;
   const recordResources = (cleaned = false) => {
-    mkdirSync(
-      `artifacts/${scenario === "contribution" ? "r4-11" : verify === "collaboration" ? "r4-12" : "r4-10"}/test-resources`,
-      { recursive: true },
-    );
+    mkdirSync(`artifacts/${artifactBatch}/test-resources`, { recursive: true });
     writeFileSync(
       resourceFile,
       JSON.stringify(
@@ -164,10 +180,14 @@ async function main() {
         ).rows;
         const counts = (
           await db!.query(
-            "SELECT (SELECT count(*)::int FROM abasong.requests) requests,(SELECT count(*)::int FROM abasong.applications) applications,(SELECT count(*)::int FROM abasong.messages WHERE kind='text') messages,(SELECT count(*)::int FROM abasong.conversations) conversations,(SELECT count(*)::int FROM abasong.access_records) access_records,(SELECT count(*)::int FROM abasong.access_contribution_sources) contribution_sources,(SELECT count(*)::int FROM abasong.personal_access_records) private_records",
+            "SELECT (SELECT count(*)::int FROM abasong.apartments) apartments,(SELECT count(*)::int FROM abasong.requests) requests,(SELECT count(*)::int FROM abasong.applications) applications,(SELECT count(*)::int FROM abasong.messages WHERE kind='text') messages,(SELECT count(*)::int FROM abasong.conversations) conversations,(SELECT count(*)::int FROM abasong.access_records) access_records,(SELECT count(*)::int FROM abasong.access_contribution_sources) contribution_sources,(SELECT count(*)::int FROM abasong.personal_access_records) private_records",
           )
         ).rows[0];
-        return reply(200, { ...counts, states: rows });
+        return reply(200, {
+          ...counts,
+          provider_calls: providerCalls,
+          states: rows,
+        });
       }
       if (req.url === "/fixture/control" && req.method === "POST") {
         const b = JSON.parse(await body(req)) as Record<string, unknown>;
@@ -187,6 +207,25 @@ async function main() {
         ) {
           fault = { operation: String(b.operation), after: b.after === true };
           return reply(200, { armed: true });
+        }
+        if (
+          verify === "unlisted" &&
+          b.action === "access_qualification" &&
+          typeof b.enabled === "boolean"
+        ) {
+          await db!.query(
+            "UPDATE abasong.capabilities SET revoked_at=CASE WHEN $2 THEN NULL ELSE now() END WHERE user_id=$1 AND capability='access.contribute'",
+            [owner, b.enabled],
+          );
+          return reply(200, { enabled: b.enabled });
+        }
+        if (
+          verify === "unlisted" &&
+          b.action === "address_storage" &&
+          typeof b.enabled === "boolean"
+        ) {
+          addressStorage = b.enabled;
+          return reply(200, { enabled: addressStorage });
         }
         if (
           scenario === "contribution" &&

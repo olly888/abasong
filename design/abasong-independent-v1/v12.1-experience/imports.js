@@ -5,7 +5,7 @@
     { id:'s1', title:'Westline · 行人门', lines:['Westline Apartments','1200 W Pine Ave, Los Angeles, CA','Pedestrian gate: 0017#'], rows:[{apt:'a1',code:'0017#',scope:'行人门',status:'ready'}] },
     { id:'s2', title:'Westline · 已有资料', lines:['Westline Apartments','1200 W Pine Ave, Los Angeles, CA','Pedestrian gate: 1268#'], rows:[{apt:'a1',code:'1268#',scope:'行人门',status:'ready'}] },
     { id:'s3', title:'Palm Court · 字符待确认', lines:['Palm Court','1228 W Pine Ave, Los Angeles, CA','Main gate: #74I2'], rows:[{apt:'a2',code:'#74I2',scope:'大门',status:'needs_review',reason:'请确认 I 是字母还是数字'}] },
-    { id:'s4', title:'Olive House · 地址不完整', lines:['Olive House','Side gate: *0390','Building address unavailable'], rows:[{apt:null,code:'*0390',scope:'侧门',status:'needs_review',reason:'请选择所属公寓'}] },
+    { id:'s4', title:'Olive House · 地址不完整', lines:['Olive House','Side gate: *0390','Building address unavailable'], rows:[{apt:null,code:'*0390',scope:'侧门',status:'needs_review',reason:'请核对完整公寓地址'}] },
     { id:'s5', title:'两处公寓资料', lines:['1200 W Pine Ave, Los Angeles, CA','Pedestrian gate: 0146#','1228 W Pine Ave, Los Angeles, CA','Side gate: *1020'], rows:[{apt:'a1',code:'0146#',scope:'行人门',status:'ready'},{apt:'a2',code:'*1020',scope:'侧门',status:'ready'}] },
     { id:'s6', title:'新公寓 · 尚未收录', lines:['Cedar Flats','1610 W Cedar Ave, Los Angeles, CA','Main gate: 0073*'], rows:[{apt:null,address:'1610 W Cedar Ave, Los Angeles, CA',name:'Cedar Flats',code:'0073*',scope:'大门',status:'needs_review',reason:'尚未匹配到公寓'}] },
   ];
@@ -61,13 +61,24 @@
     const editable=!finished.has(r.status)&&r.status!=='removed';
     return `<article class="import-row ${r.status==='needs_review'?'attention':''}" data-import-row="${r.id}"><div class="import-row-head">${r.status==='ready'?`<input type="checkbox" data-import-check="${r.id}" aria-label="提交${esc(address(r))} ${esc(r.scope)} ${esc(r.code)}" ${r.selected?'checked':''}>`:I(r.status==='needs_review'?'warning':'check')}<div class="import-row-main"><b>${esc(apartment(r.apt)?.name||r.name||'公寓待确认')}</b><div class="address">${esc(address(r))}</div></div><span class="import-badge ${r.status==='needs_review'||r.status==='failed'?'warning':''}">${statusText[r.status]}</span></div><div class="import-code">${esc(r.code)}</div><div class="caption">${esc(r.scope||'大门')}</div>${r.reason&&!finished.has(r.status)?`<p class="import-issue">${esc(r.reason)}</p>`:''}<div class="import-row-actions">${editable?btn('import-edit','编辑','text-btn',attr(r.id)):''}</div></article>`;
   }
+  function addressSuggestions(r) {
+    const q=(r.addressQuery||'').trim().toLowerCase();
+    if(q.length<2)return '';
+    return model.apartments.filter(a=>(a.address+' '+a.name).toLowerCase().includes(q)).slice(0,5).map(a=>btn('import-address-pick',a.address,'text-btn',attr(a.id))).join('');
+  }
+  function addressFields(r) {
+    if(r.addressMode==='manual')return `<div class="code-address-verification">${[['address_line1','门牌号与街道',200],['city','城市',100],['state','州',2],['postal_code','邮编（选填）',10]].map(([name,label,max])=>`<label class="field"><span class="field-label">${label}</span><input name="${name}" value="${esc(r[name]||'')}" maxlength="${max}"></label>`).join('')}${btn('import-address-change','使用地址联想','text-btn')}</div>`;
+    const chosen=apartment(r.apt);
+    if(chosen)return `<div class="flat-card"><b>公寓地址</b><p>${esc(chosen.address)}</p>${btn('import-address-change','更换地址','text-btn')}</div>`;
+    return `<label class="field"><span class="field-label">公寓地址</span><input name="addressQuery" value="${esc(r.addressQuery??r.address??'')}" maxlength="300" placeholder="输入门牌号和街道" autocomplete="off"></label><div class="import-address-results">${addressSuggestions(r)}</div>${btn('import-address-manual','手动填写完整地址','text-btn')}`;
+  }
   function editor(original) {
     const r=editDraft||original;
-    return `<form class="import-editor" data-submit="import-edit">${btn('import-preview','查看截图','text-btn',attr(r.source))}<label class="field"><span class="field-label">所属公寓</span><select name="apt"><option value="">选择公寓</option>${model.apartments.map(a=>`<option value="${a.id}" ${r.apt===a.id?'selected':''}>${esc(a.name)} · ${esc(a.address)}</option>`).join('')}<option value="new" ${r.propose?'selected':''}>核对未收录地址</option></select></label><label class="field"><span class="field-label">未收录公寓的英文地址</span><input name="address" value="${esc(r.address||'')}" maxlength="300" placeholder="选择已有公寓时无需填写"></label>${r.propose?`<label class="check-row"><input type="checkbox" name="addressConfirmed" ${r.addressConfirmed?'checked':''}><span>我已核对门牌、街道、城市和州</span></label>`:''}<label class="field"><span class="field-label">门禁码</span><input name="code" value="${esc(r.code)}" maxlength="32" autocomplete="off" spellcheck="false"></label><label class="field"><span class="field-label">适用门别</span><input name="scope" value="${esc(r.scope)}" maxlength="100"></label>${state.errors.import?`<p class="error" role="alert">${esc(state.errors.import)}</p>`:''}<div class="import-editor-actions"><button class="button" type="submit">确认修改</button>${secondary('cancel-edit','取消修改')}${btn('import-remove-row','移除这条资料','text-btn danger',attr(r.id))}</div></form>`;
+    return `<form class="import-editor" data-submit="import-edit">${btn('import-preview','查看截图','text-btn',attr(r.source))}${addressFields(r)}<label class="field"><span class="field-label">门禁码</span><input name="code" value="${esc(r.code)}" maxlength="32" autocomplete="off" spellcheck="false"></label><label class="field"><span class="field-label">适用门别</span><input name="scope" value="${esc(r.scope)}" maxlength="100"></label>${state.errors.import?`<p class="error" role="alert">${esc(state.errors.import)}</p>`:''}<div class="import-editor-actions"><button class="button" type="submit">完成核对</button>${secondary('cancel-edit','取消修改')}${btn('import-remove-row','移除这条资料','text-btn danger',attr(r.id))}</div></form>`;
   }
   function reviewPage() {
     if(blocked())return gate();const j=batch();if(!j)return frame('识别结果',empty('暂无待确认资料',''),secondary('open','选择截图'));
-    if(editing&&getRow(editing))return frame('编辑资料',editor(getRow(editing)));
+    if(editing&&getRow(editing))return frame('核对公寓',editor(getRow(editing)));
     const ready=j.rows.filter(r=>r.status==='ready'), pending=j.rows.filter(r=>r.status==='needs_review'||r.status==='failed');
     const n=ready.filter(r=>r.selected).length;
     return frame('确认识别结果',`${j.paused?secondary('resume-recognize','继续识别剩余截图'):''}<div class="import-summary">${ready.length+pending.length} 条资料 · 已选 ${n} 条</div>${ready.map(item).join('')}${pending.length?`<h2 class="import-section">需要补充 ${pending.length}</h2>${pending.map(item).join('')}`:''}${!ready.length&&!pending.length?empty('没有待确认资料',''):''}${j.failedSources.length?`<div class="flat-card"><b>${j.failedSources.length} 张未识别成功</b>${secondary('retry-ocr','重试这些截图')}</div>`:''}`,`<button class="import-scope-summary" data-action="import-scope-menu" ${j.modeLocked?'disabled':''}><span>保存方式</span><b>${j.share?'共享并保存':'仅自己保存'}</b>${j.modeLocked?'':'<em>更改</em>'}</button>${j.share&&!state.qualified?'<p class="error">共享资格待核验</p>':''}${n?`<label class="check-row import-consent"><input type="checkbox" data-import-consent ${j.confirmed?'checked':''}><span>我已核对，并有权${j.share?'共享':'保存'}所选资料</span></label>`:''}${control('submit',`${j.share?'确认共享':'确认保存'} ${n} 条`,n&&j.confirmed&&(!j.share||state.qualified)?'':'disabled')}`,j.modeLocked?'':btn('import-add-more','添加截图','text-btn'));
@@ -147,13 +158,16 @@
       case'resume-recognize':j.paused=false;nav('importResult');process(j,false);break;
       case'review':openReview();break;
       case'edit':editing=id;editDraft={...getRow(id)};state.errors.import=null;if(state.route.view!=='importReview')nav('importReview');else render();$('.import-editor input[name="code"]')?.focus();break;
+      case'address-change':if(editDraft){editDraft.addressQuery=apartment(editDraft.apt)?.address||editDraft.address||'';editDraft.apt=null;editDraft.propose=false;editDraft.addressConfirmed=false;editDraft.addressMode='search';state.errors.import=null;render();}break;
+      case'address-pick':if(editDraft&&apartment(id)){editDraft.apt=id;editDraft.propose=false;editDraft.address=apartment(id).address;editDraft.addressConfirmed=false;state.errors.import=null;render();}break;
+      case'address-manual':if(editDraft){const parts=(editDraft.addressQuery??editDraft.address??'').split(',').map(s=>s.trim());editDraft.address_line1=parts[0]||'';editDraft.city=parts[1]||'';editDraft.state=(parts[2]||'CA').split(/\s+/)[0];editDraft.postal_code=(parts[2]||'').split(/\s+/)[1]||'';editDraft.addressMode='manual';editDraft.apt=null;editDraft.propose=true;editDraft.addressConfirmed=false;state.errors.import=null;render();}break;
       case'cancel-edit':editing=null;editDraft=null;state.errors.import=null;render();break;
       case'remove-row':{const r=getRow(id);if(r&&!finished.has(r.status)){r.status='removed';r.selected=false;j.confirmed=false;editing=null;editDraft=null;render();}break;}
       case'preview':modal('import-preview',{id});break;
       case'submit':publish(j);break;
       case'retry-submit':publish(j,true);break;
       case'retry-ocr':process(j,true);nav('importResult');break;
-      case'done':leave();break;
+      case'done':{if(j?.share&&!unfinished()){const shared=j.rows.find(r=>['submitted','duplicate'].includes(r.status)&&r.apt);if(shared){state.apt=shared.apt;state.homeView='apartments';state.temporaryDestination=null;state.expanded=false;state.scenario='normal';$('#scenario').value='normal';origin={view:'home',args:{}};originStack=[];}}leave();break;}
       case'cancel':if(j)confirmAction('移除未提交资料？','已经贡献的记录会保留。',()=>{j.generation++;j.status='cancelled';j.rows=j.rows.filter(r=>finished.has(r.status));j.failedSources=[];j.sources=[];closeModal();render();},true);break;
     }
   }
@@ -189,9 +203,24 @@
     baseActions(a,b);
   };
   document.addEventListener('change',e=>{const box=e.target;if(box.matches('[data-import-mode]')){const j=batch();if(!j.modeLocked){j.share=box.value==='share';j.confirmed=false;capture();render();}}if(box.matches('[data-import-check]')){const r=getRow(box.dataset.importCheck);if(r&&r.status==='ready'){r.selected=box.checked;batch().confirmed=false;capture();render();}}if(box.matches('[data-import-consent]')){batch().confirmed=box.checked;capture();render();}});
-  document.addEventListener('input',e=>{if(!e.target.closest('[data-submit="import-edit"]')||!editDraft)return;const t=e.target;if(t.name==='apt'){editDraft.apt=t.value==='new'?null:t.value;editDraft.propose=t.value==='new';}else if(['code','scope','address'].includes(t.name))editDraft[t.name]=t.value;else if(t.name==='addressConfirmed')editDraft.addressConfirmed=t.checked;});
-  document.addEventListener('submit',e=>{if(!e.target.matches('[data-submit="import-edit"]'))return;e.preventDefault();if(blocked())return;const r=getRow(editing);if(!r)return;const fd=new FormData(e.target),apt=String(fd.get('apt')||''),code=String(fd.get('code')||'').trim(),addr=String(fd.get('address')||'').trim();if(!apt||!code||(apt==='new'&&!addr)){state.errors.import='请确认公寓和门禁码；新公寓需填写英文地址';render();return;}if(apt==='new'&&(!/^\d\S*\s+.+,\s*.+,\s*[A-Za-z]{2}(?:\s+\d{5}(?:-\d{4})?)?$/.test(addr)||!fd.get('addressConfirmed'))){state.errors.import='请核对完整英文地址，并勾选地址确认';render();return;}r.addressConfirmed=apt==='new'&&!!fd.get('addressConfirmed');r.apt=apt==='new'?null:apt;r.propose=apt==='new';r.address=addr;r.code=code;r.scope=String(fd.get('scope')||'').trim()||'大门';r.status='ready';r.selected=true;r.reason='';batch().confirmed=false;editing=null;state.errors.import=null;render();});
-  document.addEventListener('change',e=>{if(e.target.closest('[data-submit="import-edit"]')&&e.target.name==='apt')render();});
+  document.addEventListener('input',e=>{
+    if(!e.target.closest('[data-submit="import-edit"]')||!editDraft)return;
+    const t=e.target;
+    if(['code','scope','addressQuery','address_line1','city','state','postal_code'].includes(t.name))editDraft[t.name]=t.value;
+    if(t.name==='addressQuery'){$('.import-address-results').innerHTML=addressSuggestions(editDraft);editDraft.apt=null;editDraft.addressConfirmed=false;}
+  });
+  document.addEventListener('submit',e=>{
+    if(!e.target.matches('[data-submit="import-edit"]'))return;e.preventDefault();if(blocked())return;
+    const r=getRow(editing),d=editDraft;if(!r||!d)return;
+    const fd=new FormData(e.target),code=String(fd.get('code')||'').trim();
+    const manual=d.addressMode==='manual';let addr=apartment(d.apt)?.address||'';
+    if(!code||(!d.apt&&!manual)){state.errors.import='请核对公寓地址和门禁码';render();return;}
+    if(manual){const street=String(fd.get('address_line1')||'').trim(),city=String(fd.get('city')||'').trim(),region=String(fd.get('state')||'').trim().toUpperCase(),postal=String(fd.get('postal_code')||'').trim();
+      if(!/^\d\S*\s+.+/.test(street)||!city||!/^[A-Z]{2}$/.test(region)||(postal&&!/^\d{5}(?:-\d{4})?$/.test(postal))){state.errors.import='请核对门牌、街道、城市和州';render();return;}
+      addr=`${street}, ${city}, ${region}${postal?' '+postal:''}`;
+    }
+    r.addressConfirmed=manual;r.apt=manual?null:d.apt;r.propose=manual;r.address=addr;r.code=code;r.scope=String(fd.get('scope')||'').trim()||'大门';r.status='ready';r.selected=true;r.reason='';batch().confirmed=false;editing=null;editDraft=null;state.errors.import=null;render();
+  });
   const baseReset=resetPrototype;
   resetPrototype=function(){jobs.forEach(j=>j.generation++);jobs=[];selected.clear();current=null;editing=null;gallery=false;serial=0;for(const id of ['import-submit-fail','import-ocr-fail'])$('#'+id).checked=false;baseReset();};
   document.querySelectorAll('[data-import-lab]').forEach(b=>b.addEventListener('click',()=>{state.logged=true;state.qualified=true;state.scenario='normal';$('#scenario').value='normal';if(b.dataset.importLab==='mixed'){open();selected=new Set(fixtures.map(f=>f.id));createBatch();}else open();}));

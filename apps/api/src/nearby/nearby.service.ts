@@ -14,13 +14,13 @@ type S = components["schemas"];
 export class NearbyService {
   private rates = new Map<string, number>();
   private addressRates = new Map<string, { until: number; count: number }>();
-  private addressBudget(actor: string) {
+  private addressBudget(actor: string, batch = false) {
     const now = Date.now();
     for (const [k, v] of this.addressRates)
       if (v.until <= now) this.addressRates.delete(k);
     for (const [k, max, ms] of [
-      ["*", 2, 1000],
-      [actor, 5, 60000],
+      [batch ? "import:*" : "*", batch ? 20 : 2, 1000],
+      [batch ? "import:" + actor : actor, batch ? 20 : 5, 60000],
     ] as const) {
       const r = this.addressRates.get(k) ?? { until: now + ms, count: 0 };
       if (r.count >= max || this.addressRates.size >= 1000)
@@ -195,5 +195,11 @@ export class NearbyService {
       ? undefined
       : await this.maps.permanent(b.address);
     return this.apartments.contributeAddress(a, b, key!, permanent);
+  }
+  async prepareImportAddress(a: VerifiedIdentity, address: S["SearchAddress"]) {
+    // Import owns the account/capability and catalog checks on its transaction.
+    // Opening another sensitive connection here could exhaust the pool.
+    this.addressBudget(a.userId, true);
+    return this.maps.permanent(address);
   }
 }

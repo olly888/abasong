@@ -174,3 +174,5 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 - 2026-11-06 R4-11：无新增依赖/原生模块/权限/锁文件/契约/迁移。复用Expo58选图和既有原生OCR；导入状态控制器分出纯传输核心及原鉴权适配，错误类保持兼容导出。纠正复用PageFrame/Controls固定底部主操作。loopback测试工具以独立contribution场景限定路径及合成身份，不扩大普通API权限，不写云或真实D0资格。
 
 2026-11-06 R4-12：无新增依赖/SDK/原生模块、权限、契约、迁移或云资源。复用现有Expo58、React/RN、crypto/pg及V3.2共用组件；抽出报名幂等尝试与会话生命周期发送门控。现有loopback独立TEST工具新增collaboration验证入口，仍拒绝非D0管理目标/外部origin，合成JWT与加密密钥留服务进程；结束清理自有随机库/角色。真实账号及云服务不变。
+
+2026-11-06 R4-13：无新增应用依赖、SDK、原生模块、系统权限或锁文件；复用现有Mapbox永久地理编码、Nest/pg/EnvelopeCrypto和统一ContributionAddressField。临时Python契约验证虚拟环境仅在/private/tmp，不改变全局Python及工程依赖。确认新地图地址先取得持久化许可再写加密草稿；服务端证据不入公开DTO；D0仍17迁移54表，无云变更。

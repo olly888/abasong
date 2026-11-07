@@ -91,15 +91,17 @@ async (page) => {
   await run("未收录截图：完整地址须本人确认，共享后不造附近位置", async () => {
     await screenshots(["s6"]);
     await p.locator('[data-action="import-edit"]').click();
-    await p.selectOption('.import-editor [name="apt"]', "new");
+    assert(await p.locator('.import-editor select').count()===0, "no full catalog dropdown");
+    await p.locator('[data-action="import-address-manual"]').click();
+    await p.locator('[name="city"]').fill("");
     await p.locator('.import-editor [type="submit"]').click();
     assert(
       (await p.locator(".import-editor").innerText()).includes(
-        "请核对完整英文地址",
+        "请核对门牌、街道、城市和州",
       ),
       "address confirmation required",
     );
-    await p.locator('[name="addressConfirmed"]').check();
+    await p.locator('[name="city"]').fill("Los Angeles");
     await p.locator("#device").screenshot({
       path: "design/abasong-independent-v1/v12.1-experience/evidence/core-new-address.png",
     });
@@ -115,7 +117,9 @@ async (page) => {
       "confirmed address/code",
     );
     await p.locator('[data-action="import-done"]').click();
-    await p.locator('.bottom-nav [data-id="home"]').click();
+    await p.waitForSelector('.ex-carousel');
+    assert((await p.locator('.ex-map-card:not([aria-hidden])').innerText()).includes('1610'), 'returns to the explicitly shared apartment');
+    await p.locator('[data-action="locate"]').click();
     assert(
       !(await p.locator(".ex-carousel").innerText()).includes("1610"),
       "unknown coordinates not nearby",

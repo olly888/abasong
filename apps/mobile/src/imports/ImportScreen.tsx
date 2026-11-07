@@ -7,7 +7,6 @@ import {
 } from "react";
 import type { Session as AuthSession } from "@supabase/supabase-js";
 import {
-  ActivityIndicator,
   Alert,
   AppState,
   BackHandler,
@@ -38,7 +37,9 @@ import {
 } from "../auth/AuthControls";
 import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
-import { ListRow, SearchBox } from "../ui/Primitives";
+import { ContributionAddressField } from "../apartments/ContributionAddressField";
+import { canShareCandidate, importAddressLabel } from "./candidate-address";
+import { importCommitPatch } from "./commit-patch";
 import { extractCandidates } from "./extract";
 import { runRecognitionBatch, RecognitionError } from "./recognition-work";
 import { recognize } from "./recognize";
@@ -48,16 +49,15 @@ import { ServerDraft } from "./server-draft";
 import { exitImport } from "./navigation";
 import { createImageCache } from "./storage";
 import { keepImportSession } from "./session-gate";
-import { createReviewSearch } from "./review-search";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
 type S = components["schemas"];
 const issueLabels: Record<string, string> = {
   missing_address: "缺少地址",
-  missing_value: "缺少密码",
+  missing_value: "缺少门禁码",
   ambiguous_pair: "地址与密码对应不明",
   uncertain_characters: "请核对字符",
   uncertain_address: "请核对地址",
-  unmatched_apartment: "公寓尚未匹配，可先私存",
+  unmatched_apartment: "请核对公寓地址",
   duplicate: "存在重复资料",
   unsupported_method: "暂不支持此进入方式",
 };
@@ -146,9 +146,6 @@ export function ImportSession(p: {
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
     [editing, setEditing] = useState<string | null>(null),
-    [query, setQuery] = useState(""),
-    [matches, setMatches] = useState<S["Apartment"][]>([]),
-    [searchBusy, setSearchBusy] = useState(false),
     [exitAccepted, setExitAccepted] = useState(false),
     [processing, setProcessing] = useState(false),
     [progress, setProgress] = useState({ finished: 0, total: 0 });
@@ -159,10 +156,7 @@ export function ImportSession(p: {
     recognitionAbort = useRef<AbortController | null>(null),
     abort = useRef(new AbortController()),
     allUris = useRef(new Set<string>()),
-    rowsRef = useRef(rows),
-    reviewSearch = useRef(
-      createReviewSearch((path, options) => request(path, options)),
-    );
+    rowsRef = useRef(rows);
   rowsRef.current = rows;
   useEffect(() => {
     live.current = true;
@@ -180,7 +174,6 @@ export function ImportSession(p: {
       allUris.current.clear();
       cache.current?.dispose();
       cache.current = null;
-      reviewSearch.current.cancel();
     };
   }, []);
   const request = <T,>(
@@ -203,6 +196,10 @@ export function ImportSession(p: {
       ...patch,
       revision: row.revision + 1,
       selected: false,
+      status: undefined,
+      error: undefined,
+      sharedApartmentId: undefined,
+      needsAddressReview: false,
     });
     setAttested(false);
   }
@@ -216,6 +213,7 @@ export function ImportSession(p: {
       id: randomUUID(),
       sourceId,
       address,
+      sourceAddress: address,
       value,
       scope: "门别未注明",
       issues,
@@ -430,28 +428,6 @@ export function ImportSession(p: {
     setStage("select");
     setError(null);
   }
-  function clearSearch() {
-    reviewSearch.current.cancel();
-    setMatches([]);
-    setSearchBusy(false);
-  }
-  async function search() {
-    if (!editing || query.trim().length < 2 || searchBusy) return;
-    setSearchBusy(true);
-    setError(null);
-    try {
-      const result = await reviewSearch.current.search(editing, query);
-      if (live.current && result) {
-        setMatches(result.items);
-        setSearchBusy(false);
-      }
-    } catch {
-      if (live.current) {
-        setError("搜索失败，请重试");
-        setSearchBusy(false);
-      }
-    }
-  }
   const exitPromptOpen = useRef(false);
   usePreventRemove(
     !exitAccepted && (busy || hasUnsubmittedImportWork(rows, sources, mode)),
@@ -480,6 +456,19 @@ export function ImportSession(p: {
       );
     },
   );
+  function finish() {
+    if (hasUnsubmittedImportWork(rows, sources, mode)) return leave();
+    if (p.onCompleted) return p.onCompleted(rows);
+    const first = rows.find(
+      (r) => r.shared && (r.sharedApartmentId || r.target?.id),
+    );
+    if (mode === "private_and_share" && first)
+      router.replace({
+        pathname: "/",
+        params: { apartment_id: first.sharedApartmentId ?? first.target!.id },
+      });
+    else leave();
+  }
   function leave() {
     if (!running.current) exitImport(router);
   }
@@ -487,7 +476,6 @@ export function ImportSession(p: {
     if (processing) recognitionAbort.current?.abort();
     else if (running.current) return;
     else if (editing) {
-      clearSearch();
       setEditing(null);
     } else if (stage === "review" && !locked) setStage("select");
     else leave();
@@ -522,27 +510,7 @@ export function ImportSession(p: {
       );
       if (live.current) {
         for (const { localId, out } of result)
-          update(localId, {
-            privateId: out.private_record_id ?? undefined,
-            shared: ["active", "pending", "same_value"].includes(
-              out.share_status,
-            ),
-            status:
-              out.private_status === "failed" || out.share_status === "failed"
-                ? "failed"
-                : out.share_status === "pending"
-                  ? "pending"
-                  : out.share_status === "same_value"
-                    ? "same_value"
-                    : out.share_status === "active"
-                      ? "active"
-                      : "private_saved",
-            error: out.error_code
-              ? out.private_status === "saved"
-                ? "已保存，尚未共享；可重试"
-                : "保存失败，可重试"
-              : undefined,
-          });
+          update(localId, importCommitPatch(out));
         setLocked(!!server.current!.batch?.mode_locked);
         setStage("result");
       }
@@ -560,7 +528,7 @@ export function ImportSession(p: {
     !!r.value.trim() &&
     r.value.trim().length <= 32 &&
     !!r.scope.trim() &&
-    !!(r.target || (mode === "private_only" && r.address.trim()));
+    !!(canShareCandidate(r) || (mode === "private_only" && r.address.trim()));
   const pending = rows.filter(
     (r) =>
       r.selected &&
@@ -577,7 +545,8 @@ export function ImportSession(p: {
       setRows((old) =>
         old.map((r) => ({
           ...r,
-          selected: r.selected && (next === "private_only" || !!r.target),
+          selected:
+            r.selected && (next === "private_only" || canShareCandidate(r)),
         })),
       );
     };
@@ -586,6 +555,13 @@ export function ImportSession(p: {
       { text: "仅自己保存", onPress: () => choose("private_only") },
       { text: "取消", style: "cancel" },
     ]);
+  }
+  const addressReview = rows.find((r) => r.needsAddressReview && !r.privateId);
+  function reviewAddress() {
+    if (!addressReview) return;
+    setAttested(false);
+    setStage("review");
+    setEditing(addressReview.id);
   }
   return (
     <ApartmentPage
@@ -630,7 +606,6 @@ export function ImportSession(p: {
             <ActionButton
               label="完成核对"
               onPress={() => {
-                clearSearch();
                 setEditing(null);
               }}
             />
@@ -682,9 +657,11 @@ export function ImportSession(p: {
               <ActionButton
                 label={
                   stage === "result"
-                    ? pending.length
-                      ? `重试 ${pending.length} 条`
-                      : "完成"
+                    ? addressReview
+                      ? "核对地址"
+                      : pending.length
+                        ? `重试 ${pending.length} 条`
+                        : "完成"
                     : mode === "private_only"
                       ? `确认保存 ${pending.length} 条`
                       : `确认共享 ${pending.length} 条`
@@ -695,15 +672,17 @@ export function ImportSession(p: {
                     (!pending.length ||
                       !attested ||
                       (mode === "private_and_share" && !p.canContribute))) ||
-                  (stage === "result" && pending.length > 0 && !attested)
+                  (stage === "result" &&
+                    !addressReview &&
+                    pending.length > 0 &&
+                    !attested)
                 }
                 onPress={() =>
-                  stage === "result" && !pending.length
-                    ? p.onCompleted &&
-                      !hasUnsubmittedImportWork(rows, sources, mode)
-                      ? p.onCompleted(rows)
-                      : leave()
-                    : void submit()
+                  stage === "result" && addressReview
+                    ? reviewAddress()
+                    : stage === "result" && !pending.length
+                      ? finish()
+                      : void submit()
                 }
               />
             </>
@@ -718,7 +697,7 @@ export function ImportSession(p: {
             <Text style={styles.label}>
               {sources.length
                 ? `已选 ${sources.length} 张`
-                : "添加公寓地址和密码截图"}
+                : "添加公寓地址和门禁码截图"}
             </Text>
             {sources.length > 0 && sources.length < 10 ? (
               <Pressable
@@ -769,47 +748,46 @@ export function ImportSession(p: {
             resizeMode="contain"
             accessibilityLabel="原截图"
           />
-          <Field
-            label="截图地址"
-            maxLength={300}
-            value={editor.address}
-            editable={!editor.privateId}
-            onChangeText={(address) =>
-              change(editor.id, { address, target: null })
+          <ContributionAddressField
+            key={editor.id}
+            value={
+              editor.target
+                ? { kind: "apartment", apartment: editor.target }
+                : editor.confirmedAddress
+                  ? { kind: "address", address: editor.confirmedAddress }
+                  : mode === "private_only"
+                    ? { kind: "private", address: editor.address }
+                    : { kind: "pending" }
             }
-            autoCorrect={false}
-          />
-          <SearchBox
-            value={query}
-            onChange={(v) => {
-              clearSearch();
-              setQuery(v);
-            }}
-            busy={searchBusy}
-            onSearch={() => void search()}
-          />
-          {searchBusy ? <ActivityIndicator /> : null}
-          {matches.map((p) => (
-            <ListRow
-              key={p.id}
-              title={p.name ?? "公寓"}
-              subtitle={`${p.address_line1}, ${p.city}, ${p.state}`}
-              onPress={() => {
+            initialQuery={editor.address}
+            isPrivate={mode === "private_only"}
+            disabled={busy || !!editor.privateId}
+            request={request}
+            onChange={(value) => {
+              if (value.kind === "apartment")
                 change(editor.id, {
-                  target: p,
-                  address: `${p.address_line1}, ${p.city}, ${p.state}${p.postal_code ? " " + p.postal_code : ""}`,
+                  target: value.apartment,
+                  confirmedAddress: null,
+                  address: importAddressLabel(value.apartment),
                 });
-                clearSearch();
-              }}
-            />
-          ))}
-          <Text style={styles.meta}>
-            {editor.target
-              ? `已选：${editor.target.address_line1}, ${editor.target.city}`
-              : "请选择对应公寓；未收录地址可先私存"}
-          </Text>
+              else if (value.kind === "address")
+                change(editor.id, {
+                  target: null,
+                  confirmedAddress: value.address,
+                  address: importAddressLabel(value.address),
+                });
+              else if (value.kind === "private")
+                change(editor.id, {
+                  target: null,
+                  confirmedAddress: null,
+                  address: value.address,
+                  sourceAddress: value.address,
+                });
+              else change(editor.id, { target: null, confirmedAddress: null });
+            }}
+          />
           <Field
-            label="密码"
+            label="门禁码"
             value={editor.value}
             maxLength={32}
             editable={!editor.privateId}
@@ -831,7 +809,6 @@ export function ImportSession(p: {
             style={styles.check}
             onPress={() => {
               setRows((old) => old.filter((x) => x.id !== editor.id));
-              clearSearch();
               setEditing(null);
               setAttested(false);
             }}
@@ -876,9 +853,7 @@ export function ImportSession(p: {
                       ),
                     );
                     setRows((old) => [...old, r]);
-                    clearSearch();
                     setEditing(r.id);
-                    setQuery("");
                   }}
                 />
                 <ActionButton
@@ -892,14 +867,11 @@ export function ImportSession(p: {
           {rows.map((r, index) => (
             <View key={r.id} style={styles.card}>
               <Text style={styles.label}>
-                {r.target?.name ?? (r.address || `待核对 ${index + 1}`)}
+                {r.target
+                  ? importAddressLabel(r.target)
+                  : r.address || `待核对 ${index + 1}`}
               </Text>
-              {r.target ? (
-                <Text style={styles.meta}>
-                  {r.target.address_line1}, {r.target.city}, {r.target.state}
-                </Text>
-              ) : null}
-              <Text style={styles.code}>{r.value || "缺少密码"}</Text>
+              <Text style={styles.code}>{r.value || "缺少门禁码"}</Text>
               {r.scope && r.scope !== "门别未注明" ? (
                 <Text style={styles.meta}>{r.scope}</Text>
               ) : null}
@@ -917,7 +889,7 @@ export function ImportSession(p: {
                 </Text>
               ) : stage === "result" ? (
                 <Text style={styles.meta}>未提交</Text>
-              ) : !r.target && mode === "private_and_share" ? (
+              ) : !canShareCandidate(r) && mode === "private_and_share" ? (
                 <Text style={styles.meta}>公寓待匹配</Text>
               ) : r.issues.length ? (
                 <Text style={styles.meta}>
@@ -954,9 +926,7 @@ export function ImportSession(p: {
                       disabled={busy}
                       style={styles.check}
                       onPress={() => {
-                        clearSearch();
                         setEditing(r.id);
-                        setQuery(r.address.split(",")[0]);
                       }}
                     >
                       <Text style={styles.link}>编辑</Text>

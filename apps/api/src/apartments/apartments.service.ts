@@ -1241,10 +1241,7 @@ export class ApartmentsService {
   ): Promise<S["NearbyCandidate"][]> {
     return this.tx(a, async (c) => {
       const rows = (
-        await c.query(
-          apartmentProximityQuery,
-          [p.lng, p.lat, 200, 20],
-        )
+        await c.query(apartmentProximityQuery, [p.lng, p.lat, 200, 20])
       ).rows;
       return rows.map((r) => ({
         key: r.id,
@@ -1312,6 +1309,68 @@ export class ApartmentsService {
       return r.map((x) => this.apartmentView(x));
     });
   }
+  async confirmedAddressIdTx(
+    c: PoolClient,
+    address: S["SearchAddress"],
+  ): Promise<string | undefined> {
+    const rows = await this.addressRows(c, address);
+    if (rows.length > 1)
+      throw new ApiError(
+        409,
+        "AMBIGUOUS_ADDRESS",
+        "同一地址有多个公寓，请从搜索结果选择",
+      );
+    return rows[0]?.id;
+  }
+  async ensureConfirmedAddressTx(
+    c: PoolClient,
+    address: S["SearchAddress"],
+    permanent?: { point: S["Point"]; address: S["SearchAddress"] },
+  ): Promise<string> {
+    const canonical = addressIdentity(address);
+    if (!canonical) throw invalid();
+    await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+      "address:" + canonical,
+    ]);
+    const rows = await this.addressRows(c, address);
+    if (rows.length > 1)
+      throw new ApiError(
+        409,
+        "AMBIGUOUS_ADDRESS",
+        "同一地址有多个公寓，请从搜索结果选择",
+      );
+    let aid = rows[0]?.id as string | undefined;
+    if (!aid) {
+      if (!permanent || addressIdentity(permanent.address) !== canonical)
+        throw new ApiError(
+          503,
+          "ADDRESS_STORAGE_UNAVAILABLE",
+          "新地址保存暂不可用，填写内容已保留",
+        );
+      const source = (
+        await c.query(
+          `INSERT INTO abasong.data_sources(source_type,provider,product,license_reference,persistent_use_approved,verified_at) VALUES('provider_permanent','Mapbox','geocoding-v6-permanent','Mapbox Permanent Geocoding; confirmed contributor address',true,now()) RETURNING id`,
+        )
+      ).rows[0].id;
+      aid = (
+        await c.query(
+          `INSERT INTO abasong.apartments(address_line1,city,state,postal_code,point,source_id,status,confidence,address_key) VALUES($1,$2,$3,$4,extensions.ST_SetSRID(extensions.ST_MakePoint($5,$6),4326)::extensions.geography,$7,'active','unverified',$8) RETURNING id`,
+          [
+            address.address_line1,
+            address.city,
+            address.state,
+            address.postal_code,
+            permanent.point.lng,
+            permanent.point.lat,
+            source,
+            canonical,
+          ],
+        )
+      ).rows[0].id;
+    }
+    return aid!;
+  }
+
   async contributeAddress(
     a: VerifiedIdentity,
     b: S["AddressContributionInput"],
@@ -1357,49 +1416,11 @@ export class ApartmentsService {
           key,
           b,
           async () => {
-            await c.query(
-              "SELECT pg_advisory_xact_lock(hashtextextended($1,0))",
-              ["address:" + canonical],
+            const aid = await this.ensureConfirmedAddressTx(
+              c,
+              b.address,
+              permanent,
             );
-            const rows = await this.addressRows(c, b.address);
-            if (rows.length > 1)
-              throw new ApiError(
-                409,
-                "AMBIGUOUS_ADDRESS",
-                "同一地址有多个公寓，请从搜索结果选择",
-              );
-            let aid = rows[0]?.id as string | undefined;
-            if (!aid) {
-              if (
-                !permanent ||
-                addressIdentity(permanent.address) !== canonical
-              )
-                throw new ApiError(
-                  503,
-                  "ADDRESS_STORAGE_UNAVAILABLE",
-                  "新地址保存暂不可用，填写内容已保留",
-                );
-              const source = (
-                await c.query(
-                  `INSERT INTO abasong.data_sources(source_type,provider,product,license_reference,persistent_use_approved,verified_at) VALUES('provider_permanent','Mapbox','geocoding-v6-permanent','Mapbox Permanent Geocoding; confirmed contributor address',true,now()) RETURNING id`,
-                )
-              ).rows[0].id;
-              aid = (
-                await c.query(
-                  `INSERT INTO abasong.apartments(address_line1,city,state,postal_code,point,source_id,status,confidence,address_key) VALUES($1,$2,$3,$4,extensions.ST_SetSRID(extensions.ST_MakePoint($5,$6),4326)::extensions.geography,$7,'active','unverified',$8) RETURNING id`,
-                  [
-                    b.address.address_line1,
-                    b.address.city,
-                    b.address.state,
-                    b.address.postal_code,
-                    permanent.point.lng,
-                    permanent.point.lat,
-                    source,
-                    canonical,
-                  ],
-                )
-              ).rows[0].id;
-            }
             return { object: aid!, result: await result(aid!) };
           },
           result,
@@ -1594,10 +1615,12 @@ export class ApartmentsService {
     return this.tx(a, async (c) => {
       // Matching a manually selected address requires both its exact canonical
       // postal identity and nearby geometry. Proximity alone never picks a home.
-      const found = await c.query(
-        apartmentProximityQuery,
-        [point.lng, point.lat, 250, 101],
-      );
+      const found = await c.query(apartmentProximityQuery, [
+        point.lng,
+        point.lat,
+        250,
+        101,
+      ]);
       if (found.rows.length > 100) return [];
       const matched = found.rows.filter((r) => addressIdentity(r) === key);
       if (matched.length > 20) return [];

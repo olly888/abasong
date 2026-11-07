@@ -98,6 +98,8 @@ describe("server import draft safety", () => {
       [],
       "private_and_share",
     );
+    if ("stage" in result[0].out)
+      throw new Error("Unexpected preparation failure");
     expect(result[0].out.private_record_id).toBe("private-id");
     const call = mock.request.mock.calls.find((c) => c[1].endsWith("/commit"))!;
     expect(call[2].body.items[0].client_commit_id).toBe("retry-id");
@@ -352,6 +354,8 @@ describe("lost draft mutation responses", () => {
       [],
       "private_and_share",
     );
+    if ("stage" in result[0].out)
+      throw new Error("Unexpected preparation failure");
     expect(result[0].out.private_record_id).toBe("private-id");
     const writes = mock.request.mock.calls.filter((c) =>
       c[1].endsWith("/commit"),

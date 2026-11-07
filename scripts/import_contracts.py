@@ -39,7 +39,7 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         ['expected_version', 'source_ids'])
     S['ImportStartInput']['properties']['source_ids'].update(minItems=1, maxItems=50, uniqueItems=True)
     obj('ImportCandidateEdit', {'expected_revision': integer(1), 'address_text': string(300),
-        'apartment_id': nullable_id, 'method': deepcopy(S['AccessInput']['properties']['method']),
+        'apartment_id': nullable_id, 'confirmed_address': {'allOf':[ref('SearchAddress')],'nullable':True}, 'method': deepcopy(S['AccessInput']['properties']['method']),
         'value': string(32), 'scope': ref('ImportScope'), 'removed': boolean}, ['expected_revision'])
     out('ImportCandidate', {'id': uid, 'revision': integer(1), 'source_ids': arr(uid),
         'address_text': string(300), 'apartment_id': nullable_id,
@@ -48,6 +48,7 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         'ambiguous_pair', 'uncertain_characters', 'uncertain_address', 'unmatched_apartment', 'duplicate', 'unsupported_method')),
         'state': enum('needs_review', 'ready', 'removed', 'committed', 'failed'),
         'confirmation_revision': {'type':'integer','minimum':1,'nullable':True}})
+    S['ImportCandidate']['properties']['confirmed_address'] = {'allOf':[ref('SearchAddress')],'nullable':True}
     page('ImportCandidatePage', 'ImportCandidate')
     obj('ImportCandidateConfirm', {'expected_revision': integer(1), 'fields_confirmed': {'type':'boolean','enum':[True]}},
         ['expected_revision', 'fields_confirmed'])
@@ -69,6 +70,7 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         'share_status': enum('not_requested', 'not_started', 'active', 'pending', 'same_value', 'failed'),
         'contribution_id': nullable_id, 'error_code': string(80, nullable=True), 'retryable': boolean})
     out('ImportCommitResponse', {'batch': ref('ImportBatch'), 'results': arr(ref('ImportCommitResult'))})
+    S['ImportCommitResult']['properties']['apartment_id'] = nullable_id
     S['ImportCandidate']['properties']['commit_result'] = ref('ImportCommitResult')
     obj('ImportDeviceCandidateInput', {'address_text': string(300), 'value': string(32),
         'method': deepcopy(S['AccessInput']['properties']['method']), 'scope': ref('ImportScope'),

@@ -26,8 +26,10 @@ export function AvailabilityFlow({
   onSaved,
   onCancel,
   testControls,
+  enableOnOpen = false,
 }: {
   request: AvailabilityRequest;
+  enableOnOpen?: boolean;
   onSaved: (value: S["Availability"]) => void;
   onCancel: () => void;
   testControls?: ReactNode;
@@ -58,7 +60,7 @@ export function AvailabilityFlow({
       if (!visible.current || !result) return;
       const f = availabilityFields(result.value);
       baseline.current = availabilityDraftKey(f);
-      setForm(f);
+      setForm(enableOnOpen ? { ...f, enabled: true } : f);
       setCurrent(result.value);
       setRegions(result.regions);
       setRegionError(result.regionError);
@@ -70,7 +72,7 @@ export function AvailabilityFlow({
     } finally {
       if (visible.current) setLoading(false);
     }
-  }, [editor]);
+  }, [editor, enableOnOpen]);
   useFocusEffect(
     useCallback(() => {
       visible.current = true;

@@ -1,5 +1,5 @@
 import { openContributionMenu } from "../../apartments/contribution-entry";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -10,12 +10,18 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "../../auth/AuthProvider";
-import { ListRow } from "../../ui/Primitives";
+import { MyAccount } from "../../profile/MyAccount";
+import { dataRequest } from "../../apartments/client";
+import type { ProfileRequest } from "../../profile/profile-session";
 import { PageHeader } from "../../ui/PageFrame";
 import { ActionButton, FormError } from "../../auth/AuthControls";
 import { tokens } from "@abasong/ui";
 export default function Profile() {
   const auth = useAuth();
+  const request: ProfileRequest = useCallback(
+    (path, options) => dataRequest(auth.session!, path, options),
+    [auth.session?.access_token],
+  );
   const [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   async function logout() {
@@ -29,6 +35,29 @@ export default function Profile() {
       setBusy(false);
     }
   }
+  if (auth.phase === "ready" && auth.me && auth.session)
+    return (
+      <MyAccount
+        key={auth.session.user.id}
+        request={request}
+        onProfile={() => router.push("/account/profile")}
+        onAvailability={(enable) =>
+          router.push({
+            pathname: "/account/availability",
+            params: enable ? { enable: "1" } : {},
+          })
+        }
+        onShare={openContributionMenu}
+        onMenu={(menu) => {
+          if (menu === "apartments") router.push("/apartments/library");
+          else if (menu === "requests")
+            router.push({ pathname: "/requests", params: { mine: "1" } });
+          else if (menu === "applications")
+            router.push("/requests/applications");
+          else router.push("/account/settings");
+        }}
+      />
+    );
   return (
     <SafeAreaView style={styles.page} edges={["top"]}>
       <View style={{ marginHorizontal: -20 }}>
@@ -42,53 +71,6 @@ export default function Profile() {
         auth.phase === "loading-account" ||
         auth.phase === "signing-out" ? (
           <ActivityIndicator color={tokens.color.brandPrimary} />
-        ) : auth.phase === "ready" && auth.me ? (
-          <>
-            <View style={styles.identity}>
-              <View style={styles.avatar}>
-                <Text style={styles.initial}>
-                  {auth.me.profile.display_name.slice(0, 1).toUpperCase()}
-                </Text>
-              </View>
-              <Text style={styles.name}>{auth.me.profile.display_name}</Text>
-            </View>
-            <Text style={styles.secondary}>
-              {auth.me.capabilities.includes("access.read")
-                ? "公寓资料查看资格已开通"
-                : "暂未开通资料查看资格"}
-            </Text>
-            <ActionButton
-              label="＋ 共享门禁码"
-              onPress={openContributionMenu}
-            />
-            <ListRow
-              title="可接活设置"
-              icon="people"
-              onPress={() => router.push("/account/availability")}
-            />
-            <ListRow
-              title="我的公寓"
-              icon="bookmark"
-              onPress={() => router.push("/apartments/library")}
-            />
-            <ListRow
-              title="我的发布"
-              icon="box"
-              onPress={() =>
-                router.push({ pathname: "/requests", params: { mine: "1" } })
-              }
-            />
-            <ListRow
-              title="我的报名"
-              icon="box"
-              onPress={() => router.push("/requests/applications")}
-            />
-            <ListRow
-              icon="settings"
-              title="设置"
-              onPress={() => router.push("/account/settings")}
-            />
-          </>
         ) : auth.phase === "needs-profile" ? (
           <>
             <Text style={styles.name}>完善个人资料</Text>

@@ -142,3 +142,8 @@ OTP 发起、验证、刷新、退出使用 Supabase Auth SDK，不在自有 API
 候选编辑/候选DTO增加可空`confirmed_address`（SearchAddress），与`apartment_id`互斥；`address_text`须与确认身份一致。仅所有者可编辑本批次，账号/会话及共享资格仍由真实服务校验，不由客户端确认替代。新供应商选址在保存加密候选前完成永久地理编码与身份/精度校验；许可证据只由服务端生成并在所有候选响应中剔除。客户端不能提交坐标、许可标识或归属。自由OCR原文与临时选址分离，独立文本私存不创建公共地址。
 
 提交结果可带已解析`apartment_id`用于确定回程；不取最近GPS或列表首项猜绑定。逐项地址准备失败与持久提交结果分开；同条请求丢响应复用幂等意图。已私存/共享的计划不可改目标；无持久副作用的失败计划允许新修订，旧修订及旧提交回放拒绝。共享范围在第一次提交锁定，重试不扩大范围。当前契约是OpenAPI生成源/YAML/TS三者一致的本地实现，不等于云已部署；见[R4-13](R4_13_核心差异关闭与未收录截图方案.md)。
+
+
+## B5-01 本人资料契约（2026-11-06，本地实施）
+
+GET/PATCH `/v1/me/profile` 采用独立SelfProfile/PrivateContact，公共Profile不含电话/微信/用途。PATCH必须expected_version和幂等编号；自填经验只收carrier/region_label/description，不接受verified/source/资格/代表权。关闭用途不自动关闭接活；显式close_availability_expected_version同时关闭，事务校验两个版本。联系方式只从本人主动填写，使用统一EnvelopeCrypto加密和actor RLS；不读取Auth手机号，不自动发送。公共司机详情只增加可选熟悉区域id/label。实际0018/0019迁移、对象权限、重试/冲突及未验范围见[B5-01报告](B5_01_本人资料与我的实施验收.md)。本批不代表团队业务联系方式或云迁移已完成。

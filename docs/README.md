@@ -1,12 +1,14 @@
 # Abasong 研发文档入口
 
-更新2026-11-06。当前按[总计划1.42](Abasong_V12.1_项目开发与验收总计划.md)推进。[R4-13](technical/R4_13_核心差异关闭与未收录截图方案.md)已完成未收录截图的结构化地址、许可先行、部分失败与同公寓回程。492工程测试、新链路41断言/183 HTTP、旧贡献27/75、导入124及私人库295、双端范围验收和清理0/0通过；实际代码f46dbb2的精确HEAD CI42328650702成功。R4本地核心出口关闭，下一批B5-01本人资料/“我的”，发布未就绪。
+更新2026-11-06。当前按[总计划1.43](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-01本人资料与我的](technical/B5_01_本人资料与我的实施验收.md)已接本地接口/owner RLS、加密自愿联系、经验和我的/接活开关。500工程测试、profile28/26 HTTP、需求519/库295/导入124通过；双端范围核对及清理0/0通过，代码e6e55ab精确CI42333171347成功，文档HEAD另查PR102 Checks。D0为19迁移/55表；无云变更，真实账号/物理与现场仍B6，发布未就绪。
 
-[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。文档收尾不改代码指纹，最新提交仍查[PR101 Checks](https://github.com/olly888/abasong/pull/101/checks)。D0仍17迁移54表，无云变更；真实观察0/7，云业务KMS/两真实账号/推送/独立包/真实图质量及物理现场仍B6。
+[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。文档收尾不改代码指纹，最新提交仍查[PR102 Checks](https://github.com/olly888/abasong/pull/102/checks)。D0为19迁移55表，无云变更；真实观察0/7，云业务KMS/两真实账号/推送/独立包/真实图质量及物理现场仍B6。
 
 原型入口：[首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)、[两场景发布](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[我的](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=me)。产品确认只覆盖主要体验，原型图不代表App已更新。当前和目标依据[可开发基准](Abasong_V3.2_可开发与可验收基线.md)；之前全文保留在[审查前档案](archive/app-alignment-audit-20261105/README.md)。
 
 ## 当前入口
+
+- [B5-01本人资料、经验、自愿联系与我的](technical/B5_01_本人资料与我的实施验收.md)：本地实现及权限/原生收尾；[执行证据](technical/B5_01_执行证据.json)。
 
 - [R4-13 未收录截图与核心差异](technical/R4_13_核心差异关闭与未收录截图方案.md)：复用统一地址字段、许可先行、实际批次/结果与逐项回程；[执行证据](technical/R4_13_执行证据.json)。
 

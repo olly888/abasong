@@ -176,6 +176,11 @@ async function main() {
         "utf8",
       ),
     );
+    for (const f of [
+      "0018_self_profiles.sql",
+      "0019_profile_availability_intent.sql",
+    ])
+      await db.query(readFileSync("database/migrations/" + f, "utf8"));
     const password = randomBytes(24).toString("hex");
     await bootstrap.query(
       `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD ${escapeLiteral(password)}`,

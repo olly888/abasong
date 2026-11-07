@@ -9,11 +9,13 @@ export function ConversationLayout({
   onBack,
   onReload,
   children,
+  headerRight,
 }: {
   title: string;
   onBack: () => void;
   onReload: () => void;
   children: ReactNode;
+  headerRight?: ReactNode;
 }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: tokens.color.surface }}>
@@ -25,7 +27,9 @@ export function ConversationLayout({
           title={title}
           onBack={onBack}
           right={
-            <IconButton name="refresh" label="刷新会话" onPress={onReload} />
+            headerRight ?? (
+              <IconButton name="refresh" label="刷新会话" onPress={onReload} />
+            )
           }
         />
         {children}

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../auth/AuthProvider";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate } from "../../requests/RequestUi";
@@ -14,6 +14,7 @@ export default function Availability() {
 }
 function Editor() {
   const { session } = useAuth();
+  const { enable } = useLocalSearchParams<{ enable?: string }>();
   const request: AvailabilityRequest = useCallback(
     (path, options) => {
       if (!session) return Promise.reject(new Error("请先登录"));
@@ -23,5 +24,12 @@ function Editor() {
   );
   const back = () =>
     router.canGoBack() ? router.back() : router.replace("/profile");
-  return <AvailabilityFlow request={request} onSaved={back} onCancel={back} />;
+  return (
+    <AvailabilityFlow
+      enableOnOpen={enable === "1"}
+      request={request}
+      onSaved={back}
+      onCancel={back}
+    />
+  );
 }

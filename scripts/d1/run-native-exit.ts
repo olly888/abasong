@@ -12,7 +12,7 @@ async function main() {
   const scenario = process.env.ABASONG_NATIVE_EXIT_SCENARIO ?? "delivery";
   assert(["delivery", "contribution"].includes(scenario));
   const verify = process.env.ABASONG_NATIVE_EXIT_VERIFY ?? "default";
-  assert(["default", "collaboration", "unlisted"].includes(verify));
+  assert(["default", "collaboration", "unlisted", "profile"].includes(verify));
   assert(verify !== "unlisted" || scenario === "contribution");
   assert(verify !== "collaboration" || scenario === "delivery");
   const env = parseEnv(readFileSync(".env", "utf8"));
@@ -67,13 +67,15 @@ async function main() {
       [
         "--import",
         "tsx",
-        verify === "unlisted"
-          ? "scripts/d1/verify-unlisted-import.ts"
-          : scenario === "contribution"
-            ? "scripts/d1/verify-native-contribution.ts"
-            : verify === "collaboration"
-              ? "scripts/d1/verify-native-collaboration.ts"
-              : "scripts/d1/verify-native-exit.ts",
+        verify === "profile"
+          ? "scripts/d1/verify-self-profile.ts"
+          : verify === "unlisted"
+            ? "scripts/d1/verify-unlisted-import.ts"
+            : scenario === "contribution"
+              ? "scripts/d1/verify-native-contribution.ts"
+              : verify === "collaboration"
+                ? "scripts/d1/verify-native-collaboration.ts"
+                : "scripts/d1/verify-native-exit.ts",
       ],
       { stdio: "inherit" },
     );

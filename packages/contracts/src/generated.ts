@@ -63,13 +63,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** 本人资料和加密私有联系方式；不读取Auth手机号 */
+        get: operations["getMyProfile"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** 修改本人白名单字段；经验source不可自行verified */
+        /** 版本及幂等保护；自填经验不授资格；仅本人联系方式 */
         patch: operations["patchMyProfile"];
         trace?: never;
     };
@@ -1553,14 +1554,20 @@ export interface components {
             /** @enum {string} */
             status: "ok";
         };
+        PrivateContact: {
+            phone: string;
+            wechat: string;
+        };
         ProfilePatch: {
-            display_name?: string;
-            bio?: string;
-            vehicle_type?: string;
-            /** @enum {string} */
-            locale?: "zh-CN" | "en-US";
-            timezone?: string;
-            experience?: components["schemas"]["ExperienceInput"][];
+            close_availability_expected_version?: number;
+            expected_version: number;
+            display_name: string;
+            bio: string;
+            vehicle_type: string;
+            experience: components["schemas"]["ExperienceInput"][];
+            purposes: ("delivery" | "dsp")[];
+            familiar_region_ids: string[];
+            private_contact: components["schemas"]["PrivateContact"];
         };
         ExperienceInput: {
             carrier: string;
@@ -1581,6 +1588,19 @@ export interface components {
             bio: string | null;
             vehicle_type: string | null;
             experience: components["schemas"]["Experience"][];
+            familiar_regions?: components["schemas"]["ProfileRegion"][];
+        };
+        ProfileRegion: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+        };
+        SelfProfile: {
+            profile: components["schemas"]["Profile"];
+            version: number;
+            purposes: ("delivery" | "dsp")[];
+            familiar_region_ids: string[];
+            private_contact: components["schemas"]["PrivateContact"];
         };
         Me: {
             /** Format: uuid */
@@ -3486,6 +3506,100 @@ export interface operations {
             };
         };
     };
+    getMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelfProfile"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     patchMyProfile: {
         parameters: {
             query?: never;
@@ -3507,7 +3621,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Profile"];
+                    "application/json": components["schemas"]["SelfProfile"];
                 };
             };
             /** @description 输入或跨字段约束错误 */

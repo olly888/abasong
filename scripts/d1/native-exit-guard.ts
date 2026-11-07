@@ -27,7 +27,9 @@ export function fixtureRequestAllowed(
     /^\/v1\/(requests|regions|drivers|conversations|applications)(\/[a-z0-9-]+)*$/i.test(
       pathname ?? "",
     ) ||
-    /^\/v1\/me\/(requests|applications|availability)$/.test(pathname ?? "");
+    /^\/v1\/me\/(requests|applications|availability|profile)$/.test(
+      pathname ?? "",
+    );
   const contributionPath =
     /^\/v1\/(apartments|access-records)(\/[a-z0-9-]+)*$/i.test(
       pathname ?? "",
@@ -39,7 +41,12 @@ export function fixtureRequestAllowed(
     scenario === "contribution" ? contributionPath : deliveryPath;
   return (
     (businessPath && /^\/v1\/[a-z0-9/?%_=,&.-]+$/i.test(path)) ||
-    ["/fixture", "/fixture/snapshot", "/fixture/control"].includes(path)
+    [
+      "/fixture",
+      "/fixture/snapshot",
+      "/fixture/control",
+      "/fixture/profile-checks",
+    ].includes(path)
   );
 }
 export function fixtureFaultMatch(
@@ -56,6 +63,10 @@ export function fixtureFaultMatch(
     return (
       method === "GET" && /^\/v1\/conversations\/[a-f0-9-]{36}$/.test(path)
     );
+  if (operation === "profile")
+    return method === "PATCH" && path === "/v1/me/profile";
+  if (operation === "availability")
+    return method === "PUT" && path === "/v1/me/availability";
   if (method !== "POST") return false;
   if (operation === "contribute")
     return /^\/v1\/apartments\/[a-f0-9-]{36}\/access-records$/.test(path);

@@ -42,6 +42,7 @@ import { randomUUID } from "node:crypto";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Database } from "./database/database.service";
 import { MeController } from "./me/me.controller";
+import { SelfProfileService } from "./me/self-profile.service";
 import { MeService } from "./me/me.service";
 import { TokenVerifier } from "./auth/token-verifier";
 import { IdentityGuard } from "./auth/identity.guard";
@@ -87,6 +88,7 @@ class HealthController {
     { provide: ENVELOPE_CRYPTO, useFactory: createEnvelope },
     Database,
     MeService,
+    SelfProfileService,
     TokenVerifier,
     IdentityGuard,
     SensitiveDatabase,

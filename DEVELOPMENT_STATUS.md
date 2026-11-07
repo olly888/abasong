@@ -1,8 +1,12 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.47](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-07 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.47](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B6-01 test preparation
+## Current delivery — B6-02 pilot cloud preflight
+
+Participant recruiting remains deferred at 0/7. DevWest reports V12.0009 while the current API requires V12.0022. The disposable PostgreSQL rehearsal applied 13 migrations, preserved the pilot apartment and policy, and verified 57 forced-RLS tables and restricted secret grants. Independent pilot JS preparation and invitation asset isolation passed. See [B6-02 preflight](docs/technical/B6-02_云内测升级预检.md). The cloud update, real two-account KMS flow and native field build remain pending.
+
+## Previous delivery — B6-01 test preparation
 
 The [B6-01 facilitator pack](docs/usability/B6-01_可用性与现场测试执行包.md) is ready with recruitment copy, public sites, and separate field and OCR sheets. The 390px prototype home rendered successfully and both pilot-dev health endpoints returned HTTP 200. Participant sessions are 0/7, field trials are 0 and authorized screenshot intake is 0. Start with one driver and one DSP. Business-device preflight and admission are still required before scheduling the full door-side flow.
 

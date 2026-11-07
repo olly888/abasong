@@ -49,6 +49,8 @@ jobs:
       - run: ./scripts/dev env:init
       - run: ./scripts/dev db:up
       - run: ./scripts/dev db:verify
+      - name: Rehearse pilot database upgrade in a disposable database
+        run: ./scripts/dev exec node --import tsx scripts/cloud/verify-business-bootstrap.ts
       - run: ./scripts/dev verify:auth-api
       - run: ./scripts/dev verify:requests-api
       - name: Verify native delivery inputs through isolated HTTP services

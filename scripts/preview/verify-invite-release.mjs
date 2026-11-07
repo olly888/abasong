@@ -19,9 +19,12 @@ const exports = process.argv.slice(2);
 assert(exports.length > 0, "Pass Expo export directories");
 const verified = new Set();
 for (const directory of exports) {
-  const assets = readdirSync(join(directory, "assets")).map((file) =>
-    digest(readFileSync(join(directory, "assets", file))),
-  );
+  const assets = readdirSync(join(directory, "assets"), {
+    recursive: true,
+    withFileTypes: true,
+  })
+    .filter((file) => file.isFile())
+    .map((file) => digest(readFileSync(join(file.parentPath, file.name))));
   assert(assets.includes(expected), "Missing the normal invitation scene");
   assert(
     !assets.some((hash) => forbidden.has(hash)),

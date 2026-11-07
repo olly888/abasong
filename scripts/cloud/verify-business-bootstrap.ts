@@ -6,6 +6,10 @@ import assert from "node:assert/strict";
 import { localTarget } from "../d0/database-target";
 import { cloudBusinessSql } from "./business-data";
 import { pilotAdmissionSql, type PilotAdmission } from "./pilot-admission";
+import { REQUIRED_SCHEMA_VERSIONS } from "../../packages/contracts/src/schema-versions";
+
+const pilotBaseline = "V12.0009";
+
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     target = localTarget(env.DATABASE_ADMIN_URL);
@@ -22,9 +26,14 @@ async function main() {
     target.pathname = "/" + name;
     db = new Client({ connectionString: target.href });
     await db.connect();
-    for (const f of readdirSync("database/migrations")
+    const migrations = readdirSync("database/migrations")
       .filter((f) => /^\d{4}_.+\.sql$/.test(f))
-      .sort())
+      .sort();
+    const versions = migrations.map((f) => `V12.${f.slice(0, 4)}`);
+    assert.deepEqual(versions, [...REQUIRED_SCHEMA_VERSIONS]);
+    const baseline = versions.indexOf(pilotBaseline) + 1;
+    assert(baseline > 0 && baseline < migrations.length);
+    for (const f of migrations.slice(0, baseline))
       await db.query(readFileSync("database/migrations/" + f, "utf8"));
     // Simulated auth metadata only inside this disposable local database.
     await db.query(
@@ -47,6 +56,44 @@ async function main() {
     await assert.rejects(
       db.query(cloudBusinessSql({ ...m, operation: randomUUID() })),
     );
+    const fixture = async () =>
+      (
+        await db!.query(
+          `SELECT
+             (SELECT to_jsonb(a) FROM abasong.apartments a WHERE id=$1) AS apartment,
+             (SELECT to_jsonb(b) FROM abasong.apartment_buildings b WHERE id=$2) AS building,
+             (SELECT config FROM abasong.config_versions WHERE version=1) AS config`,
+          [m.apartment, m.building],
+        )
+      ).rows[0];
+    const before = await fixture();
+    assert(before.apartment && before.building && before.config);
+    for (const f of migrations.slice(baseline))
+      await db.query(readFileSync("database/migrations/" + f, "utf8"));
+    const { rows: installed } = await db.query<{ version: string }>(
+      "SELECT version FROM abasong.schema_version ORDER BY version",
+    );
+    assert.deepEqual(
+      installed.map((r) => r.version),
+      versions,
+    );
+    await db.query(business);
+    assert.deepEqual(await fixture(), before);
+    const { rows: protection } = await db.query(`
+      SELECT
+        count(*)::int AS tables,
+        count(*) FILTER (WHERE c.relrowsecurity AND c.relforcerowsecurity)::int AS forced,
+        has_table_privilege('abasong_api','abasong.access_secrets','SELECT') AS api_read,
+        has_table_privilege('abasong_worker','abasong.access_secrets','SELECT') AS worker_read,
+        has_table_privilege('abasong_sensitive','abasong.access_secrets','SELECT') AS sensitive_read
+      FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+      WHERE n.nspname='abasong' AND c.relkind='r'
+    `);
+    assert(protection[0].tables > 0);
+    assert.equal(protection[0].forced, protection[0].tables);
+    assert.equal(protection[0].api_read, false);
+    assert.equal(protection[0].worker_read, false);
+    assert.equal(protection[0].sensitive_read, true);
     const p: PilotAdmission = {
       operation_id: randomUUID(),
       users: [randomUUID(), randomUUID()],
@@ -113,7 +160,7 @@ async function main() {
       0,
     );
     console.log(
-      "PASS: real isolated PostgreSQL business/admission initialization, rollback, replay, expiry bounds, no role escalation and no replay reactivation; simulated local identities only.",
+      `PASS: isolated PostgreSQL upgraded ${pilotBaseline} to ${versions.at(-1)} (${migrations.length - baseline} migrations). Pilot public fixture and policy preserved, ${protection[0].forced} tables force RLS, restricted secret grants and admission replay/revocation checks passed.`,
     );
   } finally {
     await db?.end();

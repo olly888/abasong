@@ -34,6 +34,9 @@ it("rejects forged roles, verified experience and public contact flags", () => {
   ])
     expect(selfProfileInput.safeParse(p).success).toBe(false);
   expect(selfProfileInput.safeParse(body).success).toBe(true);
+  expect(
+    selfProfileInput.safeParse({ ...body, bio: "TEST\n第二行" }).success,
+  ).toBe(true);
 });
 it("rolls back before any write if encryption fails", async () => {
   const sql: string[] = [];

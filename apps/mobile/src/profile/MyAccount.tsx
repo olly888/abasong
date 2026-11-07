@@ -235,6 +235,9 @@ export function MyAccount({
                     ]}
                   >
                     {availabilitySummary(availability, clock)}
+                    {availability?.region_ids.length
+                      ? ` · ${availability.region_ids.length}个区域`
+                      : ""}
                   </Text>
                 </Pressable>
               ) : (

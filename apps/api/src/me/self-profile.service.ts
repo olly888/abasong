@@ -10,21 +10,26 @@ import type { VerifiedIdentity } from "../common/request-context";
 import { ApiError } from "../common/api-error";
 import { UUID } from "../auth/token-verifier";
 type S = components["schemas"];
-const clean = (n: number) =>
+const clean = (n: number, multiline = false) =>
   z
     .string()
     .trim()
     .max(n)
     .refine(
       (s) =>
-        ![...s].some((c) => c.codePointAt(0)! < 32 || c.codePointAt(0) === 127),
+        ![...s].some(
+          (c) =>
+            (c.codePointAt(0)! < 32 &&
+              !(multiline && ["\n", "\r"].includes(c))) ||
+            c.codePointAt(0) === 127,
+        ),
     );
 export const selfProfileInput = z
   .object({
     close_availability_expected_version: z.number().int().positive().optional(),
     expected_version: z.number().int().min(0),
     display_name: clean(60).min(1),
-    bio: clean(500),
+    bio: clean(500, true),
     vehicle_type: clean(60),
     purposes: z
       .array(z.enum(["delivery", "dsp"]))
@@ -40,7 +45,7 @@ export const selfProfileInput = z
           .object({
             carrier: clean(80).min(1),
             region_label: clean(120),
-            description: clean(300),
+            description: clean(300, true),
           })
           .strict(),
       )

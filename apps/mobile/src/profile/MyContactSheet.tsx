@@ -42,7 +42,12 @@ export function MyContactSheet({
   async function copy(label: string, text: string) {
     setError(null);
     try {
-      if (!(await Clipboard.setStringAsync(text))) throw new Error();
+      if (
+        !(await Clipboard.setStringAsync(text, {
+          android: { isSensitive: true },
+        }))
+      )
+        throw new Error();
       setCopied(label + "已复制");
     } catch {
       setError("复制失败，请长按选择文字");

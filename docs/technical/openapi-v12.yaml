@@ -5549,6 +5549,86 @@ paths:
         in: path
         required: true
         schema: *id001
+  /v1/me/blocks:
+    get:
+      operationId: listBlockedUsers
+      summary: 仅返回本人屏蔽的账号与最小显示信息
+      tags:
+      - me
+      responses:
+        '200':
+          description: 成功；202 表示已接受任务，非最终完成
+          headers:
+            X-Request-ID:
+              schema: *id001
+              description: 追踪ID，不含个人数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockedUserPage'
+        '400':
+          description: 输入或跨字段约束错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 不存在或不可见
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: 版本/状态/幂等内容冲突
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: 业务条件不满足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: 限流
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: 依赖暂不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 1000
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
   /v1/me/blocks/{user_id}:
     put:
       operationId: blockUser
@@ -5915,7 +5995,7 @@ paths:
         schema: *id001
     delete:
       operationId: removePost
-      summary: 仅作者或有权运营软删除
+      summary: 仅作者软删除；重复删除同一对象安全
       tags:
       - posts
       responses:
@@ -6148,7 +6228,7 @@ paths:
   /v1/comments/{comment_id}:
     delete:
       operationId: removeComment
-      summary: 仅作者或有权运营软删除
+      summary: 仅作者软删除；重复删除同一对象安全
       tags:
       - comments
       responses:
@@ -6298,7 +6378,7 @@ paths:
   /v1/me/notifications:
     get:
       operationId: listNotifications
-      summary: 本人站内通知；无密码/消息正文
+      summary: 本人站内通知；司机圈回复按当前可见性过滤，仅附回复ID
       tags:
       - me
       responses:
@@ -6866,7 +6946,7 @@ paths:
   /v1/reports:
     post:
       operationId: submitReport
-      summary: 校验可见对象；仅提交不自动封禁
+      summary: 举报可见动态或回复；不自动封禁
       tags:
       - reports
       responses:
@@ -11480,8 +11560,163 @@ components:
         request_id:
           type: string
           format: uuid
+        region_id:
+          type: string
+          format: uuid
+        topic:
+          type: string
+          enum:
+          - delivery_question
+          - experience
+          - on_the_road
       required:
       - body
+    CircleAuthor:
+      type: object
+      additionalProperties: false
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+          maxLength: 60
+      required:
+      - user_id
+      - display_name
+    BlockedUser:
+      type: object
+      additionalProperties: false
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+          maxLength: 60
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - user_id
+      - display_name
+      - created_at
+    BlockedUserPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlockedUser'
+        next_cursor:
+          type: string
+          nullable: true
+      required:
+      - items
+      - next_cursor
+    CircleRequestSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - partial_route
+          - whole_route
+          - extra_drivers
+          - vehicle_help
+          - other_help
+        status:
+          type: string
+          enum:
+          - draft
+          - open
+          - found
+          - closed
+          - expired
+        scenario:
+          type: string
+          enum:
+          - warehouse_shortage
+          - delivery_handoff
+          nullable: true
+        region_label:
+          type: string
+          maxLength: 120
+          nullable: true
+        pickup_region_label:
+          type: string
+          maxLength: 120
+          nullable: true
+        price_unit:
+          type: string
+          nullable: true
+          enum:
+          - per_parcel
+          - per_route
+          - negotiable
+        price_cents:
+          type: integer
+          minimum: 0
+          nullable: true
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        handoff_date:
+          type: string
+          format: date
+          nullable: true
+        handoff_mode:
+          type: string
+          enum:
+          - asap
+          - scheduled
+          nullable: true
+        quantity_mode:
+          type: string
+          enum:
+          - exact
+          - estimate
+          - unknown
+          nullable: true
+        parcel_count:
+          type: integer
+          minimum: 0
+          nullable: true
+        drivers_needed:
+          type: integer
+          minimum: 0
+          nullable: true
+        remaining_parcels:
+          type: integer
+          minimum: 0
+          nullable: true
+        remaining_drivers:
+          type: integer
+          minimum: 0
+          nullable: true
+      required:
+      - id
+      - kind
+      - status
+      - scenario
+      - region_label
+      - pickup_region_label
+      - price_unit
+      - price_cents
+      - starts_at
+      - handoff_date
+      - handoff_mode
+      - quantity_mode
+      - parcel_count
+      - drivers_needed
+      - remaining_parcels
+      - remaining_drivers
     Post:
       type: object
       additionalProperties: false
@@ -11490,18 +11725,38 @@ components:
           type: string
           format: uuid
         author:
-          $ref: '#/components/schemas/Profile'
+          $ref: '#/components/schemas/CircleAuthor'
         body:
           type: string
           maxLength: 2000
-        request:
+        topic:
+          type: string
+          enum:
+          - delivery_question
+          - experience
+          - on_the_road
+          nullable: true
+        region:
           anyOf:
           - allOf:
-            - $ref: '#/components/schemas/Request'
+            - $ref: '#/components/schemas/ProfileRegion'
           - type: object
             nullable: true
             enum:
             - null
+        has_request:
+          type: boolean
+        request:
+          anyOf:
+          - allOf:
+            - $ref: '#/components/schemas/CircleRequestSummary'
+          - type: object
+            nullable: true
+            enum:
+            - null
+        reply_count:
+          type: integer
+          minimum: 0
         created_at:
           type: string
           format: date-time
@@ -11509,7 +11764,11 @@ components:
       - id
       - author
       - body
+      - topic
+      - region
+      - has_request
       - request
+      - reply_count
       - created_at
     CommentInput:
       type: object
@@ -11532,7 +11791,7 @@ components:
           type: string
           format: uuid
         author:
-          $ref: '#/components/schemas/Profile'
+          $ref: '#/components/schemas/CircleAuthor'
         body:
           type: string
           maxLength: 1000
@@ -11568,6 +11827,9 @@ components:
         created_at:
           type: string
           format: date-time
+        comment_id:
+          type: string
+          format: uuid
       required:
       - id
       - kind
@@ -11670,13 +11932,8 @@ components:
         object_type:
           type: string
           enum:
-          - apartment
-          - access_record
-          - request
-          - user
           - post
           - comment
-          - message
         object_id:
           type: string
           format: uuid

@@ -91,6 +91,7 @@ export function visibleWatermark(rows: Message[], ids: string[]) {
   );
 }
 export const notificationLabel: Record<string, string> = {
+  circle_reply: "你的司机圈动态有新回复",
   application_received: "有司机报名支援",
   application_withdrawn: "司机取消了报名",
   application_contacted: "发布者已标记联系",

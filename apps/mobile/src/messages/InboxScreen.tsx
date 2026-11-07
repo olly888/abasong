@@ -3,18 +3,31 @@ import { AppState, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
-import { useAuth } from "../auth/AuthProvider";
+import { useBusinessRequest } from "../auth/useBusinessRequest";
+import type { ProfileRequest } from "../profile/profile-session";
+import { openPost } from "../circle/navigation";
 import { AuthPage, ActionButton, FormError } from "../auth/AuthControls";
-import { dataRequest } from "../apartments/client";
 import { ConversationRows, NotificationRows } from "./MessageViews";
 import { StatusPanel } from "../ui/Feedback";
 import { AccountError } from "../auth/api-client";
 type S = components["schemas"];
 export default function InboxScreen() {
-  const { session } = useAuth(),
-    [tab, setTab] = useState<"conversations" | "notifications">(
-      "conversations",
-    ),
+  const request = useBusinessRequest();
+  return <InboxContent request={request} onPost={openPost} />;
+}
+
+export function InboxContent({
+  request,
+  onPost,
+  initialTab = "conversations",
+  onBack,
+}: {
+  request: ProfileRequest;
+  onPost: (id: string, commentId?: string) => void;
+  initialTab?: "conversations" | "notifications";
+  onBack?: () => void;
+}) {
+  const [tab, setTab] = useState<"conversations" | "notifications">(initialTab),
     [conversations, setConversations] = useState<S["Conversation"][]>([]),
     [notifications, setNotifications] = useState<S["Notification"][]>([]),
     [summary, setSummary] = useState<S["InboxSummary"] | null>(null),
@@ -35,19 +48,18 @@ export default function InboxScreen() {
   }, []);
   const load = useCallback(
     async (g: number, next?: string) => {
-      if (!session || !active.current || loading.current === g) return;
+      if (!active.current || loading.current === g) return;
       loading.current = g;
       const c = new AbortController();
       controller.current = c;
       setBusy(true);
       try {
         const [page, count] = await Promise.all([
-          dataRequest<S["ConversationPage"] | S["NotificationPage"]>(
-            session,
+          request<S["ConversationPage"] | S["NotificationPage"]>(
             `/v1/${tab === "conversations" ? "conversations" : "me/notifications"}?limit=30${next ? "&cursor=" + encodeURIComponent(next) : ""}`,
             { signal: c.signal },
           ),
-          dataRequest<S["InboxSummary"]>(session, "/v1/me/inbox-summary", {
+          request<S["InboxSummary"]>("/v1/me/inbox-summary", {
             signal: c.signal,
           }),
         ]);
@@ -93,7 +105,7 @@ export default function InboxScreen() {
         if (active.current && g === scope.current) setBusy(false);
       }
     },
-    [tab, session?.access_token],
+    [tab, request],
   );
   useFocusEffect(
     useCallback(() => {
@@ -119,10 +131,9 @@ export default function InboxScreen() {
     }, [foreground, load]),
   );
   async function openNotification(n: S["Notification"]) {
-    if (!session) return;
     const g = scope.current;
     try {
-      await dataRequest(session, `/v1/me/notifications/${n.id}/read`, {
+      await request(`/v1/me/notifications/${n.id}/read`, {
         method: "PUT",
       });
       if (!active.current || g !== scope.current) return;
@@ -133,7 +144,9 @@ export default function InboxScreen() {
             : x,
         ),
       );
-      if (
+      if (n.kind === "circle_reply" && n.object_type === "post")
+        onPost(n.object_id, n.comment_id);
+      else if (
         n.object_type === "request" &&
         ["application_received", "application_withdrawn"].includes(n.kind)
       )
@@ -153,8 +166,27 @@ export default function InboxScreen() {
         });
       else void load(g);
     } catch (e) {
-      if (active.current && g === scope.current)
-        setError(e instanceof Error ? e.message : "通知暂不可用");
+      if (active.current && g === scope.current) {
+        if (
+          e instanceof AccountError &&
+          e.status === 404 &&
+          n.kind === "circle_reply"
+        ) {
+          setNotifications((old) => old.filter((item) => item.id !== n.id));
+          if (!n.read_at)
+            setSummary(
+              (old) =>
+                old && {
+                  ...old,
+                  unread_notifications: Math.max(
+                    0,
+                    old.unread_notifications - 1,
+                  ),
+                },
+            );
+          setError("这条回复通知已不可查看");
+        } else setError(e instanceof Error ? e.message : "通知暂不可用");
+      }
     }
   }
   const items = tab === "conversations" ? conversations : notifications;
@@ -162,7 +194,10 @@ export default function InboxScreen() {
     <AuthPage
       compact
       title="消息"
-      onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+      onBack={
+        onBack ??
+        (() => (router.canGoBack() ? router.back() : router.replace("/")))
+      }
     >
       <View
         style={{

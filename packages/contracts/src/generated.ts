@@ -961,6 +961,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅返回本人屏蔽的账号与最小显示信息 */
+        get: operations["listBlockedUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/blocks/{user_id}": {
         parameters: {
             query?: never;
@@ -1008,7 +1025,7 @@ export interface paths {
         get: operations["getPost"];
         put?: never;
         post?: never;
-        /** 仅作者或有权运营软删除 */
+        /** 仅作者软删除；重复删除同一对象安全 */
         delete: operations["removePost"];
         options?: never;
         head?: never;
@@ -1043,7 +1060,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** 仅作者或有权运营软删除 */
+        /** 仅作者软删除；重复删除同一对象安全 */
         delete: operations["removeComment"];
         options?: never;
         head?: never;
@@ -1074,7 +1091,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 本人站内通知；无密码/消息正文 */
+        /** 本人站内通知；司机圈回复按当前可见性过滤，仅附回复ID */
         get: operations["listNotifications"];
         put?: never;
         post?: never;
@@ -1196,7 +1213,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 校验可见对象；仅提交不自动封禁 */
+        /** 举报可见动态或回复；不自动封禁 */
         post: operations["submitReport"];
         delete?: never;
         options?: never;
@@ -2315,13 +2332,65 @@ export interface components {
             body: string;
             /** Format: uuid */
             request_id?: string;
+            /** Format: uuid */
+            region_id?: string;
+            /** @enum {string} */
+            topic?: "delivery_question" | "experience" | "on_the_road";
+        };
+        CircleAuthor: {
+            /** Format: uuid */
+            user_id: string;
+            display_name: string;
+        };
+        BlockedUser: {
+            /** Format: uuid */
+            user_id: string;
+            display_name: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        BlockedUserPage: {
+            items: components["schemas"]["BlockedUser"][];
+            next_cursor: string | null;
+        };
+        CircleRequestSummary: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+            /** @enum {string} */
+            status: "draft" | "open" | "found" | "closed" | "expired";
+            /** @enum {string|null} */
+            scenario: "warehouse_shortage" | "delivery_handoff" | null;
+            region_label: string | null;
+            pickup_region_label: string | null;
+            /** @enum {string|null} */
+            price_unit: "per_parcel" | "per_route" | "negotiable" | null;
+            price_cents: number | null;
+            /** Format: date-time */
+            starts_at: string | null;
+            /** Format: date */
+            handoff_date: string | null;
+            /** @enum {string|null} */
+            handoff_mode: "asap" | "scheduled" | null;
+            /** @enum {string|null} */
+            quantity_mode: "exact" | "estimate" | "unknown" | null;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            remaining_parcels: number | null;
+            remaining_drivers: number | null;
         };
         Post: {
             /** Format: uuid */
             id: string;
-            author: components["schemas"]["Profile"];
+            author: components["schemas"]["CircleAuthor"];
             body: string;
-            request: components["schemas"]["Request"] | (never | null);
+            /** @enum {string|null} */
+            topic: "delivery_question" | "experience" | "on_the_road" | null;
+            region: components["schemas"]["ProfileRegion"] | (never | null);
+            has_request: boolean;
+            request: components["schemas"]["CircleRequestSummary"] | (never | null);
+            reply_count: number;
             /** Format: date-time */
             created_at: string;
         };
@@ -2333,7 +2402,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             post_id: string;
-            author: components["schemas"]["Profile"];
+            author: components["schemas"]["CircleAuthor"];
             body: string;
             /** Format: date-time */
             created_at: string;
@@ -2349,6 +2418,8 @@ export interface components {
             read_at: string | null;
             /** Format: date-time */
             created_at: string;
+            /** Format: uuid */
+            comment_id?: string;
         };
         InstallationProof: {
             /** Format: uuid */
@@ -2382,7 +2453,7 @@ export interface components {
         };
         ReportInput: {
             /** @enum {string} */
-            object_type: "apartment" | "access_record" | "request" | "user" | "post" | "comment" | "message";
+            object_type: "post" | "comment";
             /** Format: uuid */
             object_id: string;
             reason: string;
@@ -10185,6 +10256,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ack"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listBlockedUsers: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockedUserPage"];
                 };
             };
             /** @description 输入或跨字段约束错误 */

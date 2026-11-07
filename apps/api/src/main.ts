@@ -41,6 +41,8 @@ import { NestFactory } from "@nestjs/core";
 import { randomUUID } from "node:crypto";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Database } from "./database/database.service";
+import { CircleController } from "./circle/circle.controller";
+import { CircleService } from "./circle/circle.service";
 import { TeamController } from "./me/team.controller";
 import { TeamService } from "./me/team.service";
 import { MeController } from "./me/me.controller";
@@ -75,6 +77,7 @@ class HealthController {
     HealthController,
     MeController,
     TeamController,
+    CircleController,
     ApartmentsController,
     ImportsController,
     SearchController,
@@ -92,6 +95,7 @@ class HealthController {
     Database,
     MeService,
     TeamService,
+    CircleService,
     SelfProfileService,
     TokenVerifier,
     IdentityGuard,

@@ -1,8 +1,12 @@
 # Abasong development status
 
-Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.44](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
+Updated 2026-11-06 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan1.45](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
-## Current delivery — B5-02 scoped local DSP team implementation
+## Current delivery — B5-03 scoped local driver circle
+
+Branch `codex/b5-03-circle-text`, base `c7d5906` / PR103. Native text feed, posts, replies, existing Inbox notifications, own deletion, reports and block controls are connected to the authenticated API. Local D0 now has 21 migrations / 56 forced-RLS tables. iOS and Android simulator verification used isolated HTTP/PG and two synthetic actors, including response-loss retries in both directions and removal of inaccessible notices. Fixture cleanup verified 0 databases / 0 roles. Engineering 500, requests 577, library 295 and import 124 checks pass. [Implementation and scoped evidence](docs/technical/B5_03_司机圈文字动态回复与通知实施验收.md). Next: B5-04 private post images. B6 external delivery and human testing remain separate.
+
+## Previous delivery — B5-02 scoped local DSP team implementation
 
 Branch `codex/b5-02-dsp-team`, base `1277818` / PR102. One owner-managed DSP team per unified account, private by default; optionally share the separate encrypted business contact in an authorized detail. Draft team creation returns to the same form; owner edits, contact changes and deactivation do not rewrite published identity. No membership, payment, or capability grants. Local D0: 20 migrations / 56 tables. [Implementation and scoped evidence](docs/technical/B5_02_本人DSP团队与发布身份实施验收.md). Next: B5-03 text circle/replies; B6 and human0/7 remain separate.
 
@@ -114,6 +118,6 @@ Documentation/task/link/JS syntax validation is recorded in [baseline report](de
 
 1. R4-01–13 scoped local core exits and exact code CI are verified; reports preserve each batch's evidence and limits. Do not repeat unchanged map gestures or rebuild completed services.
 2. Start **B5-01** on its own `codex/` branch: minimal editable self profile/experience/voluntary contacts and the approved My menu, with the compact switch reusing the existing one-window availability flow. Contract/authorization precede new forms.
-3. Continue B5-02 own DSP team→B5-03 circle text/replies→B5-04 private images→B5-05 invitations; B6 external/human validation can be arranged alongside independent local work.
+3. Continue B5-04 private images→B5-05 invitations after the B5-03 local text exit; B6 external/human validation can be arranged alongside independent local work.
 
 `development_ready=true` and `b5_ready=true` authorize this controlled local scope; they do not certify the full product, normal-login/physical field or release readiness. `release_ready=false`. D14 is an umbrella, D22 overlaps D05/06, D23 overlaps D01; no duplicate counts. D19 cancelled, D24 P1. Do not bulk merge the PR stack or close issues from document status alone.

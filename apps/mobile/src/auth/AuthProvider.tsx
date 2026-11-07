@@ -1,3 +1,4 @@
+import { clearCircleDrafts } from "../circle/session";
 import { clearProfileDraft } from "../profile/profile-session";
 import { preparePushLogout } from "../notifications/registration";
 import {
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session) setRetry((value) => value + 1);
     if (owner.current !== (session?.user.id ?? null)) {
       clearProfileDraft();
+      clearCircleDrafts();
       identityVersion.current++;
       owner.current = session?.user.id ?? null;
       setPendingPhone(null);
@@ -221,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   async function signOut() {
     clearProfileDraft();
+    clearCircleDrafts();
     if (signingOut.current) return;
     signingOut.current = true;
     ignoreSessionEvents.current = true;

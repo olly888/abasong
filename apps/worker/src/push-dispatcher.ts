@@ -23,6 +23,7 @@ type Target = {
 };
 const eventTypes = [
   "message_created",
+  "circle_reply",
   "request_updated",
   "application_received",
   "application_withdrawn",
@@ -65,6 +66,21 @@ export class PushDispatcher {
         kind: "conversation",
         object_id: cid,
         category: "chat_push",
+      }));
+    }
+    if (e.event_type === "circle_reply") {
+      const rows = (
+        await c.query<{ user_id: string; object_id: string }>(
+          `SELECT n.user_id,n.object_id FROM abasong.notifications n
+         WHERE n.event_key=$1 AND n.object_type='post' AND n.kind='circle_reply' AND n.object_id=$2
+         AND n.read_at IS NULL AND abasong.circle_reply_visible(n.object_id,n.circle_comment_id,n.user_id)`,
+          [e.event_key, e.object_id],
+        )
+      ).rows;
+      return rows.map((row) => ({
+        ...row,
+        kind: "post",
+        category: "system_push",
       }));
     }
     const rows = (
@@ -178,7 +194,9 @@ export class PushDispatcher {
             body:
               e.event_type === "message_created"
                 ? "你有一条新消息"
-                : "临时支援有更新",
+                : e.event_type === "circle_reply"
+                  ? "你的司机圈动态有新回复"
+                  : "临时支援有更新",
             data: {
               version: 1,
               owner_id: target.user_id,

@@ -10,18 +10,14 @@ import { SensitiveDatabase } from "../apartments/sensitive-database";
 import { RequestsService } from "./requests.service";
 import { checked, requestId } from "./request-input";
 import { messageQuery } from "./collaboration-input";
-import {
-  sendInput,
-  inboxQuery,
-  pageCursor,
-  preferenceInput,
-} from "./messaging-input";
+import { sendInput, inboxCursor, preferenceInput } from "./messaging-input";
 import { conversationRow, conversationView } from "./conversation-view";
 import { safeRequestSnapshot } from "./request-events";
 type S = components["schemas"];
 const missing = () => new ApiError(404, "NOT_FOUND", "记录不存在或不可见");
 const unavailable = () =>
   new ApiError(503, "MESSAGE_UNAVAILABLE", "消息暂时无法读取，请重试");
+const visibleNotification = `(kind<>'circle_reply' OR abasong.circle_reply_visible(object_id,circle_comment_id,user_id))`;
 const conflict = () =>
   new ApiError(409, "IDEMPOTENCY_CONFLICT", "此消息编号已用于其他内容");
 @Injectable()
@@ -314,26 +310,11 @@ export class MessagingService {
     const cid = requestId(id);
     return this.requests.tx(a, (c) => conversationView(c, a, cid));
   }
-  private cursor(query: unknown) {
-    const q = checked(inboxQuery, query);
-    let after: { at: string; id: string } | undefined;
-    if (q.cursor) {
-      try {
-        after = checked(
-          pageCursor,
-          JSON.parse(Buffer.from(q.cursor, "base64url").toString("utf8")),
-        );
-      } catch {
-        throw new ApiError(400, "INVALID_INPUT", "列表位置有误");
-      }
-    }
-    return { ...q, after };
-  }
   async list(
     a: VerifiedIdentity,
     query: unknown,
   ): Promise<S["ConversationPage"]> {
-    const q = this.cursor(query);
+    const q = inboxCursor(query);
     return this.requests.tx(a, async (c) => {
       const rows = (
         await c.query(
@@ -367,7 +348,7 @@ export class MessagingService {
       ).rows[0];
       const n = (
         await c.query(
-          "SELECT count(*) AS n FROM abasong.notifications WHERE user_id=$1 AND read_at IS NULL",
+          `SELECT count(*) AS n FROM abasong.notifications WHERE user_id=$1 AND read_at IS NULL AND ${visibleNotification}`,
           [a.userId],
         )
       ).rows[0];
@@ -382,19 +363,20 @@ export class MessagingService {
     a: VerifiedIdentity,
     query: unknown,
   ): Promise<S["NotificationPage"]> {
-    const q = this.cursor(query);
+    const q = inboxCursor(query);
     return this.requests.tx(a, async (c) => {
       const rows = (
           await c.query(
-            "SELECT id,kind,object_type,object_id,read_at,created_at FROM abasong.notifications WHERE user_id=$1 AND ($2::timestamptz IS NULL OR (created_at,id)<($2::timestamptz,$3::uuid)) ORDER BY created_at DESC,id DESC LIMIT $4",
+            `SELECT id,kind,object_type,object_id,read_at,created_at,circle_comment_id FROM abasong.notifications WHERE user_id=$1 AND ${visibleNotification} AND ($2::timestamptz IS NULL OR (created_at,id)<($2::timestamptz,$3::uuid)) ORDER BY created_at DESC,id DESC LIMIT $4`,
             [a.userId, q.after?.at ?? null, q.after?.id ?? null, q.limit + 1],
           )
         ).rows,
         selected = rows.slice(0, q.limit),
         last = selected.at(-1);
       return {
-        items: selected.map((r) => ({
+        items: selected.map(({ circle_comment_id, ...r }) => ({
           ...r,
+          ...(circle_comment_id ? { comment_id: circle_comment_id } : {}),
           read_at: r.read_at?.toISOString() ?? null,
           created_at: r.created_at.toISOString(),
         })),
@@ -416,7 +398,7 @@ export class MessagingService {
       if (
         !(
           await c.query(
-            "UPDATE abasong.notifications SET read_at=COALESCE(read_at,now()) WHERE id=$1 AND user_id=$2 RETURNING id",
+            `UPDATE abasong.notifications SET read_at=COALESCE(read_at,now()) WHERE id=$1 AND user_id=$2 AND ${visibleNotification} RETURNING id`,
             [nid, a.userId],
           )
         ).rowCount

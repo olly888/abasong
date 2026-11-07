@@ -8,10 +8,14 @@ import {
   FormError,
 } from "../../auth/AuthControls";
 import { useAuth } from "../../auth/AuthProvider";
+import { useBusinessRequest } from "../../auth/useBusinessRequest";
+import type { Circle } from "../../circle/session";
 import { ListRow } from "../../ui/Primitives";
 
 export default function Settings() {
   const auth = useAuth();
+  const request = useBusinessRequest();
+  const [hasBlocks, setHasBlocks] = useState(false);
   const [permission, setPermission] = useState("查看系统权限");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,6 +40,21 @@ export default function Settings() {
         sub.remove();
       };
     }, []),
+  );
+  useFocusEffect(
+    useCallback(() => {
+      setHasBlocks(false);
+      if (auth.phase !== "ready") return;
+      const c = new AbortController();
+      void request<Circle["BlockedUserPage"]>("/v1/me/blocks?limit=1", {
+        signal: c.signal,
+      })
+        .then((page) => {
+          if (!c.signal.aborted) setHasBlocks(page.items.length > 0);
+        })
+        .catch(() => {});
+      return () => c.abort();
+    }, [auth.phase, request]),
   );
   async function openSettings() {
     try {
@@ -62,6 +81,13 @@ export default function Settings() {
           title="通知设置"
           icon="message"
           onPress={() => router.push("/account/notifications")}
+        />
+      ) : null}
+      {hasBlocks ? (
+        <ListRow
+          title="已屏蔽用户"
+          icon="person"
+          onPress={() => router.push("/account/blocks")}
         />
       ) : null}
       <ListRow

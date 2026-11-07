@@ -16,6 +16,10 @@ it("routes only current-account allowlisted opaque notification targets", () => 
   expect(notificationTarget({ ...p, kind: "request" }, owner)?.pathname).toBe(
     "/requests/[id]",
   );
+  expect(notificationTarget({ ...p, kind: "post" }, owner)).toEqual({
+    pathname: "/circle/[id]",
+    params: { id },
+  });
   for (const data of [
     null,
     { ...p, url: "https://evil.invalid" },

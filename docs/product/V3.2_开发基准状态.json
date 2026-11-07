@@ -1,10 +1,10 @@
 {
-  "version": "V3.2-B5-02-dsp-team",
+  "version": "V3.2-B5-03-circle-text",
   "date": "2026-11-06",
   "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
-  "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_and_B5_01",
+  "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_and_B5_01_to_03",
   "prototype": "3.2-r3-delivery",
-  "scope": "B5_01_scoped_local_exit_PASS_controlled_B5_02_eligible",
+  "scope": "B5_03_scoped_local_exit_PASS_controlled_B5_04_eligible",
   "app_changed": true,
   "gates": {
     "research_evidence": "documented_primary_sources_not_competitor_account_test",
@@ -12,10 +12,10 @@
     "core_prototype": "owner_main_flow_accepted_not_native",
     "human_usability": "not_scheduled_parallel_validation_not_all_local_implementation_blocker",
     "baseline_documents": "R4_13_closed_unlisted_batch_and_consolidated_core_differences",
-    "implementation": "R4_01_to_13_and_B5_01_scoped_local_exit_PASS",
-    "circle_prototype": "synthetic_checks_only_native_and_service_pending_B5",
+    "implementation": "R4_01_to_13_and_B5_01_to_03_scoped_local_exit_PASS",
+    "circle_prototype": "text_implementation_local_HTTP_DB_dual_native_PASS",
     "circle_images": "synthetic_only_private_media_and_native_pending_B5",
-    "my_account": "self_profile_My_switch_contact_scoped_local_PASS_team_and_invite_pending",
+    "my_account": "self_profile_My_switch_team_contact_scoped_local_PASS_invitation_pending",
     "invitation_prototype": "owner_main_flow_review_recorded_native_distribution_pending",
     "delivery_prototype": "owner_main_flow_accepted_R4_08_native_representative_checks_not_full_usability"
   },
@@ -31,7 +31,7 @@
   "development_ready": true,
   "b5_ready": true,
   "pending": [
-    "B5_own_team_circle_media_and_invitation",
+    "B5_private_circle_media_and_invitation",
     "human_task_observation",
     "B6_real_image_quality_cloud_accounts_push_package_and_field"
   ],
@@ -206,7 +206,7 @@
     "combined_report": "../technical/R4_10_本地原生业务组合实施验收.md"
   },
   "release_ready": false,
-  "readiness_scope": "controlled_B5_03_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
+  "readiness_scope": "controlled_B5_04_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
   "owner_review": {
     "status": "main_flows_accepted",
     "date": "2026-11-05",
@@ -223,11 +223,20 @@
     "team_http_db_assertions": 27,
     "physical_or_cloud_acceptance": false
   },
+  "b5_circle": {
+    "status": "scoped_local_circle_text_HTTP_DB_dual_native_verified",
+    "report": "../technical/B5_03_司机圈文字动态回复与通知实施验收.md",
+    "migration": "V12.0021",
+    "contract_paths": 94,
+    "circle_assertions": 27,
+    "physical_or_cloud_acceptance": false,
+    "real_push_delivery_verified": false
+  },
   "controlled_implementation": {
     "eligible_batches": [
-      "B5-03"
+      "B5-04"
     ],
-    "next_task": "B5-03",
+    "next_task": "B5-04",
     "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
     "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
     "task_count": 22,

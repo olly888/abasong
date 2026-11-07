@@ -10,6 +10,7 @@ export type IconName =
   | "person"
   | "search"
   | "message"
+  | "more"
   | "plus"
   | "back"
   | "chevron"
@@ -59,6 +60,21 @@ export function Icon({
     );
   let content;
   switch (name) {
+    case "more":
+      content = [5, 11, 17].map((left) =>
+        stroke(
+          {
+            left,
+            top: 11,
+            width: 3,
+            height: 3,
+            borderRadius: 2,
+            backgroundColor: color,
+          },
+          String(left),
+        ),
+      );
+      break;
     case "car":
       content = (
         <>

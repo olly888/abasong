@@ -53,8 +53,8 @@
   "open_P0": [
     "D08-B05-unlisted-batch-address"
   ],
-  "pull_request": null,
-  "ci_source": "pending_current_head",
+  "pull_request": "https://github.com/olly888/abasong/pull/100",
+  "ci_source": "https://github.com/olly888/abasong/pull/100/checks",
   "code_fingerprints": [
     {
       "path": ".github/workflows/ci.yml",
@@ -132,5 +132,10 @@
       "path": "scripts/d1/verify-native-collaboration.ts",
       "sha256": "6a7b9a912f807a7beea91a50479e75c25ded442bfd245c08538bee8c86e725c5"
     }
-  ]
+  ],
+  "validated_code_commit": "83217a0ba808e7bdc0eaec2eac8cbc250bcdb358",
+  "secret_scans": {
+    "staged": "PASS",
+    "all_history": "PASS"
+  }
 }

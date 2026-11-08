@@ -41,11 +41,13 @@ export function CircleComposer({
   request,
   onBack,
   onDone,
+  onPickerActorChange,
 }: {
   actor: string;
   request: CircleRequest;
   onBack: () => void;
   onDone: (post: Circle["Post"]) => void;
+  onPickerActorChange?: (actor: string | null) => void;
 }) {
   const [draft, setDraft] = useState(() => getPostDraft(actor));
   const [regions, setRegions] = useState<Circle["Region"][]>([]);
@@ -102,9 +104,12 @@ export function CircleComposer({
   useEffect(
     () => () => {
       working.current?.abort();
-      picker.current?.abort();
+      if (picker.current) {
+        picker.current.abort();
+        onPickerActorChange?.(null);
+      }
     },
-    [],
+    [onPickerActorChange],
   );
   const dirty = !!(
     fields.body ||
@@ -153,6 +158,7 @@ export function CircleComposer({
       return;
     const c = new AbortController();
     picker.current = c;
+    onPickerActorChange?.(actor);
     setPicking(true);
     try {
       const { photos, rejected } = await selectCirclePhotos(
@@ -180,7 +186,10 @@ export function CircleComposer({
       }
     } finally {
       picker.current = null;
-      if (!c.signal.aborted) setPicking(false);
+      if (!c.signal.aborted) {
+        setPicking(false);
+        onPickerActorChange?.(null);
+      }
     }
   }
   function openPhotoMenu() {

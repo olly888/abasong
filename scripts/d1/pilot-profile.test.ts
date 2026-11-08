@@ -96,3 +96,33 @@ it("build environment copies only selected public values and clears Metro/develo
   ])
     expect(result[key]).toBeUndefined();
 });
+
+it("only opts in to remote push from a valid project in local public config", () => {
+  const projectId = "11111111-1111-4111-8111-111111111111";
+  const shell = {
+    EXPO_PUBLIC_EXPO_PROJECT_ID: "22222222-2222-4222-8222-222222222222",
+    EXPO_TOKEN: "TEST_PRIVATE",
+  };
+  const local = { ...env(), EXPO_PUBLIC_EXPO_PROJECT_ID: projectId };
+  expect(
+    pilotBuildEnvironment(shell, local).EXPO_PUBLIC_EXPO_PROJECT_ID,
+  ).toBeUndefined();
+  expect(() => pilotBuildEnvironment(shell, env(), true)).toThrow(
+    "Expo project ID",
+  );
+  expect(() =>
+    pilotBuildEnvironment(
+      shell,
+      {
+        ...local,
+        EXPO_PUBLIC_EXPO_PROJECT_ID: "-".repeat(36),
+      },
+      true,
+    ),
+  ).toThrow("Expo project ID");
+  const configured = pilotBuildEnvironment(shell, local, true);
+  expect(configured.EXPO_PUBLIC_EXPO_PROJECT_ID).toBe(projectId);
+  expect(configured.EXPO_TOKEN).toBeUndefined();
+  Object.assign(process.env, configured);
+  expect(resolved().extra?.eas?.projectId).toBe(projectId);
+});

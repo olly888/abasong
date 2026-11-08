@@ -7,18 +7,60 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { pilotBuildEnvironment } from "./prepare-pilot";
 import { PILOT_API } from "../../apps/mobile/app.config";
+
+function readSigningPlist(command: string, args: string[]) {
+  const xml = spawnSync(command, args, { encoding: "utf8" });
+  if (xml.status !== 0) throw new Error("Could not read iOS signing metadata");
+  // Provisioning profiles include data and dates. Extract only the fields
+  // needed for this gate and keep the full profile out of build logs.
+  const json = spawnSync(
+    "/usr/bin/python3",
+    [
+      "-c",
+      `import json, plistlib, sys
+p = plistlib.loads(sys.stdin.buffer.read())
+e = p.get("Entitlements", p)
+print(json.dumps({
+    "teams": p.get("TeamIdentifier", []),
+    "apns": e.get("aps-environment"),
+    "appId": e.get("application-identifier"),
+    "teamId": e.get("com.apple.developer.team-identifier"),
+}))`,
+    ],
+    { input: xml.stdout, encoding: "utf8" },
+  );
+  if (json.status !== 0) throw new Error("Invalid iOS signing metadata");
+  return JSON.parse(json.stdout) as {
+    teams: string[];
+    apns: string | null;
+    appId: string | null;
+    teamId: string | null;
+  };
+}
+
 async function main() {
   const target = process.argv[2];
+  const push = target === "device" && process.argv[3] === "--push";
   if (
     !["simulator", "device"].includes(target ?? "") ||
-    process.argv.length !== 3 ||
+    process.argv.length !== (push ? 4 : 3) ||
     process.versions.node.split(".")[0] !== "24"
   )
-    throw new Error("Choose simulator or device using Node24");
+    throw new Error("Choose simulator, device or device --push using Node24");
   const root = process.cwd(),
-    output = resolve(".tooling/pilot-kit", target!);
+    output = resolve(".tooling/pilot-kit", push ? "device-push" : target!);
   mkdirSync(output, { recursive: true, mode: 0o700 });
   rmSync(resolve(output, "build-report.json"), { force: true });
+  const publicValues = parseEnv(readFileSync("apps/mobile/.env.local", "utf8"));
+  const pushTeam = publicValues.ABASONG_PILOT_PUSH_TEAM_ID;
+  if (push && !/^[A-Z0-9]{10}$/.test(pushTeam ?? ""))
+    throw new Error(
+      "Push build requires the approved Apple team ID in .env.local",
+    );
+  const env: NodeJS.ProcessEnv & { SOURCEMAP_FILE: string } = {
+    ...pilotBuildEnvironment(process.env, publicValues, push),
+    SOURCEMAP_FILE: resolve(output, "business.js.map"),
+  };
   const acceptance = JSON.parse(
     readFileSync(
       ".tooling/cloud-runtime/acceptance/business-test-result.json",
@@ -38,13 +80,6 @@ async function main() {
     signal: AbortSignal.timeout(8000),
   });
   if (!ready.ok) throw new Error("Fixed HTTPS API is not ready");
-  const env = {
-    ...pilotBuildEnvironment(
-      process.env,
-      parseEnv(readFileSync("apps/mobile/.env.local", "utf8")),
-    ),
-    SOURCEMAP_FILE: resolve(output, "business.js.map"),
-  };
   const run = (
     file: string,
     args: string[],
@@ -93,8 +128,15 @@ async function main() {
         "apps/mobile/ios/Abasong/Abasong.entitlements",
       ]),
     );
-    if (Object.hasOwn(entitlements, "aps-environment"))
-      throw new Error("Unexpected APNs entitlement in local pilot build");
+    const requestedApns = entitlements["aps-environment"];
+    if (
+      push
+        ? !["development", "production"].includes(requestedApns)
+        : Object.hasOwn(entitlements, "aps-environment")
+    )
+      throw new Error(
+        "Native pilot APNs entitlement differs from the build mode",
+      );
     const args = [
       "-workspace",
       "apps/mobile/ios/Abasong.xcworkspace",
@@ -113,27 +155,16 @@ async function main() {
       "build",
     ];
     if (target === "device") {
-      const parsed = spawnSync(
-        "/usr/bin/security",
-        [
-          "cms",
-          "-D",
-          "-i",
-          ".tooling/ios-device-build/Build/Products/Debug-iphoneos/Abasong.app/embedded.mobileprovision",
-        ],
-        { encoding: "utf8" },
-      );
-      if (parsed.status !== 0)
-        throw new Error("Existing local signing identity required");
-      const team = spawnSync(
-        "/usr/bin/python3",
-        [
-          "-c",
-          "import sys,plistlib; p=plistlib.loads(sys.stdin.buffer.read()); print(p['TeamIdentifier'][0])",
-        ],
-        { input: parsed.stdout, encoding: "utf8" },
-      ).stdout.trim();
-      if (!/^[A-Z0-9]{10}$/.test(team)) throw new Error("Signing team refused");
+      const team = push
+        ? pushTeam
+        : readSigningPlist("/usr/bin/security", [
+            "cms",
+            "-D",
+            "-i",
+            ".tooling/ios-device-build/Build/Products/Debug-iphoneos/Abasong.app/embedded.mobileprovision",
+          ]).teams[0];
+      if (typeof team !== "string" || !/^[A-Z0-9]{10}$/.test(team))
+        throw new Error("Signing team refused");
       args.push(
         "CODE_SIGN_STYLE=Automatic",
         `DEVELOPMENT_TEAM=${team}`,
@@ -188,6 +219,36 @@ async function main() {
       throw new Error("Business module graph differs");
     if (target === "device")
       run("codesign", ["--verify", "--deep", "--strict", app]);
+    let signedApns: "development" | "production" | undefined;
+    if (push) {
+      const signed = readSigningPlist("codesign", [
+        "--display",
+        "--entitlements",
+        "-",
+        "--xml",
+        app,
+      ]);
+      const profile = readSigningPlist("/usr/bin/security", [
+        "cms",
+        "-D",
+        "-i",
+        resolve(app, "embedded.mobileprovision"),
+      ]);
+      const apns = signed.apns;
+      const signedId = signed.appId;
+      if (
+        (apns !== "development" && apns !== "production") ||
+        apns !== profile.apns ||
+        !profile.teams.includes(pushTeam ?? "") ||
+        signed.teamId !== pushTeam ||
+        typeof signedId !== "string" ||
+        !signedId.endsWith(".com.abasong.pilot") ||
+        signedId !== profile.appId ||
+        !bundle.includes(Buffer.from(env.EXPO_PUBLIC_EXPO_PROJECT_ID!))
+      )
+        throw new Error("Signed pilot APNs, project or app identity differs");
+      signedApns = apns;
+    }
     writeFileSync(
       resolve(output, "build-report.json"),
       JSON.stringify({
@@ -197,7 +258,9 @@ async function main() {
         build_number: plist.CFBundleVersion,
         app,
         embedded_business_js: true,
-        remote_push_configured: false,
+        remote_push_configured: push,
+        remote_push_delivery_verified: false,
+        ...(signedApns ? { signed_apns_environment: signedApns } : {}),
         bundle_bytes: bundle.length,
         bundle_sha256: createHash("sha256").update(bundle).digest("hex"),
         fixed_https: PILOT_API,
@@ -232,9 +295,11 @@ async function main() {
     }
   }
 }
-void main().catch(() => {
+void main().catch((error: unknown) => {
   console.error(
-    "Pilot native build stopped; private logs retained, no installation or cloud changes.",
+    error instanceof Error && error.message.startsWith("Push build requires ")
+      ? error.message
+      : "Pilot native build stopped; private logs retained, no installation.",
   );
   process.exitCode = 1;
 });

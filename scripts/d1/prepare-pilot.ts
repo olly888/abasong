@@ -19,6 +19,7 @@ import {
 export function pilotBuildEnvironment(
   shell: NodeJS.ProcessEnv,
   publicValues: NodeJS.ProcessEnv,
+  remotePush = false,
 ): NodeJS.ProcessEnv {
   const env = { ...shell };
   // Do not inherit development endpoints, Metro entry overrides or unrelated
@@ -38,9 +39,18 @@ export function pilotBuildEnvironment(
     EXPO_PUBLIC_MAPBOX_TOKEN: publicValues.EXPO_PUBLIC_MAPBOX_TOKEN,
   };
   validatePilotEnvironment(selected);
+  const projectId = publicValues.EXPO_PUBLIC_EXPO_PROJECT_ID;
+  if (
+    remotePush &&
+    !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(projectId ?? "")
+  )
+    throw new Error(
+      "Push build requires the pilot Expo project ID in .env.local",
+    );
   return {
     ...env,
     ...selected,
+    ...(remotePush ? { EXPO_PUBLIC_EXPO_PROJECT_ID: projectId } : {}),
     ABASONG_BUILD_PROFILE: "pilot-dev",
     EXPO_NO_DOTENV: "1",
     NODE_ENV: "production",

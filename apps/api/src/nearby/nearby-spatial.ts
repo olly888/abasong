@@ -37,3 +37,27 @@ export function mapFeatureId(value: unknown): string | undefined {
     return value;
   return undefined;
 }
+
+// Tilequery searches the containing tile and its eight neighbours at maxzoom.
+// A successful under-limit response alone does not prove radius coverage.
+export function tilequeryCoversRadius(p: Point, radius: number, zoom: number) {
+  if (!Number.isInteger(zoom) || zoom < 0 || zoom > 22 || Math.abs(p.lat) >= 85)
+    return false;
+  const n = 2 ** zoom,
+    x = Math.floor(((p.lng + 180) / 360) * n),
+    y = Math.floor(((1 - Math.asinh(Math.tan(p.lat * rad)) / Math.PI) / 2) * n);
+  if (x < 1 || x + 2 > n || y < 1 || y + 2 > n) return false;
+  const longitude = (tile: number) => (tile / n) * 360 - 180;
+  const latitude = (tile: number) =>
+    Math.atan(Math.sinh(Math.PI * (1 - (2 * tile) / n))) / rad;
+  const toMeridian = (lng: number) =>
+    earth *
+    Math.asin(Math.abs(Math.cos(p.lat * rad) * Math.sin((lng - p.lng) * rad)));
+  const margin = Math.min(
+    toMeridian(longitude(x - 1)),
+    toMeridian(longitude(x + 2)),
+    earth * Math.abs(latitude(y - 1) - p.lat) * rad,
+    earth * Math.abs(latitude(y + 2) - p.lat) * rad,
+  );
+  return Number.isFinite(radius) && radius >= 0 && radius + 5 <= margin;
+}

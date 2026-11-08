@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { createDiscoveryLoader } from "../../apps/mobile/src/drivers/discovery-loader";
+import { defaultFilters } from "../../apps/mobile/src/drivers/discovery-model";
 import { randomUUID } from "node:crypto";
 import type { Client } from "pg";
 import type { components } from "../../packages/contracts/src/generated";
@@ -808,6 +810,115 @@ export async function verifyDeliveryServices(p: {
     { ...appBody, observed_request_version: handoff.version },
     randomUUID(),
   );
+  // M4-02: real request scenario/date/region filters through the native loader.
+  let wholeHandoff = await call(
+    "/v1/requests",
+    "POST",
+    auth,
+    201,
+    {
+      ...body,
+      scenario: "delivery_handoff",
+      task_scope: "whole_route",
+      quantity_mode: "exact",
+      parcel_count: 20,
+      pickup: { kind: "contact_handoff" },
+    },
+    randomUUID(),
+  );
+  wholeHandoff = await call(
+    `/v1/requests/${wholeHandoff.id}/publish`,
+    "POST",
+    auth,
+    200,
+    { expected_version: wholeHandoff.version },
+    randomUUID(),
+  );
+  await http(
+    "/v1/requests?request_schema_version=2&scenario=other",
+    "GET",
+    other,
+    400,
+  );
+  const filters = {
+    ...defaultFilters(),
+    region,
+    day: workday,
+    text: "R4-07 TEST",
+    kind: "delivery_handoff",
+  };
+  const paths: string[] = [];
+  const discovery = createDiscoveryLoader(async (path) => {
+    paths.push(path);
+    // Force a short server page so a small real fixture exercises pagination.
+    const url = new URL(path, "http://test.invalid");
+    if (url.pathname === "/v1/requests") url.searchParams.set("limit", "1");
+    return http(url.pathname + url.search, "GET", other);
+  });
+  const first = await discovery.load("找活", filters, 1);
+  ok(first?.status === "ready" && first.rows.length === 1 && first.next);
+  const second = await discovery.more("找活", filters);
+  ok(second?.status === "ready");
+  if (second?.status !== "ready") throw new Error("TEST discovery failed");
+  equal(
+    new Set(
+      second.rows.map((x) => (x.kind === "request" ? x.request.id : "wrong")),
+    ),
+    new Set([handoff.id, wholeHandoff.id]),
+  );
+  ok(
+    second.rows.every(
+      (x) =>
+        x.kind === "request" &&
+        "scenario" in x.request &&
+        x.request.scenario === "delivery_handoff",
+    ),
+  );
+  equal(paths.filter((x) => x.startsWith("/v1/regions")).length, 1);
+  equal(paths.length, 3);
+  const warehousePage = await discovery.load(
+    "找活",
+    { ...filters, kind: "warehouse_shortage" },
+    1,
+  );
+  ok(
+    warehousePage?.status === "ready" &&
+      warehousePage.rows.length > 0 &&
+      warehousePage.rows.every(
+        (x) =>
+          x.kind === "request" &&
+          "scenario" in x.request &&
+          x.request.scenario === "warehouse_shortage",
+      ),
+  );
+  const otherRegion = await discovery.load(
+    "找活",
+    { ...filters, region: pickup },
+    1,
+  );
+  ok(otherRegion?.status === "ready" && otherRegion.rows.length === 0);
+  const otherDay = await discovery.load(
+    "找活",
+    { ...filters, day: "1900-01-01" },
+    1,
+  );
+  ok(otherDay?.status === "ready" && otherDay.rows.length === 0);
+  await call(
+    `/v1/requests/${wholeHandoff.id}/close`,
+    "POST",
+    auth,
+    200,
+    { expected_version: wholeHandoff.version, status: "found" },
+    randomUUID(),
+  );
+  const afterClose = await discovery.load("找活", filters, 2);
+  ok(
+    afterClose?.status === "ready" &&
+      afterClose.rows.length === 1 &&
+      afterClose.rows[0]?.kind === "request" &&
+      afterClose.rows[0].request.id === handoff.id,
+  );
+  discovery.cancel();
   // Still-open work from an earlier day must not leak into today's filter.
   const past = Date.now() - 86400000,
     pastDay = laDate(past);

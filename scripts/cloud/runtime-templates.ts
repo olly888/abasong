@@ -9,6 +9,8 @@ const tags = [
   { Key: "Environment", Value: "pilot-dev" },
 ];
 const scope = "abasong-pilot-dev";
+export const circleMediaBucketPattern =
+  "^(?:|abasong-pilot-dev-circle-media-[a-z0-9][a-z0-9-]{0,30}[a-z0-9])$";
 const secretNames = {
   ApiDatabase: "api-db",
   SensitiveDatabase: "sensitive-db",
@@ -87,7 +89,9 @@ const role = (name: string, statements: Obj[]) =>
     true,
   );
 
-export function buildRuntimeTemplates() {
+export function buildRuntimeTemplates(circleMediaBucketName = "") {
+  if (!new RegExp(circleMediaBucketPattern).test(circleMediaBucketName))
+    throw new Error("Unreviewed pilot circle media bucket");
   const identityResources: Obj = {};
   for (const [name, suffix] of Object.entries(secretNames))
     identityResources[name] = resource(
@@ -143,9 +147,21 @@ export function buildRuntimeTemplates() {
       },
     }),
   ]);
-  identityResources.WorkerTaskRole = role("worker-task", [
-    { Effect: "Deny", Action: "*", Resource: "*" },
-  ]);
+  identityResources.WorkerTaskRole = role(
+    "worker-task",
+    circleMediaBucketName
+      ? [
+          { Effect: "Deny", NotAction: "s3:DeleteObject", Resource: "*" },
+          {
+            Effect: "Deny",
+            Action: "s3:DeleteObject",
+            NotResource: sub(
+              `arn:\${AWS::Partition}:s3:::${circleMediaBucketName}/circle-posts/*`,
+            ),
+          },
+        ]
+      : [{ Effect: "Deny", Action: "*", Resource: "*" }],
+  );
   const identityOutputs: Obj = {};
   for (const name of Object.keys(secretNames))
     identityOutputs[`${name}Arn`] = { Value: ref(name) };
@@ -252,6 +268,10 @@ export function buildRuntimeTemplates() {
       "^(db\\.mxlmemaunzoramgemiju\\.supabase\\.co|aws-[0-9]+-us-west-1\\.pooler\\.supabase\\.com)$",
     ),
     ApiImageDigest: string("^[a-f0-9]{64}$"),
+    CircleMediaBucketName: {
+      ...string(circleMediaBucketPattern),
+      Default: "",
+    },
     WorkerImageDigest: string("^[a-f0-9]{64}$"),
     AlertTopicArn: string(`^arn:aws:sns:us-west-1:[0-9]{12}:${scope}-alerts$`),
   };
@@ -453,6 +473,7 @@ export function buildRuntimeTemplates() {
       AWS_REGION: "us-west-1",
       PILOT_DATABASE_HOST: ref("DatabaseHost"),
       TMPDIR: "/app-tmp",
+      CIRCLE_MEDIA_BUCKET: ref("CircleMediaBucketName"),
     };
     const secrets: Record<string, string> =
       kind === "api"

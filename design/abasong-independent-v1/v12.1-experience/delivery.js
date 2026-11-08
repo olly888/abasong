@@ -4,11 +4,14 @@
   const base = { actions, submitForm, render, renderModal, resetPrototype, defaultDraft, draftFromJob, jobFromForm, jobCard, jobDetail, managePage, applyPage, sharePage, publicPage, publicSummary, chatPage };
   const ex = window.abasongExperience, today = ex.demoDay, tomorrow = "2026-11-05";
   const scenes = { warehouse: "仓库缺人，找司机", rescue: "送不完，找人代送" };
+  const carriers = ["SwiftX", "GOFO", "SpeedX", "UniUni"];
+  const addressPattern = /^\d\S*\s+.+,\s*.+,\s*[A-Za-z]{2}(?:\s+\d{5}(?:-\d{4})?)?$/;
   const ui = { preview: null, lastPublisher: false };
   const day = d => d === today ? "今天" : d === tomorrow ? "明天" : d;
   const qtyLabel = (j, remaining = false) => j.quantityMode === "unknown" || (remaining ? j.remaining : j.qty) == null ? "件数待确认" : `${j.quantityMode === "estimate" ? "约 " : ""}${remaining ? j.remaining : j.qty} 件`;
   const arrival = j => `${day(j.date)} ${j.asap ? "尽快接手" : time12(j.start)}`;
   const completion = j => ({ same_day: "当天送完", next_day: "可次日送完", contact: "联系确认" }[j.completion] || "联系确认");
+  const editingPublished = () => !!state.editing && getJob(state.editing)?.status !== "draft" && !state.reopening;
   function normalize(f) {
     f.scene ??= f.kind === "extra_drivers" ? "warehouse" : "rescue";
     f.quantityMode ??= "exact";
@@ -29,6 +32,15 @@
   }
   defaultDraft = kind => normalize({ ...base.defaultDraft(kind), quantityMode: "exact", scene: kind === "extra_drivers" ? "warehouse" : "rescue", drivers: "1", asOrg: ui.lastPublisher && !!window.abasongAccount.state.team?.name });
   draftFromJob = j => normalize({ ...base.draftFromJob(j), scene: j.deliveryScene || (j.kind === "extra_drivers" ? "warehouse" : "rescue"), quantityMode: j.quantityMode || "exact", qty: j.qty == null ? "" : String(j.qty), drivers: String(j.drivers || 1), asap: !!j.asap, taskScope: j.partial === false ? "whole" : "partial", completion: j.completion || "contact", expiryMode: j.expiryMode || "custom", moreOpen: false });
+  if (uxV34) {
+    const previousDraft = draftFromJob;
+    draftFromJob = (j) => {
+      const f = previousDraft(j);
+      if (f.carrier && !carriers.includes(f.carrier)) Object.assign(f, { carrierOther: f.carrier, carrier: "其他" });
+      if (f.pickupKind === "warehouse" && f.pickupAddress) Object.assign(f, { warehouseManualSaved: !f.pickupFixture, confirmedPickup: j.status !== "draft" ? f.pickupAddress : j.confirmedPickup || "" });
+      return Object.assign(f, { deliveryEnd: j.deliveryEnd || "" });
+    };
+  }
   function openScene(scene) {
     if (!requireLogin(() => openScene(scene))) return;
     state.editing = null; state.reopening = false;
@@ -46,13 +58,61 @@
   }
   requestForm = () => {
     const f = normalize(state.forms.request ||= defaultDraft("partial_route")), exp = expiry(f);
+    if (uxV34) return v34DeliveryForm(f, exp);
     return formPage(state.editing ? "编辑配送需求" : scenes[f.scene], "delivery-request", `${formError()}${identity(f)}<section class="form-section"><div class="delivery-grid">${field("request", "region", "派送区域", "text", { choices: [["", "请选择"], ...areas] })}${field("request", "carrier", "快递公司", "text", { choices: [["", "请选择"], "SwiftX", "GOFO", "SpeedX", "UniUni", "其他"] })}</div></section><section class="form-section"><h2 class="section-title">${f.scene === "warehouse" ? "到哪里取件" : "在哪里接手"}</h2><div class="ex-segment">${[["warehouse", "仓库取件"], ["contact_handoff", "途中交接"]].map(([key, label]) => btn("ex-pickup-kind", label, f.pickupKind === key ? "active" : "", `data-id="${key}" aria-pressed="${f.pickupKind === key}"`)).join("")}</div>${f.pickupKind === "warehouse" ? `${field("request", "pickupAddress", "仓库地址", "text", { max: 300, placeholder: "门牌、街道、城市、州" })}<div id="pickup-suggestions" class="ex-address-suggestions"></div><div data-delivery-map-action ${f.pickupAddress ? "" : "hidden"}>${btn("ex-form-map", I("pin") + "查看取件位置", "text-btn")}</div>` : `${field("request", "pickup", "交接地区", "text", { choices: [["", "请选择"], ...areas] })}<p class="delivery-short-note">具体交接地点联系确认</p>`}</section><section class="form-section"><h2 class="section-title">什么时候接手</h2><div class="delivery-date-quick">${btn("delivery-date", "今天", f.date === today ? "active" : "", `data-id="${today}"`)}${btn("delivery-date", "明天", f.date === tomorrow ? "active" : "", `data-id="${tomorrow}"`)}</div><div class="delivery-grid">${field("request", "date", "接手日期", "date")}${!f.asap ? field("request", "start", "希望到场", "time") : '<div class="delivery-asap">今天 · 尽快接手</div>'}</div>${f.date === today ? `<label class="delivery-asap"><input type="checkbox" data-delivery-field="asap" ${f.asap ? "checked" : ""}/>尽快接手</label>` : ""}</section><section class="form-section"><h2 class="section-title">任务量</h2>${quantityFields(f)}</section><section class="form-section"><h2 class="section-title">报价</h2><div class="delivery-grid">${f.unit !== "negotiable" ? field("request", "price", "金额（USD）", "number", { min: 0.01, step: "0.01", placeholder: "如 1.85" }) : ""}${field("request", "unit", "计价方式", "text", { choices: [["per_parcel", "美元 / 件"], ["per_route", "美元 / 线路"], ["negotiable", "联系议价"]] })}</div></section><section class="form-section"><h2 class="section-title">接手条件</h2>${field("request", "handoff", "账号与交接要求", "text", { choices: [["contact_confirm", "联系确认"], ["carrier_account", "需已有该快递公司账号"], ["dsp_approval", "需 DSP 确认转派"]] })}${field("request", "completion", "送完要求", "text", { choices: [["contact", "联系确认"], ["same_day", "当天送完"], ["next_day", "可次日送完"]] })}</section><details class="delivery-options" ${f.moreOpen ? "open" : ""}><summary>补充条件（选填）</summary><div>${f.pickupKind === "warehouse" ? field("request", "pickupName", "仓库名称", "text", { optional: true, max: 100 }) : ""}${field("request", "route", "线路编号", "text", { optional: true, max: 100 })}${field("request", "pickupEnd", "最迟接手时间", "time", { optional: true })}${f.scene === "rescue" ? field("request", "taskScope", "任务范围", "text", { choices: [["partial", "可分担部分包裹"], ["whole", "整条线路接手"]] }) : ""}${f.quantityMode !== "unknown" && f.taskScope !== "whole" ? field("request", "min", "每人最低件数", "number", { min: 1, optional: true }) : ""}${field("request", "experience", "配送经验要求", "text", { choices: [["any", "不限"], ["delivery_experience", "有配送经验"], ["carrier_experience", "熟悉该快递公司"]] })}${field("request", "sorted", "理货状态", "text", { choices: [["unknown", "待确认"], ["sorted", "已理货"], ["unsorted", "未理货"]] })}${field("request", "terms", "私下付款约定", "textarea", { optional: true, max: 300, placeholder: "如当天结、周结，双方联系确认" })}${field("request", "description", "其他说明", "textarea", { optional: true, max: 1000 })}<p class="delivery-short-note">需求下架：${esc(exp.date || "待选日期")} ${time12(exp.time)}</p>${check("request", "customExpiry", "自定义下架时间")}${f.expiryMode === "custom" ? `<div class="delivery-grid">${field("request", "endDate", "下架日期", "date")}${field("request", "end", "下架时间", "time")}</div>` : ""}</div></details>`, state.editing ? "核对并保存" : "核对并发布", { secondary: !state.editing ? btn("save-draft", "保存草稿", "text-btn wide-link") : "" });
   };
+  function v34Choices(key, label, options, current) {
+    const error = state.errors[key];
+    return `<fieldset class="v34-choice" data-field-error="${key}"><legend>${esc(label)}</legend><div>${options.map(([value, text]) => `<label><input type="radio" name="${key}" data-delivery-field="${key}" value="${esc(value)}" ${value === current ? "checked" : ""}><span>${esc(text)}</span></label>`).join("")}</div>${error ? `<p class="field-error" role="alert">${esc(error)}</p>` : ""}</fieldset>`;
+  }
+  function v34Section(id, title, content, action = "") {
+    return `<section class="v34-form-section" id="delivery-${id}" tabindex="-1"><header><h2>${title}</h2>${action}</header>${content}</section>`;
+  }
+  function v34Warehouse(f) {
+    if (f.pickupAddress && (f.pickupFixture || f.warehouseManualSaved))
+      return `<div class="v34-address"><b>${esc(f.pickupName || "仓库地址")}</b><p>${esc(f.pickupAddress)}</p>${btn("v34-change-warehouse", "更换地址", "text-btn")}${f.pickupFixture ? btn("ex-form-map", "查看地图", "text-btn") : ""}</div>${field("request", "pickup", "取件区域", "text", { choices: [["", "请选择"], ...areas] })}<div data-field-error="warehouseConfirm">${btn("v34-confirm-warehouse", f.confirmedPickup === f.pickupAddress ? "已确认取件地址" : "确认本次取件地址", "v34-inline", `aria-pressed="${f.confirmedPickup === f.pickupAddress}"`)}${state.errors.warehouseConfirm ? `<p class="field-error" role="alert">${esc(state.errors.warehouseConfirm)}</p>` : ""}</div>`;
+    if (f.warehouseManual) return `<div class="v34-address">${field("request", "warehouseStreet", "门牌与街道")}${field("request", "warehouseCity", "城市") }<div class="delivery-grid">${field("request", "warehouseState", "州", "text", { max: 2 })}${field("request", "warehousePostal", "邮编", "text", { optional: true, max: 10 })}</div>${btn("v34-save-warehouse", "使用这个地址", "v34-inline")}${btn("v34-search-warehouse", "改用地址搜索", "text-btn")}</div>`;
+    return `${field("request", "pickupAddress", "仓库地址", "text", { max: 300, placeholder: "门牌、街道或城市" })}<div id="pickup-suggestions" class="ex-address-suggestions"></div>${btn("v34-manual-warehouse", "手动填写完整地址", "text-btn")}`;
+  }
+  function v34DeliveryForm(f, exp) {
+    const warehouse = f.scene === "warehouse";
+    const carrier = v34Choices("carrier", "快递公司", [...carriers, "其他"].map((s) => [s, s]), f.carrier);
+    const pickupMode = !warehouse || f.pickupModeOpen || f.pickupKind !== "warehouse";
+    const pickupToggle = pickupMode ? "" : btn("v34-pickup-options", "更改取件方式", "text-btn");
+    const pickup = `${pickupMode ? `<div class="ex-segment" aria-label="取件方式">${[["warehouse", "仓库取件"], ["contact_handoff", "途中交接"]].map(([key, label]) => btn("ex-pickup-kind", label, f.pickupKind === key ? "active" : "", `data-id="${key}" aria-pressed="${f.pickupKind === key}"`)).join("")}</div>` : ""}${f.pickupKind === "warehouse" ? v34Warehouse(f) : `${field("request", "pickup", "交接地区", "text", { choices: [["", "请选择"], ...areas] })}<p class="delivery-short-note">具体交接地点联系确认</p>`}`;
+    const places = `${pickup}${field("request", "region", "派送区域", "text", { choices: [["", "请选择"], ...areas] })}${f.pickupKind === "contact_handoff" && f.pickup && f.pickup !== f.region ? btn("v34-same-region", "与交接地区相同", "text-btn") : ""}${carrier}${f.carrier === "其他" ? field("request", "carrierOther", "快递公司名称", "text", { max: 80 }) : ""}`;
+    const date = `<div class="delivery-date-quick" data-field-error="date"><div class="v34-date-chips">${[[today, "今天"], [tomorrow, "明天"]].map(([id, label]) => btn("delivery-date", label, f.date === id ? "active" : "", `data-id="${id}" aria-pressed="${f.date === id}"`)).join("")}<label class="v34-native-date ${f.date !== today && f.date !== tomorrow ? "active" : ""}"><span>${f.date && f.date !== today && f.date !== tomorrow ? esc(f.date) : "选日期"}</span><input name="date" data-field="date" data-form-key="request" data-previous="${esc(f.date)}" type="date" value="${esc(f.date)}" min="${today}" aria-label="选择其他接手日期"></label></div>${state.errors.date ? `<p class="field-error" role="alert">${esc(state.errors.date)}</p>` : ""}</div>`;
+    const timing = f.date === today ? v34Choices("arrivalMode", "接手方式", [["asap", "尽快到场"], ["scheduled", "约时间"]], f.asap ? "asap" : "scheduled") : "";
+    const start = f.asap ? "" : field("request", "start", "希望到场", "time");
+    const schedule = `${date}${timing && start ? `<div class="v34-inline-fields">${timing}${start}</div>` : timing || start}`;
+    const units = [["per_parcel", "按件"], ["per_route", "按线路"], ["negotiable", "联系议价"]];
+    const count = v34Choices("quantityMode", "包裹件数", [["exact", "确定"], ["estimate", "约数"], ["unknown", "待确认"]], f.quantityMode);
+    const amount = v34Choices("unit", "报价方式", units, f.unit);
+    const load = `${warehouse ? `<div class="v34-counter">${btn("v34-drivers", "−", "v34-inline", 'data-id="-1" aria-label="减少司机人数"')}${field("request", "drivers", "需要司机", "number", { min: 1 })}${btn("v34-drivers", "+", "v34-inline", 'data-id="1" aria-label="增加司机人数"')}</div>` : ""}${f.quantityMode !== "unknown" ? `<div class="v34-inline-fields">${count}${field("request", "qty", warehouse ? "总待送件数" : "剩余件数", "number", { min: 1, placeholder: "件" })}</div>` : `${count}${state.errors.qty ? `<p class="field-error" role="alert">${esc(state.errors.qty)}</p>` : ""}`}${f.unit !== "negotiable" ? `<div class="v34-inline-fields">${amount}${field("request", "price", f.unit === "per_route" ? "报价 · USD / 线路" : "报价 · USD / 件", "number", { min: 0.01, step: "0.01", placeholder: "如 1.85" })}</div>` : amount}`;
+    const handoff = [["contact_confirm", "联系确认"], ["carrier_account", "需已有该快递公司账号"], ["dsp_approval", "需 DSP 确认转派"]];
+    const finish = [["contact", "联系确认"], ["same_day", "当天送完"], ["next_day", "可次日送完"]];
+    const scope = warehouse ? "" : v34Choices("taskScope", "承接方式", [["partial", "可分担部分包裹"], ["whole", "整条线路接手"]], f.taskScope);
+    const conditions = `<details class="v34-disclosure delivery-conditions" ${f.conditionsOpen ? "open" : ""} id="delivery-conditions" tabindex="-1"><summary><span><b>接手要求</b><small>${esc(handoff.find(([key]) => key === f.handoff)?.[1] || "联系确认")} · ${esc(f.completion === "contact" ? "送完时间联系确认" : completion(f))}${!warehouse ? ` · ${f.taskScope === "whole" ? "整线接手" : "可分担"}` : ""}</small></span><span class="v34-edit">更改</span></summary><div>${scope}${field("request", "handoff", "账号与交接要求", "text", { choices: handoff })}${v34Choices("completion", "送完要求", finish, f.completion)}${f.completion !== "contact" ? field("request", "deliveryEnd", "最晚送完", "time", { optional: true }) : ""}</div></details>`;
+    const extra = `<details class="v34-disclosure delivery-options" ${f.moreOpen ? "open" : ""} id="delivery-extra" tabindex="-1"><summary><b>补充条件</b><span class="v34-edit">选填</span></summary><div>${f.pickupKind === "warehouse" ? field("request", "pickupName", "仓库名称", "text", { optional: true, max: 100 }) : ""}${field("request", "route", "线路编号", "text", { optional: true, max: 100 })}${field("request", "pickupEnd", "最迟接手时间", "time", { optional: true })}${f.quantityMode !== "unknown" && f.taskScope !== "whole" ? field("request", "min", "每人最低件数", "number", { min: 1, optional: true }) : ""}${v34Choices("experience", "配送经验", [["any", "不限"], ["delivery_experience", "有经验"], ["carrier_experience", "熟悉该快递公司"]], f.experience)}${v34Choices("sorted", "理货状态", [["unknown", "待确认"], ["sorted", "已理货"], ["unsorted", "未理货"]], f.sorted)}${field("request", "terms", "私下付款约定", "textarea", { optional: true, max: 300 })}${field("request", "description", "其他说明", "textarea", { optional: true, max: 1000 })}<p class="delivery-short-note">需求下架 · ${esc(exp.date || "待选日期")} ${time12(exp.time)}</p>${check("request", "customExpiry", "自定义下架时间")}${f.expiryMode === "custom" ? `<div class="delivery-grid">${field("request", "endDate", "下架日期", "date")}${field("request", "end", "下架时间", "time")}</div>` : ""}</div></details>`;
+    return formPage(editingPublished() ? "编辑配送需求" : scenes[f.scene], "delivery-request", `${formError()}${identity(f)}${v34Section("places", warehouse ? "取件与派送" : "交接与派送", places, pickupToggle)}${v34Section("schedule", "到场安排", schedule)}${v34Section("load", warehouse ? "人数、件数与报价" : "剩余包裹与报价", load)}${conditions}${extra}`, editingPublished() ? "核对修改" : "核对需求", { secondary: !state.editing ? btn("save-draft", "保存草稿", "text-btn wide-link") : "" });
+  }
   function validate(f) {
     const e = {}, positive = v => Number.isInteger(Number(v)) && Number(v) > 0;
     for (const key of ["region", "carrier", "date"]) if (!f[key]) e[key] = "请填写这一项";
+    if (uxV34) {
+      if (e.region) e.region = "请选择派送区域";
+      if (e.carrier) e.carrier = "请选择快递公司";
+      if (e.date) e.date = "请选择接手日期";
+    }
+    if (uxV34 && f.carrier === "其他" && !f.carrierOther?.trim()) e.carrierOther = "请填写快递公司名称";
+    if (uxV34 && f.date && f.date < today) e.date = "请选择今天或之后的接手日期";
     if (f.pickupKind === "warehouse") {
-      if (!/^\d\S*\s+.+,\s*.+,\s*[A-Za-z]{2}(?:\s+\d{5}(?:-\d{4})?)?$/.test((f.pickupAddress || "").trim())) e.pickupAddress = "请填写完整取件地址";
+      if (!addressPattern.test((f.pickupAddress || "").trim())) e[uxV34 && f.warehouseManual ? "warehouseStreet" : "pickupAddress"] = "请填写完整取件地址";
+      else if (uxV34 && !f.pickupFixture && !f.warehouseManualSaved) e.pickupAddress = "请选择地址候选，或手动填写完整地址";
+      else if (uxV34) {
+        if (!f.pickup) e.pickup = "请选择取件区域";
+        if (f.confirmedPickup !== f.pickupAddress) e.warehouseConfirm = "请确认本次取件地址";
+      }
     } else if (!f.pickup) e.pickup = "请选择交接地区";
     if (!f.asap && !f.start) e.start = "请选择希望到场时间";
     if (f.asap && f.date !== today) e.start = "未来日期请选择到场时间";
@@ -65,6 +125,8 @@
     if (Number.isFinite(start) && start < ex.state.now) e.start = "请选择尚未过去的接手时间";
     if (f.pickupEnd && ex.laInstant(f.date, f.pickupEnd) < start) e.pickupEnd = "最迟接手不能早于开始时间";
     if (!end.date || !end.time || ex.laInstant(end.date, end.time) <= start) e.end = "下架时间需晚于接手时间";
+    if (uxV34 && f.expiryMode === "custom" && f.pickupEnd && ex.laInstant(end.date, end.time) > ex.laInstant(f.date, f.pickupEnd)) e.end = "下架时间不能晚于最迟接手时间";
+    if (uxV34 && f.completion === "same_day" && f.deliveryEnd && ex.laInstant(f.date, f.deliveryEnd) < start) e.deliveryEnd = "送完时间不能早于接手时间";
     return e;
   }
   function startClock(f) {
@@ -73,46 +135,117 @@
   }
   jobFromForm = (input, existing) => {
     const f = normalize(input), exp = expiry(f), count = f.quantityMode === "unknown" || !f.qty ? null : Number(f.qty);
-    const j = base.jobFromForm({ ...f, start: startClock(f), endDate: exp.date, end: exp.time }, existing);
+    const j = base.jobFromForm({ ...f, carrier: uxV34 && f.carrier === "其他" ? f.carrierOther?.trim() || "" : f.carrier, start: startClock(f), endDate: exp.date, end: exp.time }, existing);
+    if (uxV34) Object.assign(j, { confirmedPickup: f.confirmedPickup || "", deliveryEnd: f.deliveryEnd || "" });
     return { ...j, deliveryScene: f.scene, pickup: f.pickupKind === "warehouse" ? f.pickup || f.pickupAddress.split(",")[1]?.trim() || "地区待确认" : f.pickup, quantityMode: f.quantityMode, qty: count, remaining: existing && existing.quantityMode === f.quantityMode && count != null ? Math.min(existing.remaining ?? count, count) : count, min: count == null ? null : j.min, asap: !!f.asap, completion: f.completion, expiryMode: f.expiryMode, pickupEnd: f.pickupEnd || "" };
   };
   function preview(f) {
     const j = jobFromForm(f, getJob(state.editing));
+    if (uxV34) return v34Preview(f, j);
     return `<section class="dialog delivery-preview" role="dialog" aria-modal="true" aria-label="核对配送需求"><div class="close-row"><h2>核对配送需求</h2>${ib("close-modal", "close", "继续编辑")}</div>${row("场景", scenes[f.scene])}${row("发布身份", j.org || "个人")}${row("派送区域", f.region)}${f.pickupKind === "warehouse" ? `<div class="ex-preview-address"><b>取件仓库</b>${f.pickupName ? `<p>${esc(f.pickupName)}</p>` : ""}<p>${esc(f.pickupAddress)}</p></div>` : row("交接地区", f.pickup + " · 具体地点联系确认")}${row("接手时间", arrival(j))}${f.pickupEnd ? row("最迟接手", time12(f.pickupEnd)) : ""}${row("任务量", qtyLabel(j) + (f.scene === "warehouse" ? ` · 需${f.drivers}人` : f.taskScope === "whole" ? " · 整线接手" : " · 可分担"))}${row("报价", f.unit === "negotiable" ? "联系议价" : `$${f.price} / ${f.unit === "per_route" ? "线路" : "件"}`)}${row("账号要求", { contact_confirm: "联系确认", carrier_account: "需已有该快递公司账号", dsp_approval: "需 DSP 确认转派" }[f.handoff])}${row("送完要求", completion(j))}${f.experience !== "any" ? row("配送经验", f.experience === "carrier_experience" ? "熟悉该快递公司" : "有配送经验") : ""}${f.terms ? row("付款约定", f.terms) : ""}${row("需求下架", j.endDate + " " + time12(j.end))}${btn("commit-request", state.editing ? "确认保存" : "发布需求", "button")}${btn("close-modal", "继续编辑", "button secondary")}</section>`;
+  }
+  function v34Preview(f, j) {
+    const reviewGroup = (id, title, details) => `<section class="v34-review-group"><header><h3>${title}</h3>${btn("v34-review-edit", "修改", "text-btn", `data-id="${id}" aria-label="修改${title}"`)}</header>${details}</section>`;
+    const warehouse = f.pickupKind === "warehouse";
+    const conditions = `${row("账号与交接", { contact_confirm: "联系确认", carrier_account: "需已有该快递公司账号", dsp_approval: "需 DSP 确认转派" }[f.handoff])}${row("送完要求", f.completion === "contact" ? "联系确认送完时间" : `${completion(j)}${f.deliveryEnd ? ` · ${time12(f.deliveryEnd)}` : ""}`)}`;
+    const extra = `${f.route ? row("线路编号", f.route) : ""}${f.experience !== "any" ? row("配送经验", f.experience === "carrier_experience" ? "熟悉该快递公司" : "有配送经验") : ""}${f.sorted !== "unknown" ? row("理货状态", f.sorted === "sorted" ? "已理货" : "未理货") : ""}${f.terms ? row("私下付款约定", f.terms) : ""}${f.description ? row("其他说明", f.description) : ""}`;
+    return `<section class="dialog delivery-preview v34-review" role="dialog" aria-modal="true" aria-label="核对配送需求"><div class="close-row"><h2>核对配送需求</h2>${ib("close-modal", "close", "继续编辑")}</div><div class="v34-review-body">${reviewGroup("identity", "发布身份", row("场景", scenes[f.scene]) + row("身份", j.org || "个人"))}${reviewGroup("places", "取件与派送", (warehouse ? `<div class="v34-address"><b>${esc(f.pickupName || "取件仓库")}</b><p>${esc(f.pickupAddress)}</p></div>${row("取件区域", f.pickup)}` : row("交接地区", `${f.pickup} · 具体地点联系确认`)) + row("派送区域", f.region) + row("快递公司", j.carrier))}${reviewGroup("schedule", "到场与下架", row("接手时间", arrival(j)) + (f.pickupEnd ? row("最迟接手", time12(f.pickupEnd)) : "") + row("需求下架", `${j.endDate} ${time12(j.end)} · 洛杉矶时间`))}${reviewGroup("load", "任务量与报价", row("件数", qtyLabel(j)) + (f.scene === "warehouse" ? row("需要司机", `${f.drivers} 人`) : row("承接方式", f.taskScope === "whole" ? "整线接手" : "可分担")) + (f.min && f.taskScope !== "whole" && f.quantityMode !== "unknown" ? row("每人最低件数", `${f.min} 件`) : "") + row("报价", f.unit === "negotiable" ? "联系议价" : `$${f.price} / ${f.unit === "per_route" ? "线路" : "件"}`))}${reviewGroup("conditions", "接手要求", conditions)}${extra ? reviewGroup("extra", "补充条件", extra) : ""}</div><footer>${btn("commit-request", editingPublished() ? "确认保存" : "确认发布", "button")}</footer></section>`;
   }
   actions = (a, b) => {
     const id = b?.dataset.id;
+    if (uxV34 && a.startsWith("v34-")) {
+      const f = state.forms.request;
+      if (!f) return;
+      if (a === "v34-review-edit") {
+        ui.preview = null;
+        closeModal();
+        const group = id === "identity" ? $(".delivery-identity") : $(`#delivery-${id}`);
+        if (group?.matches("details")) group.open = true;
+        (group?.querySelector("summary") ?? group)?.focus({ preventScroll: true });
+        group?.scrollIntoView({ block: "start" });
+        return;
+      }
+      if (a === "v34-same-region") f.region = f.pickup;
+      if (a === "v34-pickup-options") f.pickupModeOpen = true;
+      if (a === "v34-drivers") f.drivers = String(Math.max(1, (Number(f.drivers) || 1) + Number(id)));
+      if (a === "v34-manual-warehouse") Object.assign(f, { warehouseManual: true, warehouseState: f.warehouseState || "CA", pickupAddress: "", pickup: "", confirmedPickup: "", pickupFixture: null });
+      if (a === "v34-search-warehouse" || a === "v34-change-warehouse") Object.assign(f, { warehouseManual: false, warehouseManualSaved: false, pickupAddress: "", pickup: "", confirmedPickup: "", pickupName: "", pickupFixture: null, autoPickupName: "" });
+      if (a === "v34-save-warehouse") {
+        const street = (f.warehouseStreet || "").trim(), city = (f.warehouseCity || "").trim(), region = (f.warehouseState || "").trim().toUpperCase(), zip = (f.warehousePostal || "").trim();
+        const errors = {};
+        if (!/^\d\S*\s+.+$/.test(street)) errors.warehouseStreet = "请填写门牌与街道";
+        if (!city) errors.warehouseCity = "请填写城市";
+        if (!/^[A-Z]{2}$/.test(region)) errors.warehouseState = "请选择两字母州名，如 CA";
+        if (zip && !/^\d{5}(?:-\d{4})?$/.test(zip)) errors.warehousePostal = "请核对邮编";
+        if (Object.keys(errors).length) return showDeliveryErrors(f, errors);
+        Object.assign(f, { pickupAddress: `${street}, ${city}, ${region}${zip ? ` ${zip}` : ""}`, warehouseManualSaved: true, warehouseManual: false, confirmedPickup: "" });
+      }
+      if (a === "v34-confirm-warehouse") f.confirmedPickup = f.confirmedPickup === f.pickupAddress ? "" : f.pickupAddress;
+      state.errors = {};
+      capture(); render();
+      if (a === "v34-drivers") $(`[data-action="v34-drivers"][data-id="${id}"]`)?.focus({ preventScroll: true });
+      return;
+    }
     if (a === "delivery-scene") return openScene(id);
     if (a === "publish-kind") {
       if (["vehicle_help", "other_help"].includes(id)) return modal("info", { title: "配送途中求助", text: "可在司机圈发布动态向同行求助。" });
       return openScene(id === "extra_drivers" ? "warehouse" : "rescue");
     }
     if (a === "delivery-date") {
-      const f = state.forms.request; f.date = id; if (id !== today) f.asap = false; capture(); render(); return;
+      const f = state.forms.request;
+      if (uxV34 && f.date !== id) Object.assign(f, { start: "", pickupEnd: "", deliveryEnd: "" });
+      f.date = id; if (id !== today) f.asap = false;
+      if (uxV34) delete state.errors.date;
+      capture(); render(); return;
     }
     if (a === "commit-request") {
       const f = state.forms.request;
       if (!f || !ui.preview || state.modal?.type !== "delivery-preview") return;
       if (ui.preview !== JSON.stringify(f)) { state.modal = null; state.errors._ = "填写内容有变化，请重新核对。"; render(); return; }
       const old = getJob(state.editing);
+      const saving = uxV34 ? editingPublished() : !!old;
       if (old && state.editVersion !== old.version) { state.modal = null; state.errors._ = "条件已变化，请重新核对。"; render(); return; }
       if ($("#delivery-save-fail").checked) { $("#delivery-save-fail").checked = false; state.modal = null; state.errors._ = "保存未成功，填写内容已保留，请重试。"; render(); return; }
       const j = jobFromForm(f, old); j.status = "open"; j.version = old ? old.version + 1 : 1;
       if (old) Object.assign(old, j); else model.jobs.unshift(j);
-      ui.lastPublisher = !!f.asOrg; ui.preview = null; state.selectedJob = j.id; state.editing = null; state.forms.request = null; state.modal = null; state.homeView = "jobs"; nav("manage", { id: j.id }, true); toast(old ? "需求已更新" : "配送需求已发布"); return;
+      ui.lastPublisher = !!f.asOrg; ui.preview = null; state.selectedJob = j.id; state.editing = null; state.forms.request = null; state.modal = null; state.homeView = "jobs"; nav("manage", { id: j.id }, true); toast(saving ? "需求已更新" : "配送需求已发布"); return;
     }
     if (["edit-job", "reopen-job", "clone-job"].includes(a) && ["vehicle_help", "other_help"].includes(getJob(id)?.kind)) return modal("info", { title: "配送途中求助", text: "这类专用表单已后置，可在司机圈发布文字求助。历史记录仍可查看。" });
     if (a === "gap" && getJob(id)?.quantityMode === "unknown") { modal("delivery-gap", { id }); return; }
+    if (uxV34 && ["ex-pickup-choice", "ex-pickup-kind"].includes(a) && state.forms.request) {
+      const f = state.forms.request;
+      if (a === "ex-pickup-kind" && f.pickupKind === id) return;
+      Object.assign(f, { warehouseManualSaved: false, warehouseManual: false, confirmedPickup: "" });
+      if (a === "ex-pickup-kind") f.pickup = "";
+      delete state.errors.pickupAddress;
+      delete state.errors.warehouseConfirm;
+    }
     const result = base.actions(a, b);
     if (a === "ex-pickup-choice" && state.forms.request) { const f = state.forms.request; f.autoPickupName = f.pickupName; }
     if (a === "ex-pickup-kind" && id === "contact_handoff" && state.forms.request) { state.forms.request.pickup = ""; render(); }
-    if (a === "clone-job" && state.forms.request) { Object.assign(state.forms.request, { expiryMode: "auto", customExpiry: false, asap: false }); render(); }
+    if (a === "clone-job" && state.forms.request) { Object.assign(state.forms.request, { expiryMode: "auto", customExpiry: false, asap: false, ...(uxV34 ? { confirmedPickup: "", deliveryEnd: "" } : {}) }); render(); }
     return result;
   };
+  function showDeliveryErrors(f, errors) {
+    state.errors = errors;
+    f.moreOpen ||= !!(errors.pickupEnd || errors.min || errors.end);
+    f.conditionsOpen ||= !!errors.deliveryEnd;
+    capture(); render();
+    const inline = [...document.querySelectorAll(".delivery-form .field-error")].find((node) => node.getClientRects().length);
+    const target = inline?.closest(".field,[data-field-error]")?.querySelector("input,select,textarea,button") ?? inline;
+    if (target) {
+      if (target === inline) target.tabIndex = -1;
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ block: "center" });
+    }
+  }
   submitForm = (type, form) => {
     if (type === "delivery-request") {
       const f = normalize(state.forms.request), errors = validate(f);
-      if (Object.keys(errors).length) { state.errors = errors; f.moreOpen = !!(errors.pickupEnd || errors.min || errors.end); render(); $(".field.invalid input,.field.invalid select")?.focus(); return; }
+      if (Object.keys(errors).length) {
+        if (uxV34) return showDeliveryErrors(f, errors);
+        state.errors = errors; f.moreOpen = !!(errors.pickupEnd || errors.min || errors.end); render(); $(".field.invalid input,.field.invalid select")?.focus(); return;
+      }
       state.errors = {}; state.editVersion = getJob(state.editing)?.version; ui.preview = JSON.stringify(f); modal("delivery-preview"); return;
     }
     if (type === "delivery-gap") {
@@ -195,6 +328,7 @@
     if (state.route.view !== "requestForm" || !e.target.isConnected) return;
     if (e.target.matches(".delivery-options")) state.forms.request.moreOpen = e.target.open;
     if (e.target.matches("details.delivery-identity")) state.forms.request.identityOpen = e.target.open;
+    if (uxV34 && e.target.matches(".delivery-conditions")) state.forms.request.conditionsOpen = e.target.open;
   }, true);
   document.addEventListener("input", e => {
     if (e.target.dataset.field === "pickupAddress" && state.forms.request) {
@@ -210,13 +344,29 @@
     if (state.route.view !== "requestForm") return;
     const t = e.target, f = state.forms.request;
     if (t.dataset.deliveryField) {
-      f[t.dataset.deliveryField] = t.type === "checkbox" ? t.checked : t.value;
+      const key = t.dataset.deliveryField;
+      if (uxV34 && key === "arrivalMode") f.asap = t.value === "asap";
+      else f[key] = t.type === "checkbox" ? t.checked : t.value;
+      if (uxV34 && key === "unit") f.price = "";
+      if (uxV34 && key === "completion") f.deliveryEnd = "";
+      if (uxV34 && key === "taskScope" && f.taskScope === "whole") f.min = "";
       if (f.quantityMode === "unknown") { f.min = ""; }
-      state.errors = {}; capture(); render(); return;
+      state.errors = {}; capture(); render();
+      if (uxV34) {
+        $(`[data-delivery-field="${key}"]:checked`)?.focus({ preventScroll: true });
+        if (key === "taskScope" && f.taskScope === "whole" && f.quantityMode !== "exact") showDeliveryErrors(f, { qty: "整线接手请确认件数，或改为可分担部分包裹" });
+      }
+      return;
     }
     if (t.dataset.formKey !== "request") return;
     if (t.dataset.field === "date" && f.date !== today) f.asap = false;
+    if (uxV34 && t.dataset.field === "date" && f.date !== t.dataset.previous) Object.assign(f, { start: "", pickupEnd: "", deliveryEnd: "" });
     if (t.dataset.field === "customExpiry") { f.expiryMode = t.checked ? "custom" : "auto"; if (t.checked) { f.endDate ||= f.date; f.end ||= "23:59"; } }
+    if (uxV34 && f.pickupKind === "contact_handoff" && ["pickup", "region"].includes(t.dataset.field)) {
+      capture(); render();
+      $(`[data-form-key="request"][data-field="${t.dataset.field}"]`)?.focus({ preventScroll: true });
+      return;
+    }
     if (["customExpiry", "date", "taskScope", "completion"].includes(t.dataset.field)) { capture(); render(); }
   });
   resetPrototype = () => { ui.preview = null; ui.lastPublisher = false; $("#delivery-save-fail").checked = false; base.resetPrototype(); };

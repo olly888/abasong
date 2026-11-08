@@ -1,5 +1,6 @@
 import { prepareContributionBackfill } from "./verify-contribution-backfill";
 import { verifyContributionManagement } from "./verify-contribution-management";
+import { verifyVisibleAccess } from "./verify-visible-access";
 import { verifyPilotAccess } from "./verify-pilot-access";
 import { verifyNearby } from "./verify-nearby";
 import { verifyKmsServices } from "./verify-kms-services";
@@ -182,6 +183,7 @@ async function main() {
       "0020_dsp_team_profiles.sql",
       "0021_circle_text.sql",
       "0022_circle_media.sql",
+      "0023_apartment_sharing_controls.sql",
     ])
       await db.query(readFileSync("database/migrations/" + f, "utf8"));
     const password = randomBytes(24).toString("hex");
@@ -1321,6 +1323,7 @@ async function main() {
       admin.href,
       issuer,
     );
+    await verifyVisibleAccess(db, req, token, base);
     await verifyPilotAccess(db, admin.href, issuer, token, req, aid);
     await verifyKmsServices(db, sensitive.href, issued);
     console.log(

@@ -6,7 +6,11 @@ import { publicApartmentId, publicExpansion } from "./public-apartment-data";
 type S = components["schemas"];
 type Actor = { userId: string; issuedAt: number };
 interface SpatialService {
-  discoverCatalog(a: Actor, p: S["Point"]): Promise<S["NearbyCandidate"][]>;
+  discoverCatalog(
+    a: Actor,
+    p: S["Point"],
+    radius?: number,
+  ): Promise<S["NearbyCandidate"][]>;
   matchSearchAddress(
     a: Actor,
     address: S["SearchAddress"] | null,
@@ -105,6 +109,28 @@ export async function verifyNearbyCoverage(
         [],
       );
     });
+    for (const [label, changed] of [
+      ["WRONG-CITY", { ...address, city: "TEST Different City" }],
+      ["WRONG-STATE", { ...address, state: "NV" }],
+      [
+        "UNIT-SCOPE",
+        { ...address, address_line1: address.address_line1 + " Apt 2" },
+      ],
+      [
+        "BUILDING-SCOPE",
+        { ...address, address_line1: address.address_line1 + " Bldg B" },
+      ],
+      ["NO-CITY", { ...address, city: "" }],
+    ] as const) {
+      await check(`PUBLIC-${i + 1}-${label}`, async () => {
+        // Even an identical map coordinate is not proof of the same postal
+        // identity or access scope. Never fall back to the nearest apartment.
+        assert.deepEqual(
+          await service.matchSearchAddress(actor, changed, sample),
+          [],
+        );
+      });
+    }
     if (/\s[NSEW]\s/.test(sample.address_line1))
       await check(`PUBLIC-${i + 1}-WRONG-DIRECTION`, async () => {
         const opposite: Record<string, string> = {
@@ -133,6 +159,21 @@ export async function verifyNearbyCoverage(
         actor,
         {
           address_line1: "100 North Garfield Avenue",
+          city: "Pasadena",
+          state: "CA",
+          postal_code: null,
+        },
+        samples.find((s) => s.city === "Pasadena")!,
+      ),
+      [],
+    );
+  });
+  await check("UNKNOWN-HOUSE-ADDRESS-NOT-NEAREST-APARTMENT", async () => {
+    assert.deepEqual(
+      await service.matchSearchAddress(
+        actor,
+        {
+          address_line1: "1200 TEST House Way",
           city: "Pasadena",
           state: "CA",
           postal_code: null,
@@ -430,6 +471,47 @@ export async function verifyNearbyCoverage(
     assert.deepEqual(
       await service.discoverCatalog(actor, { lng: -118.02, lat: 34.43 }),
       [],
+    );
+  });
+  // Real PostGIS distance at each expansion edge; no external geocoder or GPS.
+  for (const radius of [200, 500, 1000]) {
+    const id = randomUUID();
+    await db.query(
+      `INSERT INTO abasong.apartments(id,name,address_line1,city,state,source_id,point,status,confidence)
+      VALUES($1,'TEST range','100 TEST Range Ave','TEST City','CA',$3,
+      extensions.ST_Project(extensions.ST_SetSRID(extensions.ST_MakePoint(-117.8,34.5),4326)::extensions.geography,$2::double precision,0::double precision),'active','unverified')`,
+      [id, radius - 0.5, source],
+    );
+    await check(`RANGE-${radius}-INSIDE`, async () => {
+      const found = await service.discoverCatalog(
+        actor,
+        { lng: -117.8, lat: 34.5 },
+        radius,
+      );
+      assert(found.some((c) => c.apartment?.id === id));
+      assert(found.every((c) => c.distance_m <= radius));
+    });
+    await db.query(
+      `UPDATE abasong.apartments SET point=extensions.ST_Project(
+      extensions.ST_SetSRID(extensions.ST_MakePoint(-117.8,34.5),4326)::extensions.geography,$2::double precision,0::double precision) WHERE id=$1`,
+      [id, radius + 0.5],
+    );
+    await check(`RANGE-${radius}-OUTSIDE`, async () => {
+      assert(
+        !(
+          await service.discoverCatalog(
+            actor,
+            { lng: -117.8, lat: 34.5 },
+            radius,
+          )
+        ).some((c) => c.apartment?.id === id),
+      );
+    });
+    await db.query("DELETE FROM abasong.apartments WHERE id=$1", [id]);
+  }
+  await check("RANGE-UNBOUNDED-REJECTED", async () => {
+    await assert.rejects(
+      service.discoverCatalog(actor, { lng: -117.8, lat: 34.5 }, 100000),
     );
   });
   console.log(

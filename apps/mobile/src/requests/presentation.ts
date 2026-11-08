@@ -14,16 +14,91 @@ export const isV2 = (
 export function requestTitle(r: DeliverySummary) {
   return isV2(r) ? scenarioLabels[r.scenario] : kindLabels[r.kind];
 }
+export function deliveryQuantity(
+  mode: "exact" | "estimate" | "unknown" | null,
+  count: number | null,
+  remaining: number | null = null,
+) {
+  if (mode === "unknown") return "数量待确认";
+  if (mode === "estimate")
+    return count === null ? "数量待确认" : `约 ${count} 件`;
+  if (remaining !== null && remaining !== count) return `剩余 ${remaining} 件`;
+  return count === null ? "数量待确认" : `${count} 件`;
+}
 export function requestQuantity(r: DeliverySummary) {
-  if (isV2(r) && r.quantity_mode === "unknown") return "件数待确认";
-  if (isV2(r) && r.quantity_mode === "estimate")
-    return r.parcel_count === null ? "件数待确认" : `约 ${r.parcel_count} 件`;
+  if (isV2(r))
+    return deliveryQuantity(
+      r.quantity_mode,
+      r.parcel_count,
+      r.remaining_parcels,
+    );
   return r.remaining_parcels !== null
     ? `剩余 ${r.remaining_parcels} 件`
     : r.parcel_count !== null
       ? `${r.parcel_count} 件`
       : "件数待确认";
 }
+type Arrival = {
+  handoff_mode?: string | null;
+  handoff_date?: string | null;
+  starts_at?: string | null;
+};
+export function requestArrival(r: Arrival) {
+  if (r.handoff_mode === "asap")
+    return r.handoff_date ? `${r.handoff_date} · 尽快到场` : "尽快到场";
+  return requestTime(r.starts_at ?? null);
+}
+export function deliveryArrival(r: DeliverySummary) {
+  return requestArrival(isV2(r) ? r : { starts_at: r.starts_at });
+}
+export function requestPickupRegion(
+  r: DeliveryRequest,
+  regions: Record<string, string>,
+) {
+  return regions[r.pickup_region_id ?? ""] ?? r.pickup_area ?? "联系确认";
+}
+export function requestDriverNeed(r: DeliverySummary) {
+  if (r.drivers_needed === null) return null;
+  return {
+    label:
+      r.remaining_drivers === null || r.remaining_drivers === r.drivers_needed
+        ? "需要司机"
+        : "还需司机",
+    value: `${r.remaining_drivers ?? r.drivers_needed} 人`,
+  };
+}
+export function requestHandoffRequirement(
+  r: Pick<DeliverySummary, "handoff_requirement">,
+) {
+  const requirement = r.handoff_requirement;
+  return requirement && Object.hasOwn(handoffLabels, requirement)
+    ? handoffLabels[requirement as keyof typeof handoffLabels]
+    : null;
+}
+export const handoffLabels = {
+  contact_confirm: "联系确认",
+  carrier_account: "需已有该快递公司账号",
+  dsp_approval: "需 DSP 确认转派",
+};
+export const completionLabels = {
+  contact: "送完时间联系确认",
+  same_day: "当天送完",
+  next_day: "可次日送完",
+};
+export const scopeLabels = {
+  partial: "可分担部分包裹",
+  whole_route: "整条线路接手",
+};
+export const experienceLabels = {
+  any: "不限",
+  delivery_experience: "有配送经验",
+  carrier_experience: "熟悉该快递公司",
+};
+export const sortedLabels = {
+  unknown: "待确认",
+  sorted: "已理货",
+  unsorted: "未理货",
+};
 export function canApplyTo(r: DeliverySummary) {
   if (
     r.status !== "open" ||

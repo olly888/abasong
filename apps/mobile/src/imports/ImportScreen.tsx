@@ -32,12 +32,15 @@ import {
   ActionButton,
   ApartmentPage,
   AuthResolution,
-  Field,
   FormError,
 } from "../auth/AuthControls";
 import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
+import { AccessCodeFields } from "../apartments/AccessCodeFields";
+import { CheckField } from "../ui/CheckField";
+import { AddressLine } from "../apartments/AddressLine";
 import { ContributionAddressField } from "../apartments/ContributionAddressField";
+import { unspecifiedDoor } from "../apartments/DoorScopeField";
 import { canShareCandidate, importAddressLabel } from "./candidate-address";
 import { importCommitPatch } from "./commit-patch";
 import { extractCandidates } from "./extract";
@@ -215,7 +218,7 @@ export function ImportSession(p: {
       address,
       sourceAddress: address,
       value,
-      scope: "门别未注明",
+      scope: unspecifiedDoor,
       issues,
       target: null,
       selected: false,
@@ -482,6 +485,7 @@ export function ImportSession(p: {
   }
   useFocusEffect(
     useCallback(() => {
+      if (Platform.OS !== "android") return;
       const sub = BackHandler.addEventListener("hardwareBackPress", () => {
         backWithinImport();
         return true;
@@ -639,18 +643,12 @@ export function ImportSession(p: {
                     <Text style={styles.error}>共享资格待核验</Text>
                   ) : null}
                   {pending.length ? (
-                    <Pressable
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: attested, disabled: busy }}
+                    <CheckField
+                      label={`我已核对，并有权${mode === "private_only" ? "保存" : "共享"}所选资料`}
+                      checked={attested}
                       disabled={busy}
-                      onPress={() => setAttested((x) => !x)}
-                      style={styles.check}
-                    >
-                      <Text style={styles.meta}>
-                        {attested ? "☑" : "□"} 我已核对，并有权
-                        {mode === "private_only" ? "保存" : "共享"}所选资料
-                      </Text>
-                    </Pressable>
+                      onChange={setAttested}
+                    />
                   ) : null}
                 </>
               ) : null}
@@ -786,22 +784,14 @@ export function ImportSession(p: {
               else change(editor.id, { target: null, confirmedAddress: null });
             }}
           />
-          <Field
-            label="门禁码"
+          <AccessCodeFields
             value={editor.value}
-            maxLength={32}
-            editable={!editor.privateId}
-            onChangeText={(value) => change(editor.id, { value })}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <Field
-            label="门别"
-            value={editor.scope}
-            maxLength={100}
-            editable={!editor.privateId}
-            placeholder="例如：行人门"
-            onChangeText={(scope) => change(editor.id, { scope })}
+            scope={editor.scope}
+            disabled={busy || !!editor.privateId}
+            onValueChange={(value) => change(editor.id, { value })}
+            onScopeChange={(scope) =>
+              change(editor.id, { scope: scope || unspecifiedDoor })
+            }
           />
           <Pressable
             accessibilityRole="button"
@@ -865,16 +855,30 @@ export function ImportSession(p: {
               </View>
             ))}
           {rows.map((r, index) => (
-            <View key={r.id} style={styles.card}>
-              <Text style={styles.label}>
-                {r.target
-                  ? importAddressLabel(r.target)
-                  : r.address || `待核对 ${index + 1}`}
-              </Text>
-              <Text style={styles.code}>{r.value || "缺少门禁码"}</Text>
-              {r.scope && r.scope !== "门别未注明" ? (
-                <Text style={styles.meta}>{r.scope}</Text>
-              ) : null}
+            <View
+              key={r.id}
+              style={[
+                styles.card,
+                r.selected && stage === "review" && styles.selectedCard,
+              ]}
+            >
+              <AddressLine
+                line={
+                  r.target
+                    ? importAddressLabel(r.target)
+                    : r.address || `待核对 ${index + 1}`
+                }
+                expanded
+                compact
+              />
+              <View style={styles.codeBand}>
+                <Text style={[styles.code, { flexShrink: 1 }]}>
+                  {r.value || "缺少门禁码"}
+                </Text>
+                {r.scope && r.scope !== unspecifiedDoor ? (
+                  <Text style={styles.door}>{r.scope}</Text>
+                ) : null}
+              </View>
               {r.error ? (
                 <Text style={styles.error}>{r.error}</Text>
               ) : r.status ? (
@@ -904,22 +908,16 @@ export function ImportSession(p: {
               ) : null}
               {stage === "review" ? (
                 <View style={styles.modeRow}>
-                  <Pressable
-                    accessibilityRole="checkbox"
+                  <CheckField
+                    label="选择"
                     accessibilityLabel={`选择第 ${index + 1} 条`}
-                    accessibilityState={{
-                      checked: r.selected,
-                      disabled: busy || !complete(r) || !!r.privateId,
-                    }}
+                    checked={r.selected}
                     disabled={busy || !complete(r) || !!r.privateId}
-                    style={styles.check}
-                    onPress={() => {
-                      update(r.id, { selected: !r.selected });
+                    onChange={(selected) => {
+                      update(r.id, { selected });
                       setAttested(false);
                     }}
-                  >
-                    <Text>{r.selected ? "☑" : "□"} 选择</Text>
-                  </Pressable>
+                  />
                   {!r.privateId ? (
                     <Pressable
                       accessibilityRole="button"
@@ -929,7 +927,7 @@ export function ImportSession(p: {
                         setEditing(r.id);
                       }}
                     >
-                      <Text style={styles.link}>编辑</Text>
+                      <Text style={styles.link}>核对</Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -985,7 +983,13 @@ const styles = StyleSheet.create({
     height: 210,
     backgroundColor: tokens.color.surfaceMuted,
   },
-  modeRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  modeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   check: { minHeight: 48, justifyContent: "center", paddingVertical: 8 },
   card: {
     borderWidth: 1,
@@ -994,6 +998,18 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
+  selectedCard: { borderColor: tokens.color.brandPrimary },
+  codeBand: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: tokens.color.surfaceMuted,
+  },
+  door: { color: tokens.color.textSecondary, fontSize: 13, lineHeight: 20 },
   code: {
     fontSize: 28,
     lineHeight: 36,

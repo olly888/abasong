@@ -1,5 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Keyboard, ScrollView, Text, View } from "react-native";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+} from "react";
+import {
+  AccessibilityInfo,
+  Alert,
+  Keyboard,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { router, useFocusEffect, usePreventRemove } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { randomUUID } from "expo-crypto";
@@ -12,6 +26,8 @@ import type { ContributionRequest } from "../apartments/contribution-address-sea
 import {
   changeDeliveryField,
   defaultDeliveryFields,
+  DeliveryFieldError,
+  type DeliveryAnchor,
   deliveryInput,
   hydrateDelivery,
   type DeliveryFields,
@@ -22,13 +38,16 @@ import {
   createDeliveryWriter,
   type DeliveryTeamIntent,
 } from "./delivery-writer";
-import { DeliveryForm } from "./DeliveryForm";
-import { Choice, requestStyles as s } from "./RequestUi";
 import {
-  requestPrice,
-  scenarioLabels,
-  type DeliveryRequest,
-} from "./presentation";
+  DeliveryDisclosureRow,
+  DeliveryForm,
+  type DeliveryAnchorWrap,
+  type DeliveryDisclosure,
+} from "./DeliveryForm";
+import { DeliveryReview } from "./DeliveryReview";
+import { metrics } from "../ui/foundation";
+import { Choice, requestStyles as s } from "./RequestUi";
+import { scenarioLabels, type DeliveryRequest } from "./presentation";
 type S = components["schemas"];
 export function DeliveryEditor({
   request,
@@ -63,7 +82,18 @@ export function DeliveryEditor({
     [form, setForm] = useState<DeliveryFields>(
       seed?.fields ?? defaultDeliveryFields("warehouse_shortage"),
     ),
-    [review, setReview] = useState(false),
+    [review, setReview] = useState<S["RequestDraftInputV2"] | null>(null),
+    [fieldError, setFieldError] = useState<DeliveryFieldError | null>(null),
+    [open, setOpen] = useState<Record<DeliveryDisclosure, boolean>>({
+      identity: false,
+      pickupKind: false,
+      conditions: false,
+      extra: false,
+    }),
+    [jump, setJump] = useState<{
+      field?: DeliveryAnchor;
+      offset?: number;
+    } | null>(null),
     [error, setError] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
     [dirty, setDirty] = useState(false),
@@ -79,6 +109,91 @@ export function DeliveryEditor({
       ),
     [request, initial, copy],
   );
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const content = useRef<ComponentRef<typeof View>>(null);
+  const anchors = useRef(new Map<DeliveryAnchor, ComponentRef<typeof View>>());
+  const lastOffset = useRef(0);
+  useEffect(() => {
+    if (review || !jump) return;
+    let timer: ReturnType<typeof setTimeout>;
+    let canceled = false;
+    const retry = (n: number) => {
+      if (n < 5 && !canceled) timer = setTimeout(() => locate(n + 1), 50);
+    };
+    function locate(attempt: number) {
+      if (canceled || !jump) return;
+      if (jump.offset !== undefined) {
+        scroll.current?.scrollTo({ y: jump.offset, animated: false });
+        return;
+      }
+      const node = jump.field ? anchors.current.get(jump.field) : null;
+      if (!node || !content.current || !scroll.current) return retry(attempt);
+      node.measureLayout(
+        content.current,
+        (_x, y) => {
+          if (canceled) return;
+          scroll.current?.scrollTo({
+            y: Math.max(0, y + metrics.inset - 8),
+            animated: true,
+          });
+          if (fieldError?.field === jump.field && fieldError)
+            AccessibilityInfo.announceForAccessibility(fieldError.message);
+        },
+        () => retry(attempt),
+      );
+    }
+    timer = setTimeout(() => locate(0), 50);
+    return () => {
+      canceled = true;
+      clearTimeout(timer);
+    };
+  }, [jump, review, fieldError]);
+  const toggle = (section: DeliveryDisclosure) =>
+    setOpen((state) => ({ ...state, [section]: !state[section] }));
+  const showField = (field: DeliveryAnchor) => {
+    const section =
+      field === "identity"
+        ? "identity"
+        : field === "conditions" || field === "deliveryEnd"
+          ? "conditions"
+          : ["extra", "pickupEnd", "minimum", "endDate", "end"].includes(field)
+            ? "extra"
+            : null;
+    if (section) setOpen((state) => ({ ...state, [section]: true }));
+    setJump({ field });
+  };
+  const edit = (field?: DeliveryAnchor) => {
+    setReview(null);
+    setError(null);
+    if (field) showField(field);
+    else setJump({ offset: lastOffset.current });
+  };
+  const anchor: DeliveryAnchorWrap = (id, children, aliases = []) => {
+    const ids = [id, ...aliases];
+    const issue =
+      fieldError && ids.includes(fieldError.field) ? fieldError.message : null;
+    return (
+      <View
+        collapsable={false}
+        testID={`delivery-field-${id}`}
+        ref={(node) => {
+          for (const key of ids) {
+            if (node) anchors.current.set(key, node);
+            else anchors.current.delete(key);
+          }
+        }}
+        style={{
+          gap: 4,
+          ...(issue
+            ? { backgroundColor: tokens.color.surfaceMuted, borderRadius: 8 }
+            : {}),
+        }}
+      >
+        {children}
+        <FormError message={issue} />
+      </View>
+    );
+  };
   const lock = useRef(false),
     mounted = useRef(true),
     leaving = useRef(false);
@@ -89,7 +204,7 @@ export function DeliveryEditor({
     };
   }, []);
   const disablePrevention = usePreventRemove(
-    dirty || review || busy,
+    dirty || !!review || busy,
     ({ repeat }) => {
       if (leaving.current) {
         repeat();
@@ -97,7 +212,7 @@ export function DeliveryEditor({
       }
       if (lock.current) return;
       if (review) {
-        setReview(false);
+        edit();
         return;
       }
       Alert.alert("离开这次填写？", undefined, [
@@ -120,6 +235,8 @@ export function DeliveryEditor({
     setForm((f) => changeDeliveryField(f, key, value));
     setDirty(true);
     setError(null);
+    setFieldError(null);
+    setJump(null);
   };
   const published = !copy && initial?.status !== "draft" && !!initial;
   const [team, setTeam] = useState<OwnTeamSummary | null>(null);
@@ -129,7 +246,6 @@ export function DeliveryEditor({
   const [teamState, setTeamState] = useState<"loading" | "loaded" | "error">(
     "loading",
   );
-  const pendingTeam = useRef(false);
   const teamLoad = useRef<AbortController | null>(null);
   const reviewedTeam = useRef<DeliveryTeamIntent | undefined>(undefined);
   const teamEnabled = !!onOpenTeam && !published;
@@ -144,11 +260,6 @@ export function DeliveryEditor({
       if (c.signal.aborted) return;
       setTeam(t);
       setTeamState("loaded");
-      if (pendingTeam.current && t?.can_represent) {
-        setTeamId(t.team.id);
-        setDirty(true);
-      }
-      pendingTeam.current = false;
     } catch {
       if (!c.signal.aborted) setTeamState("error");
     }
@@ -167,19 +278,32 @@ export function DeliveryEditor({
       !team?.can_represent ||
       team.team.id !== teamId
     )
-      throw new Error("当前团队不能代表发布，请检查团队资料或选择个人");
+      throw new DeliveryFieldError(
+        "identity",
+        "当前团队不能代表发布，请检查团队资料或选择个人",
+      );
     return { id: team.team.id, version: team.version, name: team.team.name };
+  }
+  function reportField(e: DeliveryFieldError) {
+    setReview(null);
+    setError(null);
+    setFieldError(e);
+    showField(e.field);
   }
   function check() {
     if (!scenario) return;
     try {
-      deliveryInput(scenario, form, true, writer.current());
+      const input = deliveryInput(scenario, form, true, writer.current());
       reviewedTeam.current = teamChoice();
       Keyboard.dismiss();
       setError(null);
-      setReview(true);
+      setFieldError(null);
+      setJump(null);
+      setReview(input);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "请检查本次填写");
+      Keyboard.dismiss();
+      if (e instanceof DeliveryFieldError) reportField(e);
+      else setError(e instanceof Error ? e.message : "请检查本次填写");
     }
   }
   async function save(publish: boolean) {
@@ -201,14 +325,24 @@ export function DeliveryEditor({
       onDone(result, publish);
     } catch (e) {
       if (!mounted.current) return;
+      if (e instanceof DeliveryFieldError) {
+        reportField(e);
+        return;
+      }
       if (e instanceof AccountError && e.code === "VERSION_CONFLICT")
         setConflict(true);
       if (
         teamError(e, "TEAM_CHANGED") ||
         teamError(e, "ORGANIZATION_REQUIRED")
       ) {
-        setReview(false);
+        reportField(
+          new DeliveryFieldError(
+            "identity",
+            "团队资料有变化，请重新核对发布身份",
+          ),
+        );
         void loadTeam();
+        return;
       }
       setError(e instanceof Error ? e.message : "保存失败，填写内容已保留");
     } finally {
@@ -218,12 +352,6 @@ export function DeliveryEditor({
   }
   const regionLabel = (id: string) =>
     regions.find((r) => r.id === id)?.label ?? "未选择";
-  const fact = (label: string, value: string) => (
-    <View style={{ gap: 6 }} key={label}>
-      <Text style={s.secondary}>{label}</Text>
-      <Text style={s.text}>{value}</Text>
-    </View>
-  );
   if (!scenario)
     return (
       <View
@@ -281,7 +409,31 @@ export function DeliveryEditor({
     <AuthPage
       key={review ? "review" : "form"}
       compact
-      title={review ? "核对本次需求" : scenarioLabels[scenario]}
+      title={
+        review
+          ? published
+            ? "核对修改"
+            : "核对需求"
+          : published
+            ? "编辑配送需求"
+            : scenarioLabels[scenario]
+      }
+      onBack={
+        review
+          ? () => {
+              if (!lock.current) edit();
+            }
+          : undefined
+      }
+      scrollRef={review ? undefined : scroll}
+      contentRef={review ? undefined : content}
+      onScroll={
+        review
+          ? undefined
+          : (y) => {
+              lastOffset.current = y;
+            }
+      }
       footer={
         <View style={{ gap: 10 }}>
           <FormError message={error} />
@@ -303,8 +455,8 @@ export function DeliveryEditor({
                       ? "确认保存"
                       : "确认发布"
                     : published
-                      ? "核对并保存"
-                      : "核对并发布"
+                      ? "核对修改"
+                      : "核对需求"
                 }
                 disabled={busy}
                 busy={busy}
@@ -315,7 +467,7 @@ export function DeliveryEditor({
                   label="返回修改"
                   variant="text"
                   disabled={busy}
-                  onPress={() => setReview(false)}
+                  onPress={() => edit()}
                 />
               ) : !published ? (
                 <ActionButton
@@ -332,122 +484,102 @@ export function DeliveryEditor({
     >
       {testControls}
       {testNotice ? <Text style={s.secondary}>{testNotice}</Text> : null}
-      {teamEnabled && !review ? (
-        <View style={{ gap: 6 }}>
-          <Choice
-            label="发布身份"
-            value={teamId}
-            disabled={busy || conflict}
-            options={[
-              ["", "个人"],
-              ...(teamState === "loaded" && team?.can_represent
-                ? [[team.team.id, `代表 ${team.team.name}`] as const]
-                : []),
-            ]}
-            onChange={(id) => {
-              setTeamId(id);
-              setDirty(true);
-              setError(null);
-            }}
-          />
-          {teamId && !team?.can_represent && teamState === "loaded" ? (
-            <Text style={s.secondary}>原团队不可用，请重新选择发布身份</Text>
-          ) : null}
-          {teamState === "error" ? (
-            <ActionButton
-              label="重新读取团队资料"
-              variant="text"
-              onPress={() => void loadTeam()}
-            />
-          ) : null}
-          {teamState === "loading" ? (
-            <Text style={s.secondary}>正在读取团队资料…</Text>
-          ) : null}
-          {teamState === "loaded" && !team?.can_represent ? (
-            <ActionButton
-              label={team ? "查看团队资料" : "添加团队资料"}
-              variant="text"
-              disabled={busy || conflict}
-              onPress={() => {
-                pendingTeam.current = !team;
-                onOpenTeam?.();
-              }}
-            />
-          ) : null}
-        </View>
-      ) : (
-        <View
-          style={{
-            padding: 14,
-            backgroundColor: tokens.color.surfaceMuted,
-            borderRadius: 12,
-          }}
-        >
-          <Text style={s.secondary}>
-            发布身份 ·{" "}
-            {published
-              ? (initial.organization?.name ?? initial.publisher.display_name)
-              : review && teamEnabled
-                ? (reviewedTeam.current?.name ?? "个人")
-                : identity}
-          </Text>
-        </View>
-      )}
       {review ? (
-        <View style={{ gap: 24 }}>
-          <Text style={s.headline}>{scenarioLabels[scenario]}</Text>
-          {fact("派送", `${regionLabel(form.region)} · ${form.carrier}`)}
-          {fact(
-            "取件",
-            form.pickupKind === "warehouse"
-              ? [
-                  form.warehouse.name,
-                  form.warehouse.line,
-                  form.warehouse.city,
-                  form.warehouse.state,
-                  form.warehouse.postal,
-                ]
-                  .filter(Boolean)
-                  .join(", ")
-              : `${regionLabel(form.pickupRegion)} · 联系确认具体交接位置`,
-          )}
-          {fact(
-            "接手时间",
-            `${form.date} · ${form.asap ? "尽快到场" : form.start}${form.pickupEnd ? ` · 最晚 ${form.pickupEnd}` : ""}`,
-          )}
-          {fact(
-            "任务量",
-            `${form.quantityMode === "unknown" ? "件数待确认" : `${form.quantityMode === "estimate" ? "约 " : ""}${form.quantity} 件`}${form.drivers ? ` · 需 ${form.drivers} 人` : ""} · ${form.scope === "partial" ? "可以分担" : "整批接手"}${form.minimum && form.scope === "partial" ? ` · 最低 ${form.minimum} 件` : ""}`,
-          )}
-          {fact(
-            "报价",
-            requestPrice({
-              price_unit: form.unit,
-              price_cents:
-                form.unit === "negotiable"
-                  ? null
-                  : Math.round(Number(form.amount) * 100),
-            }),
-          )}
-          {fact(
-            "接手条件",
-            `${{ carrier_account: "需已有快递公司账号", dsp_approval: "需 DSP 确认转派", contact_confirm: "联系确认" }[form.handoff]} · ${{ same_day: "当天送完", next_day: "次日送完", contact: "送完时间联系确认" }[form.completion]}${form.deliveryEnd && form.completion !== "contact" ? ` ${form.deliveryEnd}` : ""}`,
-          )}
-          {form.description ? fact("补充说明", form.description) : null}
-          {form.terms ? fact("私下付款约定", form.terms) : null}
-          {form.customExpiry
-            ? fact("有效至", `${form.endDate} ${form.end}`)
-            : null}
-        </View>
-      ) : (
-        <DeliveryForm
-          scenario={scenario}
-          form={form}
-          regions={regions}
-          onChange={update}
-          request={request}
+        <DeliveryReview
+          input={review}
+          regionLabel={regionLabel}
+          identity={
+            published
+              ? (initial.organization?.name ?? initial.publisher.display_name)
+              : (reviewedTeam.current?.name ?? "个人")
+          }
+          identityEditable={teamEnabled}
+          onEdit={edit}
           disabled={busy || conflict}
         />
+      ) : (
+        <>
+          {anchor(
+            "identity",
+            teamEnabled ? (
+              <View style={{ gap: 8 }}>
+                <DeliveryDisclosureRow
+                  title="发布身份"
+                  summary={teamId ? (team?.team.name ?? "团队") : "个人"}
+                  open={open.identity}
+                  onToggle={() => toggle("identity")}
+                  disabled={busy || conflict}
+                />
+                {open.identity ? (
+                  <>
+                    <Choice
+                      label="选择发布身份"
+                      value={teamId}
+                      disabled={busy || conflict}
+                      options={[
+                        ["", "个人"],
+                        ...(teamState === "loaded" && team?.can_represent
+                          ? [[team.team.id, `代表 ${team.team.name}`] as const]
+                          : []),
+                      ]}
+                      onChange={(id) => {
+                        setTeamId(id);
+                        setDirty(true);
+                        setError(null);
+                        setFieldError(null);
+                        setJump(null);
+                      }}
+                    />
+                    {teamId &&
+                    !team?.can_represent &&
+                    teamState === "loaded" ? (
+                      <Text style={s.secondary}>
+                        原团队不可用，请重新选择发布身份
+                      </Text>
+                    ) : null}
+                    {teamState === "error" ? (
+                      <ActionButton
+                        label="重新读取团队资料"
+                        variant="text"
+                        onPress={() => void loadTeam()}
+                      />
+                    ) : null}
+                    {teamState === "loading" ? (
+                      <Text style={s.secondary}>正在读取团队资料…</Text>
+                    ) : null}
+                    {teamState === "loaded" && !team?.can_represent ? (
+                      <ActionButton
+                        label={team ? "查看团队资料" : "添加团队资料"}
+                        variant="text"
+                        disabled={busy || conflict}
+                        onPress={onOpenTeam}
+                      />
+                    ) : null}
+                  </>
+                ) : null}
+              </View>
+            ) : (
+              <Text style={s.secondary}>
+                发布身份 ·{" "}
+                {published
+                  ? (initial.organization?.name ??
+                    initial.publisher.display_name)
+                  : identity}
+              </Text>
+            ),
+          )}
+          <DeliveryForm
+            scenario={scenario}
+            form={form}
+            regions={regions}
+            onChange={update}
+            request={request}
+            disabled={busy || conflict}
+            anchor={anchor}
+            open={open}
+            toggle={toggle}
+          />
+        </>
       )}
     </AuthPage>
   );

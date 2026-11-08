@@ -43,17 +43,24 @@ export class NearbyService {
     body: unknown,
     provider = false,
   ): Promise<S["NearbyDiscovery"]> {
-    const p = freshObservation(body);
+    const p = freshObservation(body),
+      started = Date.now();
+    if (p.expand && !provider)
+      throw new ApiError(400, "INVALID_INPUT", "扩围需使用附近地图查询");
     await this.accounts.get(a);
-    const catalog = await this.apartments.discoverCatalog(a, p.point);
-    const base: S["NearbyDiscovery"] = {
-      items: catalog,
+    const initial = await this.apartments.discoverCatalog(a, p.point);
+    let result: S["NearbyDiscovery"] = {
+      items: initial,
       radius_m: 200,
       expires_at: new Date(Date.now() + 20000).toISOString(),
-      truncated: catalog.length === 20,
+      truncated: initial.length === 20,
       provider_status: "not_requested",
       attribution: "",
       use_mode: "temporary",
+      coverage: {
+        catalog: initial.length === 20 ? "capped" : "queried",
+        mapbox: "not_requested",
+      },
       distance_context: {
         observation_id: p.observation_id ?? null,
         observed_at: p.observed_at,
@@ -65,7 +72,7 @@ export class NearbyService {
     if (!provider) {
       freshObservation(body);
       await this.accounts.get(a);
-      return base;
+      return result;
     }
     const now = Date.now();
     for (const [k, v] of this.rates) if (v <= now) this.rates.delete(k);
@@ -81,66 +88,140 @@ export class NearbyService {
       );
     this.rates.set(a.userId, now + 25000);
     this.rates.set("*", now + 1000);
-    try {
-      const buildings = await this.maps.buildings(p.point);
-      // A known boundary is not proof that every enclosed roof shares its
-      // postal address/access scope. Resolve suggestions before address dedupe.
-      const points = buildings.items;
-      const items: S["NearbyCandidate"][] = [];
-      const seen = new Set(
-        catalog.map((c) => addressIdentity(c.address)).filter(Boolean),
-      );
-      // Bounded enrichment; never persist provider points, addresses or geometry.
-      const suggested = await Promise.all(
-        points.slice(0, 4).map(async (b) => {
-          let address: S["SearchAddress"] | null = null;
-          try {
-            address = await this.maps.reverse(b.point);
-          } catch {
-            /* Keep an unresolved confirmation card. */
-          }
-          return { b, address };
-        }),
-      );
-      for (const { b, address } of suggested) {
-        const key = addressIdentity(address);
-        if (key && seen.has(key)) continue;
-        if (key) seen.add(key);
-        // A catalog point can be outside the driver's 200m query while a
-        // Mapbox roof of the same property is nearby. Reuse the existing exact
-        // postal + 250m spatial matcher; proximity alone never binds a code.
-        const matches =
-          key && address
-            ? await this.apartments.matchSearchAddress(a, address, b.point)
-            : [];
-        const linked = matches.length === 1 ? matches[0]! : null;
-        items.push({
-          key: linked?.id ?? randomUUID(),
-          source: "mapbox",
-          apartment: linked,
-          address: linked
-            ? {
-                address_line1: linked.address_line1,
-                city: linked.city,
-                state: linked.state,
-                postal_code: linked.postal_code,
-              }
-            : address,
-          point: b.point,
-          ...(b.feature_id ? { provider_feature_id: b.feature_id } : {}),
-          distance_m: b.distance_m,
-          distance_basis: b.distance_basis,
-          classification: "apartments",
-          requires_address_confirmation: !linked,
-        });
+    // One cycle owns one origin, one rate-limit lease and one finite budget.
+    const budget = {
+      signal: AbortSignal.timeout(Math.max(1, 8000 - (Date.now() - started))),
+      tilequery_requests: 0,
+      metadata_requests: 0,
+    };
+    const expansion: S["NearbyExpansion"] = {
+      attempted_radii_m: [200],
+      stop_reason: "fixed",
+      catalog_queries: 1,
+      tilequery_requests: 0,
+      reverse_requests: 0,
+      metadata_requests: 0,
+      elapsed_ms: 0,
+    };
+    const suggestions = new Map<
+      string,
+      {
+        address: S["SearchAddress"] | null;
+        linked: S["Apartment"] | null;
+        failed: boolean;
+        key: string;
       }
-      freshObservation(body);
-      await this.accounts.get(a);
-      return {
-        ...base,
-        // An atomic same-origin bundle prevents cached provider distances from
-        // being mixed with a newer catalog observation on the mobile client.
-        items: [...catalog, ...items]
+    >();
+    for (const radius of p.expand
+      ? ([200, 500, 1000] as const)
+      : ([200] as const)) {
+      if (p.expand && (budget.signal.aborted || Date.now() - started >= 8000)) {
+        expansion.stop_reason = "budget_exhausted";
+        result = {
+          ...result,
+          provider_status: "unavailable",
+          coverage: {
+            catalog: result.coverage!.catalog,
+            mapbox: "unavailable",
+          },
+        };
+        break;
+      }
+      if (radius !== 200) expansion.attempted_radii_m.push(radius);
+      try {
+        freshObservation(body);
+        let catalog = initial;
+        if (radius !== 200) {
+          expansion.catalog_queries++;
+          catalog = await this.apartments.discoverCatalog(a, p.point, radius);
+        }
+        const buildings = await this.maps.buildings(
+          p.point,
+          radius,
+          p.expand ? budget : undefined,
+        );
+        const points = buildings.items;
+        const items: S["NearbyCandidate"][] = [];
+        const seen = new Set(
+          catalog.map((c) => addressIdentity(c.address)).filter(Boolean),
+        );
+        let incomplete =
+          buildings.truncated ||
+          (p.expand && buildings.extent_complete !== true);
+        // Four distinct reverse requests per cycle, memoized only until return.
+        const candidates = points.slice(0, 4);
+        if (points.length > candidates.length) incomplete = true;
+        const suggested = await Promise.all(
+          candidates.map(async (b) => {
+            const id = b.feature_id ?? `${b.point.lng},${b.point.lat}`;
+            let cached = suggestions.get(id);
+            if (!cached) {
+              if (expansion.reverse_requests >= 4) {
+                incomplete = true;
+                return { b, cached: null };
+              }
+              expansion.reverse_requests++;
+              let address: S["SearchAddress"] | null = null,
+                failed = false;
+              try {
+                address = await this.maps.reverse(
+                  b.point,
+                  p.expand ? budget.signal : undefined,
+                );
+              } catch {
+                failed = true;
+              }
+              // Missing address also requires human confirmation; no nearby guess.
+              if (!address) failed = true;
+              const key = addressIdentity(address);
+              const matches =
+                key && address && !seen.has(key)
+                  ? await this.apartments.matchSearchAddress(
+                      a,
+                      address,
+                      b.point,
+                    )
+                  : [];
+              cached = {
+                address,
+                linked: matches.length === 1 ? matches[0]! : null,
+                failed,
+                key: randomUUID(),
+              };
+              suggestions.set(id, cached);
+            }
+            return { b, cached };
+          }),
+        );
+        for (const { b, cached } of suggested) {
+          if (!cached) continue;
+          if (cached.failed) incomplete = true;
+          const { address, linked } = cached,
+            key = addressIdentity(address);
+          if (key && seen.has(key)) continue;
+          if (key) seen.add(key);
+          items.push({
+            key: linked?.id ?? cached.key,
+            source: "mapbox",
+            apartment: linked,
+            address: linked
+              ? {
+                  address_line1: linked.address_line1,
+                  city: linked.city,
+                  state: linked.state,
+                  postal_code: linked.postal_code,
+                }
+              : address,
+            point: b.point,
+            ...(b.feature_id ? { provider_feature_id: b.feature_id } : {}),
+            distance_m: b.distance_m,
+            distance_basis: b.distance_basis,
+            classification: "apartments",
+            requires_address_confirmation: !linked,
+          });
+        }
+        const merged = [...catalog, ...items]
+          .filter((c) => c.distance_m >= 0 && c.distance_m <= radius)
           .sort(
             (x, y) =>
               x.distance_m - y.distance_m ||
@@ -148,11 +229,9 @@ export class NearbyService {
               (
                 addressIdentity(x.address) ??
                 x.provider_feature_id ??
-                `${x.point.lng},${x.point.lat}`
+                x.key
               ).localeCompare(
-                addressIdentity(y.address) ??
-                  y.provider_feature_id ??
-                  `${y.point.lng},${y.point.lat}`,
+                addressIdentity(y.address) ?? y.provider_feature_id ?? y.key,
               ),
           )
           .filter(
@@ -161,22 +240,70 @@ export class NearbyService {
                 (c) =>
                   (c.apartment?.id ?? c.key) === (x.apartment?.id ?? x.key),
               ) === i,
-          )
-          .slice(0, 20),
-        truncated:
-          base.truncated ||
-          buildings.truncated ||
-          points.length > 4 ||
-          catalog.length + items.length > 20,
-        provider_status: "ok",
-        attribution: "© Mapbox © OpenStreetMap",
-        expires_at: new Date(Date.now() + 60000).toISOString(),
-      };
-    } catch (e) {
-      if (e instanceof ApiError && [401, 403, 404].includes(e.status)) throw e;
-      await this.accounts.get(a);
-      return { ...base, items: [], provider_status: "unavailable" };
+          );
+        if (p.expand && budget.signal.aborted)
+          throw new ApiError(503, "DISCOVERY_TIMEOUT", "附近资料暂时无法加载");
+        freshObservation(body);
+        await this.accounts.get(a);
+        result = {
+          ...result,
+          radius_m: radius,
+          items: merged.slice(0, 20),
+          truncated: catalog.length === 20 || incomplete || merged.length > 20,
+          provider_status: "ok",
+          attribution: "© Mapbox © OpenStreetMap",
+          coverage: {
+            catalog: catalog.length === 20 ? "capped" : "queried",
+            mapbox: incomplete ? "partial" : "queried",
+          },
+          expires_at: new Date(Date.now() + 60000).toISOString(),
+        };
+        if (!p.expand) break;
+        if (incomplete) {
+          expansion.stop_reason = "coverage_incomplete";
+          break;
+        }
+        if (merged.length >= 3) {
+          expansion.stop_reason = "sufficient";
+          break;
+        }
+        expansion.stop_reason = "max_radius";
+      } catch (e) {
+        // Never downgrade revoked identity or expired location to usable data.
+        if (e instanceof ApiError && [401, 403, 404, 409].includes(e.status))
+          throw e;
+        freshObservation(body);
+        await this.accounts.get(a);
+        expansion.stop_reason = budget.signal.aborted
+          ? "budget_exhausted"
+          : "provider_unavailable";
+        result = {
+          ...result,
+          items: p.expand ? result.items : [],
+          provider_status: "unavailable",
+          coverage: {
+            catalog: result.coverage!.catalog,
+            mapbox: "unavailable",
+          },
+        };
+        break;
+      }
     }
+    freshObservation(body);
+    await this.accounts.get(a);
+    return {
+      ...result,
+      ...(p.expand
+        ? {
+            expansion: {
+              ...expansion,
+              tilequery_requests: budget.tilequery_requests,
+              metadata_requests: budget.metadata_requests,
+              elapsed_ms: Math.max(0, Date.now() - started),
+            },
+          }
+        : {}),
+    };
   }
   async contribute(
     a: VerifiedIdentity,

@@ -208,3 +208,33 @@ it("accepts only matching account/region, exact role names and immutable image d
     ),
   ).toThrow();
 });
+
+it("binds only the same optional pilot media bucket to both tasks", () => {
+  const runtime = plan().runtime;
+  expect(runtime.Parameters.CircleMediaBucketName.Default).toBe("");
+  for (const task of ["ApiTask", "WorkerTask"]) {
+    const [container] = runtime.Resources[task].Properties.ContainerDefinitions;
+    expect(
+      container.Environment.filter(
+        (v: { Name: string }) => v.Name === "CIRCLE_MEDIA_BUCKET",
+      ),
+    ).toEqual([
+      { Name: "CIRCLE_MEDIA_BUCKET", Value: { Ref: "CircleMediaBucketName" } },
+    ]);
+  }
+  expect(() =>
+    assertRuntimeParameters(
+      {
+        ...bindings(),
+        CircleMediaBucketName: "abasong-pilot-dev-circle-media-fixture",
+      },
+      "111122223333",
+    ),
+  ).not.toThrow();
+  expect(() =>
+    assertRuntimeParameters(
+      { ...bindings(), CircleMediaBucketName: "outside-pilot" },
+      "111122223333",
+    ),
+  ).toThrow("Runtime parameter refused");
+});

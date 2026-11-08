@@ -1,0 +1,3 @@
+### Result
+{"checks":[{"name":"实际组件：390宽详情摘要、完整取件地址和地图工具","status":"PASS"},{"name":"实际组件：报名先核对地址再填写，错误滚动到件数字段","status":"PASS"},{"name":"实际组件：未知件数可留空，失败保留并重试","status":"PASS"},{"name":"实际组件：核对摘要顺序与返回修改不丢输入","status":"PASS"},{"name":"实际组件：版本冲突锁住旧条件并提供重新读取","status":"PASS"},{"name":"实际组件：320/390/430长地址及大金额不横向溢出","status":"PASS"}],"errors":[],"passed":6,"failed":0}
+

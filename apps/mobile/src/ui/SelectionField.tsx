@@ -1,3 +1,4 @@
+import { SafeAreaModal } from "./SafeAreaModal";
 import { useEffect, useRef, useState } from "react";
 import {
   ActionSheetIOS,
@@ -8,7 +9,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaModal } from "./SafeAreaModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 import { Icon } from "./Icon";

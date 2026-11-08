@@ -93,6 +93,7 @@ export const requestPageInput = z
     limit: z.coerce.number().int().min(1).max(100).default(20),
     region_id: uuid.optional(),
     kind: requestKind.optional(),
+    scenario: z.enum(["warehouse_shortage", "delivery_handoff"]).optional(),
     carrier: text(80).optional(),
     query: text(200).optional(),
     day: z.iso.date().optional(),

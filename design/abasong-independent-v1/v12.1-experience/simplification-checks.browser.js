@@ -45,7 +45,7 @@ async (page) => {
     await p.locator('[name=value]').fill('*0007#');await p.locator('[name=source]').check();const count=await p.evaluate(()=>model.apartments.flatMap(a=>a.codes).length);await save();assert((await p.locator('#app').innerText()).includes('核对完整地址'),'address required');assert((await p.evaluate(()=>model.apartments.flatMap(a=>a.codes).length))===count,'no guessed target');
   });
   await run('地址候选选择后保留输入，符号/前导零直接共享并回到正确公寓',async()=>{
-    await manual();await p.locator('[name=value]').fill('*0007#');await p.locator('[name=scope]').fill('TEST-SHARE');await choose('1228');assert((await p.locator('[name=value]').inputValue())==='*0007#','input retained');assert(!(await p.locator('[name=source]').isChecked()),'must confirm chosen address');
+    await manual();await p.locator('[name=value]').fill('*0007#');await p.getByRole('button',{name:'车库门',exact:true}).click();await choose('1228');assert((await p.locator('[name=scope]').inputValue())==='车库门','door retained');assert((await p.locator('[name=value]').inputValue())==='*0007#','input retained');assert(!(await p.locator('[name=source]').isChecked()),'must confirm chosen address');
     await p.locator('[name=source]').check();await save();await p.waitForFunction(()=>window.abasongExperience.state.code.status==='ready');assert((await p.locator('.ex-expanded h2').innerText()).includes('1228'),'same target');assert((await p.locator('.ex-expanded .ex-code').allTextContents()).includes('*0007#'),'literal code');
   });
   await run('首页卡添加复用相同字段；更换地址清来源确认，失败保留正确目标/密码',async()=>{
@@ -55,7 +55,7 @@ async (page) => {
     assert((await p.locator('[name=value]').inputValue())==='#0099*','error retains');assert((await p.locator('.code-address-summary').innerText()).includes('1200'),'new address retained');await p.evaluate(()=>{state.scenario='normal';render();});await save();await p.waitForFunction(()=>window.abasongExperience.state.code.status==='ready');assert((await p.locator('.ex-expanded h2').innerText()).includes('1200'),'not old target');
   });
   await run('未收录地址可在同一表单手动核对；保存不伪造附近坐标或距离',async()=>{
-    await manual();await p.locator('#code-address-query').fill('9999 TEST Unlisted Ave');await p.locator('[data-action=code-address-manual]').click();await p.locator('[name=city]').fill('Los Angeles');await p.locator('[name=state]').fill('CA');await p.locator('[name=postal_code]').fill('90001');await p.locator('[name=value]').fill('*0011#');await p.locator('[name=scope]').fill('TEST-UNKNOWN');await p.locator('[name=source]').check();await save();
+    await manual();await p.locator('#code-address-query').fill('9999 TEST Unlisted Ave');await p.locator('[data-action=code-address-manual]').click();await p.locator('[name=city]').fill('Los Angeles');await p.locator('[name=state]').fill('CA');await p.locator('[name=postal_code]').fill('90001');await p.locator('[name=value]').fill('*0011#');assert((await p.locator('[name=scope]').inputValue())==='','unknown door left blank');await p.locator('[name=source]').check();await save();
     assert(await p.evaluate(()=>{const a=model.apartments.find(a=>a.address.includes('9999 TEST'));return a&&a.codes.some(c=>c.value==='*0011#')&&!a.distance&&!a.geometry&&!a.latitude;}),'business association only');
   });
   await run('屏蔽保留但下沉：无记录无空菜单，屏蔽后设置可解除，不恢复常联系',async()=>{

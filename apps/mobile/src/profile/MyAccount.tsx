@@ -18,11 +18,10 @@ import { useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
-import { PageHeader } from "../ui/PageFrame";
 import { ActionButton, FormError } from "../ui/Controls";
 import { ListRow } from "../ui/Primitives";
 import { Icon } from "../ui/Icon";
-import { typeStyles } from "../ui/foundation";
+import { metrics, typeStyles } from "../ui/foundation";
 import { availabilitySummary } from "../drivers/availability-fields";
 import { availabilityConflict } from "../drivers/availability-session";
 import type { ProfileRequest, SelfProfile } from "./profile-session";
@@ -152,7 +151,8 @@ export function MyAccount({
     }
   }
   const group = {
-    borderRadius: 20,
+    borderRadius: metrics.cardRadius,
+    paddingHorizontal: 12,
     backgroundColor: tokens.color.surface,
     overflow: "hidden" as const,
   };
@@ -161,11 +161,12 @@ export function MyAccount({
       edges={["top"]}
       style={{ flex: 1, backgroundColor: tokens.color.surfaceMuted }}
     >
-      <View style={{ backgroundColor: tokens.color.surface }}>
-        <PageHeader title="我的" />
-      </View>
       <ScrollView
-        contentContainerStyle={{ padding: 20, gap: 20, paddingBottom: 32 }}
+        contentContainerStyle={{
+          padding: metrics.inset,
+          gap: 20,
+          paddingBottom: 32,
+        }}
       >
         {testControls}
         {profile ? (
@@ -198,14 +199,14 @@ export function MyAccount({
                   color: tokens.color.brandText,
                 }}
               >
-                {profile.profile.display_name.slice(0, 1)}
+                {Array.from(profile.profile.display_name)[0]}
               </Text>
             </View>
             <View style={{ flex: 1, gap: 5 }}>
-              <Text style={[typeStyles.title, { fontSize: 24 }]}>
+              <Text style={typeStyles.title}>
                 {profile.profile.display_name}
               </Text>
-              <Text style={typeStyles.secondary}>个人资料与联系方式</Text>
+              <Text style={typeStyles.secondary}>编辑资料</Text>
             </View>
             <Icon name="chevron" />
           </Pressable>
@@ -237,6 +238,7 @@ export function MyAccount({
                   accessibilityLabel="修改接活时段"
                   disabled={busy}
                   onPress={() => onAvailability(false)}
+                  style={{ minHeight: 48, justifyContent: "center" }}
                 >
                   <Text
                     style={[
@@ -305,13 +307,13 @@ export function MyAccount({
         {onInvite || showTeamRow ? (
           <View style={group}>
             {onInvite ? (
-              <ListRow title="邀请司机" icon="people" onPress={onInvite} />
+              <ListRow title="邀请司机" icon="send" onPress={onInvite} />
             ) : null}
             {showTeamRow && onTeam ? (
               <ListRow
                 title="我的团队"
                 subtitle={team?.team.name ?? "添加团队资料"}
-                icon="people"
+                icon="warehouse"
                 onPress={onTeam}
               />
             ) : null}

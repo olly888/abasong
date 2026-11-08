@@ -1,4 +1,10 @@
 import {
+  HomeWorkspace,
+  type WorkspaceControls,
+} from "../components/HomeWorkspace";
+import { HomeResultList } from "../ui/HomeResultList";
+import { HomeResultCard } from "../ui/MapCardFrame";
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -30,7 +36,10 @@ import { MapCardCarousel } from "../ui/MapCardCarousel";
 import { compactCardHeight, measuredCardHeight } from "../ui/map-card-layout";
 import { cameraAt, type MapCameraSnapshot } from "../components/map-camera";
 import { DiscoveryCardContent } from "./DiscoveryCardContent";
-import { createDiscoveryLoader } from "./discovery-loader";
+import {
+  createDiscoveryLoader,
+  DISCOVERY_PAGE_LIMIT,
+} from "./discovery-loader";
 import { typeStyles } from "../ui/foundation";
 import { DiscoveryFilters } from "./DiscoveryFilters";
 import {
@@ -56,6 +65,7 @@ export type DiscoveryAdapter = {
   testMapStyle?: string;
 };
 type CollaborationProps = {
+  workspace?: WorkspaceControls;
   mode: SupportMode;
   list: boolean;
   toolbar: ReactNode;
@@ -101,6 +111,8 @@ function DiscoveryHome(p: CollaborationProps) {
     [busy, setBusy] = useState(true),
     [loadedKey, setLoadedKey] = useState<string | null>(null),
     [error, setError] = useState<string | null>(null),
+    [moreError, setMoreError] = useState<string | null>(null),
+    [moreRecovery, setMoreRecovery] = useState<"retry" | "reload">("retry"),
     [cursor, setCursor] = useState<string | null>(null),
     [selectedId, setSelectedId] = useState(current.selectedId),
     [camera, setCamera] = useState<MapCameraSnapshot | undefined>(
@@ -113,7 +125,8 @@ function DiscoveryHome(p: CollaborationProps) {
     [height, setHeight] = useState(212),
     [width, setWidth] = useState(0),
     [measurements, setMeasurements] = useState<Record<string, number>>({}),
-    [clock, setClock] = useState(Date.now());
+    [clock, setClock] = useState(Date.now()),
+    [focusRevision, setFocusRevision] = useState(0);
   const reader = useRef(read);
   reader.current = read;
   const loader = useRef(
@@ -123,12 +136,16 @@ function DiscoveryHome(p: CollaborationProps) {
     scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const load = useCallback(
     async (more = false) => {
+      if (more && working.current) return;
       working.current = true;
       setBusy(true);
       setError(null);
+      setMoreError(null);
       const view = p.memory[p.mode],
-        count = Math.min(5, view.pages + (more ? 1 : 0));
-      const result = await loader.current.load(p.mode, view.filters, count);
+        count = Math.min(DISCOVERY_PAGE_LIMIT, view.pages);
+      const result = more
+        ? await loader.current.more(p.mode, view.filters)
+        : await loader.current.load(p.mode, view.filters, count);
       if (!result || JSON.stringify(view.filters) !== signature) return;
       working.current = false;
       setBusy(false);
@@ -140,6 +157,8 @@ function DiscoveryHome(p: CollaborationProps) {
         return;
       }
       const unique = reconcileDiscovery(result.rows, view);
+      setMoreError(result.moreError ?? null);
+      setMoreRecovery(result.moreRecovery ?? "retry");
       setRegions(result.regions);
       setRows(unique);
       setCursor(result.next);
@@ -320,6 +339,157 @@ function DiscoveryHome(p: CollaborationProps) {
       {statusRow}
     </MapCardFrame>
   ) : null;
+  const paginationFooter = cursor ? (
+    current.pages >= DISCOVERY_PAGE_LIMIT ? (
+      <Text style={typeStyles.secondary}>结果较多，请缩小筛选范围</Text>
+    ) : (
+      <View>
+        {moreError ? (
+          <Text accessibilityRole="alert" style={typeStyles.secondary}>
+            {moreRecovery === "reload"
+              ? "结果已变化，请重新加载"
+              : "加载更多失败，已加载内容保留"}
+          </Text>
+        ) : null}
+        <ActionButton
+          label={
+            moreError
+              ? moreRecovery === "reload"
+                ? "重新加载"
+                : "重试加载更多"
+              : "加载更多"
+          }
+          secondary
+          busy={busy}
+          onPress={() => void load(!(moreError && moreRecovery === "reload"))}
+        />
+      </View>
+    )
+  ) : null;
+  if (p.workspace)
+    return (
+      <View style={{ flex: 1 }}>
+        <HomeWorkspace
+          header={p.toolbar}
+          controls={p.workspace}
+          title={subject}
+          count={visible.length || undefined}
+          locating={p.locating}
+          canRecenter={!!p.point}
+          onLocate={() => {
+            if (p.point) moveCamera(p.point);
+            p.onLocate();
+          }}
+          map={
+            <HomeMap
+              point={camera?.center ?? p.cameraPoint ?? p.point}
+              cameraState={camera}
+              onCameraSnapshot={(snapshot) => {
+                current.camera = snapshot;
+                if (!camera) setCamera(snapshot);
+                if (__DEV__) p.testAdapter?.onCamera?.(snapshot);
+              }}
+              location={p.point}
+              cameraRevision={p.cameraRevision + revision}
+              cameraZoom={14}
+              topInset={dimensions.height > 650 ? 168 : 108}
+              bottomInset={12}
+              areaMarkers={markers}
+              selectedAreaIds={selectedRegions}
+              filteredAreaId={filters.region}
+              onAreaSelect={(id) => {
+                apply({ ...filters, region: id });
+                setFocusRevision((v) => v + 1);
+              }}
+              testMapStyle={__DEV__ ? p.testAdapter?.testMapStyle : undefined}
+            />
+          }
+        >
+          {statusRow ? (
+            <View style={{ paddingHorizontal: 16 }}>{statusRow}</View>
+          ) : (
+            <HomeResultList
+              items={visible}
+              getKey={itemId}
+              selectedKey={selected ? itemId(selected) : null}
+              focusRevision={focusRevision}
+              memory={current}
+              onFocus={(r) => {
+                if (itemId(r) !== selectedId) choose(r);
+              }}
+              header={
+                <View>
+                  {p.locationNotice ? (
+                    <MapStatusRow
+                      state="unavailable"
+                      title={p.locationNotice}
+                      action={{ label: "重新定位", onPress: p.onLocationRetry }}
+                    />
+                  ) : null}
+                  {filtered ? (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <Text style={[typeStyles.metadata, { flex: 1 }]}>
+                        {[
+                          regions.find((r) => r.id === filters.region)?.label,
+                          filters.day,
+                          filters.text,
+                          (
+                            {
+                              warehouse_shortage: "仓库找司机",
+                              delivery_handoff: "途中找人代送",
+                            } as Record<string, string>
+                          )[filters.kind],
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Text>
+                      <ActionButton
+                        label="清除筛选"
+                        variant="text"
+                        onPress={() => apply(defaultFilters())}
+                      />
+                    </View>
+                  ) : null}
+                </View>
+              }
+              renderItem={(r) => (
+                <HomeResultCard selected={itemId(r) === selectedId}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={cardLabel(r)}
+                    accessibilityState={{ selected: itemId(r) === selectedId }}
+                    onPress={() => open(r)}
+                  >
+                    <DiscoveryCardContent
+                      item={r}
+                      regions={regions}
+                      workspace
+                    />
+                  </Pressable>
+                </HomeResultCard>
+              )}
+              footer={paginationFooter}
+            />
+          )}
+        </HomeWorkspace>
+        {p.filtersOpen ? (
+          <DiscoveryFilters
+            key={p.mode + signature}
+            mode={p.mode}
+            filters={filters}
+            regions={regions}
+            onApply={apply}
+            onClose={p.onCloseFilters}
+          />
+        ) : null}
+      </View>
+    );
   return (
     <View
       style={{ flex: 1 }}
@@ -446,16 +616,7 @@ function DiscoveryHome(p: CollaborationProps) {
                 {content(r)}
               </MapCardFrame>
             ))}
-            {cursor && current.pages < 5 ? (
-              <ActionButton
-                label="加载更多"
-                secondary
-                busy={busy}
-                onPress={() => void load(true)}
-              />
-            ) : cursor ? (
-              <Text style={typeStyles.secondary}>请选择区域缩小范围</Text>
-            ) : null}
+            {paginationFooter}
           </ScrollView>
         </View>
       ) : selected ? (

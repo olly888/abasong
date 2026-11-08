@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { createDiscoveryLoader } from "../../apps/mobile/src/drivers/discovery-loader";
+import { defaultFilters } from "../../apps/mobile/src/drivers/discovery-model";
 import { randomUUID } from "node:crypto";
 import type { Client } from "pg";
 import type { components } from "../../packages/contracts/src/generated";
@@ -241,6 +243,41 @@ export async function verifyDrivers(p: {
     page.items[0]!.profile.user_id,
     page2.items[0]!.profile.user_id,
   );
+  // Exercise the same native loader with real date/region filters and two pages.
+  const discovery = createDiscoveryLoader(async (path) => {
+    const url = new URL(path, "http://test.invalid");
+    if (url.pathname === "/v1/drivers") url.searchParams.set("limit", "1");
+    return http(url.pathname + url.search, "GET", p.strangerToken);
+  });
+  const filters = { ...defaultFilters(), region, day };
+  const firstDiscovery = await discovery.load("找人", filters, 1);
+  assert(firstDiscovery?.status === "ready" && firstDiscovery.next);
+  const both = await discovery.more("找人", filters);
+  assert(both?.status === "ready");
+  assert.equal(both.rows.length, 2);
+  assert.deepEqual(
+    new Set(
+      both.rows.map((x) =>
+        x.kind === "driver" ? x.driver.profile.user_id : "wrong",
+      ),
+    ),
+    new Set([owner, reader]),
+  );
+  assert(
+    both.rows.every(
+      (x) =>
+        x.kind === "driver" &&
+        !Object.hasOwn(x.driver, "point") &&
+        !Object.hasOwn(x.driver.profile, "phone"),
+    ),
+  );
+  const none = await discovery.load(
+    "找人",
+    { ...filters, day: "1900-01-01" },
+    1,
+  );
+  assert(none?.status === "ready" && none.rows.length === 0);
+  discovery.cancel();
   const closed = await call<S["Availability"]>(
     "/v1/me/availability",
     "PUT",

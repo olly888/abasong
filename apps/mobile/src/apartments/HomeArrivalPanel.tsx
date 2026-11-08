@@ -5,11 +5,19 @@ import type { components } from "@abasong/contracts";
 import { ListRow } from "../ui/Primitives";
 import { MapStatusRow } from "../ui/MapStatusRow";
 import { typeStyles } from "../ui/foundation";
+import { router } from "expo-router";
 
 type Apartment = components["schemas"]["Apartment"];
 
 export function HomeArrivalPanel(p: {
-  state: "loading" | "nearby" | "ambiguous" | "empty" | "error" | "location";
+  state:
+    | "loading"
+    | "nearby"
+    | "ambiguous"
+    | "empty"
+    | "error"
+    | "location"
+    | "partial";
   message?: string;
   blocked?: boolean;
   candidates: Apartment[];
@@ -36,6 +44,16 @@ export function HomeArrivalPanel(p: {
         state="error"
         title="公寓资料暂时无法加载"
         action={{ label: "重新加载", onPress: p.onRetry }}
+      />
+    );
+  if (p.state === "partial")
+    return (
+      <MapStatusRow
+        title="部分范围待补全"
+        action={{
+          label: "搜索地址",
+          onPress: () => router.push("/apartments"),
+        }}
       />
     );
   if (p.candidates.length && p.state !== "empty")

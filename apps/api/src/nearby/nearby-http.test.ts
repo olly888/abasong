@@ -173,6 +173,20 @@ it("exercises real discovery HTTP guards, validation, partial provider failure a
     await req("address-contributions", contribution, 403);
     canContribute = true;
     await req("address-contributions", contribution, 503);
+    revokeDuringProvider = false;
+    clock += 31000;
+    await req("discover", { ...fix(), expand: true }, 400);
+    await req("discover/mapbox", { ...fix(), radius_m: 100000 }, 400);
+    const expanded = await req(
+      "discover/mapbox",
+      { ...fix(), expand: true },
+      200,
+    );
+    // A provider with no extent evidence must stay partial, not blindly expand.
+    expect(expanded.radius_m).toBe(200);
+    expect(expanded.coverage.mapbox).toBe("partial");
+    expect(expanded.expansion.stop_reason).toBe("coverage_incomplete");
+    expect(expanded.expansion.attempted_radii_m).toEqual([200]);
   } finally {
     vi.restoreAllMocks();
     await app.close();

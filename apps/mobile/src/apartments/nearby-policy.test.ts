@@ -1,6 +1,8 @@
 import { expect, it } from "vitest";
 import {
   mergeNearby,
+  discoveryInput,
+  nearbyRangeLabel,
   distanceM,
   nearbyAtCurrentObservation,
   nearbyFromSnapshots,
@@ -230,7 +232,7 @@ it("rejects expired discovery data and preserves response identity while trimmin
   const lookup = {
     items: [item("a", 10), item("edge", 198)],
     expires_at: new Date(Date.now() + 20000).toISOString(),
-    radius_m: 200,
+    radius_m: 200 as const,
     truncated: false,
     provider_status: "ok" as const,
     attribution: "TEST",
@@ -257,4 +259,84 @@ it("only presents an empty result after the nearby provider has answered success
   expect(nearbyResultState(false, "ok")).toBe("empty");
   expect(nearbyResultState(false, "unavailable")).toBe("error");
   expect(nearbyResultState(true, "unavailable")).toBe("nearby");
+});
+
+it("retains expanded candidates only inside the server's allowlisted radius after drift", () => {
+  const p = item("p", 0).point;
+  expect(
+    withinNearbyRadius(
+      [item("a", 400), item("b", 499), item("c", 501)],
+      p,
+      p,
+      500,
+    ).map((c) => c.key),
+  ).toEqual(["a", "b"]);
+  const moved = { ...p, lat: p.lat + 0.0001 };
+  expect(
+    withinNearbyRadius([item("a", 490), item("b", 400)], p, moved, 500).map(
+      (c) => c.key,
+    ),
+  ).toEqual(["b"]);
+  expect(withinNearbyRadius([item("a", 900)], p, p, 1000)).toHaveLength(1);
+  expect(withinNearbyRadius([item("a", 900)], p, p, 90000)).toEqual([]);
+  expect(withinNearbyRadius([item("a", 400)], p, p)).toEqual([]);
+});
+it("does not mix an expanded bundle's origin with a newer catalog and expires its range", () => {
+  const now = Date.now(),
+    p = item("p", 0).point;
+  const observation = {
+    fix: {
+      coords: { longitude: p.lng, latitude: p.lat, accuracy: 5 },
+      timestamp: now,
+    },
+    approximate: false,
+  };
+  const catalog = { items: [item("near", 80)], point: p, until: now + 10000 };
+  const provider = {
+    items: [item("far", 400)],
+    point: p,
+    until: now + 10000,
+    complete: true,
+    radius_m: 500,
+  };
+  expect(
+    nearbyFromSnapshots(catalog, provider, observation).map((c) => c.key),
+  ).toEqual(["far"]);
+  expect(
+    nearbyFromSnapshots(
+      catalog,
+      { ...provider, until: now - 1 },
+      observation,
+    ).map((c) => c.key),
+  ).toEqual(["near"]);
+  expect(nearbyResultState(false, "partial")).toBe("partial");
+  expect(nearbyResultState(false, "unavailable")).toBe("error");
+});
+
+it("requests expansion only explicitly and labels the actual range without claiming full coverage", () => {
+  const o = {
+    fix: {
+      coords: { longitude: -118.1, latitude: 34.1, accuracy: 5 },
+      timestamp: Date.now(),
+    },
+    approximate: false,
+  };
+  expect(discoveryInput(o).expand).toBeUndefined();
+  expect(discoveryInput(o, true).expand).toBe(true);
+  const snapshot = {
+    items: [],
+    point: item("p", 0).point,
+    until: Date.now() + 10000,
+    radius_m: 1000,
+    coverage: { catalog: "queried", mapbox: "partial" },
+  } as const;
+  expect(nearbyRangeLabel({ ...snapshot, items: [] }, "partial")).toEqual({
+    title: "附近公寓 · 1 km",
+    note: "部分范围待补全",
+  });
+  expect(nearbyRangeLabel(null, "unavailable").note).toBe("更新失败");
+  expect(nearbyRangeLabel(null, "idle")).toEqual({
+    title: "附近公寓",
+    note: undefined,
+  });
 });

@@ -10,7 +10,7 @@ import { Alert, Pressable, Text, View } from "react-native";
 import { useFocusEffect, usePreventRemove } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
-import { tokens } from "@abasong/ui";
+import { ChoiceChip } from "../ui/ChoiceChip";
 import { PageFrame } from "../ui/PageFrame";
 import { ActionButton, Field, FormError } from "../ui/Controls";
 import { typeStyles } from "../ui/foundation";
@@ -224,36 +224,13 @@ export function ProfileEditor({
     }
   }
   const pill = (label: string, selected: boolean, onPress: () => void) => (
-    <Pressable
+    <ChoiceChip
       key={label}
-      accessibilityRole="checkbox"
-      accessibilityLabel={label}
-      accessibilityState={{ checked: selected, disabled: busy || conflict }}
+      label={label}
+      selected={selected}
       disabled={busy || conflict}
       onPress={onPress}
-      style={{
-        minHeight: 44,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 22,
-        borderWidth: 1,
-        borderColor: selected
-          ? tokens.color.brandPrimary
-          : tokens.color.controlBorder,
-        backgroundColor: selected
-          ? tokens.color.brandSurface
-          : tokens.color.surface,
-      }}
-    >
-      <Text
-        style={[
-          typeStyles.body,
-          { color: selected ? tokens.color.brandText : tokens.color.ink },
-        ]}
-      >
-        {label}
-      </Text>
-    </Pressable>
+    />
   );
   return (
     <PageFrame

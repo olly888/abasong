@@ -39,7 +39,7 @@ export type SheetProps = {
   observation?: DiscoveryObservation | null;
   embedded?: boolean;
   records: S["AccessRecord"][];
-  status: "loading" | "ready" | "denied" | "error";
+  status: "loading" | "ready" | "denied" | "error" | "paused";
   expanded: boolean;
   saved: boolean;
   bookmarkBusy?: boolean;
@@ -259,6 +259,9 @@ export function ApartmentSheet(p: SheetProps) {
           {p.status === "denied" ? (
             <MapStatusRow state="unavailable" title="暂未开通资料查看资格" />
           ) : null}
+          {p.status === "paused" ? (
+            <MapStatusRow state="unavailable" title="该公寓暂不共享门禁码" />
+          ) : null}
           {p.status === "error" ? (
             <MapStatusRow
               state="error"
@@ -303,9 +306,11 @@ export function ApartmentSheet(p: SheetProps) {
           ) : null}
           {p.expanded ? (
             <>
-              <View style={{ paddingTop: 18, paddingBottom: 14 }}>
-                <ActionButton label="＋ 添加门禁码" onPress={p.onAdd} />
-              </View>
+              {p.status !== "paused" ? (
+                <View style={{ paddingTop: 18, paddingBottom: 14 }}>
+                  <ActionButton label="＋ 添加门禁码" onPress={p.onAdd} />
+                </View>
+              ) : null}
               {records.map((r) => (
                 <View
                   key={r.id}

@@ -2,12 +2,14 @@ import { addressIdentity } from "@abasong/contracts";
 import type { components } from "@abasong/contracts";
 import type { NearbyCardCandidate } from "./distance-presentation";
 type S = components["schemas"];
-export type ProviderDiscoveryStatus = "idle" | "loading" | "ok" | "unavailable";
+export type ProviderDiscoveryStatus =
+  "idle" | "loading" | "ok" | "partial" | "unavailable";
 export function nearbyResultState(
   hasCandidates: boolean,
   provider: ProviderDiscoveryStatus,
 ) {
   if (hasCandidates) return "nearby";
+  if (provider === "partial") return "partial";
   if (provider === "ok") return "empty";
   return provider === "unavailable" ? "error" : "loading";
 }
@@ -67,13 +69,17 @@ export type DiscoveryObservation = {
   approximate: boolean;
   id?: string;
 };
-export function discoveryInput(o: DiscoveryObservation): S["NearbyInput"] {
+export function discoveryInput(
+  o: DiscoveryObservation,
+  expand = false,
+): S["NearbyInput"] {
   return {
     point: observationPoint(o),
     observed_at: new Date(o.fix.timestamp).toISOString(),
     accuracy_m: o.fix.coords.accuracy ?? 100000,
     accuracy_permission: o.approximate ? "approximate" : "precise",
     ...(o.id ? { observation_id: o.id } : {}),
+    ...(expand ? { expand: true } : {}),
   };
 }
 export function matchesDistanceContext(
@@ -135,11 +141,12 @@ export function withinNearbyRadius(
   radius = 200,
 ) {
   const shift = distanceM(origin, current);
+  if (![200, 500, 1000].includes(radius)) return [];
   return items.filter(
     (c) =>
       Number.isFinite(c.distance_m) &&
       c.distance_m >= 0 &&
-      c.distance_m + shift <= Math.min(200, radius),
+      c.distance_m + shift <= radius,
   );
 }
 export function nearbyAtCurrentObservation(
@@ -170,6 +177,9 @@ export type NearbySnapshot = {
   until: number;
   context?: S["DistanceContext"];
   complete?: boolean;
+  radius_m?: number;
+  coverage?: S["NearbyCoverage"];
+  expansion?: S["NearbyExpansion"];
 };
 
 // Revalidate visible automatic recommendations on every fresh fix, not only
@@ -185,19 +195,22 @@ export function nearbyFromSnapshots(
     now = Date.now();
   const visible = (snapshot: NearbySnapshot | null): NearbyCardCandidate[] =>
     snapshot && snapshot.until > now
-      ? withinNearbyRadius(snapshot.items, snapshot.point, current).map(
-          (c) => ({
-            ...c,
-            ...(snapshot.context
-              ? {
-                  distance_reference: {
-                    context: snapshot.context,
-                    origin: snapshot.point,
-                  },
-                }
-              : {}),
-          }),
-        )
+      ? withinNearbyRadius(
+          snapshot.items,
+          snapshot.point,
+          current,
+          snapshot.radius_m ?? 200,
+        ).map((c) => ({
+          ...c,
+          ...(snapshot.context
+            ? {
+                distance_reference: {
+                  context: snapshot.context,
+                  origin: snapshot.point,
+                },
+              }
+            : {}),
+        }))
       : [];
   // New provider responses are atomic catalog+map bundles. Keep their common
   // ranking origin during small GPS drift; never mix their distances with a
@@ -211,4 +224,20 @@ export function nearbyFromSnapshots(
     return visible(provider);
   if (provider?.complete) return visible(catalog);
   return mergeNearby(visible(catalog), visible(provider));
+}
+
+export function nearbyRangeLabel(
+  snapshot: NearbySnapshot | null,
+  status: ProviderDiscoveryStatus,
+) {
+  const radius = snapshot?.radius_m ?? 200;
+  const range = radius === 1000 ? "1 km" : `${radius} m`;
+  const note =
+    status === "unavailable"
+      ? "更新失败"
+      : snapshot?.coverage?.mapbox === "partial" ||
+          snapshot?.expansion?.stop_reason === "budget_exhausted"
+        ? "部分范围待补全"
+        : undefined;
+  return { title: snapshot ? `附近公寓 · ${range}` : "附近公寓", note };
 }

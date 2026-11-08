@@ -179,6 +179,7 @@ async function main() {
       "0020_dsp_team_profiles.sql",
       "0021_circle_text.sql",
       "0022_circle_media.sql",
+      "0023_apartment_sharing_controls.sql",
     ])
       await db.query(readFileSync(`database/migrations/${file}`, "utf8"));
     const password = randomBytes(24).toString("hex");
@@ -925,12 +926,32 @@ async function main() {
       shareBody.items[0]!.client_commit_id,
     );
     await db.query("DROP TRIGGER block_shared ON abasong.access_records");
-    const shared = await req(
+    await db.query(
+      "INSERT INTO abasong.apartment_sharing_operations(id,apartment_id,version,paused,actor_id,reason) VALUES($1,$2,1,true,$3,'property_request')",
+      [randomUUID(), publicApartmentId, actor],
+    );
+    const paused = await req(
       "POST",
       sb + "/commit",
       a,
       200,
       { ...shareBody, expected_batch_version: partial.batch.version },
+      randomUUID(),
+    );
+    assert.equal(paused.results[0].private_record_id, saved);
+    assert.equal(paused.results[0].share_status, "failed");
+    assert.equal(paused.results[0].error_code, "APARTMENT_SHARING_PAUSED");
+    assert.equal(paused.results[0].retryable, true);
+    await db.query(
+      "INSERT INTO abasong.apartment_sharing_operations(id,apartment_id,version,paused,actor_id,reason) VALUES($1,$2,2,false,$3,'property_confirmed')",
+      [randomUUID(), publicApartmentId, actor],
+    );
+    const shared = await req(
+      "POST",
+      sb + "/commit",
+      a,
+      200,
+      { ...shareBody, expected_batch_version: paused.batch.version },
       randomUUID(),
     );
     assert.equal(shared.results[0].private_record_id, saved);

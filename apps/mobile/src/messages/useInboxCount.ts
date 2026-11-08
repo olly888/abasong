@@ -6,7 +6,9 @@ import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
 export function useInboxCount() {
   const { session, phase } = useAuth(),
-    [count, setCount] = useState<number | null>(null),
+    [result, setResult] = useState<{ token: string; count: number } | null>(
+      null,
+    ),
     [foreground, setForeground] = useState(AppState.currentState === "active");
   useEffect(() => {
     const s = AppState.addEventListener("change", (x) =>
@@ -16,7 +18,7 @@ export function useInboxCount() {
   }, []);
   useFocusEffect(
     useCallback(() => {
-      setCount(null);
+      setResult(null);
       if (!session || phase !== "ready" || !foreground) return;
       let live = true,
         busy = false;
@@ -30,9 +32,13 @@ export function useInboxCount() {
             "/v1/me/inbox-summary",
             { signal: c.signal },
           );
-          if (live) setCount(r.unread_messages + r.unread_notifications);
+          if (live)
+            setResult({
+              token: session.access_token,
+              count: r.unread_messages + r.unread_notifications,
+            });
         } catch {
-          if (live) setCount(null);
+          if (live) setResult(null);
         } finally {
           busy = false;
         }
@@ -46,5 +52,9 @@ export function useInboxCount() {
       };
     }, [session?.access_token, phase, foreground]),
   );
-  return count;
+  return foreground &&
+    phase === "ready" &&
+    result?.token === session?.access_token
+    ? (result?.count ?? null)
+    : null;
 }

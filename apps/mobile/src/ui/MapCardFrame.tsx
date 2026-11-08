@@ -4,7 +4,31 @@ import { tokens } from "@abasong/ui";
 export function MapCardFrame({ style, ...props }: ViewProps) {
   return <View {...props} style={[styles.frame, style]} />;
 }
+// V3.5 vertical results share the surface, not a fixed content height.
+export function HomeResultCard({
+  selected,
+  style,
+  ...props
+}: ViewProps & { selected: boolean }) {
+  return (
+    <View
+      {...props}
+      style={[styles.result, selected && styles.selected, style]}
+    />
+  );
+}
 const styles = StyleSheet.create({
+  result: {
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: tokens.color.border,
+    backgroundColor: tokens.color.surface,
+  },
+  selected: {
+    borderColor: tokens.color.brandPrimary,
+    backgroundColor: tokens.color.brandSurface,
+  },
   frame: {
     borderRadius: 24,
     backgroundColor: tokens.color.surface,

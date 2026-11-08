@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Pressable, Text, View } from "react-native";
+import { AppState, Text } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
-import { tokens } from "@abasong/ui";
+import { MapModeSwitch } from "../ui/MapControls";
+import { typeStyles } from "../ui/foundation";
+import { useAuth } from "../auth/AuthProvider";
 import { useBusinessRequest } from "../auth/useBusinessRequest";
 import type { ProfileRequest } from "../profile/profile-session";
 import { openPost } from "../circle/navigation";
@@ -13,7 +15,10 @@ import { AccountError } from "../auth/api-client";
 type S = components["schemas"];
 export default function InboxScreen() {
   const request = useBusinessRequest();
-  return <InboxContent request={request} onPost={openPost} />;
+  const { session } = useAuth();
+  return (
+    <InboxContent key={session?.user.id} request={request} onPost={openPost} />
+  );
 }
 
 export function InboxContent({
@@ -33,13 +38,21 @@ export function InboxContent({
     [summary, setSummary] = useState<S["InboxSummary"] | null>(null),
     [cursor, setCursor] = useState<string | null>(null),
     [busy, setBusy] = useState(true),
+    [verified, setVerified] = useState<{
+      request: ProfileRequest;
+      tab: string;
+    } | null>(null),
+    [openingId, setOpeningId] = useState<string | null>(null),
     [error, setError] = useState<string | null>(null),
     [foreground, setForeground] = useState(AppState.currentState === "active");
   const scope = useRef(0),
     active = useRef(false),
     controller = useRef<AbortController | null>(null),
     loading = useRef<number | null>(null),
-    paginated = useRef(false);
+    paginated = useRef(false),
+    reading = useRef(false),
+    readRevision = useRef(0),
+    summaryRequest = useRef(0);
   useEffect(() => {
     const s = AppState.addEventListener("change", (x) =>
       setForeground(x === "active"),
@@ -48,8 +61,16 @@ export function InboxContent({
   }, []);
   const load = useCallback(
     async (g: number, next?: string) => {
-      if (!active.current || loading.current === g) return;
+      if (
+        !active.current ||
+        g !== scope.current ||
+        loading.current === g ||
+        reading.current
+      )
+        return;
       loading.current = g;
+      const revision = readRevision.current;
+      const summaryId = ++summaryRequest.current;
       const c = new AbortController();
       controller.current = c;
       setBusy(true);
@@ -63,9 +84,15 @@ export function InboxContent({
             signal: c.signal,
           }),
         ]);
-        if (!active.current || g !== scope.current) return;
+        if (
+          !active.current ||
+          g !== scope.current ||
+          revision !== readRevision.current
+        )
+          return;
+        setVerified({ request, tab });
         if (next) paginated.current = true;
-        setSummary(count);
+        if (summaryId === summaryRequest.current) setSummary(count);
         setCursor(page.next_cursor);
         setError(null);
         if (tab === "conversations")
@@ -91,8 +118,14 @@ export function InboxContent({
               : (page as S["NotificationPage"]).items,
           );
       } catch (e) {
-        if (!c.signal.aborted && active.current && g === scope.current) {
+        if (
+          !c.signal.aborted &&
+          active.current &&
+          g === scope.current &&
+          revision === readRevision.current
+        ) {
           if (e instanceof AccountError && [401, 403, 404].includes(e.status)) {
+            setVerified(null);
             setConversations([]);
             setNotifications([]);
             setSummary(null);
@@ -113,7 +146,11 @@ export function InboxContent({
       const g = ++scope.current;
       active.current = true;
       paginated.current = false;
+      reading.current = false;
+      setOpeningId(null);
       setCursor(null);
+      setVerified(null);
+      setSummary(null);
       setError(null);
       setBusy(true);
       void load(g);
@@ -123,6 +160,7 @@ export function InboxContent({
         if (!paginated.current) void load(g);
       }, 12000);
       return () => {
+        setVerified(null);
         active.current = false;
         scope.current++;
         clearInterval(timer);
@@ -130,12 +168,40 @@ export function InboxContent({
       };
     }, [foreground, load]),
   );
-  async function openNotification(n: S["Notification"]) {
-    const g = scope.current;
+  async function refreshSummary(g: number) {
+    const revision = readRevision.current;
+    const summaryId = ++summaryRequest.current;
+    const current = () =>
+      active.current &&
+      g === scope.current &&
+      revision === readRevision.current &&
+      summaryId === summaryRequest.current;
     try {
-      await request(`/v1/me/notifications/${n.id}/read`, {
-        method: "PUT",
-      });
+      const value = await request<S["InboxSummary"]>("/v1/me/inbox-summary");
+      if (current()) setSummary(value);
+    } catch (e) {
+      if (current()) {
+        setSummary(null);
+        if (e instanceof AccountError && [401, 403].includes(e.status)) {
+          setVerified(null);
+          setConversations([]);
+          setNotifications([]);
+          setCursor(null);
+          setError(e.message);
+        }
+      }
+    }
+  }
+  async function openNotification(n: S["Notification"]) {
+    if (reading.current || !active.current) return;
+    const g = scope.current;
+    reading.current = true;
+    readRevision.current++;
+    controller.current?.abort();
+    setOpeningId(n.id);
+    setError(null);
+    try {
+      await request(`/v1/me/notifications/${n.id}/read`, { method: "PUT" });
       if (!active.current || g !== scope.current) return;
       setNotifications((old) =>
         old.map((x) =>
@@ -144,6 +210,10 @@ export function InboxContent({
             : x,
         ),
       );
+      // Only the server acknowledges this notification. Never clear other
+      // notifications or conversation watermarks when entering the circle.
+      setSummary(null);
+      void refreshSummary(g);
       if (n.kind === "circle_reply" && n.object_type === "post")
         onPost(n.object_id, n.comment_id);
       else if (
@@ -164,32 +234,43 @@ export function InboxContent({
           pathname: "/conversations/[id]",
           params: { id: n.object_id },
         });
-      else void load(g);
     } catch (e) {
       if (active.current && g === scope.current) {
-        if (
-          e instanceof AccountError &&
-          e.status === 404 &&
-          n.kind === "circle_reply"
-        ) {
+        if (e instanceof AccountError && [401, 403].includes(e.status)) {
+          setVerified(null);
+          setSummary(null);
+          setConversations([]);
+          setNotifications([]);
+          setCursor(null);
+        } else if (e instanceof AccountError && e.status === 404) {
           setNotifications((old) => old.filter((item) => item.id !== n.id));
-          if (!n.read_at)
-            setSummary(
-              (old) =>
-                old && {
-                  ...old,
-                  unread_notifications: Math.max(
-                    0,
-                    old.unread_notifications - 1,
-                  ),
-                },
-            );
-          setError("这条回复通知已不可查看");
-        } else setError(e instanceof Error ? e.message : "通知暂不可用");
+          setSummary(null);
+          void refreshSummary(g);
+        }
+        setError(
+          e instanceof AccountError && e.status === 404
+            ? "这条通知已不可查看"
+            : e instanceof Error
+              ? e.message
+              : "通知暂不可用",
+        );
+      }
+    } finally {
+      if (active.current && g === scope.current) {
+        reading.current = false;
+        setOpeningId(null);
+        setBusy(false);
       }
     }
   }
-  const items = tab === "conversations" ? conversations : notifications;
+  const visible =
+    verified?.request === request && verified?.tab === tab && foreground;
+  const counts = visible ? summary : null;
+  const items = !visible
+    ? []
+    : tab === "conversations"
+      ? conversations
+      : notifications;
   return (
     <AuthPage
       compact
@@ -199,51 +280,23 @@ export function InboxContent({
         (() => (router.canGoBack() ? router.back() : router.replace("/")))
       }
     >
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 8,
-          borderBottomWidth: 1,
-          borderColor: tokens.color.border,
+      <MapModeSwitch
+        items={["对话", "通知"] as const}
+        fullWidth
+        selected={tab === "conversations" ? "对话" : "通知"}
+        onSelect={(value) =>
+          setTab(value === "对话" ? "conversations" : "notifications")
+        }
+        badges={{
+          对话: counts?.unread_messages ?? 0,
+          通知: counts?.unread_notifications ?? 0,
         }}
-      >
-        {(["conversations", "notifications"] as const).map((t) => (
-          <Pressable
-            key={t}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: t === tab }}
-            onPress={() => setTab(t)}
-            style={{
-              flex: 1,
-              minHeight: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              borderBottomWidth: 2,
-              borderColor:
-                t === tab ? tokens.color.brandPrimary : "transparent",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: t === tab ? "600" : "400",
-                color:
-                  t === tab
-                    ? tokens.color.brandText
-                    : tokens.color.textSecondary,
-              }}
-            >
-              {t === "conversations" ? "对话" : "通知"}
-              {summary &&
-              (t === "conversations"
-                ? summary.unread_conversations
-                : summary.unread_notifications) > 0
-                ? ` · ${t === "conversations" ? summary.unread_conversations : summary.unread_notifications}`
-                : ""}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      />
+      {tab === "notifications" && (counts?.unread_circle_replies ?? 0) > 0 ? (
+        <Text style={typeStyles.metadata}>
+          其中司机圈回复 {counts!.unread_circle_replies} 条
+        </Text>
+      ) : null}
       <FormError message={error} />
       {error ? (
         <ActionButton
@@ -257,24 +310,25 @@ export function InboxContent({
       ) : null}
       {tab === "conversations" ? (
         <ConversationRows
-          items={conversations}
+          items={visible ? conversations : []}
           onOpen={(id) =>
             router.push({ pathname: "/conversations/[id]", params: { id } })
           }
         />
       ) : (
         <NotificationRows
-          items={notifications}
+          items={visible ? notifications : []}
+          openingId={openingId}
           onOpen={(n) => void openNotification(n)}
         />
       )}
-      {!busy && !error && !items.length ? (
+      {visible && !busy && !error && !items.length ? (
         <StatusPanel
           state="empty"
           title={tab === "conversations" ? "暂无对话" : "暂无通知"}
         />
       ) : null}
-      {cursor ? (
+      {visible && cursor ? (
         <ActionButton
           label="加载更多"
           variant="text"

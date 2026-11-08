@@ -1,4 +1,10 @@
-import { useRef, useState, type ReactNode, type ComponentRef } from "react";
+import {
+  useRef,
+  useState,
+  type ReactNode,
+  type ComponentRef,
+  type Ref,
+} from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -50,6 +56,9 @@ export function PageFrame({
   compact = false,
   footer,
   headerRight,
+  scrollRef,
+  contentRef,
+  onScroll,
   backgroundColor = tokens.color.surface,
 }: {
   title: string;
@@ -59,6 +68,9 @@ export function PageFrame({
   compact?: boolean;
   footer?: ReactNode;
   headerRight?: ReactNode;
+  scrollRef?: Ref<ComponentRef<typeof ScrollView>>;
+  contentRef?: Ref<ComponentRef<typeof View>>;
+  onScroll?: (offset: number) => void;
   backgroundColor?: string;
 }) {
   const frame = useRef<ComponentRef<typeof View>>(null),
@@ -86,6 +98,14 @@ export function PageFrame({
             <PageHeader title={title} onBack={back} right={headerRight} />
           ) : null}
           <ScrollView
+            ref={scrollRef}
+            onScroll={
+              onScroll
+                ? (e) => onScroll(e.nativeEvent.contentOffset.y)
+                : undefined
+            }
+            scrollEventThrottle={onScroll ? 16 : undefined}
+            removeClippedSubviews={contentRef ? false : undefined}
             style={{ flex: 1 }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
@@ -114,6 +134,8 @@ export function PageFrame({
               </Text>
             ) : null}
             <View
+              ref={contentRef}
+              collapsable={contentRef ? false : undefined}
               style={{ gap: metrics.sectionGap, marginTop: compact ? 0 : 32 }}
             >
               {children}

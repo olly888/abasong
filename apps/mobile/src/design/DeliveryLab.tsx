@@ -21,6 +21,7 @@ const scenes = [
   "仓库详情",
   "报名重试",
   "地址失败",
+  "长地址",
 ] as const;
 type Scene = (typeof scenes)[number];
 export default function DeliveryLab() {
@@ -80,7 +81,21 @@ function SceneBody({
         ? "delivery_handoff"
         : "warehouse_shortage",
     );
-    if (["仓库详情", "地址失败", "报名重试"].includes(scene)) r.status = "open";
+    if (["仓库详情", "地址失败", "报名重试", "长地址"].includes(scene))
+      r.status = "open";
+    if (scene === "长地址" && r.pickup?.kind === "warehouse") {
+      r.pickup = {
+        ...r.pickup,
+        address_line1: "100 TEST Very Long Warehouse Boulevard Building Three",
+        city: "TEST City With A Long Name",
+        point: null,
+        point_source: "unlocated",
+      };
+      r.price_cents = 123456;
+      r.quantity_mode = "unknown";
+      r.parcel_count = null;
+      r.remaining_parcels = null;
+    }
     if (scene === "地址失败" && r.pickup?.kind === "warehouse")
       r.pickup = { ...r.pickup, point: null, point_source: "unlocated" };
     if (scene === "报名重试") {
@@ -199,7 +214,7 @@ function SceneBody({
     };
     return run;
   }, [seed, scene]);
-  if (!saved && !["仓库详情", "地址失败", "报名重试"].includes(scene))
+  if (!saved && !["仓库详情", "地址失败", "报名重试", "长地址"].includes(scene))
     return (
       <DeliveryEditor
         key={reset}
@@ -241,6 +256,9 @@ function SceneBody({
         <ApplicationSheet
           request={current}
           regionLabel={regions[0]?.label}
+          pickupRegionLabel={
+            regions.find((r) => r.id === current.pickup_region_id)?.label
+          }
           transport={transport}
           onClose={() => setApplying(false)}
           onRefresh={() => {

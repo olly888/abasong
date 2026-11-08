@@ -1,18 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
-import {
-  ActionButton,
-  ApartmentPage,
-  Field,
-  FormError,
-} from "../auth/AuthControls";
+import { ActionButton, ApartmentPage, FormError } from "../auth/AuthControls";
 import { AccountError } from "../auth/api-client";
 import { AddressLine } from "./AddressLine";
+import { unspecifiedDoor } from "./DoorScopeField";
 import type { ContributionRequest } from "./contribution-address-search";
 import { createContributionAttempt } from "./contribution-attempt";
+import { AccessCodeFields } from "./AccessCodeFields";
+import { CheckField } from "../ui/CheckField";
+import { typeStyles } from "../ui/foundation";
 type S = components["schemas"];
 export function CorrectionForm(p: {
   id: string;
@@ -128,7 +127,7 @@ export function CorrectionForm(p: {
   }
   return (
     <ApartmentPage
-      title="纠正密码"
+      title="纠正门禁码"
       onBack={() => {
         if (!busy) back();
       }}
@@ -165,7 +164,10 @@ export function CorrectionForm(p: {
         />
       ) : (
         <>
-          <AddressLine line={source.address_label} expanded />
+          <View style={{ gap: 8 }}>
+            <Text style={typeStyles.label}>公寓地址</Text>
+            <AddressLine line={source.address_label} expanded />
+          </View>
           {committed ? (
             <>
               <Text>已纠正并共享</Text>
@@ -173,57 +175,35 @@ export function CorrectionForm(p: {
             </>
           ) : !source.can_correct ? (
             <>
-              <Text>这条贡献当前不能纠正</Text>
+              <Text>
+                {source.sharing_paused
+                  ? "该公寓暂不共享门禁码"
+                  : "这条贡献当前不能纠正"}
+              </Text>
               <ActionButton label="返回共享记录" secondary onPress={back} />
             </>
           ) : (
             <>
-              <Field
-                label="正确密码"
+              <AccessCodeFields
+                correction
                 value={value}
-                onChangeText={(v) => {
+                scope={scope}
+                disabled={busy || conflict}
+                onValueChange={(v) => {
                   setValue(v);
                   setAttested(false);
                 }}
-                maxLength={32}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="off"
-                editable={!busy && !conflict}
-              />
-              <Field
-                label="门别"
-                value={scope}
-                onChangeText={(v) => {
-                  setScope(v);
+                onScopeChange={(v) => {
+                  setScope(v || unspecifiedDoor);
                   setAttested(false);
                 }}
-                maxLength={100}
-                editable={!busy && !conflict}
               />
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityLabel="我已核对，并有权共享这条资料"
-                accessibilityState={{
-                  checked: attested,
-                  disabled: busy || conflict,
-                }}
+              <CheckField
+                label="我已核对，并有权共享这条资料"
+                checked={attested}
                 disabled={busy || conflict}
-                onPress={() => setAttested((v) => !v)}
-                style={{
-                  minHeight: 48,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 24, color: tokens.color.brandText }}
-                >
-                  {attested ? "☑" : "□"}
-                </Text>
-                <Text style={{ flex: 1 }}>我已核对，并有权共享这条资料</Text>
-              </Pressable>
+                onChange={setAttested}
+              />
               <Text
                 style={{
                   fontSize: 13,

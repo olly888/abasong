@@ -1,12 +1,16 @@
 # Abasong 研发文档入口
 
-更新 2026-11-07。当前按[总计划 1.48](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-04 司机圈私有图片](technical/B5_04_司机圈私有图片实施验收.md)已接入选图、拍照、上传重试和鉴权阅读。本地 D0 为 22 次迁移、57 张表。[B5-05 邀请司机](technical/B5_05_邀请司机与接收页实施验收.md)完成双端本机核对，正式分发留在 B6-03。
+**当前执行：**[Muse/V3.5 对齐方案](product/Abasong_V3.5_Muse原型对齐落地方案.md)进入[M7-01 统一候选](technical/V3.5_M7-01_统一候选与集成验收.md)。独立工作树承接已验收 477e7ec，补回 Android 相册返回保护与弹层安全区。候选561工程、328公寓、660协作、125导入检查及生成一致性通过；远程CI和双端原生集中验收待补，未更新云端或签名包。[任务清单](technical/V3.5_Muse原型对齐任务清单.csv)。
 
-[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。[B6-01 执行包](usability/B6-01_可用性与现场测试执行包.md)已备好招募、主持、现场与截图记录。真人观察仍为 0/7。云业务、真实推送、独立包和现场验收按 B6 推进。
+更新 2026-11-08。当前按[总计划 1.60](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-04 司机圈私有图片](technical/B5_04_司机圈私有图片实施验收.md)已接入选图、拍照、上传重试和鉴权阅读。本地 D0 为 22 次迁移、57 张表。[B5-05 邀请司机](technical/B5_05_邀请司机与接收页实施验收.md)完成双端本机核对，正式分发留在 B6-03。
+
+[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。[B6-01 执行包](usability/B6-01_可用性与现场测试执行包.md)已备好招募、主持、现场与截图记录。真人观察仍为 0/7。云业务与独立包已有分项证据；真实推送、正式分发和现场等未完成项按 B6 单独记录。
 
 原型入口：[首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)、[两场景发布](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[我的](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=me)。产品确认只覆盖主要体验，原型图不代表App已更新。当前和目标依据[可开发基准](Abasong_V3.2_可开发与可验收基线.md)；之前全文保留在[审查前档案](archive/app-alignment-audit-20261105/README.md)。
 
 ## 当前入口
+
+- [V3.4 两场景原生发布与核对](technical/V3.4_两场景原生发布与核对验收.md)：仓库和途中代送的表单、核对、需求详情、报名与联系，以及双端隔离验收。
 
 - [B5-02 本人 DSP 团队、自愿联系与发布身份](technical/B5_02_本人DSP团队与发布身份实施验收.md)。
 - [B5-01本人资料、经验、自愿联系与我的](technical/B5_01_本人资料与我的实施验收.md)：本地实现及权限/原生收尾；[执行证据](technical/B5_01_执行证据.json)。
@@ -51,8 +55,10 @@
 
 ## 设计与文案
 
+- [V3.4 UI/UX 深度评审与升级提案](design/Abasong_UIUX深度评审与升级方案_V3.4提案.md)覆盖两场景发布、司机圈发帖、「我的」和地图。现行设计系统为下方 V3.3。
+
 - **唯一现行设计系统** [V3.3](design/Abasong_设计系统_V3.3_现行规范.md)、[正式品牌原件](design/brand/README.md)、[令牌源](design/tokens-v3.json)、[图标源](design/icons-lucide.json)。[历史规范和逐页核对](design/D2_设计系统收敛与逐页核对.md)。
-- **目标原型：**[V3.2升级方案](design/Abasong_设计系统_V3.2_升级方案.md)、[文案与状态V1](design/Abasong_界面文案与状态规范_V1.md)、[升级追踪JSON](design/experience-upgrade-matrix.json)。启用范围以[R4报告](technical/R4_01_距离契约与公寓卡片实施验收.md)记录，不声明全App已迁移。
+- **前轮原型与实施追溯：**[V3.2升级方案](design/Abasong_设计系统_V3.2_升级方案.md)、[文案与状态V1](design/Abasong_界面文案与状态规范_V1.md)、[升级追踪JSON](design/experience-upgrade-matrix.json)。启用范围以[R4报告](technical/R4_01_距离契约与公寓卡片实施验收.md)记录，不声明全App已迁移。
 - [UI样板证据](design/D2_UI样板对齐实施与验收.md)、[iOS框架评估](design/D2_UI对齐审查与iOS原生方案评估.md)。保持RN/Expo，局部系统原生控件，不全面改写SwiftUI。
 
 ## 技术与实现

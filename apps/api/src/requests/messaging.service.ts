@@ -348,7 +348,7 @@ export class MessagingService {
       ).rows[0];
       const n = (
         await c.query(
-          `SELECT count(*) AS n FROM abasong.notifications WHERE user_id=$1 AND read_at IS NULL AND ${visibleNotification}`,
+          `SELECT count(*) AS n,count(*) FILTER (WHERE kind='circle_reply') AS circle FROM abasong.notifications WHERE user_id=$1 AND read_at IS NULL AND ${visibleNotification}`,
           [a.userId],
         )
       ).rows[0];
@@ -356,6 +356,7 @@ export class MessagingService {
         unread_conversations: Number(r.conversations),
         unread_messages: Number(r.messages),
         unread_notifications: Number(n.n),
+        unread_circle_replies: Number(n.circle),
       };
     });
   }

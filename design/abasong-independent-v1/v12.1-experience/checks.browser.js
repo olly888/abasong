@@ -142,7 +142,10 @@ async (page) => {
       .locator('.ex-apartment-card:not([inert]) [data-action="add-code"]')
       .click();
     await p.locator('[name="value"]').fill("*0078#");
-    await p.locator('[name="scope"]').fill("侧门");
+    const doors = p.locator('[data-door-scope] button');
+    assert((await doors.allTextContents()).join(",") === "行人门,车库门,大堂门", "three door choices");
+    await p.getByRole("button", { name: "大堂门", exact: true }).click();
+    assert((await p.locator('[name="scope"]').inputValue()) === "大堂门", "door set by one tap");
     await p.locator('[name="source"]').check();
     await p.locator(".fixed-actions [type=submit]").click();
     await p.waitForFunction(

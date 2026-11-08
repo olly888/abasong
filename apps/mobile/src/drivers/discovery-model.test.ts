@@ -147,3 +147,19 @@ it("reopens an expired declaration as an off draft with fresh times while retain
   expect(form.date).toBe("2026-11-04");
   expect(form.regions).toEqual(f.drivers[0]!.availability!.region_ids);
 });
+it("uses two delivery scenarios without excluding whole-route handoffs", () => {
+  for (const scenario of ["warehouse_shortage", "delivery_handoff"]) {
+    const q = new URL(
+      discoveryPath("找活", {
+        region: "",
+        text: "",
+        day: "2026-11-09",
+        kind: scenario,
+      }),
+      "http://test.invalid",
+    );
+    expect(q.searchParams.get("scenario")).toBe(scenario);
+    expect(q.searchParams.has("kind")).toBe(false);
+    expect(q.searchParams.get("request_schema_version")).toBe("2");
+  }
+});

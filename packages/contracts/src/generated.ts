@@ -1909,6 +1909,8 @@ export interface components {
             accuracy_permission: "precise" | "approximate";
             /** Format: uuid */
             observation_id?: string;
+            /** @description 仅Mapbox发现端点支持；显式true启用200/500/1000m受控扩围，省略保持200m */
+            expand?: boolean;
         };
         /** @description 当前请求的定位快照，不重复返回坐标、不持久化；valid_until最多为observed_at后20秒。仅用于距离与请求关联，不表示到达、入口或读取资格。 */
         DistanceContext: {
@@ -1943,10 +1945,11 @@ export interface components {
             /** @description 会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可 */
             provider_feature_id?: string;
         };
-        /** @description 本次定位快照的一组候选；Mapbox成功响应包含同原点目录及地图候选，按同源距离排序去重。新增距离字段为加法兼容；新服务总返回，旧服务缺失时客户端隐藏距离。 */
+        /** @description 同一次定位快照的候选，最多20条；expand省略为200m兼容模式。扩围不足3且本档查询完整才进入下一档；失败保留上一有效范围的公共地址并标注失败，绝不含门禁正文。 距离字段为加法兼容；旧服务缺失时客户端隐藏距离。 */
         NearbyDiscovery: {
             items: components["schemas"]["NearbyCandidate"][];
-            radius_m: number;
+            /** @enum {integer} */
+            radius_m: 200 | 500 | 1000;
             /** Format: date-time */
             expires_at: string;
             truncated: boolean;
@@ -1955,7 +1958,26 @@ export interface components {
             attribution: string;
             /** @enum {string} */
             use_mode: "temporary";
+            coverage?: components["schemas"]["NearbyCoverage"];
+            expansion?: components["schemas"]["NearbyExpansion"];
             distance_context?: components["schemas"]["DistanceContext"];
+        };
+        /** @description 仅表示本次来源查询范围及预算状态，不保证现实世界分类/地址完整。Tilequery九瓦片覆盖不足、50条封顶或地址解析未完成时为partial。 */
+        NearbyCoverage: {
+            /** @enum {string} */
+            catalog: "queried" | "capped";
+            /** @enum {string} */
+            mapbox: "not_requested" | "queried" | "partial" | "unavailable";
+        };
+        NearbyExpansion: {
+            attempted_radii_m: (200 | 500 | 1000)[];
+            /** @enum {string} */
+            stop_reason: "fixed" | "sufficient" | "max_radius" | "coverage_incomplete" | "provider_unavailable" | "budget_exhausted";
+            catalog_queries: number;
+            tilequery_requests: number;
+            reverse_requests: number;
+            metadata_requests: number;
+            elapsed_ms: number;
         };
         ConfirmedAddressAccessScope: {
             label: string;
@@ -2038,6 +2060,11 @@ export interface components {
             items: components["schemas"]["AccessRecord"][];
             config_version: number;
             next_cursor: string | null;
+            /**
+             * @description 公寓暂停共享时返回；items 为空，地址仍可查看。
+             * @enum {boolean}
+             */
+            sharing_paused?: true;
         };
         /** @description 新贡献成功返回created_active，无人工审核；created_pending仅兼容旧请求重放，不表示当前仍在共享。same_value_validation不刷新贡献时间或增加有用票。 */
         ContributionResult: {
@@ -2595,6 +2622,11 @@ export interface components {
             /** Format: date-time */
             last_feedback_at: string | null;
             views_count: number | null;
+            /**
+             * @description 公寓暂停共享，历史贡献保留，正文不返回。
+             * @enum {boolean}
+             */
+            sharing_paused?: true;
         };
         ContributionSummaryPage: {
             items: components["schemas"]["ContributionSummary"][];
@@ -2622,6 +2654,8 @@ export interface components {
             unread_conversations: number;
             unread_messages: number;
             unread_notifications: number;
+            /** @description 本人仍可查看的未读司机圈回复；是 unread_notifications 的子集，不额外计入总数。 */
+            unread_circle_replies: number;
         };
         ShareCreateInput: {
             /** @enum {boolean} */
@@ -7522,6 +7556,8 @@ export interface operations {
                 carrier?: string;
                 day?: string;
                 kind?: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+                /** @description 新版两场景筛选，与 request_schema_version=2 一起使用；代送同时包含整条线路与部分包裹。 */
+                scenario?: "warehouse_shortage" | "delivery_handoff";
                 request_schema_version?: 1 | 2;
             };
             header?: never;

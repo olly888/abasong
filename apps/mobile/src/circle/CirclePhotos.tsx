@@ -1,3 +1,4 @@
+import { SafeAreaModal } from "../ui/SafeAreaModal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,7 +13,6 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaModal } from "../ui/SafeAreaModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "expo-router";

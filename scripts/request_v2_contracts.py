@@ -115,6 +115,8 @@ def wire_request_v2(S, paths, ref, query):
                 old=content.get('schema',{}).get('$ref')
                 if old==ref('Request')['$ref']:content['schema']=ref('RequestRead')
                 if old==ref('RequestPage')['$ref']:content['schema']=ref('RequestListRead')
+            if method=='get' and path=='/v1/requests':
+                op.setdefault('parameters',[]).append({**query('scenario',{'type':'string','enum':['warehouse_shortage','delivery_handoff']}), 'description':'新版两场景筛选，与 request_schema_version=2 一起使用；代送同时包含整条线路与部分包裹。'})
             if method=='get' and path in ['/v1/requests','/v1/me/requests']:
                 op.setdefault('parameters',[]).append(query('request_schema_version',{'type':'integer','enum':[1,2],'default':1}))
                 op['description']='默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。'

@@ -22,6 +22,7 @@ export const observation = z
     accuracy_m: z.number().finite().min(0).max(100000),
     accuracy_permission: z.enum(["precise", "approximate"]),
     observation_id: z.string().uuid().optional(),
+    expand: z.boolean().optional(),
   })
   .strict();
 export const confirmedAddress = z

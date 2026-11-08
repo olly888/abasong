@@ -1,0 +1,511 @@
+{
+  "schema": 1,
+  "accepted_parent": "477e7ec4ac2d502e59f3a9dc5031a00085a8af45",
+  "scope": "M7 candidate changed implementation files; excluded logs, secrets, raw source attachments and document self-hashes",
+  "files": [
+    {
+      "path": "apps/api/src/apartments/apartments.service.ts",
+      "sha256": "52c7c03e41be896296a078087264b565c3f0b5773fec80d5f63d52c3f15d768e"
+    },
+    {
+      "path": "apps/api/src/apartments/sharing-state.ts",
+      "sha256": "f7583de70f066eb49a214f92666c75a5dad0a0faae6d0829edc1ed8d033d65ed"
+    },
+    {
+      "path": "apps/api/src/nearby/mapbox-nearby.provider.ts",
+      "sha256": "a5dbb54f6e69c842cae7926a3faffbf1d4e7237b72f07fa82495a5397fae21e8"
+    },
+    {
+      "path": "apps/api/src/nearby/nearby-expansion.test.ts",
+      "sha256": "e15bf01e8d7d350409231f738e9ec3e3ab63892c148abfd6bf1872e2eb8b485c"
+    },
+    {
+      "path": "apps/api/src/nearby/nearby-http.test.ts",
+      "sha256": "eb4adc958a8ec726dff7f6cbe89efb703c810e08e7e21f48f51287f865eeefc8"
+    },
+    {
+      "path": "apps/api/src/nearby/nearby-input.ts",
+      "sha256": "a93a8a1aa7b34a553cd61a0cd07f9a4a0d3cd681812225bdfaafcfdcf0eb1a54"
+    },
+    {
+      "path": "apps/api/src/nearby/nearby-spatial.ts",
+      "sha256": "c9bf5d8be8f3bb15b1fd93ca80e5c6f0f54e0c40eeb47e03acdffaeaef6dfa31"
+    },
+    {
+      "path": "apps/api/src/nearby/nearby.service.ts",
+      "sha256": "b2356f2c500fdc71cae3cee2c9e8f0fb297ac10d4d20c820eebbb67bfaaddc44"
+    },
+    {
+      "path": "apps/api/src/operations/apartment-sharing.ts",
+      "sha256": "2018338bc6bf870a0431575dda1d593a21b1d293945ba05f6704825e69c382f4"
+    },
+    {
+      "path": "apps/api/src/operations/review-access.ts",
+      "sha256": "5f3a201f42e4e6c6331e5c27de175f3de222ec9755898f3bd2d1b21a57563c6e"
+    },
+    {
+      "path": "apps/api/src/operations/stop-contribution.ts",
+      "sha256": "618226cafae48c24e297e4f52fa992aa86fab5d72c80e4bbeb2f786a97cccaae"
+    },
+    {
+      "path": "apps/api/src/requests/messaging.service.ts",
+      "sha256": "64dff7f8ee3cc66238af46b227aca9f503888ac710c9d8c1fc6770eecbd095df"
+    },
+    {
+      "path": "apps/api/src/requests/request-input.ts",
+      "sha256": "459180e94a2853acc09084cffa1ad1e7a7d442840d32bc0262111cb8cac02686"
+    },
+    {
+      "path": "apps/api/src/requests/requests.service.ts",
+      "sha256": "8f193769aaec285399fa0ccf4e000ec3b73e8405c5838c8900b0254363b4d719"
+    },
+    {
+      "path": "apps/mobile/src/apartments/AccessCodeFields.tsx",
+      "sha256": "313ad616a5f8c359bc20e46f9c40f4d30f4c639bdc94cac482a423792729f8bd"
+    },
+    {
+      "path": "apps/mobile/src/apartments/ApartmentSheet.tsx",
+      "sha256": "863971a60345c8017bad4b3c36c338d67ed68903d5aed6d91e52b34a25612923"
+    },
+    {
+      "path": "apps/mobile/src/apartments/ContributionForm.tsx",
+      "sha256": "d41b8786a650aa85d68b7a3425f83bc07ba53fd01395867bbe3b790b7711a07d"
+    },
+    {
+      "path": "apps/mobile/src/apartments/CorrectionForm.tsx",
+      "sha256": "e1a823f5723467f360f85977cd59949721bb45d84bb7ecd82990e4a106f92658"
+    },
+    {
+      "path": "apps/mobile/src/apartments/DoorScopeField.tsx",
+      "sha256": "cbd7d0d572b0b85a61a1b73eb5b4bb25f814f7418551b412e6c0f1a2d33f4760"
+    },
+    {
+      "path": "apps/mobile/src/apartments/HomeApartmentCard.tsx",
+      "sha256": "6d5e9568f865d3e8f82080bf1f9daccaceee9d7aedc49519e5f20b6b5f8c6f7d"
+    },
+    {
+      "path": "apps/mobile/src/apartments/HomeApartments.tsx",
+      "sha256": "26db3ee6b8bc01b39c91948b6ca734746499c06090b71f8d2210a25348ef965a"
+    },
+    {
+      "path": "apps/mobile/src/apartments/HomeArrivalPanel.tsx",
+      "sha256": "715bc51231bb66583e19088dc45bdbbc679bf6cc5cedfbc950b020a1ea36ceb4"
+    },
+    {
+      "path": "apps/mobile/src/apartments/SharedContributions.tsx",
+      "sha256": "f9407da3af129eeb7855e5c9ac9faa2eb612b93b648ee1bc1cf4be48d0192f5e"
+    },
+    {
+      "path": "apps/mobile/src/apartments/contribution-visibility.test.ts",
+      "sha256": "c44035980f4e4448acce4176301de5e89a30f73a2ef5292018843cb5f7747fcc"
+    },
+    {
+      "path": "apps/mobile/src/apartments/contribution-visibility.ts",
+      "sha256": "5dcdbc4a1c63240d60e30823c62e26afd941be2eb6eba0c0eb0cb00885a17b36"
+    },
+    {
+      "path": "apps/mobile/src/apartments/distance-presentation.test.ts",
+      "sha256": "0f6911a146df36ba691470b3e6d2dc52a3b3bb0927e9b8720c485897cd12a89a"
+    },
+    {
+      "path": "apps/mobile/src/apartments/home-actions.test.ts",
+      "sha256": "eaff492ed908db45d72d2ebb4f3300fde0082452918edadb3bafbdbbcbb71e6b"
+    },
+    {
+      "path": "apps/mobile/src/apartments/home-actions.ts",
+      "sha256": "5017d49d3fb17892497de6a14fef86048d0ffb6b3bf2633592b409c00f6f4be4"
+    },
+    {
+      "path": "apps/mobile/src/apartments/nearby-policy.test.ts",
+      "sha256": "25351a07164b4df4bce7e84f19c074646a69169ca5c328b95158e0a57afd98c5"
+    },
+    {
+      "path": "apps/mobile/src/apartments/nearby-policy.ts",
+      "sha256": "1dc558aa777ec9054354917074097208ae071014d99dd3c0d53845f05a6baa5c"
+    },
+    {
+      "path": "apps/mobile/src/apartments/useVisibleAccess.ts",
+      "sha256": "e045ac86b31c03a918eb5a3491ff281ede5c629972355b84d87eb7ae79981c1f"
+    },
+    {
+      "path": "apps/mobile/src/apartments/visible-access-reader.test.ts",
+      "sha256": "e9d5fae85e3b6c870b2cc1ad80908130b87840d92cb1cfbfc4a9c7141834998e"
+    },
+    {
+      "path": "apps/mobile/src/apartments/visible-access-reader.ts",
+      "sha256": "1cfe290c09b4f9da9955b07a968b8f78ad65234d6d6110c43de63350bcbbac6a"
+    },
+    {
+      "path": "apps/mobile/src/app/(tabs)/index.tsx",
+      "sha256": "46fce81e6cfffab1cde62ec1db8ced2d34fa5f2847cfb0d9f7ee540edfc95aa7"
+    },
+    {
+      "path": "apps/mobile/src/app/(tabs)/profile.tsx",
+      "sha256": "d58fc96f0ea418a87af11150546d8ffdeb5cba5a42f400196301fe851e78d6e7"
+    },
+    {
+      "path": "apps/mobile/src/app/access-contribution-lab.tsx",
+      "sha256": "44fa765b0f2c46184e1114989919f6e5b9380b3fe8f438959aa9ef8d86489f10"
+    },
+    {
+      "path": "apps/mobile/src/app/apartments/library.tsx",
+      "sha256": "7d28444d453c6ceac15e8fa14fae5e14e2ddf60922af7def3e21838df76f494f"
+    },
+    {
+      "path": "apps/mobile/src/app/community-visual-lab.tsx",
+      "sha256": "4522df93245627b1e4a7c911a98fff465cea3c28449f7321f5ea94187137e909"
+    },
+    {
+      "path": "apps/mobile/src/app/inbox-visual-lab.tsx",
+      "sha256": "2d8291b1c6bcc65860fcd694414d353254c0f26c11b360750bdb807e5cd489dd"
+    },
+    {
+      "path": "apps/mobile/src/app/requests/[id].tsx",
+      "sha256": "a0c93758751efd0bdcb8819babae8cb93f68d22ba75d480c426d6699b186fde9"
+    },
+    {
+      "path": "apps/mobile/src/app/requests/applications.tsx",
+      "sha256": "67767a6069c7b81d01cc4f0b1fe19f6c9b133a9de6b84baf036b056094f2275e"
+    },
+    {
+      "path": "apps/mobile/src/circle/CircleComposer.tsx",
+      "sha256": "392ec6e917a7f6e29a2525359d1399bc54f7c7ac8cbf487671d3ebe1e97288f7"
+    },
+    {
+      "path": "apps/mobile/src/circle/CircleFeed.tsx",
+      "sha256": "a86c70d156e72b1c6ed7f9c8eb92fe4938febcecef328cdb129c95eecab5fda7"
+    },
+    {
+      "path": "apps/mobile/src/circle/CirclePhotos.tsx",
+      "sha256": "f4af4ae4c4518f2085fb8605bd5c08c8b0e46955364d2d054933271626314580"
+    },
+    {
+      "path": "apps/mobile/src/circle/CirclePostCard.tsx",
+      "sha256": "bda0e0f24b85da00fd79cba17602778fccc49fa333ea2d4fc9e6501e29225795"
+    },
+    {
+      "path": "apps/mobile/src/circle/ComposerOption.tsx",
+      "sha256": "541560e027b7d7b90cc8a149945ee8252d0f6022691fa35c71e3290217d2d4ee"
+    },
+    {
+      "path": "apps/mobile/src/components/HomeChrome.tsx",
+      "sha256": "d842e9418a164b954aa841b0f51f16f5e91ce9333b58b56fe772e385cb24809c"
+    },
+    {
+      "path": "apps/mobile/src/components/HomeWorkspace.tsx",
+      "sha256": "85927185b89702f6a32e51630be4ec745579e51b6de2c388026acb29ed978549"
+    },
+    {
+      "path": "apps/mobile/src/design/AccessContributionLab.tsx",
+      "sha256": "3b64450c30ede6cc87433f4d5500c45ad3833307f207195c55bc5cbef90ccc78"
+    },
+    {
+      "path": "apps/mobile/src/design/CommunityVisualLab.tsx",
+      "sha256": "fd6fd6a91473bc147dea38468e5c8c7e78dbb7ce5a52f3a50bdb20714defb3a1"
+    },
+    {
+      "path": "apps/mobile/src/design/DeliveryLab.tsx",
+      "sha256": "338057a94710e22ff07e8ff0c9e5d24807b21122bd8a018e5bed8b0e98e33145"
+    },
+    {
+      "path": "apps/mobile/src/design/HomeIntegrationLab.tsx",
+      "sha256": "7a9b63046a6ebecf17538d39693558fccc5042fd9b37a7d154da8f7ce65d29b7"
+    },
+    {
+      "path": "apps/mobile/src/design/InboxVisualLab.tsx",
+      "sha256": "c793097b5089031f57fcc3c2718132f31cf79179187bb93ee99a356bf9c71014"
+    },
+    {
+      "path": "apps/mobile/src/design/NativeExitLab.tsx",
+      "sha256": "e2c0557b3e47d1f2572ad9f8aac6301242b565b48ee62863a211d99261a3c1f6"
+    },
+    {
+      "path": "apps/mobile/src/design/collaboration-seed.ts",
+      "sha256": "38cdb42d3ef7a0eb9a1d082a70d4d382ec4e411fdc0f33e37b780e5bf8f552fa"
+    },
+    {
+      "path": "apps/mobile/src/drivers/CollaborationHome.tsx",
+      "sha256": "c842061420d719345625bf642835dbbcceb57164ee63e92c6ec3b32665539e2c"
+    },
+    {
+      "path": "apps/mobile/src/drivers/DiscoveryCardContent.tsx",
+      "sha256": "4929f7b9f713b01b3ebabeb9377a957a7849323ce2b959771f75070f44c44e2d"
+    },
+    {
+      "path": "apps/mobile/src/drivers/DiscoveryFilters.tsx",
+      "sha256": "f299142489f31ccf6d4202dfc5b7addbdabaf17f0624317aa2e698fa8af27b2e"
+    },
+    {
+      "path": "apps/mobile/src/drivers/discovery-loader.test.ts",
+      "sha256": "30510dde5e43e4da20e1dd71a70f871b8594bb6d51ec7b9db7c496c4010d335f"
+    },
+    {
+      "path": "apps/mobile/src/drivers/discovery-loader.ts",
+      "sha256": "5115407b88e312f291254dc948896c65b29f6c5a4e873b4597b4d314dbbecf14"
+    },
+    {
+      "path": "apps/mobile/src/drivers/discovery-model.test.ts",
+      "sha256": "99a89241a0ec592950e4aba85e23710a5b9e789a7017d333f810bf4798296989"
+    },
+    {
+      "path": "apps/mobile/src/drivers/discovery-model.ts",
+      "sha256": "34849599d9fb3821ede7fd30393041254ec04feea40957173c72a9dbb5134cc5"
+    },
+    {
+      "path": "apps/mobile/src/imports/ImportScreen.tsx",
+      "sha256": "a172695cd489bddf4d74ba2f6a9476e947cfa26f579bbe2b36b2423eac2f30b8"
+    },
+    {
+      "path": "apps/mobile/src/imports/commit-patch.ts",
+      "sha256": "7e566a6f3da83167df24abe3ac26fbdbcbce692fe95ac350f446a6580da781bc"
+    },
+    {
+      "path": "apps/mobile/src/invitation/InviteDriver.tsx",
+      "sha256": "8dd07b0219eae01ebce0e4806deca8c8d1da0e516eeafb2015b2b4cdfe687990"
+    },
+    {
+      "path": "apps/mobile/src/messages/InboxScreen.tsx",
+      "sha256": "5ce684815e9ce7cdc92ca927dbedf46d7dca29e44d07f2f40a9149233c9156cf"
+    },
+    {
+      "path": "apps/mobile/src/messages/MessageViews.tsx",
+      "sha256": "1b1d120eb22bcdfefa27910487992913df5526790a55ba36d512b549797cacce"
+    },
+    {
+      "path": "apps/mobile/src/messages/useInboxCount.ts",
+      "sha256": "7e5c03f8c564c8fd164ef7042bc29bf42932b43135c38fe5aa5c1426946269d2"
+    },
+    {
+      "path": "apps/mobile/src/profile/MyAccount.tsx",
+      "sha256": "167f6eca3f7a5dde93d49390cf18d1ed32b88db45dc6a9279f32502766866dee"
+    },
+    {
+      "path": "apps/mobile/src/profile/ProfileEditor.tsx",
+      "sha256": "25573ad803d0366f32885d53b0b73676e71f26f7110654e70bc7d768f8506db4"
+    },
+    {
+      "path": "apps/mobile/src/requests/ApplicationFields.tsx",
+      "sha256": "0349f1979e0f583d62fd506357b9ba88f7047bb8d24b08b59ed7fda383029144"
+    },
+    {
+      "path": "apps/mobile/src/requests/ApplySheet.tsx",
+      "sha256": "10edb39cfeb6d9561d5d9789c02476088d64e31a33a182e3f39c93c54425e654"
+    },
+    {
+      "path": "apps/mobile/src/requests/DeliveryDetailBody.tsx",
+      "sha256": "645b064238a8f0e0869774c16ff44c908d6a5bfb983c22f9d25c1f9dfa47b2ce"
+    },
+    {
+      "path": "apps/mobile/src/requests/DeliveryEditor.tsx",
+      "sha256": "49aa8f64e2192f4c8d87d3b2257273c5647ab05431aa16398d5e1af65a89ff58"
+    },
+    {
+      "path": "apps/mobile/src/requests/DeliveryForm.tsx",
+      "sha256": "18747fe262c504aeab6f36a91ba9ac56b1ac0246ac9342ee47a586872f8b061e"
+    },
+    {
+      "path": "apps/mobile/src/requests/DeliveryOverview.tsx",
+      "sha256": "dd0fa5010b636d2ec68188d37397112dcb66119a05362a8cb87bc0c4ba89475b"
+    },
+    {
+      "path": "apps/mobile/src/requests/DeliveryReview.tsx",
+      "sha256": "55d29ca767696059a6d500a3c638dd99c572f8587f82786b07af571d9b79f462"
+    },
+    {
+      "path": "apps/mobile/src/requests/DeliverySection.tsx",
+      "sha256": "876a7969baac3d3427e989e0dc5730a4b2445c7f339ff356b84f2b825b01ff10"
+    },
+    {
+      "path": "apps/mobile/src/requests/RequestUi.tsx",
+      "sha256": "3146f08a8dd9ca2c5ab5d5a862e24285265ce48f24881cee1dd17ec9417e3a8a"
+    },
+    {
+      "path": "apps/mobile/src/requests/WarehouseAddressField.tsx",
+      "sha256": "4992df5dcae55ac842935e099864817f41f06a174a506b5837a714e249c9a6df"
+    },
+    {
+      "path": "apps/mobile/src/requests/WarehousePickup.tsx",
+      "sha256": "f84f0ccd851cd32319fa6c8b4d8d55c8ffdec3edc80566958ea0cd518bda129d"
+    },
+    {
+      "path": "apps/mobile/src/requests/application-attempt.test.ts",
+      "sha256": "6736b83927f1bcc32f77b6d532f1dcba077c7716022ec6acbd46bc0d72c9c898"
+    },
+    {
+      "path": "apps/mobile/src/requests/application-input.ts",
+      "sha256": "285a1f249030d98336c4e813de834dffb0252b2e2b8f8a5935af419699cb7162"
+    },
+    {
+      "path": "apps/mobile/src/requests/delivery-fields.ts",
+      "sha256": "d64620e8fa7c0a35a097b658623e80460596d2013913f5eda7d1b21b32c7c0b0"
+    },
+    {
+      "path": "apps/mobile/src/requests/delivery-v34.test.ts",
+      "sha256": "e1e5ce168e2e6a26ba8f0ab8fa790677d28c20ef1e921c711aa8800097fd4b56"
+    },
+    {
+      "path": "apps/mobile/src/requests/delivery.test.ts",
+      "sha256": "a19e5ca0c4bf5747a04f9b4cf03ed88c418d4973fd3cb935d89e13619bef94b7"
+    },
+    {
+      "path": "apps/mobile/src/requests/presentation.ts",
+      "sha256": "0252bbaba5febbb03fc376a356ef6ffaeeae8dc9b7667a39776bd2481e8d0d42"
+    },
+    {
+      "path": "apps/mobile/src/requests/warehouse.ts",
+      "sha256": "5c692b572daf503ca03498702c8bf51146efe07d5e9c3bc53c6834070e3056fa"
+    },
+    {
+      "path": "apps/mobile/src/ui/BottomSheet.tsx",
+      "sha256": "6dc390236656f989e6a7e4b3c020f93b8c799501704bd11096669e2e811e34e1"
+    },
+    {
+      "path": "apps/mobile/src/ui/BrandWordmark.tsx",
+      "sha256": "0674b5aa06ea41da290c14607527b4a2007e12ea20869897adceb92499b769e8"
+    },
+    {
+      "path": "apps/mobile/src/ui/CheckField.tsx",
+      "sha256": "067bad39c8746594f4420d5667ea9db1e891a4e129d35c96bb911bc8d0abd078"
+    },
+    {
+      "path": "apps/mobile/src/ui/ChoiceChip.tsx",
+      "sha256": "9b7192973881625b827d2c985275a39fcc11f36fae6054389d0662f463cb0f8f"
+    },
+    {
+      "path": "apps/mobile/src/ui/HomeResultList.tsx",
+      "sha256": "476216e0f99bd6ad4e58f2ce3691d5be1052b07141575c5629155b996d7b150e"
+    },
+    {
+      "path": "apps/mobile/src/ui/MapCardFrame.tsx",
+      "sha256": "eef8f52f44f75a8cd044948ffe77f06d5bea230f76fb0fb710c55cb84cd9ace6"
+    },
+    {
+      "path": "apps/mobile/src/ui/MapControls.tsx",
+      "sha256": "ab300ee1206cbf957fa54f544ce44b7664d51a2f20e4f2384a16e2e0057b10b4"
+    },
+    {
+      "path": "apps/mobile/src/ui/NativeDateField.tsx",
+      "sha256": "85a705ff7fdf9a7f8d0447672f2b0b7997ded9cbf1642414ecfd042fa3a9e987"
+    },
+    {
+      "path": "apps/mobile/src/ui/PageFrame.tsx",
+      "sha256": "fbd530f324a234297055e537ec99d95023f202ddcbedf160e4aeccbdad84715f"
+    },
+    {
+      "path": "apps/mobile/src/ui/SelectionField.tsx",
+      "sha256": "91ee4bdb695757b1dd7a558f4ae6d58247142f0534a3223b517a553fa5b731d0"
+    },
+    {
+      "path": "apps/mobile/src/ui/UnreadBadge.tsx",
+      "sha256": "b81656164ff2b08d49940b78d2fd4faf2bc34b9c7a725e55f143f3b0648e0887"
+    },
+    {
+      "path": "database/migrations/0023_apartment_sharing_controls.sql",
+      "sha256": "c1285378cc3c0455f8b60bd13d15352f8b432c68bc0c1a98e90adfab6dcc9cd6"
+    },
+    {
+      "path": "deploy/pilot-dev/circle-media.json",
+      "sha256": "a133d640b7166b4d49831c04597e96bc151a9756054ff41eb42d4827954bd8b6"
+    },
+    {
+      "path": "deploy/pilot-dev/circle-media.proposal.json",
+      "sha256": "027a347153c3985415e03baf9eb9314d5087a2a024618eaac1f578230d0f30e2"
+    },
+    {
+      "path": "deploy/pilot-dev/runtime.json",
+      "sha256": "ad38345dbae3613fcac0ed6d47de81fdfd93d3b72d3855115590b4bbc521e762"
+    },
+    {
+      "path": "packages/contracts/src/generated.ts",
+      "sha256": "282b1862125995621e8e0d28b412333099cb6f4dbfc695d84032a5d09d13bc4c"
+    },
+    {
+      "path": "packages/contracts/src/schema-versions.ts",
+      "sha256": "dd4d1fa32f711e525928b17b3d78999fb7e7a0fe1ee8ac0bce75678dc2ff5902"
+    },
+    {
+      "path": "scripts/cloud/runtime-identity.test.ts",
+      "sha256": "740f1d23541e4d9fbd9846bd14c5c1979ddf6032d732bc695de75d3e25c4d003"
+    },
+    {
+      "path": "scripts/cloud/runtime-identity.ts",
+      "sha256": "67d4a6b24c61ee0911cd0dfcd07f86548443b4094af466c04e4434334a99cd5d"
+    },
+    {
+      "path": "scripts/cloud/runtime-plan.test.ts",
+      "sha256": "0dba73826f05411393ec9721558ef0690d2968ba1b953d53e147cc20b41dca27"
+    },
+    {
+      "path": "scripts/cloud/runtime-plan.ts",
+      "sha256": "b4d3d782a23a1ef16a45a3aa03dd269d194a202686c63ee53c4f45c880480945"
+    },
+    {
+      "path": "scripts/cloud/runtime-templates.ts",
+      "sha256": "268bc9e39004fa347e7bf580e030530e13e49fdc4f78b8b810537f3f9d476065"
+    },
+    {
+      "path": "scripts/cloud/verify-runtime-roles.ts",
+      "sha256": "44ba2d3a996972c32b6f75013908adaef91d055368438a430e4d0106dc74e37f"
+    },
+    {
+      "path": "scripts/d0/verify-database.ts",
+      "sha256": "1025127143c3b6cdfd87de6301a804aee40793f7bfe7de2511bafec3f72a4ee5"
+    },
+    {
+      "path": "scripts/d1/apartment-sharing.ts",
+      "sha256": "68b9aabbba858283ea29ba1555f8c8840b231a70ebfe0ac16ea1d18f0ea27048"
+    },
+    {
+      "path": "scripts/d1/verify-circle-services.ts",
+      "sha256": "cde1ca5e0878a717582c6aeb1e60b634817346e153aa4f85e695688501da445c"
+    },
+    {
+      "path": "scripts/d1/verify-contribution-management.ts",
+      "sha256": "3e3325c0fdece98a50c84105d7049572fee6f6fe3536a39092efbd4019344446"
+    },
+    {
+      "path": "scripts/d1/verify-delivery-services.ts",
+      "sha256": "a3632a7e48a15d30def255028447591b779838a3a1dcbf90a32c0d5d7b36b8ec"
+    },
+    {
+      "path": "scripts/d1/verify-drivers.ts",
+      "sha256": "080bcbd4ab756e145a38323be24939551f2f2fee8c2c72a8dfcd541214a3a8b7"
+    },
+    {
+      "path": "scripts/d1/verify-import-api.ts",
+      "sha256": "daef72667b8aca8b9da7dfdc5a1f29cacde223a87478f535ebf5425c318d514d"
+    },
+    {
+      "path": "scripts/d1/verify-library-api.ts",
+      "sha256": "a97ca76009cb9d4e1d862920d5f75e4cc6b0f4ae70195c142f1389c228fac8e8"
+    },
+    {
+      "path": "scripts/d1/verify-native-contribution.ts",
+      "sha256": "ccd760e1fb48c27019dce2c565c508d24fdc92a533b216724ecb69df19cd3a8a"
+    },
+    {
+      "path": "scripts/d1/verify-native-exit.ts",
+      "sha256": "2ffc400a34f7b3aa765848269f7835a8122414af782dda061d1da4c55e6cfeac"
+    },
+    {
+      "path": "scripts/d1/verify-nearby-coverage.ts",
+      "sha256": "3398f899a44ab15f99e31ffbeed841357ad3d48edf4d56e33bf03267057297c3"
+    },
+    {
+      "path": "scripts/d1/verify-requests-api.ts",
+      "sha256": "1ee532f5441d6aa489b824fb13a7147715d79afdca97445c80eab5e223131c67"
+    },
+    {
+      "path": "scripts/d1/verify-visible-access.ts",
+      "sha256": "4b4eb015e29f6f4c39c214d8adb78c6a4af282aad02695a838facc779b06bc82"
+    },
+    {
+      "path": "scripts/generate_v12_openapi.py",
+      "sha256": "d155e585cb4ad78d0c60ea80a9b8f4c7a0c4dcbb9d11edb2525efe13906b5213"
+    },
+    {
+      "path": "scripts/request_v2_contracts.py",
+      "sha256": "b9b897f0cafe50b58e2bc45fae05f4f1f57219bc3120cea8ce01af07a9ae4828"
+    }
+  ]
+}

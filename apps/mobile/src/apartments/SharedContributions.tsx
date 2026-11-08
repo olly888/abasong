@@ -25,9 +25,11 @@ export function contributionStatus(s: S["ContributionSummary"]) {
     ? "已停止共享"
     : s.status === "corrected"
       ? "本人已纠正"
-      : s.record_status === "active"
-        ? "已共享"
-        : "已停止展示";
+      : s.sharing_paused
+        ? "该公寓暂不共享"
+        : s.record_status === "active"
+          ? "已共享"
+          : "已停止展示";
 }
 export function SharedContributions() {
   const auth = useAuth(),
@@ -72,7 +74,8 @@ export function SharedContributions() {
             items.slice(i, i + 4).map(async (row) => {
               if (
                 row.source.status !== "active" ||
-                row.source.record_status !== "active"
+                row.source.record_status !== "active" ||
+                row.source.sharing_paused
               )
                 return;
               try {
@@ -195,7 +198,7 @@ export function SharedContributionCard({
         <Text selectable style={styles.code}>
           {visibleValue}
         </Text>
-      ) : s.status === "active" ? (
+      ) : s.status === "active" && !s.sharing_paused ? (
         <Text style={styles.muted}>
           {!canRead
             ? "暂无资料查看资格"

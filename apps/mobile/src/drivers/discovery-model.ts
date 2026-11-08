@@ -115,7 +115,13 @@ export function discoveryPath(mode: SupportMode, f: Filters, cursor?: string) {
   if (f.text.trim())
     q.set(mode === "找活" ? "query" : "carrier", f.text.trim());
   if (f.day) q.set("day", f.day);
-  if (mode === "找活" && f.kind) q.set("kind", f.kind);
+  if (mode === "找活" && f.kind)
+    q.set(
+      ["warehouse_shortage", "delivery_handoff"].includes(f.kind)
+        ? "scenario"
+        : "kind",
+      f.kind,
+    );
   if (cursor) q.set("cursor", cursor);
   return `/v1/${mode === "找活" ? "requests" : "drivers"}?${q}`;
 }

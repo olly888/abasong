@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from "react";
-import { Text, ScrollView } from "react-native";
+import { Text, ScrollView, View } from "react-native";
+import { tokens } from "@abasong/ui";
+import { Icon } from "../ui/Icon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import type { components } from "@abasong/contracts";
@@ -10,6 +12,7 @@ import {
 import { ContributionForm } from "../apartments/ContributionForm";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
 import { HomeChrome, type HomeMode } from "../components/HomeChrome";
+import { MapModeSwitch } from "../ui/MapControls";
 import { ActionButton } from "../ui/Controls";
 import { DiscoveryCardContent } from "../drivers/DiscoveryCardContent";
 import { PageFrame } from "../ui/PageFrame";
@@ -17,6 +20,8 @@ import {
   createDiscoveryMemory,
   type DiscoveryItem,
 } from "../drivers/discovery-model";
+import { AccountError } from "../auth/errors";
+import { localDateTime } from "../requests/presentation";
 import { driverFixtures } from "../drivers/fixtures";
 import { arrivalAdapter } from "./ArrivalLab";
 type S = components["schemas"];
@@ -36,15 +41,38 @@ function apartment(id: string): S["Apartment"] {
   };
 }
 export default function HomeIntegrationLab() {
-  const params = useLocalSearchParams<{ scene?: string }>();
+  const params = useLocalSearchParams<{
+    scene?: string;
+    layout?: string;
+    mode?: string;
+  }>();
   return __DEV__ ? (
-    <Lab key={params.scene ?? "normal"} scene={params.scene ?? "normal"} />
+    <Lab
+      key={`${params.scene}:${params.layout}:${params.mode}`}
+      scene={params.scene ?? "normal"}
+      workspace={params.layout === "muse"}
+      initialMode={
+        params.mode === "jobs"
+          ? "找活"
+          : params.mode === "people"
+            ? "找人"
+            : "公寓"
+      }
+    />
   ) : (
     <Redirect href="/" />
   );
 }
-function Lab({ scene }: { scene: string }) {
-  const [mode, setMode] = useState<HomeMode>("公寓"),
+function Lab({
+  scene,
+  workspace,
+  initialMode,
+}: {
+  scene: string;
+  workspace: boolean;
+  initialMode: HomeMode;
+}) {
+  const [mode, setMode] = useState<HomeMode>(initialMode),
     [list, setList] = useState(false),
     [filters, setFilters] = useState(false),
     [revision, setRevision] = useState(0),
@@ -59,7 +87,8 @@ function Lab({ scene }: { scene: string }) {
   const memory = useRef(createDiscoveryMemory()),
     position = useRef({ ...point }),
     codes = useRef(new Map<string, S["AccessRecord"]>()),
-    failedSave = useRef(false);
+    failedSave = useRef(false),
+    failedMore = useRef(false);
   const fixtures = useMemo(() => {
     const f = driverFixtures();
     f.regions.forEach((r, i) => {
@@ -80,12 +109,30 @@ function Lab({ scene }: { scene: string }) {
         regions: i === 0 ? f.regions : [f.regions[i % 2]!],
       };
     });
-    return f;
-  }, []);
+    const requests = workspace
+      ? f.requests.map((r, i): S["RequestSummaryV2"] => ({
+          ...r,
+          request_schema_version: 2,
+          scenario: i ? "warehouse_shortage" : "delivery_handoff",
+          task_scope: i ? null : "partial",
+          quantity_mode: "exact",
+          handoff_mode: "scheduled",
+          handoff_date: localDateTime(r.starts_at).date,
+          completion_mode: "contact",
+          pickup_kind: i ? "warehouse" : "contact_handoff",
+        }))
+      : f.requests;
+    return { ...f, requests };
+  }, [workspace]);
   const base = useMemo(
     () =>
-      arrivalAdapter(scene === "read-error" ? "读取失败" : "多候选", () =>
-        setReads((n) => n + 1),
+      arrivalAdapter(
+        scene === "empty"
+          ? "无候选"
+          : scene === "discovery-error"
+            ? "查询失败"
+            : "多候选",
+        () => setReads((n) => n + 1),
       ),
     [scene],
   );
@@ -96,6 +143,16 @@ function Lab({ scene }: { scene: string }) {
         options?: Parameters<ContributionRequest>[1],
       ) => {
         if (options?.signal?.aborted) throw new Error("TEST cancelled");
+        if (path.endsWith("/access-records") && options?.method !== "POST") {
+          if (scene === "read-error") throw new Error("TEST 读取失败");
+          if (scene === "paused")
+            return {
+              config_version: 1,
+              next_cursor: null,
+              items: [],
+              sharing_paused: true,
+            } as T;
+        }
         if (path === "/v1/regions?limit=100")
           return { items: fixtures.regions, next_cursor: null } as T;
         if (
@@ -104,15 +161,67 @@ function Lab({ scene }: { scene: string }) {
         ) {
           const u = new URL(path, "http://test.invalid"),
             region = u.searchParams.get("region_id");
+          const isDriver = path.includes("/drivers?"),
+            day = u.searchParams.get("day");
+          let items: (S["Driver"] | S["Request"] | S["RequestSummaryV2"])[] =
+            scene === "empty"
+              ? []
+              : isDriver
+                ? fixtures.drivers.filter(
+                    (d) =>
+                      (!region || d.regions.some((r) => r.id === region)) &&
+                      (!u.searchParams.get("carrier") ||
+                        d.profile.experience.some((e) =>
+                          e.carrier
+                            .toLowerCase()
+                            .includes(
+                              u.searchParams.get("carrier")!.toLowerCase(),
+                            ),
+                        )) &&
+                      (!day ||
+                        localDateTime(d.availability?.starts_at ?? null)
+                          .date === day),
+                  )
+                : fixtures.requests.filter(
+                    (r) =>
+                      (!region || r.region_id === region) &&
+                      (!u.searchParams.get("scenario") ||
+                        ("scenario" in r &&
+                          r.scenario === u.searchParams.get("scenario"))) &&
+                      (!day || localDateTime(r.starts_at).date === day) &&
+                      (!u.searchParams.get("query") ||
+                        (r.carrier ?? "")
+                          .toLowerCase()
+                          .includes(
+                            u.searchParams.get("query")!.toLowerCase(),
+                          )),
+                  );
+          if (scene.startsWith("pages-") && !isDriver)
+            items = items
+              .filter(
+                (r): r is S["Request"] | S["RequestSummaryV2"] => "id" in r,
+              )
+              .flatMap((r) =>
+                Array.from({ length: 6 }, (_, n) => ({
+                  ...r,
+                  id: `${r.id.slice(0, -3)}${((Number(r.id.slice(-3)) + n * 100) % 1000).toString().padStart(3, "0")}`,
+                  route_label: `TEST 分页${n + 1}`,
+                })),
+              );
+          const offset = Number(u.searchParams.get("cursor") ?? 0);
+          if (scene === "pages-retry" && offset && !failedMore.current) {
+            failedMore.current = true;
+            throw new Error("TEST 下一页失败");
+          }
+          if (scene === "pages-denied" && offset)
+            throw new AccountError(403, "FORBIDDEN", "TEST 无权查看");
+          if (scene === "pages-slow" && offset)
+            await new Promise((r) => setTimeout(r, 3500));
+          const size = scene.startsWith("pages-") ? 2 : items.length;
           return {
-            items: path.includes("/drivers?")
-              ? fixtures.drivers.filter(
-                  (d) => !region || d.regions.some((r) => r.id === region),
-                )
-              : fixtures.requests.filter(
-                  (r) => !region || r.region_id === region,
-                ),
-            next_cursor: null,
+            items: items.slice(offset, offset + size),
+            next_cursor:
+              offset + size < items.length ? String(offset + size) : null,
           } as T;
         }
         const id = path.split("/")[3]!;
@@ -195,28 +304,49 @@ function Lab({ scene }: { scene: string }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <Text style={{ paddingHorizontal: 12, fontSize: 12 }}>
-        TEST · R4-05组合 · 查码{reads} · {notice}
+        TEST · {workspace ? "V3.5 M2" : "R4-05组合"} · 查码{reads} · {notice}
       </Text>
-      <ScrollView horizontal style={{ maxHeight: 44 }}>
-        <ActionButton
-          label="移到街道"
-          variant="text"
-          onPress={() => {
-            position.current = { ...point, lng: point.lng + 0.006 };
-            setNotice("TEST 街道位置");
-          }}
-        />
-        <ActionButton
-          label="返回样本"
-          variant="text"
-          onPress={() => {
-            position.current = { ...point };
-            setNotice("TEST 样本位置");
-          }}
-        />
-      </ScrollView>
+      {!workspace ? (
+        <ScrollView horizontal style={{ maxHeight: 44 }}>
+          <ActionButton
+            label="移到街道"
+            variant="text"
+            onPress={() => {
+              position.current = { ...point, lng: point.lng + 0.006 };
+              setNotice("TEST 街道位置");
+            }}
+          />
+          <ActionButton
+            label="返回样本"
+            variant="text"
+            onPress={() => {
+              position.current = { ...point };
+              setNotice("TEST 样本位置");
+            }}
+          />
+        </ScrollView>
+      ) : null}
       <HomeApartmentContent
         key={revision}
+        workspace={
+          workspace
+            ? {
+                modes: (
+                  <MapModeSwitch
+                    fullWidth
+                    icons={{ 查码: "key", 找活: "box", 找人: "people" }}
+                    items={["查码", "找活", "找人"]}
+                    selected={mode === "公寓" ? "查码" : mode}
+                    onSelect={(v) => {
+                      setMode(v === "查码" ? "公寓" : (v as HomeMode));
+                      setFilters(false);
+                    }}
+                  />
+                ),
+                onFilter: () => setFilters(true),
+              }
+            : undefined
+        }
         mode={mode}
         list={list}
         apartmentId={returnId}
@@ -261,6 +391,7 @@ function Lab({ scene }: { scene: string }) {
         }}
         toolbar={
           <HomeChrome
+            workspace={workspace}
             mode={mode}
             list={list}
             onToggleList={() => setList((v) => !v)}
@@ -273,6 +404,45 @@ function Lab({ scene }: { scene: string }) {
           />
         }
       />
+      {workspace ? (
+        <View
+          style={{
+            height: 60,
+            flexDirection: "row",
+            borderTopWidth: 1,
+            borderColor: tokens.color.border,
+            alignItems: "center",
+          }}
+        >
+          {(
+            [
+              ["home", "首页"],
+              ["people", "司机圈"],
+              ["person", "我的"],
+            ] as const
+          ).map(([icon, label], i) => (
+            <View key={label} style={{ flex: 1, alignItems: "center", gap: 4 }}>
+              <Icon
+                name={icon}
+                color={
+                  i === 0 ? tokens.color.brandText : tokens.color.textSecondary
+                }
+              />
+              <Text
+                style={{
+                  fontSize: 12,
+                  color:
+                    i === 0
+                      ? tokens.color.brandText
+                      : tokens.color.textSecondary,
+                }}
+              >
+                {label}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }

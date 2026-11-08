@@ -33,9 +33,11 @@ export function importCommitPatch(out: ImportOutcome): Partial<Candidate> {
     error: out.error_code
       ? addressReview
         ? "请核对公寓地址后再共享"
-        : out.private_status === "saved"
-          ? "已保存，尚未共享；可重试"
-          : "保存失败，可重试"
+        : out.error_code === "APARTMENT_SHARING_PAUSED"
+          ? "已保存，该公寓暂不共享门禁码"
+          : out.private_status === "saved"
+            ? "已保存，尚未共享；可重试"
+            : "保存失败，可重试"
       : undefined,
   };
 }

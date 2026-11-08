@@ -1,6 +1,7 @@
 import { StatusPanel } from "../../ui/Feedback";
 import { SharedContributions } from "../../apartments/SharedContributions";
 import { AddressLine } from "../../apartments/AddressLine";
+import { DoorScopeField, unspecifiedDoor } from "../../apartments/DoorScopeField";
 import { openContributionMenu } from "../../apartments/contribution-entry";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
@@ -47,7 +48,7 @@ function LibraryContent() {
     [error, setError] = useState<string | null>(null),
     [region, setRegion] = useState(""),
     [code, setCode] = useState(""),
-    [scope, setScope] = useState("大门"),
+    [scope, setScope] = useState(""),
     [note, setNote] = useState(""),
     [edit, setEdit] = useState<S["PrivateRecord"] | null>(null),
     [next, setNext] = useState<string | null>(null);
@@ -90,7 +91,9 @@ function LibraryContent() {
               const shared = await request<S["AccessList"]>(
                 "/v1/apartments/" + e.apartment_id + "/access-records",
               );
-              return { ...detail, shared: shared.items[0] };
+              return shared.sharing_paused
+                ? { ...detail, sharedError: "该公寓暂不共享门禁码" }
+                : { ...detail, shared: shared.items[0] };
             } catch {
               return { ...detail, sharedError: "共享资料暂不可用" };
             }
@@ -134,7 +137,7 @@ function LibraryContent() {
     setRegion(item.entry.region);
     setCode("");
     setNote("");
-    setScope("大门");
+    setScope("");
     setEdit(null);
   }
   async function refreshSelected(id: string) {
@@ -246,11 +249,10 @@ function LibraryContent() {
           autoCapitalize="none"
           autoCorrect={false}
         />
-        <Field
-          label="门别"
+        <DoorScopeField
           value={scope}
-          onChangeText={setScope}
-          maxLength={100}
+          onChange={setScope}
+          disabled={busy}
         />
         <Field
           label="私人备注"
@@ -261,7 +263,7 @@ function LibraryContent() {
         <ActionButton
           label="仅自己保存"
           busy={busy}
-          disabled={!code.trim() || !scope.trim()}
+          disabled={!code.trim()}
           onPress={() =>
             void run(async () => {
               await request(
@@ -275,7 +277,7 @@ function LibraryContent() {
                   key: randomUUID(),
                   body: {
                     value: code,
-                    scope_label: scope,
+                    scope_label: scope || unspecifiedDoor,
                     note,
                     ...(edit ? { expected_version: edit.version } : {}),
                   },

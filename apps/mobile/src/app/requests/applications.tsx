@@ -7,7 +7,7 @@ import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
 import { StatusPanel } from "../../ui/Feedback";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate, requestStyles as s } from "../../requests/RequestUi";
-import { requestTime, kindLabels } from "../../requests/presentation";
+import { requestTime, requestTitle } from "../../requests/presentation";
 type Application = components["schemas"]["Application"];
 export default function Applications() {
   return (
@@ -18,7 +18,10 @@ export default function Applications() {
 }
 function List() {
   const { session } = useAuth(),
-    { request_id } = useLocalSearchParams<{ request_id?: string }>();
+    { request_id, for_request } = useLocalSearchParams<{
+      request_id?: string;
+      for_request?: string;
+    }>();
   const [items, setItems] = useState<Application[]>([]),
     [cursor, setCursor] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
@@ -33,9 +36,15 @@ function List() {
     setBusy(true);
     setError(null);
     try {
+      const path = request_id
+        ? `/v1/requests/${encodeURIComponent(request_id)}/applications`
+        : "/v1/me/applications";
+      const query = new URLSearchParams({ limit: "20" });
+      if (for_request && !request_id) query.set("request_id", for_request);
+      if (next) query.set("cursor", next);
       const page = await dataRequest<components["schemas"]["ApplicationPage"]>(
         session,
-        `${request_id ? `/v1/requests/${encodeURIComponent(request_id)}/applications` : "/v1/me/applications"}?limit=20${next ? "&cursor=" + encodeURIComponent(next) : ""}`,
+        `${path}?${query}`,
         { signal },
       );
       if (!signal?.aborted && g === generation.current && active.current) {
@@ -69,7 +78,7 @@ function List() {
         generation.current++;
         c.abort();
       };
-    }, [session?.access_token, request_id]),
+    }, [session?.access_token, request_id, for_request]),
   );
   async function mutate(item: Application, withdraw: boolean) {
     if (!session || lock.current) return;
@@ -114,7 +123,7 @@ function List() {
               {request_id
                 ? (item.applicant_profile?.display_name ?? "用户当前不可见")
                 : item.request_summary
-                  ? kindLabels[item.request_summary.kind]
+                  ? requestTitle(item.request_summary)
                   : "来源需求当前不可见"}
             </Text>
             <Text style={s.status}>
@@ -148,7 +157,7 @@ function List() {
           {item.request_summary ? (
             <View style={{ gap: 8 }}>
               <ActionButton
-                label="查看来源记录"
+                label="查看会话"
                 secondary
                 disabled={working !== null}
                 onPress={() =>

@@ -1,0 +1,18 @@
+{
+  "scope": "M6-01 local worktree subset, not commit CI",
+  "files": {
+    "apps/mobile/src/circle/CircleComposer.tsx": "c58ec7e29999a5df76ae4cd32faa6e1e1cb31330e0635114581b668ec4fbb70d",
+    "apps/mobile/src/circle/ComposerOption.tsx": "541560e027b7d7b90cc8a149945ee8252d0f6022691fa35c71e3290217d2d4ee",
+    "apps/mobile/src/circle/CircleFeed.tsx": "a86c70d156e72b1c6ed7f9c8eb92fe4938febcecef328cdb129c95eecab5fda7",
+    "apps/mobile/src/circle/CirclePostCard.tsx": "bda0e0f24b85da00fd79cba17602778fccc49fa333ea2d4fc9e6501e29225795",
+    "apps/mobile/src/profile/MyAccount.tsx": "167f6eca3f7a5dde93d49390cf18d1ed32b88db45dc6a9279f32502766866dee",
+    "apps/mobile/src/profile/ProfileEditor.tsx": "25573ad803d0366f32885d53b0b73676e71f26f7110654e70bc7d768f8506db4",
+    "apps/mobile/src/app/(tabs)/profile.tsx": "d58fc96f0ea418a87af11150546d8ffdeb5cba5a42f400196301fe851e78d6e7",
+    "apps/mobile/src/ui/ChoiceChip.tsx": "9b7192973881625b827d2c985275a39fcc11f36fae6054389d0662f463cb0f8f",
+    "apps/mobile/src/design/CommunityVisualLab.tsx": "fd6fd6a91473bc147dea38468e5c8c7e78dbb7ce5a52f3a50bdb20714defb3a1",
+    "apps/mobile/src/app/community-visual-lab.tsx": "4522df93245627b1e4a7c911a98fff465cea3c28449f7321f5ea94187137e909",
+    "design/abasong-independent-v1/v12.1-experience/muse-v35.css": "2d8ace4ab4a8b1b0ce7eea9016670032077e4d93f8cc31ebdadef183e7b7a9ec",
+    "design/abasong-independent-v1/v12.1-experience/muse-v35-community-checks.browser.js": "e60232873818372f99ce68371fa8ea458d8b5f0c646bc8d263d7bbcd5ad2b9c6",
+    "design/abasong-independent-v1/v12.1-experience/muse-v35-community-components.browser.js": "355f8eb800104845a388122d043f89de60db3f49b9b19a39478fdcf96c0e869b"
+  }
+}

@@ -24,7 +24,7 @@ export function DiscoveryFilters(p: {
   return (
     <BottomSheet onRequestClose={p.onClose}>
       <Text style={typeStyles.title}>
-        {p.mode === "找活" ? "筛选临时支援" : "筛选可用司机"}
+        {p.mode === "找活" ? "筛选配送需求" : "筛选可用司机"}
       </Text>
       <SelectionField
         label="服务区域"
@@ -47,13 +47,12 @@ export function DiscoveryFilters(p: {
       />
       {p.mode === "找活" ? (
         <SelectionField
-          label="支援类型"
+          label="需求场景"
           value={draft.kind}
           options={[
             ["", "全部类型"],
-            ["extra_drivers", "仓库缺人"],
-            ["partial_route", "部分包裹代送"],
-            ["whole_route", "整批代送"],
+            ["warehouse_shortage", "仓库找司机"],
+            ["delivery_handoff", "途中找人代送"],
           ]}
           onChange={(kind) => setDraft({ ...draft, kind })}
         />

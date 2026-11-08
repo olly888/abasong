@@ -1,3 +1,5 @@
+import { localDateTime } from "../../apps/mobile/src/requests/presentation";
+import { createApplicationAttempt } from "../../apps/mobile/src/requests/application-attempt";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import type { components } from "../../packages/contracts/src/generated";
@@ -93,6 +95,10 @@ async function main() {
     if (scenario === "delivery_handoff") {
       state.quantityMode = "unknown";
       state.quantity = "";
+    } else {
+      const start = localDateTime(null, Date.now() + 30 * 60000);
+      state.date = start.date;
+      state.start = start.time;
     }
     return deliveryInput(scenario, state, true);
   };
@@ -222,12 +228,34 @@ async function main() {
     method: "POST",
     body: { action: "qualification", enabled: true },
   });
-  const handoff = await createDeliveryWriter(own, randomUUID).save(
-    input("delivery_handoff"),
-    true,
+  const handoffWriter = createDeliveryWriter(own, randomUUID);
+  const handoffInput = input("delivery_handoff");
+  const handoffDraft = await handoffWriter.save(handoffInput, false);
+  ok(handoffDraft.status === "draft");
+  ok(
+    handoffDraft.quantity_mode === "unknown" &&
+      handoffDraft.parcel_count === null,
   );
+  const handoff = await handoffWriter.save(handoffInput, true);
+  ok(handoff.id === handoffDraft.id && handoff.status === "open");
   ok(handoff.pickup?.kind === "contact_handoff");
   ok(handoff.quantity_mode === "unknown" && handoff.parcel_count === null);
+  const seen = await drive<R>(`/v1/requests/${handoff.id}`);
+  const planned = initialApplication(seen);
+  const apply = createApplicationAttempt(seen, drive, randomUUID);
+  await arm("apply");
+  await assert.rejects(apply(seen, planned.date, planned.time, ""));
+  assertions++;
+  const handoffApplication = await apply(seen, planned.date, planned.time, "");
+  ok(handoffApplication?.capacity_parcels === null);
+  ok(handoffApplication?.conversation_id === applied.conversation_id);
+  const myHandoff = await drive<S["ApplicationPage"]>(
+    `/v1/me/applications?request_id=${handoff.id}&limit=1`,
+  );
+  ok(
+    myHandoff.items.length === 1 &&
+      myHandoff.items[0]?.id === handoffApplication?.id,
+  );
   const hf = hydrateDelivery(handoff, true).fields,
     copied = await createDeliveryWriter(own, randomUUID).save(
       deliveryInput(handoff.scenario, hf, true),

@@ -15,6 +15,8 @@ import { GapSheet } from "../../requests/GapSheet";
 import {
   canApplyTo,
   hasEditableGap,
+  isV2,
+  requestPickupRegion,
   type DeliveryRequest,
 } from "../../requests/presentation";
 export default function RequestDetail() {
@@ -103,7 +105,7 @@ function Detail() {
       };
     }, [session?.access_token, id]),
   );
-  const own = r?.publisher.user_id === session?.user.id;
+  const own = !!r && r.publisher.user_id === session?.user.id;
   async function action(
     type: "publish" | "found" | "closed" | "discard" | "reopen",
   ) {
@@ -125,7 +127,7 @@ function Detail() {
           expected_version: r.version,
           ...(type === "publish" || type === "reopen" ? {} : { status: type }),
         },
-        signature = type + ":" + r.version;
+        signature = `${r.id}:${type}:${r.version}`;
       attempts.current[signature] ??= randomUUID();
       const value = await dataRequest<DeliveryRequest>(
         session,
@@ -161,10 +163,10 @@ function Detail() {
         {r.status === "draft" ? (
           <>
             <ActionButton
-              label="确认发布"
+              label={isV2(r) ? "核对需求" : "确认发布"}
               busy={busy}
               onPress={() => {
-                if ("request_schema_version" in r && r.organization)
+                if (isV2(r))
                   router.push({
                     pathname: "/requests/new",
                     params: { edit: r.id },
@@ -199,7 +201,13 @@ function Detail() {
         ) : r.status === "open" ? (
           <>
             <ActionButton
+              label="管理需求"
+              disabled={busy}
+              onPress={() => setManaging(true)}
+            />
+            <ActionButton
               label="查看报名司机"
+              secondary
               disabled={busy}
               onPress={() =>
                 router.push({
@@ -207,12 +215,6 @@ function Detail() {
                   params: { request_id: r.id },
                 })
               }
-            />
-            <ActionButton
-              label="管理需求"
-              secondary
-              disabled={busy}
-              onPress={() => setManaging(true)}
             />
           </>
         ) : (
@@ -237,7 +239,12 @@ function Detail() {
         {application?.status === "applied" ? (
           <ActionButton
             label="查看我的报名"
-            onPress={() => router.push("/requests/applications")}
+            onPress={() =>
+              router.push({
+                pathname: "/requests/applications",
+                params: { for_request: r.id },
+              })
+            }
           />
         ) : canApply ? (
           <ActionButton
@@ -255,7 +262,7 @@ function Detail() {
       footer={footer}
     >
       {!r && busy ? <ActivityIndicator /> : null}
-      {!own || !r ? <FormError message={error} /> : null}
+      {!r ? <FormError message={error} /> : null}
       {error && !r ? (
         <ActionButton label="重新加载" secondary onPress={() => void load()} />
       ) : null}
@@ -319,8 +326,10 @@ function Detail() {
         <ApplySheet
           request={r}
           regionLabel={regions[r.region_id ?? ""]}
+          pickupRegionLabel={requestPickupRegion(r, regions)}
           onClose={() => setApplying(false)}
           onRefresh={() => void load()}
+          onApplied={setApplication}
         />
       ) : null}
       {r && gapEditing ? (

@@ -8,15 +8,18 @@ import {
 import { tokens } from "@abasong/ui";
 import { Icon, type IconName } from "./Icon";
 import { metrics, typeStyles } from "./foundation";
+import { UnreadBadge } from "./UnreadBadge";
 
 export function MapSearchButton({
   label,
   onPress,
   disabled = false,
+  embedded = false,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  embedded?: boolean;
 }) {
   return (
     <Pressable
@@ -29,6 +32,12 @@ export function MapSearchButton({
         s.surface,
         s.control,
         s.search,
+        embedded && {
+          backgroundColor: tokens.color.surfaceMuted,
+          elevation: 0,
+          shadowOpacity: 0,
+          minHeight: 48,
+        },
         pressed && s.surfacePressed,
         disabled && s.disabled,
       ]}
@@ -55,6 +64,7 @@ export function MapControl({
   busy = false,
   disabled = false,
   unread = 0,
+  round = false,
 }: {
   icon: IconName;
   label: string;
@@ -65,6 +75,7 @@ export function MapControl({
   busy?: boolean;
   disabled?: boolean;
   unread?: number;
+  round?: boolean;
 }) {
   const color = disabled
     ? tokens.color.disabledText
@@ -86,6 +97,7 @@ export function MapControl({
         s.surface,
         s.control,
         showLabel ? s.withLabel : s.iconOnly,
+        round && { borderRadius: tokens.radius.pill.value },
         primary && s.primary,
         pressed && (primary ? s.primaryPressed : s.surfacePressed),
         disabled && s.disabled,
@@ -105,15 +117,10 @@ export function MapControl({
       {showLabel ? (
         <Text style={[typeStyles.label, { color }]}>{label}</Text>
       ) : null}
-      {unread > 0 ? (
-        <View
-          style={s.badge}
-          accessible={false}
-          importantForAccessibility="no-hide-descendants"
-        >
-          <Text style={s.badgeText}>{unread > 99 ? "99+" : unread}</Text>
-        </View>
-      ) : null}
+      <UnreadBadge
+        count={unread}
+        style={{ position: "absolute", top: 2, right: 2 }}
+      />
     </Pressable>
   );
 }
@@ -122,25 +129,66 @@ export function MapModeSwitch<T extends string>({
   items,
   selected,
   onSelect,
+  fullWidth = false,
+  icons,
+  badges,
 }: {
   items: readonly T[];
   selected: T;
   onSelect: (item: T) => void;
+  fullWidth?: boolean;
+  icons?: Partial<Record<T, IconName>>;
+  badges?: Partial<Record<T, number>>;
 }) {
   return (
-    <View accessibilityRole="tablist" style={[s.surface, s.segments]}>
+    <View
+      accessibilityRole="tablist"
+      style={[
+        s.surface,
+        s.segments,
+        fullWidth && {
+          backgroundColor: tokens.color.surfaceMuted,
+          elevation: 0,
+          shadowOpacity: 0,
+          padding: 4,
+        },
+      ]}
+    >
       {items.map((item) => (
         <Pressable
           key={item}
           accessibilityRole="tab"
+          aria-selected={selected === item}
+          accessibilityLabel={
+            badges?.[item] ? `${item}，${badges[item]}条未读` : item
+          }
           accessibilityState={{ selected: selected === item }}
           onPress={() => onSelect(item)}
           style={({ pressed }) => [
             s.segment,
+            fullWidth && { flex: 1 },
+            (icons || badges) && {
+              flexDirection: "row",
+              gap: 6,
+              paddingHorizontal: 6,
+            },
             pressed && s.surfacePressed,
             selected === item && s.selected,
+            fullWidth &&
+              selected === item && { backgroundColor: tokens.color.surface },
           ]}
         >
+          {icons?.[item] ? (
+            <Icon
+              name={icons[item]!}
+              size={19}
+              color={
+                selected === item
+                  ? tokens.color.brandText
+                  : tokens.color.textSecondary
+              }
+            />
+          ) : null}
           <Text
             style={[
               typeStyles.label,
@@ -150,6 +198,7 @@ export function MapModeSwitch<T extends string>({
           >
             {item}
           </Text>
+          {badges ? <UnreadBadge count={badges[item] ?? 0} /> : null}
         </Pressable>
       ))}
     </View>
@@ -212,19 +261,4 @@ const s = StyleSheet.create({
   segmentText: { color: tokens.color.textSecondary, textAlign: "center" },
   selected: { backgroundColor: tokens.color.brandSurface },
   selectedText: { color: tokens.color.brandText },
-  badge: {
-    position: "absolute",
-    right: 2,
-    top: 2,
-    minWidth: 19,
-    paddingHorizontal: 4,
-    borderRadius: tokens.radius.pill.value,
-    backgroundColor: tokens.color.brandPrimary,
-    alignItems: "center",
-  },
-  badgeText: {
-    fontSize: tokens.fontSize.metadata.value,
-    fontWeight: "600",
-    color: tokens.color.onBrand,
-  },
 });

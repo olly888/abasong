@@ -5,6 +5,7 @@ import { useLocalSearchParams } from "expo-router";
 import { tokens } from "@abasong/ui";
 import { HomeChrome, type HomeMode } from "../../components/HomeChrome";
 import { HomeApartments } from "../../apartments/HomeApartments";
+import { MapModeSwitch } from "../../ui/MapControls";
 export default function Home() {
   const params = useLocalSearchParams<{
     apartment_id?: string;
@@ -21,6 +22,7 @@ export default function Home() {
   }, [params.apartment_id, params.destination_key]);
   const toolbar = (
     <HomeChrome
+      workspace
       mode={mode}
       list={list}
       onToggleList={() => setList(!list)}
@@ -35,6 +37,21 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.root} edges={["top"]}>
       <HomeApartments
+        workspace={{
+          modes: (
+            <MapModeSwitch
+              fullWidth
+              icons={{ 查码: "key", 找活: "box", 找人: "people" }}
+              items={["查码", "找活", "找人"]}
+              selected={mode === "公寓" ? "查码" : mode}
+              onSelect={(v) => {
+                setMode(v === "查码" ? "公寓" : (v as HomeMode));
+                setFiltersOpen(false);
+              }}
+            />
+          ),
+          onFilter: () => setFiltersOpen(true),
+        }}
         toolbar={toolbar}
         mode={mode}
         list={list}

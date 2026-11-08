@@ -21,6 +21,7 @@ import { metrics, typeStyles } from "../ui/foundation";
 import { Icon, type IconName } from "../ui/Icon";
 import { BrandWordmark } from "../ui/BrandWordmark";
 import { PageFrame } from "../ui/PageFrame";
+import { StatusPanel } from "../ui/Feedback";
 import type { getInviteKit } from "./invite-policy";
 import content from "./poster-content.json";
 
@@ -122,50 +123,7 @@ export function InviteDriver({ localPreview }: { localPreview: boolean }) {
       backgroundColor={tokens.color.surfaceMuted}
     >
       <View style={s.stack}>
-        <View style={s.poster}>
-          <BrandWordmark />
-          <Text accessibilityRole="header" style={s.headline}>
-            {content.firstLine}
-            {"\n"}
-            {content.secondLine}
-            <Text style={s.blue}>{content.highlight}</Text>
-          </Text>
-          <Image
-            source={scene}
-            resizeMode="contain"
-            style={s.scene}
-            accessible={false}
-          />
-          <View style={s.benefits}>
-            {content.benefits.map((benefit, i) => (
-              <View key={benefit} style={s.benefit}>
-                <Icon
-                  name={benefitIcons[i]!}
-                  size={17}
-                  color={tokens.color.brandPrimary}
-                />
-                <Text style={typeStyles.label}>{benefit}</Text>
-              </View>
-            ))}
-          </View>
-          {__DEV__ && kit ? (
-            <View style={s.qrRow}>
-              <Image
-                // eslint-disable-next-line @typescript-eslint/no-require-imports -- keep the TEST QR inside the development-only branch
-                source={require("./assets/qr-test.png")}
-                style={s.qr}
-                accessibilityLabel="本机测试邀请二维码"
-                accessible
-              />
-              <View style={s.qrText}>
-                <Text style={typeStyles.label}>{content.scan}</Text>
-                <Text style={typeStyles.metadata}>{content.scanCaption}</Text>
-                <Text style={s.testLabel}>{kit.label}</Text>
-              </View>
-            </View>
-          ) : null}
-        </View>
-        <Text style={s.note}>{content.source}</Text>
+        <InvitePoster testLabel={kit?.label} />
         {kit ? (
           <View style={s.operations}>
             <ActionButton
@@ -223,7 +181,11 @@ export function InviteDriver({ localPreview }: { localPreview: boolean }) {
           </View>
         ) : (
           <View style={s.closed}>
-            <Text style={typeStyles.label}>内测准备中，暂未开放邀请分享。</Text>
+            <StatusPanel
+              state="unavailable"
+              title="邀请分享暂未开放"
+              description="开放后可保存邀请图或分享给同行。"
+            />
           </View>
         )}
       </View>
@@ -231,29 +193,74 @@ export function InviteDriver({ localPreview }: { localPreview: boolean }) {
   );
 }
 
+export function InvitePoster({ testLabel }: { testLabel?: string }) {
+  return (
+    <View style={s.stack}>
+      <View style={s.poster}>
+        <BrandWordmark />
+        <Text accessibilityRole="header" style={s.headline}>
+          {content.firstLine}
+          {"\n"}
+          {content.secondLine}
+          <Text style={s.blue}>{content.highlight}</Text>
+        </Text>
+        <Image
+          source={scene}
+          resizeMode="contain"
+          style={s.scene}
+          accessible={false}
+        />
+        <View style={s.benefits}>
+          {content.benefits.map((benefit, i) => (
+            <View key={benefit} style={s.benefit}>
+              <Icon
+                name={benefitIcons[i]!}
+                size={17}
+                color={tokens.color.brandPrimary}
+              />
+              <Text style={typeStyles.label}>{benefit}</Text>
+            </View>
+          ))}
+        </View>
+        {__DEV__ && testLabel ? (
+          <View style={s.qrRow}>
+            <Image
+              // eslint-disable-next-line @typescript-eslint/no-require-imports -- keep the TEST QR inside the development-only branch
+              source={require("./assets/qr-test.png")}
+              style={s.qr}
+              accessibilityLabel="本机测试邀请二维码"
+              accessible
+            />
+            <View style={s.qrText}>
+              <Text style={typeStyles.label}>{content.scan}</Text>
+              <Text style={typeStyles.metadata}>{content.scanCaption}</Text>
+              <Text style={s.testLabel}>{testLabel}</Text>
+            </View>
+          </View>
+        ) : null}
+      </View>
+      <Text style={s.note}>{content.source}</Text>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
-  stack: { gap: 14 },
+  stack: { gap: 20 },
   poster: {
     backgroundColor: tokens.color.surface,
     padding: metrics.inset,
     borderRadius: metrics.cardRadius,
-    gap: 14,
+    gap: 20,
   },
   headline: { ...typeStyles.title, fontWeight: "700", marginTop: 3 },
   blue: { color: tokens.color.brandText },
   scene: { width: "100%", aspectRatio: 3.1 },
-  benefits: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    columnGap: 10,
-    rowGap: 6,
-  },
-  benefit: { flexDirection: "row", alignItems: "center", gap: 4 },
+  benefits: { gap: 12 },
+  benefit: { flexDirection: "row", alignItems: "center", gap: 10 },
   qrRow: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderColor: tokens.color.border,
-    paddingTop: 12,
+    paddingTop: 16,
     flexDirection: "row",
     gap: 12,
     alignItems: "center",
@@ -266,10 +273,10 @@ const s = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 6,
   },
-  note: { ...typeStyles.metadata, textAlign: "center" },
-  operations: { gap: 5 },
-  secondary: { flexDirection: "row", gap: 8 },
-  operation: { flex: 1 },
+  note: { ...typeStyles.metadata },
+  operations: { gap: 12 },
+  secondary: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  operation: { flexGrow: 1, flexBasis: 136 },
   selectable: {
     ...typeStyles.body,
     padding: 12,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { tokens } from "@abasong/ui";
+import { metrics, typeStyles } from "../ui/foundation";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/Primitives";
 import {
@@ -187,7 +188,7 @@ function CircleSource({
 }
 
 const s = StyleSheet.create({
-  post: { gap: 9, paddingVertical: 14 },
+  post: { gap: 12, paddingVertical: 20 },
   authorRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -202,21 +203,19 @@ const s = StyleSheet.create({
     minHeight: 48,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: tokens.color.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: { fontSize: 15, fontWeight: "600", color: tokens.color.ink },
   name: {
-    fontSize: 15,
-    lineHeight: 21,
+    ...typeStyles.body,
     fontWeight: "600",
-    color: tokens.color.ink,
   },
-  meta: { fontSize: 12, lineHeight: 18, color: tokens.color.textSecondary },
+  meta: { ...typeStyles.metadata },
   topic: {
     alignSelf: "flex-start",
     fontSize: 12,
@@ -250,7 +249,7 @@ const s = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderColor: tokens.color.border,
-    borderRadius: 12,
+    borderRadius: metrics.controlRadius,
     backgroundColor: tokens.color.surfaceMuted,
   },
   sourceBody: {

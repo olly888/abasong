@@ -12,6 +12,7 @@ import type { EnvelopeCrypto } from "../encryption/envelope";
 import { buildAccessRankingQuery } from "../access/access-ranking.query";
 import { apartmentSearchQuery } from "./apartment-search.query";
 import { apartmentProximityQuery } from "./apartment-proximity.query";
+import { lockApartmentSharing, requireApartmentSharing } from "./sharing-state";
 import {
   automaticMatchBasis,
   automaticMatchPolicy,
@@ -635,6 +636,12 @@ export class ApartmentsService {
       ).rowCount
     )
       throw missing();
+    // Corrections already hold this lock. Always acquire it before the shared
+    // apartment lock so a queued pause cannot block two writes in reverse order.
+    await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+      `access-source-owner:${a.userId}`,
+    ]);
+    await requireApartmentSharing(c, aid);
     const label = b.scope?.label ?? "大门",
       scopeKey = `keypad:${label.normalize("NFC").toLowerCase()}`,
       hash = createHmac("sha256", this.crypto.hmacKey("shared-dedup"))
@@ -647,9 +654,6 @@ export class ApartmentsService {
       key,
       intent,
       async () => {
-        await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
-          `access-source-owner:${a.userId}`,
-        ]);
         await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
           `${aid}:${scopeKey}:${hash.toString("hex")}`,
         ]);
@@ -776,6 +780,7 @@ export class ApartmentsService {
           ).rowCount
         )
           throw missing();
+        const { paused } = await lockApartmentSharing(c, aid);
         const config = (
           await c.query(
             "SELECT version,config FROM abasong.config_versions WHERE activated_at<=now() ORDER BY version DESC LIMIT 1",
@@ -784,6 +789,13 @@ export class ApartmentsService {
         const days = config?.config.feedback_window_days;
         if (!Number.isSafeInteger(days) || days <= 0 || days > 3650)
           throw new ApiError(503, "CONFIGURATION_REQUIRED", "资料规则尚未配置");
+        if (paused)
+          return {
+            items: [],
+            config_version: config.version,
+            next_cursor: null,
+            sharing_paused: true,
+          };
         const scopeRows = (
           await c.query(
             "SELECT DISTINCT scope_key FROM abasong.access_records WHERE apartment_id=$1 AND method='keypad' AND applicable_schedule IS NULL",
@@ -890,11 +902,12 @@ export class ApartmentsService {
         ]);
         const target = (
           await c.query(
-            "SELECT r.id FROM abasong.access_records r JOIN abasong.apartments p ON p.id=r.apartment_id AND p.status='active' WHERE r.id=$1 AND r.status='active' AND (r.expires_at IS NULL OR r.expires_at>now()) AND r.applicable_schedule IS NULL AND EXISTS(SELECT 1 FROM abasong.access_contribution_sources x WHERE x.record_id=r.id AND x.status='active')",
+            "SELECT r.apartment_id FROM abasong.access_records r JOIN abasong.apartments p ON p.id=r.apartment_id AND p.status='active' WHERE r.id=$1 AND r.status='active' AND (r.expires_at IS NULL OR r.expires_at>now()) AND r.applicable_schedule IS NULL AND EXISTS(SELECT 1 FROM abasong.access_contribution_sources x WHERE x.record_id=r.id AND x.status='active')",
             [rid],
           )
         ).rows[0];
         if (!target) throw missing();
+        await requireApartmentSharing(c, target.apartment_id);
         const old = (
           await c.query(
             "SELECT record_id,value,reason,occurred_at FROM abasong.feedback_events WHERE user_id=$1 AND client_event_id=$2",
@@ -948,6 +961,7 @@ export class ApartmentsService {
       await c.query(
         `SELECT s.*,r.apartment_id,r.status AS record_status,r.contributor_id,r.scope_label,
       p.address_line1,p.city,p.state,
+      COALESCE((SELECT o.paused FROM abasong.apartment_sharing_operations o WHERE o.apartment_id=p.id ORDER BY o.version DESC LIMIT 1),false) AS sharing_paused,
       EXISTS(SELECT 1 FROM abasong.capabilities x WHERE x.user_id=s.user_id AND x.capability='access.contribute' AND x.revoked_at IS NULL AND x.valid_from<=now() AND (x.valid_until IS NULL OR x.valid_until>now())) AND p.status='active' AS can_publish,
       (SELECT count(*)::int FROM abasong.access_contribution_sources x WHERE x.record_id=r.id AND x.status='active' AND x.user_id<>s.user_id) AS others,
       (SELECT count(*)::int FROM abasong.access_feedback f JOIN abasong.users u ON u.id=f.user_id AND u.status='active' WHERE f.record_id=r.id AND f.user_id<>s.user_id AND f.applicable AND f.excluded_at IS NULL AND f.value='useful') AS useful,
@@ -971,7 +985,8 @@ export class ApartmentsService {
             : "same_value_validation"
           : r.status,
       record_status: r.record_status,
-      can_correct: r.status === "active" && r.can_publish,
+      can_correct: r.status === "active" && r.can_publish && !r.sharing_paused,
+      ...(r.sharing_paused ? { sharing_paused: true } : {}),
       status: r.status,
       version: r.version,
       scope_label: r.scope_label ?? "大门",
@@ -1033,6 +1048,11 @@ export class ApartmentsService {
       async (c) => {
         const source = (await this.sourceMetadata(c, a, sid))[0];
         if (!source) throw missing();
+        if ((await lockApartmentSharing(c, source.apartment_id)).paused)
+          return {
+            source: { ...source, can_correct: false, sharing_paused: true },
+            value: null,
+          };
         let value: string | null = null;
         if (source.status === "active" && source.record_status === "active") {
           const r = (
@@ -1086,6 +1106,14 @@ export class ApartmentsService {
         await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
           `access-source-owner:${a.userId}`,
         ]);
+        const target = (
+          await c.query<{ apartment_id: string }>(
+            "SELECT r.apartment_id FROM abasong.access_contribution_sources s JOIN abasong.access_records r ON r.id=s.record_id WHERE s.id=$1 AND s.user_id=$2",
+            [sid, a.userId],
+          )
+        ).rows[0];
+        if (!target) throw missing();
+        await requireApartmentSharing(c, target.apartment_id);
         const receipt = async (
           eid: string,
         ): Promise<S["ContributionChangeResult"]> => {
@@ -1238,10 +1266,13 @@ export class ApartmentsService {
   async discoverCatalog(
     a: VerifiedIdentity,
     p: S["Point"],
+    radius = 200,
   ): Promise<S["NearbyCandidate"][]> {
+    if (![200, 500, 1000].includes(radius))
+      throw new ApiError(400, "INVALID_INPUT", "附近范围无效");
     return this.tx(a, async (c) => {
       const rows = (
-        await c.query(apartmentProximityQuery, [p.lng, p.lat, 200, 20])
+        await c.query(apartmentProximityQuery, [p.lng, p.lat, radius, 20])
       ).rows;
       return rows.map((r) => ({
         key: r.id,

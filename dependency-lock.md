@@ -1,5 +1,15 @@
 # D0 依赖与运行时基线
 
+2026-11-08 M6-01：无新增依赖、契约、迁移或云资源。复用现有React Native/Expo与Lucide，新增ChoiceChip、ComposerOption；圈内正文／标签／可选字段与我的菜单对齐。锁屏原生验收待补，详见[M6-01报告](docs/technical/V3.5_M6-01_司机圈与我的视觉收敛验收.md)。
+
+2026-11-08 M5-02：无新增依赖、原生模块、契约、迁移或云资源。复用既有字段、Lucide和品牌token，统一门禁码/三选门别/勾选组件与截图核对卡。561工程、125导入检查、31贡献断言/78 HTTP、4原型与6RN-web组通过；双端Hermes导出通过，原生键盘/手势/视觉待补。详见[M5-02报告](docs/technical/V3.5_M5-02_贡献截图与门别对齐验收.md)。
+
+2026-11-08 M5-01：无新增依赖、原生模块、契约、迁移或云资源。复用已锁Expo58/RN0.88、共用字体/颜色、原生日期与既有表单/报名transport。新增共用摘要及分组、报名字段锚点定位；[561工程/652接口数据库检查及浏览器证据](docs/technical/V3.5_M5-01_详情报名与核对验收.md)通过。双端Hermes导出通过，原生手势与键盘待补；未重签或部署。
+
+2026-11-08 M4-02：无新增依赖、原生模块、迁移、外部服务或费用。复用现有Nest/Zod/PostgreSQL、React Native列表与AbortController；新增可选scenario查询参数并同步契约生成源。iOS/Android Hermes导出通过，原生手势待解锁，未云部署或重签。详见[M4-02报告](docs/technical/V3.5_M4-02_协作查询与分页验收.md)。
+
+2026-11-08 M4-01：无新增包、原生模块、迁移或云资源。复用Node24 AbortSignal、Zod、现有Mapbox临时Tilequery/Geocoding及PostGIS。新增只读TileJSON元数据调用（进程内五分钟缓存maxzoom）用于九瓦片范围判断；一次扩围最多3次catalog、7次Tilequery、4次逆地理、1次元数据，共享8秒供应商中止预算。未运行实时供应商探测，不持久保存临时地址，不改变账号计费或访问资格。详见[M4报告](docs/technical/V3.5_M4_受控扩围与覆盖验收.md)。
+
 2026-11-07 设计系统 V3.3：通过 Expo SDK 58 兼容安装并精确锁定 `react-native-svg 15.16.0`，pnpm 与 iOS CocoaPods 锁已同步。Lucide 1.70.0 仅选用所需的上游 SVG 路径，许可入库，原型与 App 由同一份映射生成。两端 Debug 模拟器包实际重编译。iOS 本地由供应商脚本恢复匹配的 React Native、Hermes、Expo Debug 预编译模块，再使用模拟器临时签名。
 
 2026-11-06 R4-09：无新增包、SDK、原生模块、迁移或锁变更。复用Expo58 Router及RN0.88 AppState/Switch、已安装DateTimePicker9.2.1和V3.2共用控件；时段仍为既有版本化PUT，关闭只提交开关及版本。仅刷新显示，不增加后台自动续期/定位/推送或云调用。

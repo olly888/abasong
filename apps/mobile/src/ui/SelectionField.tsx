@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActionSheetIOS,
   Keyboard,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
+import { SafeAreaModal } from "./SafeAreaModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 import { Icon } from "./Icon";
@@ -104,7 +104,7 @@ export function SelectionField<T extends string>({
         </Text>
         <Icon name="down" size={18} color={tokens.color.textSecondary} />
       </Pressable>
-      <Modal
+      <SafeAreaModal
         visible={open}
         transparent
         animationType="slide"
@@ -179,7 +179,7 @@ export function SelectionField<T extends string>({
             />
           </SafeAreaView>
         </View>
-      </Modal>
+      </SafeAreaModal>
     </View>
   );
 }

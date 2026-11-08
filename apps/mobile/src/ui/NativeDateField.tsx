@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Keyboard, Modal, Platform, Pressable, Text, View } from "react-native";
+import { Keyboard, Platform, Pressable, Text, View } from "react-native";
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
+import { SafeAreaModal } from "./SafeAreaModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 import { Icon } from "./Icon";
@@ -124,7 +125,7 @@ export function NativeDateField({
         <Icon name="down" size={18} color={tokens.color.textSecondary} />
       </Pressable>
       {Platform.OS === "ios" ? (
-        <Modal
+        <SafeAreaModal
           visible={open}
           transparent
           animationType="slide"
@@ -191,7 +192,7 @@ export function NativeDateField({
               ) : null}
             </SafeAreaView>
           </View>
-        </Modal>
+        </SafeAreaModal>
       ) : null}
     </View>
   );

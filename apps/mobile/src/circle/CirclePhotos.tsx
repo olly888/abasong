@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   AppState,
   Image,
-  Modal,
   PanResponder,
   Pressable,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { SafeAreaModal } from "../ui/SafeAreaModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useFocusEffect } from "expo-router";
@@ -206,7 +206,7 @@ function PhotoViewer({
     transform.scale > 1 ? reset() : change({ scale: 2, x: 0, y: 0 });
   const white = tokens.color.surface;
   return (
-    <Modal
+    <SafeAreaModal
       animationType="fade"
       onRequestClose={onClose}
       supportedOrientations={["portrait", "landscape"]}
@@ -274,7 +274,7 @@ function PhotoViewer({
           </View>
         ) : null}
       </SafeAreaView>
-    </Modal>
+    </SafeAreaModal>
   );
 }
 

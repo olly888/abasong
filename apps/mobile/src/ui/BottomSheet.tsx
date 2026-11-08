@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { SafeAreaModal } from "./SafeAreaModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 import { metrics } from "./foundation";
@@ -17,7 +13,11 @@ export function BottomSheet({
   onRequestClose: () => void;
 }) {
   return (
-    <Modal transparent animationType="slide" onRequestClose={onRequestClose}>
+    <SafeAreaModal
+      transparent
+      animationType="slide"
+      onRequestClose={onRequestClose}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{
@@ -44,6 +44,6 @@ export function BottomSheet({
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
-    </Modal>
+    </SafeAreaModal>
   );
 }

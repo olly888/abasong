@@ -1,5 +1,5 @@
 """Idempotent project bootstrap. Explicit manual command; never a CI auto-publish step.
-Requires an audited/pushed private olly888/abasong and authenticated gh with project scope.
+Requires an audited/pushed olly888/abasong (public needs explicit --allow-public) and authenticated gh with project scope.
 No credentials or project business data are read.
 """
 from pathlib import Path
@@ -65,7 +65,8 @@ if __name__=='__main__':
  if '--prepare-only' in sys.argv:print('Prepared35 tasks; no remote writes');raise SystemExit
  if not (ROOT/'.tooling/security/publish-approved.json').exists():raise RuntimeError('Run and review complete history audit before remote bootstrap')
  login=gh(['api','user'])['login'];assert login=='olly888'
- repo=gh(['repo','view',REPO,'--json','nameWithOwner,isPrivate,id']);assert repo['nameWithOwner']==REPO and repo['isPrivate']
+ repo=gh(['repo','view',REPO,'--json','nameWithOwner,isPrivate,id']);assert repo['nameWithOwner']==REPO
+ if not repo['isPrivate']:assert '--allow-public' in sys.argv, 'Public repository requires explicit --allow-public'
  labels={x['name'] for x in api(f'repos/{REPO}/labels?per_page=100')}
  definitions={'type:task':('1D76DB','总计划开发任务'),'priority:P0':('B60205','首版关键任务')}
  for d in range(5):definitions[f'stage:D{d}']=('5319E7',f'D{d}阶段')

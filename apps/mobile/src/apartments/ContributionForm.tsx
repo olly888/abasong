@@ -15,6 +15,7 @@ import {
 } from "./contribution-address-search";
 import { AccessCodeFields } from "./AccessCodeFields";
 import { CheckField } from "../ui/CheckField";
+import { useAccessFormExit } from "./useAccessFormExit";
 type S = components["schemas"];
 export function ContributionForm(p: {
   initialApartmentId?: string;
@@ -37,9 +38,14 @@ export function ContributionForm(p: {
     [confirmed, setConfirmed] = useState(false),
     [busy, setBusy] = useState(false),
     [attempted, setAttempted] = useState(false),
+    [addressEdited, setAddressEdited] = useState(false),
     [error, setError] = useState<string | null>(null);
   const current = useRef(p);
   current.current = p;
+  const exit = useAccessFormExit(
+    addressEdited || !!value || !!scope || confirmed || attempted,
+    busy,
+  );
   const control = useRef(new AbortController()),
     attempt = useRef(createContributionAttempt(randomUUID));
   const changeAddress = useCallback((next: ContributionAddress) => {
@@ -108,6 +114,7 @@ export function ContributionForm(p: {
         });
         if (control.current.signal.aborted) return;
         committed = true;
+        exit.release();
         setValue("");
         current.current.onPrivateSaved();
       } else {
@@ -139,6 +146,7 @@ export function ContributionForm(p: {
         }
         if (control.current.signal.aborted) return;
         committed = true;
+        exit.release();
         setValue("");
         setConfirmed(false);
         current.current.onShared(apartmentId, result.outcome);
@@ -154,7 +162,7 @@ export function ContributionForm(p: {
   return (
     <ApartmentPage
       title={isPrivate ? "添加私人记录" : "添加门禁码"}
-      onBack={p.onBack}
+      onBack={() => exit.back(p.onBack)}
       footer={
         <>
           <FormError message={error} />
@@ -186,6 +194,7 @@ export function ContributionForm(p: {
         disabled={busy}
         request={request}
         onChange={changeAddress}
+        onEdit={() => setAddressEdited(true)}
       />
       <AccessCodeFields
         value={value}

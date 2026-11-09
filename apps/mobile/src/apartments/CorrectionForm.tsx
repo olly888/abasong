@@ -12,6 +12,7 @@ import { createContributionAttempt } from "./contribution-attempt";
 import { AccessCodeFields } from "./AccessCodeFields";
 import { CheckField } from "../ui/CheckField";
 import { typeStyles } from "../ui/foundation";
+import { useAccessFormExit } from "./useAccessFormExit";
 type S = components["schemas"];
 export function CorrectionForm(p: {
   id: string;
@@ -33,6 +34,11 @@ export function CorrectionForm(p: {
     [error, setError] = useState<string | null>(null),
     [conflict, setConflict] = useState(false),
     [committed, setCommitted] = useState(false);
+  const exit = useAccessFormExit(
+    !committed &&
+      (!!value || attested || (!!source && scope !== source.scope_label)),
+    busy,
+  );
   const request = <T,>(
     path: string,
     options: Parameters<ContributionRequest>[1] = {},
@@ -77,7 +83,7 @@ export function CorrectionForm(p: {
     };
   }, [id]);
   function back() {
-    latest.current.onBack();
+    exit.back(() => latest.current.onBack());
   }
   async function submit() {
     if (
@@ -108,6 +114,7 @@ export function CorrectionForm(p: {
       );
       attempt.current.finish(true);
       if (controller.current.signal.aborted) return;
+      exit.release();
       setCommitted(true);
       setValue("");
       setAttested(false);

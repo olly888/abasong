@@ -344,7 +344,7 @@ export function HomeApartmentContent({
   const collapsedHeight = compactCardHeight(window.fontScale);
   const localListMemory = useRef<{ scroll?: number }>({});
   const [listFocusRevision, setListFocusRevision] = useState(
-    readingMemory?.pendingFocusId ? 1 : 0,
+    apartmentId || readingMemory?.pendingFocusId ? 1 : 0,
   );
   const fallbackMemory = useRef(createDiscoveryMemory());
   const modeRef = useRef(mode),

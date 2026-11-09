@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { CircleComposer } from "../circle/CircleComposer";
 import { CircleFeed } from "../circle/CircleFeed";
@@ -37,10 +38,10 @@ const postSeed: Circle["Post"] = {
   created_at: "2026-11-08T18:00:00Z",
 };
 export default function CommunityVisualLab() {
-  return __DEV__ ? <Lab /> : <Redirect href="/" />;
-}
-function Lab() {
   const { scene = "composer" } = useLocalSearchParams<{ scene?: string }>();
+  return __DEV__ ? <Lab key={scene} scene={scene} /> : <Redirect href="/" />;
+}
+function Lab({ scene }: { scene: string }) {
   const [view, setView] = useState(scene);
   const [revision, revise] = useState(0);
   const [note, setNote] = useState("TEST · M6-01 · 仅内存，不连接业务服务");
@@ -156,7 +157,7 @@ function Lab() {
   const info = (v: string) => setNote("TEST · " + v);
   return (
     <View style={{ flex: 1 }}>
-      {controls}
+      <SafeAreaView edges={["top"]}>{controls}</SafeAreaView>
       {view === "composer" ? (
         <CircleComposer
           actor="TEST-M6-composer"

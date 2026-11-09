@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { InboxContent } from "../messages/InboxScreen";
@@ -39,10 +40,10 @@ const notice: S["Notification"] = {
   created_at: time,
 };
 export default function InboxVisualLab() {
-  return __DEV__ ? <Lab /> : <Redirect href="/" />;
-}
-function Lab() {
   const { scene = "ready" } = useLocalSearchParams<{ scene?: string }>();
+  return __DEV__ ? <Lab key={scene} scene={scene} /> : <Redirect href="/" />;
+}
+function Lab({ scene }: { scene: string }) {
   const [opened, setOpened] = useState(0),
     [account, setAccount] = useState("A");
   const request = useMemo<ProfileRequest>(() => {
@@ -141,17 +142,19 @@ function Lab() {
   }, [scene, account]);
   return (
     <View style={{ flex: 1 }}>
-      <Text>
-        TEST · M6-02 · {account} · 打开{opened}
-      </Text>
-      <ActionButton
-        variant="text"
-        label="切换 TEST 账号"
-        onPress={() => {
-          setAccount("B");
-          setOpened(0);
-        }}
-      />
+      <SafeAreaView edges={["top"]}>
+        <Text>
+          TEST · M6-02 · {account} · 打开{opened}
+        </Text>
+        <ActionButton
+          variant="text"
+          label="切换 TEST 账号"
+          onPress={() => {
+            setAccount("B");
+            setOpened(0);
+          }}
+        />
+      </SafeAreaView>
       {scene === "invite" ? (
         <InviteDriver localPreview={false} />
       ) : scene === "poster" ? (

@@ -85,7 +85,7 @@
     },
     {
       "path": "apps/mobile/src/apartments/HomeApartments.tsx",
-      "sha256": "26db3ee6b8bc01b39c91948b6ca734746499c06090b71f8d2210a25348ef965a"
+      "sha256": "418b9e13f89a1008dd5871bb22d08aed395d03bf1118ee84f9e409c3d494da5d"
     },
     {
       "path": "apps/mobile/src/apartments/HomeArrivalPanel.tsx",
@@ -201,7 +201,7 @@
     },
     {
       "path": "apps/mobile/src/design/CommunityVisualLab.tsx",
-      "sha256": "fd6fd6a91473bc147dea38468e5c8c7e78dbb7ce5a52f3a50bdb20714defb3a1"
+      "sha256": "2894590b6c6724e4e7ac8a1861bf89dd2d13b2c8abac36ce96f6dc63486569a6"
     },
     {
       "path": "apps/mobile/src/design/DeliveryLab.tsx",
@@ -213,7 +213,7 @@
     },
     {
       "path": "apps/mobile/src/design/InboxVisualLab.tsx",
-      "sha256": "c793097b5089031f57fcc3c2718132f31cf79179187bb93ee99a356bf9c71014"
+      "sha256": "a502858806b27d4f6b6a4d9df7bfbf78fdc57175961663c5be9dbbd270573eb8"
     },
     {
       "path": "apps/mobile/src/design/NativeExitLab.tsx",
@@ -373,7 +373,7 @@
     },
     {
       "path": "apps/mobile/src/ui/HomeResultList.tsx",
-      "sha256": "476216e0f99bd6ad4e58f2ce3691d5be1052b07141575c5629155b996d7b150e"
+      "sha256": "1d3b7bf7918f840e9879a4367410ab4ba610cc76d2e56ad07de1b390c07f25a5"
     },
     {
       "path": "apps/mobile/src/ui/MapCardFrame.tsx",

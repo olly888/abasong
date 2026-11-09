@@ -1328,7 +1328,7 @@ export function HomeApartmentContent({
             nearbyItems.length || !items.length ? rangeLabel.title : "公寓"
           }
           statusNote={
-            nearbyItems.length || !items.length ? rangeLabel.note : undefined
+            nearbyItems.length ? rangeLabel.note : undefined
           }
           count={items.length || undefined}
           apartment

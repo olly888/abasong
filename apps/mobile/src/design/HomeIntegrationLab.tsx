@@ -24,6 +24,7 @@ import { AccountError } from "../auth/errors";
 import { localDateTime } from "../requests/presentation";
 import { driverFixtures } from "../drivers/fixtures";
 import { arrivalAdapter } from "./ArrivalLab";
+import { isM7DiscoveryScene, m7Discovery } from "./m7-discovery-fixtures";
 type S = components["schemas"];
 const point = { lng: -118.2437, lat: 34.0522 };
 const ids = [1, 2, 3].map((n) => `11111111-1111-4111-8111-11111111111${n}`);
@@ -84,6 +85,10 @@ function Lab({
     ),
     [notice, setNotice] = useState("");
   const reading = useRef<ApartmentReadingMemory>({});
+  const held = useRef<(() => void)[]>([]);
+  const released = useRef(false);
+  const mapReads = useRef(0);
+  const discoveryApartments = useRef(new Map<string, S["Apartment"]>());
   const memory = useRef(createDiscoveryMemory()),
     position = useRef({ ...point }),
     codes = useRef(new Map<string, S["AccessRecord"]>()),
@@ -143,6 +148,74 @@ function Lab({
         options?: Parameters<ContributionRequest>[1],
       ) => {
         if (options?.signal?.aborted) throw new Error("TEST cancelled");
+        if (isM7DiscoveryScene(scene) && path.includes("/discover")) {
+          const provider = path.endsWith("/mapbox");
+          const response = m7Discovery(
+            scene,
+            options?.body as S["NearbyInput"],
+            provider,
+          );
+          response.items.forEach((candidate) => {
+            if (candidate.apartment)
+              discoveryApartments.current.set(
+                candidate.apartment.id,
+                candidate.apartment,
+              );
+          });
+          if (provider) {
+            mapReads.current++;
+            setNotice(
+              `TEST 扩围请求${mapReads.current} · ${response.expansion!.attempted_radii_m.join("→")}`,
+            );
+          }
+          return response as T;
+        }
+        if (isM7DiscoveryScene(scene) && path.endsWith("/map-context")) {
+          const id = path.split("/")[3]!;
+          const target = discoveryApartments.current.get(id);
+          if (!target) throw new Error("TEST · 未知公寓轮廓");
+          const { lng, lat } = target.point;
+          return {
+            apartment_id: id,
+            buildings: [
+              {
+                id: `TEST-building-${id}`,
+                street_number: target.address_line1.split(" ")[0],
+                label_point: target.point,
+                verified_at: new Date().toISOString(),
+                geometry: {
+                  type: "MultiPolygon",
+                  coordinates: [
+                    [
+                      [
+                        [lng - 0.00007, lat - 0.00009],
+                        [lng + 0.00007, lat - 0.00009],
+                        [lng + 0.00007, lat + 0.00009],
+                        [lng - 0.00007, lat + 0.00009],
+                        [lng - 0.00007, lat - 0.00009],
+                      ],
+                    ],
+                  ],
+                },
+              },
+            ],
+          } as T;
+        }
+        if (
+          scene === "slow-switch" &&
+          !released.current &&
+          path.includes(ids[0]!) &&
+          (path.endsWith("/access-records") || path.endsWith("/map-context"))
+        ) {
+          const response = await base.read(path, options);
+          // Deliberately ignore cancellation: prove late responses are discarded
+          // by the real production component, not by this test transport.
+          await new Promise<void>((resolve) => {
+            held.current.push(resolve);
+            setNotice(`TEST 100响应等待释放 · ${held.current.length}`);
+          });
+          return response as T;
+        }
         if (path.endsWith("/access-records") && options?.method !== "POST") {
           if (scene === "read-error") throw new Error("TEST 读取失败");
           if (scene === "paused")
@@ -304,8 +377,21 @@ function Lab({
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <Text style={{ paddingHorizontal: 12, fontSize: 12 }}>
-        TEST · {workspace ? "V3.5 M2" : "R4-05组合"} · 查码{reads} · {notice}
+        TEST · {scene} · {workspace ? "V3.5 M7" : "R4-05组合"} · 查码{reads} ·{" "}
+        {notice}
       </Text>
+      {scene === "slow-switch" ? (
+        <ActionButton
+          label="释放100迟到响应"
+          variant="text"
+          onPress={() => {
+            released.current = true;
+            const pending = held.current.splice(0);
+            pending.forEach((resolve) => resolve());
+            setNotice(`TEST 已释放100响应${pending.length}`);
+          }}
+        />
+      ) : null}
       {!workspace ? (
         <ScrollView horizontal style={{ maxHeight: 44 }}>
           <ActionButton

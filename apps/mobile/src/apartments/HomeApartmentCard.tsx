@@ -11,6 +11,7 @@ import type { AccessRowState } from "./visible-access-reader";
 import { ActionButton } from "../ui/Controls";
 import { Icon } from "../ui/Icon";
 import { HomeResultCard } from "../ui/MapCardFrame";
+import { apartmentCardLabel, apartmentCardStatus } from "./card-accessibility";
 
 export function HomeApartmentCard(p: {
   candidate: NearbyCardCandidate;
@@ -30,7 +31,20 @@ export function HomeApartmentCard(p: {
     <HomeResultCard selected={p.selected} style={{ minHeight: 164 }}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`查看${[a?.address_line1 ?? "公寓", a?.city ?? "地址待核对", a?.state, a?.postal_code].filter(Boolean).join("，")}`}
+        accessibilityLabel={apartmentCardLabel({
+          address: [
+            a?.address_line1 ?? "公寓",
+            a?.city ?? "地址待核对",
+            a?.state,
+            a?.postal_code,
+          ]
+            .filter(Boolean)
+            .join("，"),
+          distance,
+          pendingAddress,
+          state: p.state,
+        })}
+        accessibilityHint="打开公寓详情"
         accessibilityState={{ selected: p.selected }}
         onPress={p.onOpen}
       >
@@ -56,17 +70,7 @@ export function HomeApartmentCard(p: {
           </View>
         ) : (
           <Text style={s.status}>
-            {pendingAddress
-              ? "核对地址后共享门禁码"
-              : status === "loading"
-                ? "正在读取门禁码"
-                : status === "error"
-                  ? "门禁码暂时无法加载"
-                  : status === "denied"
-                    ? "暂未开通资料查看资格"
-                    : status === "paused"
-                      ? "该公寓暂不共享门禁码"
-                      : "暂无共享门禁码"}
+            {apartmentCardStatus(pendingAddress, status)}
           </Text>
         )}
         {r && r.method !== "keypad" ? (

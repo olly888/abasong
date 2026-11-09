@@ -81,11 +81,11 @@
     },
     {
       "path": "apps/mobile/src/apartments/HomeApartmentCard.tsx",
-      "sha256": "6d5e9568f865d3e8f82080bf1f9daccaceee9d7aedc49519e5f20b6b5f8c6f7d"
+      "sha256": "34a164840c7ffd9c76b88d8295fd765ff9b8d71d6a84716ee004c0329345754c"
     },
     {
       "path": "apps/mobile/src/apartments/HomeApartments.tsx",
-      "sha256": "418b9e13f89a1008dd5871bb22d08aed395d03bf1118ee84f9e409c3d494da5d"
+      "sha256": "33328536d5473755c553950825874c3758eaff3025213c5de53937e129e1896e"
     },
     {
       "path": "apps/mobile/src/apartments/HomeArrivalPanel.tsx",
@@ -94,6 +94,14 @@
     {
       "path": "apps/mobile/src/apartments/SharedContributions.tsx",
       "sha256": "f9407da3af129eeb7855e5c9ac9faa2eb612b93b648ee1bc1cf4be48d0192f5e"
+    },
+    {
+      "path": "apps/mobile/src/apartments/card-accessibility.test.ts",
+      "sha256": "fbd6741f7ae6a810d4a52c6cf9df1a19f1df186387d27a216b58788ad173ee43"
+    },
+    {
+      "path": "apps/mobile/src/apartments/card-accessibility.ts",
+      "sha256": "77bfdbf24a16b859bd81e3516c494c036e2517cfae3ef9f628c1f29210f14fa0"
     },
     {
       "path": "apps/mobile/src/apartments/contribution-visibility.test.ts",
@@ -209,7 +217,7 @@
     },
     {
       "path": "apps/mobile/src/design/HomeIntegrationLab.tsx",
-      "sha256": "7a9b63046a6ebecf17538d39693558fccc5042fd9b37a7d154da8f7ce65d29b7"
+      "sha256": "c8f93e62a84dcc67cdb672f64f3f0b5dbada9bb2128715c896835998f602ffe3"
     },
     {
       "path": "apps/mobile/src/design/InboxVisualLab.tsx",
@@ -222,6 +230,10 @@
     {
       "path": "apps/mobile/src/design/collaboration-seed.ts",
       "sha256": "38cdb42d3ef7a0eb9a1d082a70d4d382ec4e411fdc0f33e37b780e5bf8f552fa"
+    },
+    {
+      "path": "apps/mobile/src/design/m7-discovery-fixtures.ts",
+      "sha256": "bb53241f4df78343504af8374f393c83bfe078dba574763044da644509f28d08"
     },
     {
       "path": "apps/mobile/src/drivers/CollaborationHome.tsx",

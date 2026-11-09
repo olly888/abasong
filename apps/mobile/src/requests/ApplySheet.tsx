@@ -6,7 +6,13 @@ import {
   type ComponentRef,
   type ReactNode,
 } from "react";
-import { AccessibilityInfo, ScrollView, Text, View } from "react-native";
+import {
+  AccessibilityInfo,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { randomUUID } from "expo-crypto";
 import { router } from "expo-router";
 import type { components } from "@abasong/contracts";
@@ -81,6 +87,8 @@ export function ApplicationSheet({
   onApplied: (a: components["schemas"]["Application"]) => void;
   testControls?: ReactNode;
 }) {
+  const { fontScale } = useWindowDimensions();
+  const largeType = fontScale >= 1.6;
   const observed = useRef(r).current;
   const [initial] = useState(() => initialApplication(observed));
   const [date, setDate] = useState(initial.date),
@@ -193,8 +201,8 @@ export function ApplicationSheet({
               (changed ? "需求条件已更新，请查看当前需求后重新报名" : null)
             }
           />
-          <View style={s.row}>
-            <View style={{ flex: 1 }}>
+          <View style={largeType ? { gap: 8 } : s.row}>
+            <View style={largeType ? undefined : { flex: 1 }}>
               <ActionButton
                 label="取消"
                 variant="text"
@@ -202,7 +210,7 @@ export function ApplicationSheet({
                 onPress={onClose}
               />
             </View>
-            <View style={{ flex: 2 }}>
+            <View style={largeType ? undefined : { flex: 2 }}>
               {changed ? (
                 <ActionButton
                   label="查看当前需求"

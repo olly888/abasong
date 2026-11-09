@@ -50,3 +50,7 @@
 本轮范围为共用颜色与图标、地图首页工具、底部导航视觉、登录和邀请字标。本地首页三种模式的空态、加载、失败和操作样式已接入。全站逐页组件收敛、放大文字及读屏完整回归分批验收。历史依据保留在 [V3.1 归档规范](Abasong_设计系统_V3.1_现行规范.md)及 [V3.2 地图体验方案](Abasong_设计系统_V3.2_升级方案.md)。
 
 依据 [Lucide React Native](https://lucide.dev/guide/react-native)、[Expo SDK 58 SVG](https://docs.expo.dev/versions/v58.0.0/sdk/svg/)及 [WCAG 2.2 最低对比度](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)。
+
+## V3.5 大字原生布局补充（2026-11-08）
+
+系统 fontScale 达到 1.6 时，共用 PageFrame 的紧凑标题进入正文滚动区，返回入口保持可见；页面与 BottomSheet 操作区随内容滚动，避免大字与键盘将字段挤出视口。报名取消/提交改为全宽纵排。标准字号维持既有布局，不通过限制字体放大处理溢出。错误定位继续使用同一内容坐标容器；设计出口为可读、可滚动和可操作，实际读屏另验。证据见[第四批补验](../technical/V3.5_M7-01_协作分页与表单大字补验.md)。

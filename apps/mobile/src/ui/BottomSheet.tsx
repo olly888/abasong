@@ -1,6 +1,12 @@
 import { SafeAreaModal } from "./SafeAreaModal";
 import type { ComponentRef, ReactNode, Ref } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tokens } from "@abasong/ui";
 import { metrics } from "./foundation";
@@ -16,6 +22,21 @@ export function BottomSheet({
   footer?: ReactNode;
   scrollRef?: Ref<ComponentRef<typeof ScrollView>>;
 }) {
+  const { fontScale } = useWindowDimensions();
+  const flowingActions = fontScale >= 1.6;
+  const actions = footer ? (
+    <View
+      style={{
+        flexShrink: 0,
+        paddingHorizontal: flowingActions ? 0 : metrics.inset,
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderColor: tokens.color.border,
+      }}
+    >
+      {footer}
+    </View>
+  ) : null;
   return (
     <SafeAreaModal
       transparent
@@ -47,20 +68,9 @@ export function BottomSheet({
             contentContainerStyle={{ padding: metrics.inset, gap: 16 }}
           >
             {children}
+            {flowingActions ? actions : null}
           </ScrollView>
-          {footer ? (
-            <View
-              style={{
-                flexShrink: 0,
-                paddingHorizontal: metrics.inset,
-                paddingVertical: 10,
-                borderTopWidth: 1,
-                borderColor: tokens.color.border,
-              }}
-            >
-              {footer}
-            </View>
-          ) : null}
+          {!flowingActions ? actions : null}
         </SafeAreaView>
       </KeyboardAvoidingView>
     </SafeAreaModal>

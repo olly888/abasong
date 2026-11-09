@@ -11,6 +11,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -35,15 +36,23 @@ export function PageHeader({
       ) : (
         <View style={{ width: metrics.touch }} />
       )}
-      <Text
-        numberOfLines={2}
-        style={[
-          typeStyles.header,
-          { flex: 1, textAlign: "center", fontWeight: onBack ? "600" : "700" },
-        ]}
-      >
-        {title}
-      </Text>
+      {title ? (
+        <Text
+          numberOfLines={2}
+          style={[
+            typeStyles.header,
+            {
+              flex: 1,
+              textAlign: "center",
+              fontWeight: onBack ? "600" : "700",
+            },
+          ]}
+        >
+          {title}
+        </Text>
+      ) : (
+        <View style={{ flex: 1 }} />
+      )}
       {right ?? <View style={{ width: metrics.touch }} />}
     </View>
   );
@@ -73,6 +82,10 @@ export function PageFrame({
   onScroll?: (offset: number) => void;
   backgroundColor?: string;
 }) {
+  // Large type needs a scrollable reading area, not two fixed text blocks
+  // squeezing the fields (especially while the software keyboard is open).
+  const { fontScale } = useWindowDimensions();
+  const flowingActions = fontScale >= 1.6;
   const frame = useRef<ComponentRef<typeof View>>(null),
     [keyboardOffset, setKeyboardOffset] = useState(0);
   const back =
@@ -95,7 +108,11 @@ export function PageFrame({
           keyboardVerticalOffset={keyboardOffset}
         >
           {compact ? (
-            <PageHeader title={title} onBack={back} right={headerRight} />
+            <PageHeader
+              title={flowingActions ? "" : title}
+              onBack={back}
+              right={headerRight}
+            />
           ) : null}
           <ScrollView
             ref={scrollRef}
@@ -138,10 +155,20 @@ export function PageFrame({
               collapsable={contentRef ? false : undefined}
               style={{ gap: metrics.sectionGap, marginTop: compact ? 0 : 32 }}
             >
+              {compact && flowingActions ? (
+                <Text accessibilityRole="header" style={typeStyles.header}>
+                  {title}
+                </Text>
+              ) : null}
               {children}
             </View>
+            {footer && flowingActions ? (
+              <View style={[s.footer, s.flowingFooter]}>{footer}</View>
+            ) : null}
           </ScrollView>
-          {footer ? <View style={s.footer}>{footer}</View> : null}
+          {footer && !flowingActions ? (
+            <View style={s.footer}>{footer}</View>
+          ) : null}
         </KeyboardAvoidingView>
       </View>
     </SafeAreaView>
@@ -167,5 +194,9 @@ const s = StyleSheet.create({
     borderColor: tokens.color.border,
     gap: 4,
     backgroundColor: tokens.color.surface,
+  },
+  flowingFooter: {
+    paddingHorizontal: 0,
+    marginTop: metrics.sectionGap,
   },
 });

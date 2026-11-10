@@ -159,7 +159,7 @@ describe("carrier screenshots with explicit door labels", () => {
   it("keeps equal values separate by label and preserves literal characters", () => {
     const result = extractCandidates([
       line("100 Example Ave Apt 19,", 0.1),
-      line("Test City, CA 90001", 0.126),
+      line("Test City,CA 90001", 0.126),
       line("凹 社区门禁 #00a7* | 楼门门禁 #00a7*", 0.2),
     ]);
     expect(

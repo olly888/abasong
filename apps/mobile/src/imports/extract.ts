@@ -19,7 +19,8 @@ const codePattern =
   /^(?:gate|access|entry|building|门禁|公寓|大门)?\s*(?:code|密码)\s*[:：]\s*(.{1,32})$/i;
 const carrierStart = /^(?:[\p{Script=Han}\p{S}]\s+)?(?:社区门禁|楼门门禁)/u;
 const shortCode = /^(?=[A-Za-z0-9#*]*\d)[A-Za-z0-9#*]{3,12}$/;
-const localityLine = /,?\s[A-Z]{2}\s+\d{5}(?:-\d{4})?(?:\s+US)?\s*$/i;
+const localityLine =
+  /(?:[,，]\s*|\s+)[A-Z]{2}\s+\d{5}(?:-\d{4})?(?:\s+US)?\s*$/i;
 const stateContinuation =
   /^[A-Z]{2}\s+\d{5}(?:-\d{4})?(?:\s+US|\s+(?:apt\.?|unit)\s+[a-z0-9-]+\s+[\p{L} .'’-]+\s+[A-Z]{2})?$/iu;
 const zipContinuation = /^\d{5}(?:-\d{4})?(?:\s+US)?$/i;

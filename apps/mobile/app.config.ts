@@ -55,7 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ios: {
         ...base.ios,
         bundleIdentifier: "com.abasong.pilot",
-        buildNumber: "2",
+        buildNumber: "3",
         infoPlist: {
           ...base.ios?.infoPlist,
           CFBundleDisplayName: "Abasong内测",

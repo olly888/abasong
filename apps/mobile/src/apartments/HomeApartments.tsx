@@ -341,6 +341,12 @@ export function HomeApartmentContent({
   };
 }) {
   const window = useWindowDimensions();
+  const workspaceMeasurements = useRef<
+    NonNullable<WorkspaceControls["measurements"]>
+  >({});
+  const workspaceControls = workspace
+    ? { ...workspace, measurements: workspaceMeasurements.current }
+    : undefined;
   const collapsedHeight = compactCardHeight(window.fontScale);
   const localListMemory = useRef<{ scroll?: number }>({});
   const [listFocusRevision, setListFocusRevision] = useState(
@@ -1256,7 +1262,7 @@ export function HomeApartmentContent({
   if (mode !== "公寓")
     return (
       <CollaborationHome
-        workspace={workspace}
+        workspace={workspaceControls}
         mode={mode}
         list={list}
         toolbar={toolbar}
@@ -1323,13 +1329,11 @@ export function HomeApartmentContent({
       <View style={styles.root}>
         <HomeWorkspace
           header={toolbar}
-          controls={workspace}
+          controls={workspaceControls!}
           title={
             nearbyItems.length || !items.length ? rangeLabel.title : "公寓"
           }
-          statusNote={
-            nearbyItems.length ? rangeLabel.note : undefined
-          }
+          statusNote={nearbyItems.length ? rangeLabel.note : undefined}
           count={items.length || undefined}
           apartment
           onContribute={openContributionMenu}
@@ -1494,7 +1498,6 @@ export function HomeApartmentContent({
                 message={locationNotice ?? notice}
                 candidates={candidates}
                 onSelect={(p) => void select(p)}
-                onContribute={openContributionMenu}
                 blocked={blocked}
                 onRetry={() => {
                   providerLast.current = 0;

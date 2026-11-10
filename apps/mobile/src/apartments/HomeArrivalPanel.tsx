@@ -22,7 +22,7 @@ export function HomeArrivalPanel(p: {
   blocked?: boolean;
   candidates: Apartment[];
   onSelect: (apartment: Apartment) => void;
-  onContribute: () => void;
+  onContribute?: () => void;
   onRetry: () => void;
 }) {
   if (p.state === "loading")
@@ -75,7 +75,11 @@ export function HomeArrivalPanel(p: {
   return (
     <MapStatusRow
       title="附近未匹配到公寓"
-      action={{ label: "共享门禁码", onPress: p.onContribute }}
+      action={
+        p.onContribute
+          ? { label: "共享门禁码", onPress: p.onContribute }
+          : undefined
+      }
     />
   );
 }

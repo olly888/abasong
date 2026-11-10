@@ -3,7 +3,7 @@ import {
   type WorkspaceControls,
 } from "../components/HomeWorkspace";
 import { HomeResultList } from "../ui/HomeResultList";
-import { HomeResultCard } from "../ui/MapCardFrame";
+import { HomeDiscoveryCard } from "./HomeDiscoveryCard";
 import {
   useCallback,
   useEffect,
@@ -418,61 +418,59 @@ function DiscoveryHome(p: CollaborationProps) {
                 if (itemId(r) !== selectedId) choose(r);
               }}
               header={
-                <View>
-                  {p.locationNotice ? (
-                    <MapStatusRow
-                      state="unavailable"
-                      title={p.locationNotice}
-                      action={{ label: "重新定位", onPress: p.onLocationRetry }}
-                    />
-                  ) : null}
-                  {filtered ? (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <Text style={[typeStyles.metadata, { flex: 1 }]}>
-                        {[
-                          regions.find((r) => r.id === filters.region)?.label,
-                          filters.day,
-                          filters.text,
-                          (
-                            {
-                              warehouse_shortage: "仓库找司机",
-                              delivery_handoff: "途中找人代送",
-                            } as Record<string, string>
-                          )[filters.kind],
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </Text>
-                      <ActionButton
-                        label="清除筛选"
-                        variant="text"
-                        onPress={() => apply(defaultFilters())}
+                p.locationNotice || filtered ? (
+                  <View>
+                    {p.locationNotice ? (
+                      <MapStatusRow
+                        state="unavailable"
+                        title={p.locationNotice}
+                        action={{
+                          label: "重新定位",
+                          onPress: p.onLocationRetry,
+                        }}
                       />
-                    </View>
-                  ) : null}
-                </View>
+                    ) : null}
+                    {filtered ? (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <Text style={[typeStyles.metadata, { flex: 1 }]}>
+                          {[
+                            regions.find((r) => r.id === filters.region)?.label,
+                            filters.day,
+                            filters.text,
+                            (
+                              {
+                                warehouse_shortage: "仓库找司机",
+                                delivery_handoff: "途中找人代送",
+                              } as Record<string, string>
+                            )[filters.kind],
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </Text>
+                        <ActionButton
+                          label="清除筛选"
+                          variant="text"
+                          onPress={() => apply(defaultFilters())}
+                        />
+                      </View>
+                    ) : null}
+                  </View>
+                ) : undefined
               }
               renderItem={(r) => (
-                <HomeResultCard selected={itemId(r) === selectedId}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={cardLabel(r)}
-                    accessibilityState={{ selected: itemId(r) === selectedId }}
-                    onPress={() => open(r)}
-                  >
-                    <DiscoveryCardContent
-                      item={r}
-                      regions={regions}
-                      workspace
-                    />
-                  </Pressable>
-                </HomeResultCard>
+                <HomeDiscoveryCard
+                  selected={itemId(r) === selectedId}
+                  label={cardLabel(r)}
+                  onOpen={() => open(r)}
+                  item={r}
+                  regions={regions}
+                />
               )}
               footer={paginationFooter}
             />

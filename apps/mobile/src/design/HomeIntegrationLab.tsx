@@ -96,6 +96,14 @@ function Lab({
     failedMore = useRef(false);
   const fixtures = useMemo(() => {
     const f = driverFixtures();
+    if (scene === "dtl-pressure") {
+      f.drivers.forEach((d) => {
+        if (d.availability) {
+          d.availability.starts_at = "2026-11-11T07:00:00Z";
+          d.availability.ends_at = "2026-11-11T09:00:00Z";
+        }
+      });
+    }
     f.regions.forEach((r, i) => {
       r.label = `TEST 区域${i + 1}`;
       r.display_point = { lng: point.lng + i * 0.001, lat: point.lat + 0.0006 };
@@ -128,7 +136,7 @@ function Lab({
         }))
       : f.requests;
     return { ...f, requests };
-  }, [workspace]);
+  }, [workspace, scene]);
   const base = useMemo(
     () =>
       arrivalAdapter(
@@ -136,7 +144,9 @@ function Lab({
           ? "无候选"
           : scene === "discovery-error"
             ? "查询失败"
-            : "多候选",
+            : scene === "read-retry"
+              ? "重试恢复"
+              : "多候选",
         () => setReads((n) => n + 1),
       ),
     [scene],
@@ -217,6 +227,20 @@ function Lab({
           return response as T;
         }
         if (path.endsWith("/access-records") && options?.method !== "POST") {
+          if (scene === "dtl-pressure") {
+            const response = (await base.read(
+              path,
+              options,
+            )) as S["AccessList"];
+            return {
+              ...response,
+              items: response.items.map((r) => ({
+                ...r,
+                value: "*0000123456789012345678901234567#",
+                scope: { label: "大堂门" },
+              })),
+            } as T;
+          }
           if (scene === "read-error") throw new Error("TEST 读取失败");
           if (scene === "paused")
             return {
@@ -376,7 +400,10 @@ function Lab({
     );
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-      <Text style={{ paddingHorizontal: 12, fontSize: 12 }}>
+      <Text
+        maxFontSizeMultiplier={1}
+        style={{ paddingHorizontal: 12, fontSize: 12 }}
+      >
         TEST · {scene} · {workspace ? "V3.5 M7" : "R4-05组合"} · 查码{reads} ·{" "}
         {notice}
       </Text>

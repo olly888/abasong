@@ -24,12 +24,13 @@ export function HomeChrome({
   workspace?: boolean;
 }) {
   const unread = useInboxCount();
-  const { height } = useWindowDimensions();
+  const { height, fontScale } = useWindowDimensions();
+  const compactToolbar = height <= 650 || fontScale > 1.3;
   const apartment = mode === "公寓";
   if (workspace)
     return (
       <View style={[styles.toolbar, styles.brandPanel]}>
-        {height > 650 ? (
+        {!compactToolbar ? (
           <View style={styles.brandRow}>
             <BrandWordmark compact />
             <MapControl
@@ -54,7 +55,7 @@ export function HomeChrome({
               apartment ? router.push("/apartments") : onSearch?.()
             }
           />
-          {height <= 650 ? (
+          {compactToolbar ? (
             <MapControl
               icon="message"
               label="消息"

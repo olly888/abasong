@@ -13,8 +13,8 @@ export function BrandWordmark({ compact = false }: { compact?: boolean }) {
     >
       <SvgXml
         xml={brandWordmark}
-        width={compact ? 116 : 144}
-        height={(compact ? 116 : 144) * (518 / 1870)}
+        width={compact ? 124 : 144}
+        height={(compact ? 124 : 144) * (518 / 1870)}
         accessible={false}
         importantForAccessibility="no"
       />

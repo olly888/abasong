@@ -5,6 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { components } from "@abasong/contracts";
 import { CorrectionForm } from "../apartments/CorrectionForm";
 import { ContributionForm } from "../apartments/ContributionForm";
+import { AccessCodeKeypad } from "../apartments/AccessCodeKeypad";
 import { ImportSession } from "../imports/ImportScreen";
 import type { Candidate, Source } from "../imports/types";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
@@ -107,6 +108,21 @@ function Lab() {
       </PageFrame>
     );
   const controls = <Text>TEST · 仅内存，不连接业务服务</Text>;
+  if (scene === "键盘面板")
+    return (
+      <PageFrame title="TEST · 门禁键盘">
+        {saved ? (
+          <Text>{saved}</Text>
+        ) : (
+          <AccessCodeKeypad
+            value="*0012#"
+            label="门禁码"
+            address="100 TEST Ave, TEST City, CA 90000"
+            onDone={setSaved}
+          />
+        )}
+      </PageFrame>
+    );
   if (scene === "键盘手填")
     return (
       <ContributionForm

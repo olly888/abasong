@@ -17,6 +17,7 @@ type S = components["schemas"];
 export function CorrectionForm(p: {
   id: string;
   request: ContributionRequest;
+  canReadOriginal?: boolean;
   onBack: () => void;
   onSaved: (result: S["ContributionChangeResult"]) => void;
   testControls?: ReactNode;
@@ -25,7 +26,8 @@ export function CorrectionForm(p: {
   const latest = useRef(p);
   latest.current = p;
   const controller = useRef(new AbortController()),
-    attempt = useRef(createContributionAttempt(randomUUID));
+    attempt = useRef(createContributionAttempt(randomUUID)),
+    original = useRef("");
   const [source, setSource] = useState<S["ContributionSummary"] | null>(null),
     [value, setValue] = useState(""),
     [scope, setScope] = useState(""),
@@ -34,11 +36,9 @@ export function CorrectionForm(p: {
     [error, setError] = useState<string | null>(null),
     [conflict, setConflict] = useState(false),
     [committed, setCommitted] = useState(false);
-  const exit = useAccessFormExit(
-    !committed &&
-      (!!value || attested || (!!source && scope !== source.scope_label)),
-    busy,
-  );
+  const changed =
+    value !== original.current || (!!source && scope !== source.scope_label);
+  const exit = useAccessFormExit(!committed && (changed || attested), busy);
   const request = <T,>(
     path: string,
     options: Parameters<ContributionRequest>[1] = {},
@@ -53,16 +53,25 @@ export function CorrectionForm(p: {
     setBusy(true);
     setError(null);
     try {
-      const s = await request<S["ContributionSummary"]>(
-        "/v1/me/contributions/" + id + "/summary",
-        { signal },
-      );
+      const path = "/v1/me/contributions/" + id;
+      const detail = latest.current.canReadOriginal
+        ? await request<S["ContributionDetail"]>(path, { signal }).catch(
+            () => null,
+          )
+        : null;
+      if (signal.aborted) return;
+      const s =
+        detail?.source ??
+        (await request<S["ContributionSummary"]>(path + "/summary", {
+          signal,
+        }));
       if (signal.aborted) return;
       if (s.id !== id) throw new Error("贡献资料与所选记录不一致，请重新读取");
       setSource(s);
       setScope(s.scope_label);
       setConflict(false);
-      setValue("");
+      original.current = s.can_correct ? (detail?.value ?? "") : "";
+      setValue(original.current);
       setAttested(false);
     } catch (e) {
       if (!signal.aborted)
@@ -90,6 +99,7 @@ export function CorrectionForm(p: {
       !source ||
       source.id !== id ||
       !source.can_correct ||
+      !changed ||
       !value.trim() ||
       !scope.trim() ||
       !attested ||
@@ -153,7 +163,9 @@ export function CorrectionForm(p: {
               <ActionButton
                 label="确认纠正并共享"
                 busy={busy}
-                disabled={!value.trim() || !scope.trim() || !attested}
+                disabled={
+                  !changed || !value.trim() || !scope.trim() || !attested
+                }
                 onPress={() => void submit()}
               />
             )
@@ -194,6 +206,7 @@ export function CorrectionForm(p: {
               <AccessCodeFields
                 correction
                 value={value}
+                address={source.address_label}
                 scope={scope}
                 disabled={busy || conflict}
                 onValueChange={(v) => {

@@ -1,11 +1,15 @@
-import { Modal, type ModalProps } from "react-native";
+import { Modal, Platform, type ModalProps } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-// Each native modal measures the insets of its own presentation surface.
+// Native modals have their own insets. Web portals inherit the route's insets.
 export function SafeAreaModal({ children, ...props }: ModalProps) {
   return (
     <Modal {...props}>
-      <SafeAreaProvider>{children}</SafeAreaProvider>
+      {Platform.OS === "web" ? (
+        children
+      ) : (
+        <SafeAreaProvider>{children}</SafeAreaProvider>
+      )}
     </Modal>
   );
 }

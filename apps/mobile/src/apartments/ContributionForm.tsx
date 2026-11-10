@@ -198,6 +198,7 @@ export function ContributionForm(p: {
       />
       <AccessCodeFields
         value={value}
+        address={privateAddressText(address)}
         scope={scope}
         disabled={busy}
         onValueChange={(v) => {

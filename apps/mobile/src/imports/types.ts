@@ -1,4 +1,5 @@
 import type { components } from "@abasong/contracts";
+import type { CarrierDoorLabel } from "./extract";
 type S = components["schemas"];
 export type Source = {
   width?: number;
@@ -18,6 +19,7 @@ export type Candidate = {
   sourceAddress?: string;
   value: string;
   scope: string;
+  carrierDoorLabel?: CarrierDoorLabel;
   issues: string[];
   target: S["Apartment"] | null;
   confirmedAddress?: S["SearchAddress"] | null;

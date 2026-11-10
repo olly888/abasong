@@ -46,7 +46,7 @@ import { importCommitPatch } from "./commit-patch";
 import { extractCandidates } from "./extract";
 import { runRecognitionBatch, RecognitionError } from "./recognition-work";
 import { recognize } from "./recognize";
-import { exactApartment } from "./match";
+import { buildingAddress, exactApartment } from "./match";
 import { hasUnsubmittedImportWork } from "./exit-policy";
 import { ServerDraft } from "./server-draft";
 import { exitImport } from "./navigation";
@@ -336,20 +336,33 @@ export function ImportSession(p: {
         ),
         task.signal,
         async (source, signal) => {
-          const lines = await recognize(source.uri, signal);
+          const lines = await recognize(
+            source.uri,
+            signal,
+            undefined,
+            "carrier",
+          );
           const extracted = extractCandidates(lines);
           const candidates: Candidate[] = [];
           for (const e of extracted) {
             if (signal.aborted) break;
-            const row = candidate(source.id, e.address, e.value, e.issues);
-            if (e.address) {
+            const address = buildingAddress(e.address);
+            const issues = [...e.issues];
+            if (address.needsReview && !issues.includes("请核对地址"))
+              issues.push("请核对地址");
+            const row = candidate(source.id, address.address, e.value, issues);
+            if (e.carrierDoorLabel) {
+              row.carrierDoorLabel = e.carrierDoorLabel;
+              row.scope = e.carrierDoorLabel;
+            }
+            if (address.street && !address.needsReview) {
               try {
                 const page = await request<S["ApartmentPage"]>(
                   "/v1/apartments?query=" +
-                    encodeURIComponent(e.address.split(",")[0].slice(0, 200)),
+                    encodeURIComponent(address.street.slice(0, 200)),
                   { signal },
                 );
-                row.target = exactApartment(e.address, page.items);
+                row.target = exactApartment(address.address, page.items);
                 row.selected = !!row.target && !row.issues.length;
               } catch {
                 /* Unavailable matching stays editable; cancellation is checked before publish. */
@@ -786,13 +799,24 @@ export function ImportSession(p: {
           />
           <AccessCodeFields
             value={editor.value}
+            address={
+              editor.target ? importAddressLabel(editor.target) : editor.address
+            }
             scope={editor.scope}
             disabled={busy || !!editor.privateId}
             onValueChange={(value) => change(editor.id, { value })}
             onScopeChange={(scope) =>
-              change(editor.id, { scope: scope || unspecifiedDoor })
+              change(editor.id, {
+                scope: scope || editor.carrierDoorLabel || unspecifiedDoor,
+              })
             }
           />
+          {editor.carrierDoorLabel &&
+          editor.carrierDoorLabel !== editor.scope ? (
+            <Text style={styles.meta}>
+              截图标注 · {editor.carrierDoorLabel}
+            </Text>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             disabled={busy}
@@ -879,6 +903,9 @@ export function ImportSession(p: {
                   <Text style={styles.door}>{r.scope}</Text>
                 ) : null}
               </View>
+              {r.carrierDoorLabel && r.carrierDoorLabel !== r.scope ? (
+                <Text style={styles.meta}>截图标注 · {r.carrierDoorLabel}</Text>
+              ) : null}
               {r.error ? (
                 <Text style={styles.error}>{r.error}</Text>
               ) : r.status ? (

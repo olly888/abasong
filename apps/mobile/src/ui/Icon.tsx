@@ -1,4 +1,5 @@
 import { SvgXml } from "react-native-svg";
+import { Platform } from "react-native";
 import { iconPaths, tokens } from "@abasong/ui";
 
 export type IconName = keyof typeof iconPaths;
@@ -25,8 +26,9 @@ export function Icon({
       width={size}
       height={size}
       color={color}
-      accessible={false}
-      importantForAccessibility="no"
+      {...(Platform.OS === "web"
+        ? { "aria-hidden": true }
+        : { accessible: false, importantForAccessibility: "no" as const })}
       pointerEvents="none"
     />
   );

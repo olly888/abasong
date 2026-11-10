@@ -4,6 +4,7 @@ import { Text } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import type { components } from "@abasong/contracts";
 import { CorrectionForm } from "../apartments/CorrectionForm";
+import { ContributionForm } from "../apartments/ContributionForm";
 import { ImportSession } from "../imports/ImportScreen";
 import type { Candidate, Source } from "../imports/types";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
@@ -35,15 +36,17 @@ function Lab() {
       options?: Parameters<ContributionRequest>[1],
     ) => {
       if (options?.signal?.aborted) throw Error("TEST cancelled");
-      if (path.endsWith("/summary"))
-        return {
-          id: "TEST-source",
-          apartment_id: apartment.id,
-          address_label: "100 TEST Ave, TEST City, CA 90000",
-          scope_label: scene === "历史门别" ? "TEST 东侧入口" : "行人门",
-          can_correct: true,
-          version: 1,
-        } as T;
+      const source = {
+        id: "TEST-source",
+        apartment_id: apartment.id,
+        address_label: "100 TEST Ave, TEST City, CA 90000",
+        scope_label: scene === "历史门别" ? "TEST 东侧入口" : "行人门",
+        can_correct: true,
+        version: 1,
+      };
+      if (path.endsWith("/summary")) return source as T;
+      if (path.endsWith("/TEST-source") && scene === "键盘纠正")
+        return { source, value: "*0012#" } as T;
       if (path.endsWith("/corrections")) {
         const body = options?.body as {
           value: string;
@@ -103,18 +106,30 @@ function Lab() {
         <Text>{saved}</Text>
       </PageFrame>
     );
-  const controls = <Text>TEST · M5-02 · 仅内存，不连接业务服务</Text>;
-  return scene === "截图核对" ? (
+  const controls = <Text>TEST · 仅内存，不连接业务服务</Text>;
+  if (scene === "键盘手填")
+    return (
+      <ContributionForm
+        initialAddress={apartment}
+        canContribute
+        request={request}
+        onShared={() => {}}
+        onPrivateSaved={() => {}}
+        onBack={() => {}}
+      />
+    );
+  return scene === "截图核对" || scene === "截图识别" ? (
     <ImportSession
       canContribute
       session={{ user: { id: "TEST" } } as Session}
       transport={request}
-      initialReview={seed}
+      initialReview={scene === "截图核对" ? seed : undefined}
       testControls={controls}
     />
   ) : (
     <CorrectionForm
       id="TEST-source"
+      canReadOriginal={scene === "键盘纠正"}
       request={request}
       onBack={() => {}}
       onSaved={() => {}}

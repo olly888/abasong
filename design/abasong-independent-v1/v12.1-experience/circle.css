@@ -16,7 +16,7 @@
 .circle-publish {
   border: 0;
   background: none;
-  color: #1467d8;
+  color: var(--ab-color-brandText);
   font-size: 16px;
   font-weight: 600;
   min-height: 48px;
@@ -98,7 +98,7 @@
   background: none;
   padding: 4px 0;
   min-height: 48px;
-  color: #1467d8;
+  color: var(--ab-color-brandText);
   font-size: 14px;
 }
 .circle-footer {
@@ -472,7 +472,7 @@
   background: #edf0f3;
 }
 .circle-gallery-tile[aria-pressed="true"] {
-  border-color: #1467d8;
+  border-color: var(--ab-color-brandPrimary);
 }
 .circle-gallery-tile > span {
   position: absolute;
@@ -485,10 +485,10 @@
   font-size: 13px;
   display: grid;
   place-items: center;
-  color: #1467d8;
+  color: var(--ab-color-brandText);
 }
 .circle-gallery-tile[aria-pressed="true"] > span {
-  background: #1467d8;
+  background: var(--ab-color-brandPrimary);
   color: white;
 }
 .circle-gallery-tile > span svg {

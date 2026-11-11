@@ -1,17 +1,26 @@
 import { Text, View } from "react-native";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
 import {
-  requestPrice,
+  completionLabels,
+  deliveryArrival,
+  experienceLabels,
+  isV2,
+  requestHandoffRequirement,
+  requestPickupRegion,
   requestTime,
   requestTitle,
-  requestQuantity,
+  scopeLabels,
+  sortedLabels,
   statusLabels,
-  isV2,
   type DeliveryRequest,
 } from "./presentation";
+import { DeliveryFact, DeliveryOverview } from "./DeliveryOverview";
+import { effectiveDeliveryTimes } from "./delivery-fields";
 import { requestStyles as s } from "./RequestUi";
 import { RelatedTeam } from "../teams/RelatedTeam";
 import { WarehousePickup } from "./WarehousePickup";
+import { DeliverySection as Section } from "./DeliverySection";
+
 export function DeliveryDetailBody({
   request: r,
   regions,
@@ -21,130 +30,118 @@ export function DeliveryDetailBody({
   regions: Record<string, string>;
   transport: ContributionRequest;
 }) {
-  const detail = (label: string, value: string | null | undefined) =>
-    value ? (
-      <View style={{ gap: 6 }} key={label}>
-        <Text style={s.secondary}>{label}</Text>
-        <Text style={s.text}>{value}</Text>
-      </View>
-    ) : null;
-  const delivery = !["vehicle_help", "other_help"].includes(r.kind),
-    v2 = isV2(r);
+  const delivery = r.kind !== "vehicle_help" && r.kind !== "other_help";
+  const v2 = isV2(r);
+  const region = regions[r.region_id ?? ""];
+  const pickupArea = requestPickupRegion(r, regions);
+  const warehouse =
+    "pickup" in r && r.pickup?.kind === "warehouse" ? r.pickup : null;
+  const handoff = v2 && r.pickup_kind === "contact_handoff";
+  const times =
+    v2 && r.status === "draft"
+      ? effectiveDeliveryTimes(r)
+      : { expiry: r.expires_at, completion: r.delivery_deadline_at };
+  const sorting = r.sorted_state;
+  const publisher = r.organization?.name ?? r.publisher.display_name;
   return (
-    <View style={{ gap: 24 }}>
-      <View style={s.row}>
-        <Text style={s.status}>{statusLabels[r.status]}</Text>
-        <Text style={s.secondary}>
-          {r.organization?.name ?? r.publisher.display_name}
-        </Text>
-      </View>
-      <Text style={s.headline}>{requestTitle(r)}</Text>
-      {detail("派送区域", regions[r.region_id ?? ""] ?? "未选择区域")}
+    <View style={{ gap: 20 }}>
+      <Text style={s.status}>{statusLabels[r.status]}</Text>
       {delivery ? (
         <>
-          {detail(
-            "快递公司 / 线路",
-            [r.carrier, r.route_label].filter(Boolean).join(" · "),
-          )}
-          <View style={s.row}>
-            <Text style={[s.headline, { flexShrink: 1 }]}>
-              {requestQuantity(r)}
-            </Text>
-            <Text style={[s.price, { flexShrink: 1 }]}>{requestPrice(r)}</Text>
-          </View>
-          {r.drivers_needed !== null
-            ? detail(
-                "需要司机",
-                `${r.remaining_drivers ?? r.drivers_needed} 人`,
-              )
-            : null}
-          {v2 && "pickup" in r && r.pickup?.kind === "warehouse" ? (
-            <WarehousePickup pickup={r.pickup} request={transport} />
-          ) : (
+          <DeliveryOverview request={r} regionLabel={region} />
+          <Section title={handoff ? "交接与派送" : "取件与派送"}>
+            {warehouse ? (
+              <WarehousePickup pickup={warehouse} request={transport} />
+            ) : null}
+            <DeliveryFact
+              label={handoff ? "交接地区" : "取件区域"}
+              value={pickupArea}
+            />
+            {handoff ? (
+              <Text style={s.secondary}>具体交接地点联系确认</Text>
+            ) : null}
+            <DeliveryFact label="派送区域" value={region ?? "待确认"} />
+            <DeliveryFact label="快递公司" value={r.carrier} />
+            <DeliveryFact label="线路编号" value={r.route_label} />
+          </Section>
+          <Section title="接手要求">
+            <DeliveryFact
+              label="承接方式"
+              value={scopeLabels[r.accepts_partial ? "partial" : "whole_route"]}
+            />
+            {r.accepts_partial && r.minimum_parcels ? (
+              <DeliveryFact
+                label="每人最低件数"
+                value={`${r.minimum_parcels} 件`}
+              />
+            ) : null}
+            <DeliveryFact
+              label="账号与交接"
+              value={requestHandoffRequirement(r)}
+            />
+            {v2 ? (
+              <DeliveryFact
+                label="送完要求"
+                value={completionLabels[r.completion_mode ?? "contact"]}
+              />
+            ) : null}
+            <DeliveryFact
+              label="理货状态"
+              value={
+                sorting && Object.hasOwn(sortedLabels, sorting)
+                  ? sortedLabels[sorting as keyof typeof sortedLabels]
+                  : null
+              }
+            />
+            <DeliveryFact
+              label="配送经验"
+              value={experienceLabels[r.experience_requirement]}
+            />
+          </Section>
+        </>
+      ) : (
+        <Section title={requestTitle(r)}>
+          <DeliveryFact label="区域" value={region ?? "待确认"} />
+          <DeliveryFact label="到场时间" value={deliveryArrival(r)} />
+        </Section>
+      )}
+      {r.pickup_deadline_at || times.completion || times.expiry ? (
+        <Section title="截止时间 · 洛杉矶">
+          <DeliveryFact
+            label="最迟接手"
+            value={r.pickup_deadline_at && requestTime(r.pickup_deadline_at)}
+          />
+          <DeliveryFact
+            label="最晚送完"
+            value={times.completion && requestTime(times.completion)}
+          />
+          <DeliveryFact
+            label="需求下架"
+            value={times.expiry && requestTime(times.expiry)}
+          />
+        </Section>
+      ) : null}
+      {r.description || (delivery && r.private_payment_terms) ? (
+        <Section title="补充条件">
+          {delivery && r.private_payment_terms ? (
             <>
-              {detail(
-                "取件区域",
-                r.pickup_area ??
-                  regions[r.pickup_region_id ?? ""] ??
-                  "联系确认",
-              )}
-              {v2 ? detail("途中交接", "具体交接位置联系后确认") : null}
+              <Text style={s.secondary}>私下付款约定</Text>
+              <Text style={s.text}>{r.private_payment_terms}</Text>
             </>
-          )}
-          {detail(
-            "承接方式",
-            !r.accepts_partial
-              ? "整批接手"
-              : r.minimum_parcels
-                ? `可以分担，每人至少 ${r.minimum_parcels} 件`
-                : "可以分担",
-          )}
-        </>
+          ) : null}
+          {r.description ? <Text style={s.text}>{r.description}</Text> : null}
+        </Section>
       ) : null}
-      {detail(
-        "到场时间",
-        v2 && r.handoff_mode === "asap"
-          ? `${r.handoff_date ?? ""} · 尽快到场`
-          : requestTime(r.starts_at),
-      )}
-      {detail(
-        "最晚取件",
-        r.pickup_deadline_at ? requestTime(r.pickup_deadline_at) : null,
-      )}
-      {v2
-        ? detail(
-            "送完要求",
-            { same_day: "当天送完", next_day: "次日送完", contact: "联系确认" }[
-              r.completion_mode ?? "contact"
-            ],
-          )
-        : null}
-      {detail(
-        "最晚送完",
-        r.delivery_deadline_at ? requestTime(r.delivery_deadline_at) : null,
-      )}
-      {delivery ? (
-        <>
-          {detail(
-            "账号与转派",
-            (
-              {
-                carrier_account: "需已有快递公司账号",
-                dsp_approval: "需 DSP 确认转派",
-                contact_confirm: "联系确认",
-              } as Record<string, string>
-            )[r.handoff_requirement ?? ""],
-          )}
-          {detail(
-            "理货状态",
-            (
-              {
-                sorted: "已理货",
-                unsorted: "未理货",
-                unknown: "联系确认",
-              } as Record<string, string>
-            )[r.sorted_state ?? ""],
-          )}
-          {detail(
-            "配送经验",
-            {
-              any: "不限",
-              delivery_experience: "有配送经验",
-              carrier_experience: "熟悉该快递公司",
-            }[r.experience_requirement],
-          )}
-          {detail("私下付款约定", r.private_payment_terms)}
-        </>
-      ) : null}
-      {detail("说明", r.description)}
-      {detail("需求有效至", r.expires_at ? requestTime(r.expires_at) : null)}
-      {r.organization && r.status !== "draft" ? (
-        <RelatedTeam
-          key={r.id}
-          path={`/v1/requests/${r.id}/team`}
-          request={transport}
-        />
-      ) : null}
+      <Section title="发布身份">
+        <Text style={s.text}>{publisher}</Text>
+        {r.organization && r.status !== "draft" ? (
+          <RelatedTeam
+            key={r.id}
+            path={`/v1/requests/${r.id}/team`}
+            request={transport}
+          />
+        ) : null}
+      </Section>
     </View>
   );
 }

@@ -271,6 +271,7 @@ async function main() {
       "V12.0020",
       "V12.0021",
       "V12.0022",
+      "V12.0023",
     ]) {
       const missingVersion = (
         await db.query(
@@ -292,7 +293,7 @@ async function main() {
       await request("/health/ready", "GET", undefined, 200);
     }
     console.log(
-      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015–0022 readiness denied.`,
+      `PASS: R4-06 upgrade5 groups and V2 storage/role checks${v2.checks}; R4-07 V2 enabled with legacy list default, missing0015–0023 readiness denied.`,
     );
     await request("/v1/requests", "GET", "", 401);
     await request(

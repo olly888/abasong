@@ -23,6 +23,8 @@ export function WarehousePickup({
   pickup: Warehouse;
   request: ContributionRequest;
 }) {
+  const address = warehouseAddress(pickup);
+  const canNavigate = !!(pickup.address_line1 && pickup.city && pickup.state);
   const [open, setOpen] = useState(false),
     [point, setPoint] = useState(pickup.point),
     [busy, setBusy] = useState(false),
@@ -49,6 +51,7 @@ export function WarehousePickup({
     epoch.current++;
     search.cancel();
     setOpen(false);
+    setBusy(false);
     setPoint(pickup.point);
     setCopied(false);
     setError(null);
@@ -79,7 +82,7 @@ export function WarehousePickup({
     const version = ++epoch.current;
     setBusy(true);
     try {
-      const choices = await search.search(warehouseAddress(pickup));
+      const choices = await search.search(address);
       if (!mounted.current || version !== epoch.current || !choices) return;
       const exact = choices.items.filter(
         (c) =>
@@ -105,7 +108,7 @@ export function WarehousePickup({
     setCopied(false);
     setError(null);
     try {
-      const ok = await Clipboard.setStringAsync(warehouseAddress(pickup));
+      const ok = await Clipboard.setStringAsync(address);
       if (!ok) throw new Error("复制失败，请重试");
       if (mounted.current && version === epoch.current) {
         setCopied(true);
@@ -133,6 +136,7 @@ export function WarehousePickup({
           <ActionButton
             label={copied ? "已复制" : "复制地址"}
             variant="text"
+            disabled={!address}
             onPress={() => void copy()}
           />
         </View>
@@ -140,6 +144,7 @@ export function WarehousePickup({
           <ActionButton
             label="导航"
             secondary
+            disabled={!canNavigate}
             onPress={() => void navigate()}
           />
         </View>
@@ -154,18 +159,19 @@ export function WarehousePickup({
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`查看仓库地图，${warehouseAddress(pickup)}`}
+        accessibilityLabel={`查看仓库地图，${address || "地址待补充"}`}
+        disabled={!point && !canNavigate}
         onPress={() => void showMap()}
         style={{ minHeight: 48, justifyContent: "center" }}
       >
-        <Text style={s.text}>{warehouseAddress(pickup) || "地址待补充"}</Text>
-        <Text style={s.status}>查看地图</Text>
+        <Text style={s.text}>{address || "地址待补充"}</Text>
+        {point || canNavigate ? <Text style={s.status}>查看地图</Text> : null}
       </Pressable>
       {controls}
       {open ? (
         <RequestSheet onRequestClose={close}>
           <Text style={s.headline}>取件仓库</Text>
-          <Text style={s.text}>{warehouseAddress(pickup)}</Text>
+          <Text style={s.text}>{address}</Text>
           {busy ? (
             <ActivityIndicator accessibilityLabel="正在定位仓库" />
           ) : point ? (

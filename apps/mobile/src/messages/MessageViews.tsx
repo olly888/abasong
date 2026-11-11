@@ -13,6 +13,8 @@ import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { ActionButton, FormError } from "../auth/AuthControls";
 import { Icon } from "../ui/Icon";
+import { UnreadBadge } from "../ui/UnreadBadge";
+import { typeStyles } from "../ui/foundation";
 import { requestPrice, requestTime } from "../requests/presentation";
 import {
   deliveryLabel,
@@ -71,13 +73,7 @@ export function ConversationRows({
                 : "同行对话"}
             </Text>
           </View>
-          {c.unread_count > 0 ? (
-            <View style={s.badge}>
-              <Text style={s.badgeText}>
-                {c.unread_count > 99 ? "99+" : c.unread_count}
-              </Text>
-            </View>
-          ) : null}
+          <UnreadBadge count={c.unread_count} />
         </Pressable>
       ))}
     </View>
@@ -86,7 +82,9 @@ export function ConversationRows({
 export function NotificationRows({
   items,
   onOpen,
+  openingId,
 }: {
+  openingId?: string | null;
   items: S["Notification"][];
   onOpen: (n: S["Notification"]) => void;
 }) {
@@ -97,6 +95,11 @@ export function NotificationRows({
           key={n.id}
           accessibilityRole="button"
           accessibilityLabel={`${notificationLabel[n.kind] ?? "系统通知"}${!n.read_at ? "，未读" : ""}`}
+          disabled={!!openingId}
+          accessibilityState={{
+            disabled: !!openingId,
+            busy: openingId === n.id,
+          }}
           onPress={() => onOpen(n)}
           style={({ pressed }) => [
             s.inboxRow,
@@ -112,7 +115,7 @@ export function NotificationRows({
             </Text>
             <Text style={s.meta}>{requestTime(n.created_at)}</Text>
           </View>
-          {!n.read_at ? <View style={s.dot} /> : null}
+          <UnreadBadge count={n.read_at ? 0 : 1} dot />
         </Pressable>
       ))}
     </View>
@@ -426,34 +429,13 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  name: {
-    fontSize: 17,
-    lineHeight: 24,
-    fontWeight: "600",
-    color: tokens.color.ink,
-  },
+  name: { ...typeStyles.label },
   secondary: {
     fontSize: 14,
     lineHeight: 22,
     color: tokens.color.textSecondary,
   },
   meta: { fontSize: 12, lineHeight: 18, color: tokens.color.textSecondary },
-  badge: {
-    minWidth: 22,
-    height: 22,
-    paddingHorizontal: 6,
-    borderRadius: 11,
-    backgroundColor: tokens.color.brandPrimary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: { fontSize: 12, color: tokens.color.onBrand, fontWeight: "600" },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: tokens.color.brandPrimary,
-  },
   messageRow: { alignItems: "flex-start", gap: 6 },
   bubble: {
     maxWidth: "86%",

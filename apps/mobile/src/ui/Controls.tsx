@@ -32,7 +32,7 @@ export function ActionButton({
     : kind === "primary" || kind === "danger"
       ? tokens.color.onBrand
       : kind === "text"
-        ? tokens.color.brandPrimary
+        ? tokens.color.brandText
         : tokens.color.ink;
   return (
     <Pressable
@@ -111,7 +111,7 @@ export function Field({
           },
           props.style,
           focused && {
-            borderColor: tokens.color.brandPrimary,
+            borderColor: tokens.color.focus,
             borderWidth: 2,
             paddingHorizontal: 13,
           },

@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
@@ -14,7 +15,8 @@ class AbasongOcrModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("AbasongOcr")
     Constant("addressCameraVersion") { 1 }
-    AsyncFunction("recognize") { uri: String, promise: Promise ->
+    Constant("carrierScreenshotVersion") { 1 }
+    AsyncFunction("recognize") { uri: String, carrier: Boolean?, promise: Promise ->
       val context = appContext.reactContext
       var recognizer: com.google.mlkit.vision.text.TextRecognizer? = null
       try {
@@ -29,7 +31,11 @@ class AbasongOcrModule : Module() {
         require(bounds.outWidth > 0 && bounds.outHeight > 0 &&
           bounds.outWidth.toLong() * bounds.outHeight <= 24_000_000)
         val image = InputImage.fromFilePath(context, parsed)
-        val client = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val client = if (carrier == true) {
+          TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
+        } else {
+          TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        }
         recognizer = client
         client.process(image).addOnSuccessListener { result ->
           val rotated = image.rotationDegrees == 90 || image.rotationDegrees == 270

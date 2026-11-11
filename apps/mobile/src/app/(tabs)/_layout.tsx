@@ -24,10 +24,17 @@ export default function Layout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: tokens.color.brandPrimary,
+          tabBarActiveTintColor: tokens.color.brandText,
           tabBarInactiveTintColor: tokens.color.textSecondary,
-          tabBarIconStyle: { width: 24, height: 24, marginTop: 6 },
-          tabBarLabelStyle: { fontSize: 14, marginBottom: 4 },
+          tabBarIconStyle: {
+            width: tokens.size.icon.value,
+            height: tokens.size.icon.value,
+            marginTop: 6,
+          },
+          tabBarLabelStyle: {
+            fontSize: tokens.fontSize.label.value,
+            marginBottom: 4,
+          },
           tabBarStyle: {
             backgroundColor: tokens.color.surface,
             height: 60 + Math.max(insets.bottom, 10),
@@ -47,9 +54,7 @@ export default function Layout() {
               <Icon
                 name="home"
                 color={
-                  focused
-                    ? tokens.color.brandPrimary
-                    : tokens.color.textSecondary
+                  focused ? tokens.color.brandText : tokens.color.textSecondary
                 }
               />
             ),
@@ -63,9 +68,7 @@ export default function Layout() {
               <Icon
                 name="people"
                 color={
-                  focused
-                    ? tokens.color.brandPrimary
-                    : tokens.color.textSecondary
+                  focused ? tokens.color.brandText : tokens.color.textSecondary
                 }
               />
             ),
@@ -79,9 +82,7 @@ export default function Layout() {
               <Icon
                 name="person"
                 color={
-                  focused
-                    ? tokens.color.brandPrimary
-                    : tokens.color.textSecondary
+                  focused ? tokens.color.brandText : tokens.color.textSecondary
                 }
               />
             ),

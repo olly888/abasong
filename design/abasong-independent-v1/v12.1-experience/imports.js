@@ -59,6 +59,7 @@
   function address(r){return apartment(r.apt)?.address||r.address||'尚未确认地址';}
   function item(r) {
     const editable=!finished.has(r.status)&&r.status!=='removed';
+    if (document.body.classList.contains('muse-v35')) return `<article class="import-row m35-import-record ${r.status==='needs_review'?'attention':''} ${r.status==='ready'&&r.selected?'is-selected':''}" data-import-row="${r.id}"><div class="m35-import-address">${addressHTML(address(r),true,true)}</div><div class="m35-import-codeband"><strong class="import-code">${esc(r.code||'缺少门禁码')}</strong>${r.scope&&r.scope!=='门别未注明'?`<span>${esc(r.scope)}</span>`:''}</div><span class="import-badge ${r.status==='needs_review'||r.status==='failed'?'warning':''}">${statusText[r.status]}</span>${r.reason&&!finished.has(r.status)?`<p class="import-issue">${esc(r.reason)}</p>`:''}<div class="import-row-actions">${r.status==='ready'?`<label class="check-row"><input type="checkbox" data-import-check="${r.id}" aria-label="选择${esc(address(r))}" ${r.selected?'checked':''}><span>选择</span></label>`:''}${editable?btn('import-edit','核对','text-btn',attr(r.id)):''}</div></article>`;
     return `<article class="import-row ${r.status==='needs_review'?'attention':''}" data-import-row="${r.id}"><div class="import-row-head">${r.status==='ready'?`<input type="checkbox" data-import-check="${r.id}" aria-label="提交${esc(address(r))} ${esc(r.scope)} ${esc(r.code)}" ${r.selected?'checked':''}>`:I(r.status==='needs_review'?'warning':'check')}<div class="import-row-main"><b>${esc(apartment(r.apt)?.name||r.name||'公寓待确认')}</b><div class="address">${esc(address(r))}</div></div><span class="import-badge ${r.status==='needs_review'||r.status==='failed'?'warning':''}">${statusText[r.status]}</span></div><div class="import-code">${esc(r.code)}</div><div class="caption">${esc(r.scope||'大门')}</div>${r.reason&&!finished.has(r.status)?`<p class="import-issue">${esc(r.reason)}</p>`:''}<div class="import-row-actions">${editable?btn('import-edit','编辑','text-btn',attr(r.id)):''}</div></article>`;
   }
   function addressSuggestions(r) {
@@ -74,7 +75,7 @@
   }
   function editor(original) {
     const r=editDraft||original;
-    return `<form class="import-editor" data-submit="import-edit">${btn('import-preview','查看截图','text-btn',attr(r.source))}${addressFields(r)}<label class="field"><span class="field-label">门禁码</span><input name="code" value="${esc(r.code)}" maxlength="32" autocomplete="off" spellcheck="false"></label><label class="field"><span class="field-label">适用门别</span><input name="scope" value="${esc(r.scope)}" maxlength="100"></label>${state.errors.import?`<p class="error" role="alert">${esc(state.errors.import)}</p>`:''}<div class="import-editor-actions"><button class="button" type="submit">完成核对</button>${secondary('cancel-edit','取消修改')}${btn('import-remove-row','移除这条资料','text-btn danger',attr(r.id))}</div></form>`;
+    return `<form class="import-editor" data-submit="import-edit">${btn('import-preview','查看截图','text-btn',attr(r.source))}${addressFields(r)}<label class="field"><span class="field-label">门禁码</span><input name="code" value="${esc(r.code)}" maxlength="32" autocomplete="off" spellcheck="false"></label>${doorScopeField(r.scope)}${state.errors.import?`<p class="error" role="alert">${esc(state.errors.import)}</p>`:''}<div class="import-editor-actions"><button class="button" type="submit">完成核对</button>${secondary('cancel-edit','取消修改')}${btn('import-remove-row','移除这条资料','text-btn danger',attr(r.id))}</div></form>`;
   }
   function reviewPage() {
     if(blocked())return gate();const j=batch();if(!j)return frame('识别结果',empty('暂无待确认资料',''),secondary('open','选择截图'));
@@ -219,7 +220,7 @@
       if(!/^\d\S*\s+.+/.test(street)||!city||!/^[A-Z]{2}$/.test(region)||(postal&&!/^\d{5}(?:-\d{4})?$/.test(postal))){state.errors.import='请核对门牌、街道、城市和州';render();return;}
       addr=`${street}, ${city}, ${region}${postal?' '+postal:''}`;
     }
-    r.addressConfirmed=manual;r.apt=manual?null:d.apt;r.propose=manual;r.address=addr;r.code=code;r.scope=String(fd.get('scope')||'').trim()||'大门';r.status='ready';r.selected=true;r.reason='';batch().confirmed=false;editing=null;editDraft=null;state.errors.import=null;render();
+    r.addressConfirmed=manual;r.apt=manual?null:d.apt;r.propose=manual;r.address=addr;r.code=code;r.scope=String(fd.get('scope')||'').trim()||'门别未注明';r.status='ready';r.selected=false;r.reason='';batch().confirmed=false;editing=null;editDraft=null;state.errors.import=null;render();
   });
   const baseReset=resetPrototype;
   resetPrototype=function(){jobs.forEach(j=>j.generation++);jobs=[];selected.clear();current=null;editing=null;gallery=false;serial=0;for(const id of ['import-submit-fail','import-ocr-fail'])$('#'+id).checked=false;baseReset();};

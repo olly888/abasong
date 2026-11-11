@@ -13,6 +13,21 @@ export function canShareCandidate(r: Candidate) {
       (!a.postal_code || /^\d{5}(?:-\d{4})?$/.test(a.postal_code)))
   );
 }
+
+export function groupImportCandidates(rows: Candidate[]) {
+  const groups = new Map<string, { row: Candidate; index: number }[]>();
+  rows.forEach((row, index) => {
+    const key = row.target
+      ? `apartment:${row.target.id}`
+      : row.address
+        ? `address:${row.address.trim()}`
+        : `unresolved:${row.id}`;
+    const group = groups.get(key) ?? [];
+    group.push({ row, index });
+    groups.set(key, group);
+  });
+  return [...groups];
+}
 export function canRepairImportResult(
   result: components["schemas"]["ImportCommitResult"] | undefined,
 ) {

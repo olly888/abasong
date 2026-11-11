@@ -10,31 +10,40 @@ import { ListRow, IconButton, SearchBox } from "../ui/Primitives";
 import { SelectionField } from "../ui/SelectionField";
 import { NativeDateField } from "../ui/NativeDateField";
 import { typeStyles } from "../ui/foundation";
+import { BrandWordmark } from "../ui/BrandWordmark";
+import { MapControl, MapModeSwitch, MapSearchButton } from "../ui/MapControls";
 
 // Actual shared components, memory-only actions. No service calls or grants.
 export default function DesignSystemLab() {
   const { case: scene = "buttons" } = useLocalSearchParams<{ case?: string }>();
+  const modes = ["公寓", "找活", "找人"] as const;
   const [notice, setNotice] = useState(""),
     [text, setText] = useState(""),
     [value, setValue] = useState("SwiftX"),
     [date, setDate] = useState("2026-11-04"),
     [sheet, setSheet] = useState(false),
-    [retry, setRetry] = useState(false);
+    [retry, setRetry] = useState(false),
+    [mode, setMode] = useState<(typeof modes)[number]>("公寓"),
+    [list, setList] = useState(false);
   return (
     <PageFrame
       compact
-      title="设计系统 V3.1"
+      title="Abasong 设计系统"
       onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
     >
       <Text style={typeStyles.metadata}>
         TEST · 共用组件 · 不提交{notice ? ` · ${notice}` : ""}
       </Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {(["buttons", "fields", "states", "sheet"] as const).map((x) => (
+        {(
+          ["brand", "map", "buttons", "fields", "states", "sheet"] as const
+        ).map((x) => (
           <ActionButton
             key={x}
             label={
               {
+                brand: "品牌",
+                map: "地图控件",
                 buttons: "按钮",
                 fields: "输入",
                 states: "状态",
@@ -46,6 +55,83 @@ export default function DesignSystemLab() {
           />
         ))}
       </View>
+      {scene === "brand" ? (
+        <>
+          <BrandWordmark />
+          <Text style={typeStyles.body}>品牌蓝 {tokens.brand.blue}</Text>
+          <ActionButton
+            label="主要操作"
+            onPress={() => setNotice("主要操作")}
+          />
+          <Text
+            style={[
+              typeStyles.label,
+              {
+                color: tokens.color.brandText,
+                backgroundColor: tokens.color.brandSurface,
+                padding: 12,
+              },
+            ]}
+          >
+            浅蓝底上的选中文字
+          </Text>
+        </>
+      ) : null}
+      {scene === "map" ? (
+        <View
+          style={{
+            gap: 12,
+            padding: 12,
+            backgroundColor: tokens.color.mapLand,
+          }}
+        >
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <MapSearchButton
+              label={mode === "公寓" ? "搜索公寓或地址" : "搜索区域或承运商"}
+              onPress={() => setNotice("搜索")}
+            />
+            <MapControl
+              icon="message"
+              label="消息"
+              unread={2}
+              onPress={() => setNotice("消息")}
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 8,
+              justifyContent: "space-between",
+            }}
+          >
+            <MapModeSwitch items={modes} selected={mode} onSelect={setMode} />
+            {mode !== "公寓" ? (
+              <MapControl
+                icon={list ? "map" : "list"}
+                label={list ? "地图" : "列表"}
+                showLabel
+                onPress={() => setList(!list)}
+              />
+            ) : null}
+          </View>
+          <View
+            style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8 }}
+          >
+            <MapControl
+              icon="plus"
+              label="发需求"
+              showLabel
+              primary
+              onPress={() => setNotice("发需求")}
+            />
+            <MapControl
+              icon="locate"
+              label="我的位置"
+              onPress={() => setNotice("定位")}
+            />
+          </View>
+        </View>
+      ) : null}
       {scene === "buttons" ? (
         <>
           <ActionButton

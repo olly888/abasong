@@ -1,4 +1,5 @@
 import type { components } from "@abasong/contracts";
+import type { CarrierDoorLabel } from "./extract";
 type S = components["schemas"];
 export type Source = {
   width?: number;
@@ -7,7 +8,7 @@ export type Source = {
   mime?: "image/png" | "image/jpeg" | "image/heic";
   id: string;
   uri: string;
-  state: "selected" | "processing" | "recognized" | "failed";
+  state: "selected" | "processing" | "recognized" | "restricted" | "failed";
   error?: string;
 };
 export type Candidate = {
@@ -18,7 +19,9 @@ export type Candidate = {
   sourceAddress?: string;
   value: string;
   scope: string;
+  carrierDoorLabel?: CarrierDoorLabel;
   issues: string[];
+  reviewedRevision?: number;
   target: S["Apartment"] | null;
   confirmedAddress?: S["SearchAddress"] | null;
   sharedApartmentId?: string;
@@ -26,6 +29,7 @@ export type Candidate = {
   selected: boolean;
   revision: number;
   privateId?: string;
+  privateEntryId?: string;
   privateVersion?: number;
   shared?: boolean;
   status?: "private_saved" | "pending" | "active" | "same_value" | "failed";

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text } from "react-native";
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { AuthPage, ActionButton } from "../auth/AuthControls";
@@ -10,6 +10,7 @@ import { DeliveryEditor } from "../requests/DeliveryEditor";
 import { DeliveryDetailBody } from "../requests/DeliveryDetailBody";
 import { ApplicationSheet } from "../requests/ApplySheet";
 import { deliveryFixture } from "../requests/delivery-fixtures";
+import { dayAfter } from "../requests/delivery-fields";
 import { driverFixtures } from "../drivers/fixtures";
 type S = components["schemas"];
 const scenes = [
@@ -21,13 +22,14 @@ const scenes = [
   "仓库详情",
   "报名重试",
   "地址失败",
+  "长地址",
 ] as const;
 type Scene = (typeof scenes)[number];
 export default function DeliveryLab() {
   return __DEV__ ? <Lab /> : <Redirect href="/" />;
 }
 function Lab() {
-  const params = useLocalSearchParams<{ scene?: string }>();
+  const params = useLocalSearchParams<{ scene?: string; verify?: string }>();
   const [scene, setScene] = useState<Scene>(
       scenes.includes(params.scene as Scene) ? (params.scene as Scene) : "入口",
     ),
@@ -62,17 +64,48 @@ function Lab() {
       ))}
     </ScrollView>
   );
+  if (params.verify === "entry" || params.verify === "entry-date")
+    return (
+      <AuthPage compact title="TEST · 发布时间与返回">
+        {(["仓库表单", "代送表单"] as const).map((scene) => (
+          <ActionButton
+            key={scene}
+            label={scene}
+            onPress={() =>
+              router.push({
+                pathname: "/delivery-lab",
+                params: {
+                  scene,
+                  verify: params.verify === "entry-date" ? "date" : "schedule",
+                },
+              })
+            }
+          />
+        ))}
+      </AuthPage>
+    );
   return (
-    <SceneBody key={`${scene}:${revision}`} scene={scene} controls={controls} />
+    <SceneBody
+      key={`${scene}:${revision}`}
+      scene={scene}
+      controls={controls}
+      timingTest={
+        params.verify === "date" || params.verify === "schedule"
+          ? params.verify
+          : undefined
+      }
+    />
   );
 }
 
 function SceneBody({
   scene,
   controls,
+  timingTest,
 }: {
   scene: Scene;
   controls: React.ReactNode;
+  timingTest?: "date" | "schedule";
 }) {
   const seed = useMemo(() => {
     const r = deliveryFixture(
@@ -80,7 +113,21 @@ function SceneBody({
         ? "delivery_handoff"
         : "warehouse_shortage",
     );
-    if (["仓库详情", "地址失败", "报名重试"].includes(scene)) r.status = "open";
+    if (["仓库详情", "地址失败", "报名重试", "长地址"].includes(scene))
+      r.status = "open";
+    if (scene === "长地址" && r.pickup?.kind === "warehouse") {
+      r.pickup = {
+        ...r.pickup,
+        address_line1: "100 TEST Very Long Warehouse Boulevard Building Three",
+        city: "TEST City With A Long Name",
+        point: null,
+        point_source: "unlocated",
+      };
+      r.price_cents = 123456;
+      r.quantity_mode = "unknown";
+      r.parcel_count = null;
+      r.remaining_parcels = null;
+    }
     if (scene === "地址失败" && r.pickup?.kind === "warehouse")
       r.pickup = { ...r.pickup, point: null, point_source: "unlocated" };
     if (scene === "报名重试") {
@@ -88,8 +135,17 @@ function SceneBody({
       r.parcel_count = null;
       r.remaining_parcels = null;
     }
+    if (timingTest) {
+      r.handoff_mode = "scheduled";
+      r.handoff_date = dayAfter(
+        r.handoff_date!,
+        timingTest === "date" ? -1 : 1,
+      );
+      r.starts_at = null;
+      r.expires_at = null;
+    }
     return r;
-  }, [scene]);
+  }, [scene, timingTest]);
   const [current, setCurrent] = useState(seed),
     [saved, setSaved] = useState(false),
     [applying, setApplying] = useState(scene === "报名重试"),
@@ -199,7 +255,7 @@ function SceneBody({
     };
     return run;
   }, [seed, scene]);
-  if (!saved && !["仓库详情", "地址失败", "报名重试"].includes(scene))
+  if (!saved && !["仓库详情", "地址失败", "报名重试", "长地址"].includes(scene))
     return (
       <DeliveryEditor
         key={reset}
@@ -229,7 +285,7 @@ function SceneBody({
       }
     >
       {controls}
-      <Text style={{ color: tokens.color.brandPrimary }}>
+      <Text style={{ color: tokens.color.brandText }}>
         TEST · {notice || scene} · 仅内存
       </Text>
       <DeliveryDetailBody
@@ -241,6 +297,9 @@ function SceneBody({
         <ApplicationSheet
           request={current}
           regionLabel={regions[0]?.label}
+          pickupRegionLabel={
+            regions.find((r) => r.id === current.pickup_region_id)?.label
+          }
           transport={transport}
           onClose={() => setApplying(false)}
           onRefresh={() => {

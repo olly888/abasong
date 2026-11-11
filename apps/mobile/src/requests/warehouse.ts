@@ -1,7 +1,9 @@
 import { addressIdentity, type components } from "@abasong/contracts";
 type S = components["schemas"];
 export type Warehouse = S["WarehousePickupDetailV2"];
-export function warehouseAddress(w: Warehouse) {
+export function warehouseAddress(w: {
+  [K in "address_line1" | "city" | "state" | "postal_code"]?: Warehouse[K];
+}) {
   return [
     w.address_line1,
     w.city,

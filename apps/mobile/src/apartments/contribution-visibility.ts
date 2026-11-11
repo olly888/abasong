@@ -8,6 +8,7 @@ export function visibleContributionValue(
   value?: string | null,
 ) {
   return canRead &&
+    !source.sharing_paused &&
     source.status === "active" &&
     source.record_status === "active"
     ? (value ?? null)

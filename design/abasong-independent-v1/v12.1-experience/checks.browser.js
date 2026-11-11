@@ -142,7 +142,10 @@ async (page) => {
       .locator('.ex-apartment-card:not([inert]) [data-action="add-code"]')
       .click();
     await p.locator('[name="value"]').fill("*0078#");
-    await p.locator('[name="scope"]').fill("侧门");
+    const doors = p.locator('[data-door-scope] button');
+    assert((await doors.allTextContents()).join(",") === "行人门,车库门,大堂门", "three door choices");
+    await p.getByRole("button", { name: "大堂门", exact: true }).click();
+    assert((await p.locator('[name="scope"]').inputValue()) === "大堂门", "door set by one tap");
     await p.locator('[name="source"]').check();
     await p.locator(".fixed-actions [type=submit]").click();
     await p.waitForFunction(
@@ -181,8 +184,21 @@ async (page) => {
     );
   });
   await run("无公寓低高度统一贡献入口；首页与我的入口一致", async () => {
-    await p.selectOption("#scenario", "street");
-    await p.locator(".ex-contribute").click();
+    await p.selectOption("#scenario", "house");
+    const row = p.locator(".ex-map-status");
+    assert(
+      (await row.innerText()).includes("附近未匹配到公寓"),
+      "nearby empty copy",
+    );
+    assert(
+      (await row.locator(".sheet-handle").count()) === 0,
+      "no expand handle",
+    );
+    assert(
+      (await p.locator(".ex-building-hit,.ex-roof.active").count()) === 0,
+      "no selected house",
+    );
+    await row.getByRole("button", { name: "共享门禁码" }).click();
     const first = await p.locator("#overlay").innerText();
     await p.locator('#overlay [data-action="close-modal"]').click();
     await p.locator('.bottom-nav [data-id="me"]').click();
@@ -309,7 +325,9 @@ async (page) => {
     await p.selectOption("#support-scenario", "error");
     await p.waitForTimeout(180);
     assert(
-      (await p.locator(".ex-result-count").innerText()) === "暂时无法读取",
+      (await p.locator(".ex-map-status [role=alert]").innerText()) ===
+        "配送需求暂时无法加载" &&
+        (await p.locator(".ex-result-count").count()) === 0,
       "failure scope",
     );
     assert((await p.locator(".ex-job-card").count()) === 0, "no stale cards");
@@ -319,6 +337,73 @@ async (page) => {
       (await p.locator(".ex-map-card:not([inert]) .ex-job-card").count()) === 1,
       "recovered",
     );
+  });
+  await run("附近查询失败可重试；成功无候选与无码独立", async () => {
+    await p.selectOption("#scenario", "nearby-error");
+    const row = p.locator(".ex-map-status");
+    assert(
+      (await row.getByRole("alert").innerText()) === "公寓资料暂时无法加载",
+      "nearby error",
+    );
+    assert(
+      (await p.locator(".ex-roof.active,.ex-apartment-card").count()) === 0,
+      "no old selection",
+    );
+    await row.getByRole("button", { name: "重新加载" }).click();
+    assert(
+      (await row.innerText()).includes("附近未匹配到公寓"),
+      "verified empty",
+    );
+    await p.selectOption("#scenario", "empty");
+    await p
+      .locator('.ex-apartment-card:not([inert]) [data-status="empty"]')
+      .waitFor();
+    assert(
+      (await row.count()) === 0 &&
+        (await p.locator(".ex-apartment-card:not([inert]) h2").count()) === 1,
+      "known address retained",
+    );
+  });
+  await run("找活和找人无筛选时只显示空态，地图／列表共用", async () => {
+    for (const [id, text] of [
+      ["jobs", "暂无开放配送需求"],
+      ["people", "暂无可接活司机"],
+    ]) {
+      await p.selectOption("#support-scenario", "ready");
+      await mode(id);
+      await p.selectOption("#support-scenario", "empty");
+      const row = p.locator(".ex-map-status[data-status=empty]");
+      await row.waitFor();
+      assert((await row.innerText()) === text, "empty label");
+      assert(
+        (await row.locator("button").count()) === 0 &&
+          (await p.locator(".ex-result-count").count()) === 0,
+        "no duplicate",
+      );
+      await p.getByRole("button", { name: "切换为列表" }).click();
+      assert(
+        (await p.locator(".ex-home-list .ex-map-status").innerText()) === text,
+        "same list status",
+      );
+      await p.getByRole("button", { name: "切换为地图" }).click();
+    }
+  });
+  await run("筛选无结果只提供一个清除入口", async () => {
+    await mode("people");
+    await openFilter();
+    await p.locator('#overlay [name="text"]').fill("TEST 不匹配");
+    await applyFilter();
+    const row = p.locator(".ex-map-status[data-status=empty]");
+    assert(
+      (await row.innerText()).includes("没有符合筛选的可接活司机"),
+      "filtered empty",
+    );
+    assert(
+      (await p.getByRole("button", { name: "清除筛选" }).count()) === 1,
+      "one clear action",
+    );
+    await row.getByRole("button", { name: "清除筛选" }).click();
+    await p.locator(".ex-map-card:not([inert]) .ex-driver-card").waitFor();
   });
   await run("仓库地址/地图/导航取消回原图，复制内容准确", async () => {
     await mode("jobs");
@@ -405,7 +490,10 @@ async (page) => {
     await p.locator('[data-action="ex-pickup-choice"][data-id="w1"]').click();
     await p.locator('[name="date"]').fill("2026-11-04");
     await p.locator('[name="start"]').fill("15:00");
-    assert((await p.locator('[name="end"]').count()) === 0, "default expiry not another required field");
+    assert(
+      (await p.locator('[name="end"]').count()) === 0,
+      "default expiry not another required field",
+    );
     await p.locator('[name="qty"]').fill("120");
     await p.locator('[name="price"]').fill("1.90");
     await p.locator(".fixed-actions [type=submit]").click();

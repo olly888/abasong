@@ -6,7 +6,8 @@ public class AbasongOcrModule: Module {
   public func definition() -> ModuleDefinition {
     Name("AbasongOcr")
     Constant("addressCameraVersion") { 1 }
-    AsyncFunction("recognize") { (uri: String) -> [[String: Any]] in
+    Constant("carrierScreenshotVersion") { 1 }
+    AsyncFunction("recognize") { (uri: String, carrier: Bool?) -> [[String: Any]] in
       // Only picker-created cache copies; no remote URL, documents or arbitrary paths.
       guard let url = URL(string: uri), url.isFileURL,
         let cache = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first,
@@ -21,7 +22,7 @@ public class AbasongOcrModule: Module {
       else { throw Exception(name: "INVALID_IMAGE", description: "无法读取所选图片") }
       let request = VNRecognizeTextRequest()
       request.recognitionLevel = .accurate
-      request.recognitionLanguages = ["en-US"]
+      request.recognitionLanguages = carrier == true ? ["zh-Hans", "en-US"] : ["en-US"]
       request.usesLanguageCorrection = false
       do {
         let orientation = CGImagePropertyOrientation(rawValue: (properties[kCGImagePropertyOrientation] as? NSNumber)?.uint32Value ?? 1) ?? .up

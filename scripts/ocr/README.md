@@ -62,3 +62,5 @@ swift -module-cache-path .tooling/swift-module-cache scripts/ocr/quality-lab.swi
 ```
 
 该实验是macOS主机结果；双端App选图／识别可另外做有界功能核对，未捕获对应原生观测时不填充双端质量统计。CLI安全测试中的哈希字节向量不是识别图片，不计入样本准确率。
+
+为命令追加 `--glendale` 可生成另一套 10 张中英混排合成图。摘要单独报告地址与码配对和核对提示一致率，能区分串码与低置信度提示。场景与现场验收边界见 [Glendale 样本回归](../../docs/technical/V3.5.1_DTL-04_Glendale脱敏样本回归.md)。

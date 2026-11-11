@@ -1,58 +1,65 @@
 import { AddressLine } from "./AddressLine";
 import { locality } from "./address-presentation";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Text, View } from "react-native";
 import type { components } from "@abasong/contracts";
-import { tokens } from "@abasong/ui";
 import { ListRow } from "../ui/Primitives";
-import { Icon } from "../ui/Icon";
+import { MapStatusRow } from "../ui/MapStatusRow";
+import { typeStyles } from "../ui/foundation";
+import { router } from "expo-router";
+
 type Apartment = components["schemas"]["Apartment"];
+
 export function HomeArrivalPanel(p: {
-  state: "loading" | "nearby" | "ambiguous" | "empty" | "error" | "location";
+  state:
+    | "loading"
+    | "nearby"
+    | "ambiguous"
+    | "empty"
+    | "error"
+    | "location"
+    | "partial";
   message?: string;
   blocked?: boolean;
   candidates: Apartment[];
   onSelect: (apartment: Apartment) => void;
-  onContribute: () => void;
+  onContribute?: () => void;
   onRetry: () => void;
 }) {
   if (p.state === "loading")
+    return <MapStatusRow state="loading" title={p.message ?? "正在定位"} />;
+  if (p.state === "location")
     return (
-      <View style={s.quiet}>
-        <ActivityIndicator color={tokens.color.brandPrimary} />
-        <Text style={s.muted}>{p.message ?? "正在定位"}</Text>
-      </View>
+      <MapStatusRow
+        state="unavailable"
+        title={p.message ?? "暂时无法获取位置"}
+        action={{
+          label: p.blocked ? "打开系统设置" : "重试定位",
+          onPress: p.onRetry,
+        }}
+      />
     );
-  if (p.state === "location" || p.state === "error")
+  if (p.state === "error")
     return (
-      <View style={s.error}>
-        <Text style={s.title}>
-          {p.state === "error" ? "公寓资料暂时无法加载" : p.message}
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={p.onRetry}
-          style={s.action}
-        >
-          <Text style={s.link}>
-            {p.state === "error"
-              ? "重新加载"
-              : p.blocked
-                ? "打开系统设置"
-                : "使用当前位置"}
-          </Text>
-        </Pressable>
-      </View>
+      <MapStatusRow
+        state="error"
+        title="公寓资料暂时无法加载"
+        action={{ label: "重新加载", onPress: p.onRetry }}
+      />
+    );
+  if (p.state === "partial")
+    return (
+      <MapStatusRow
+        title="部分范围待补全"
+        action={{
+          label: "搜索地址",
+          onPress: () => router.push("/apartments"),
+        }}
+      />
     );
   if (p.candidates.length && p.state !== "empty")
     return (
       <View>
-        <Text style={s.title}>
+        <Text style={typeStyles.label}>
           {p.state === "ambiguous" ? "选择公寓" : "附近公寓"}
         </Text>
         {p.candidates.map((a) => (
@@ -66,27 +73,13 @@ export function HomeArrivalPanel(p: {
       </View>
     );
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={p.onContribute}
-      style={s.quiet}
-    >
-      <Icon name="plus" size={20} color={tokens.color.brandPrimary} />
-      <Text style={s.link}>共享门禁码</Text>
-    </Pressable>
+    <MapStatusRow
+      title="附近未匹配到公寓"
+      action={
+        p.onContribute
+          ? { label: "共享门禁码", onPress: p.onContribute }
+          : undefined
+      }
+    />
   );
 }
-const s = StyleSheet.create({
-  quiet: {
-    minHeight: 56,
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: { fontSize: 18, fontWeight: "600", color: tokens.color.ink },
-  muted: { fontSize: 15, color: tokens.color.textMuted },
-  link: { fontSize: 16, fontWeight: "600", color: tokens.color.brandPrimary },
-  action: { minHeight: 48, justifyContent: "center" },
-  error: { paddingVertical: 10 },
-});

@@ -16,6 +16,7 @@ export function importCommitPatch(out: ImportOutcome): Partial<Candidate> {
     };
   return {
     privateId: out.private_record_id ?? undefined,
+    privateEntryId: out.private_entry_id,
     sharedApartmentId: out.apartment_id ?? undefined,
     shared: ["active", "pending", "same_value"].includes(out.share_status),
     status:
@@ -33,9 +34,13 @@ export function importCommitPatch(out: ImportOutcome): Partial<Candidate> {
     error: out.error_code
       ? addressReview
         ? "请核对公寓地址后再共享"
-        : out.private_status === "saved"
-          ? "已保存，尚未共享；可重试"
-          : "保存失败，可重试"
+        : out.error_code === "APARTMENT_SHARING_PAUSED"
+          ? "已保存，该公寓暂不共享门禁码"
+          : out.error_code === "ACCESS_SCOPE_CONFIRMATION_REQUIRED"
+            ? "已私存，请在「我的公寓」确认入口后再共享"
+            : out.private_status === "saved"
+              ? "已保存，尚未共享；可重试"
+              : "保存失败，可重试"
       : undefined,
   };
 }

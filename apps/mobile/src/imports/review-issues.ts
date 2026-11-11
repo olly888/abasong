@@ -19,3 +19,11 @@ export function ocrReviewIssues(issues: readonly string[]): OcrReviewIssue[] {
     ),
   ];
 }
+
+export function needsScreenshotReview(row: {
+  issues: readonly string[];
+  revision: number;
+  reviewedRevision?: number;
+}) {
+  return row.issues.length > 0 && row.reviewedRevision !== row.revision;
+}

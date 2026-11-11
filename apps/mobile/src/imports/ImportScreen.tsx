@@ -3,6 +3,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ComponentRef,
   type ReactNode,
 } from "react";
 import type { Session as AuthSession } from "@supabase/supabase-js";
@@ -13,42 +14,54 @@ import {
   Image,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import {
-  router,
-  useFocusEffect,
-  useLocalSearchParams,
-  usePreventRemove,
-} from "expo-router";
+import { router, useFocusEffect, usePreventRemove } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { File, Paths } from "expo-file-system";
 import { randomUUID } from "expo-crypto";
-import type { components } from "@abasong/contracts";
+import {
+  isEntranceScope,
+  unconfirmedEntrance,
+  type components,
+} from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import {
   ActionButton,
   ApartmentPage,
   AuthResolution,
-  Field,
   FormError,
 } from "../auth/AuthControls";
 import { useAuth } from "../auth/AuthProvider";
 import { dataRequest } from "../apartments/client";
+import { AccessCodeFields } from "../apartments/AccessCodeFields";
+import { CheckField } from "../ui/CheckField";
+import { AddressLine } from "../apartments/AddressLine";
 import { ContributionAddressField } from "../apartments/ContributionAddressField";
-import { canShareCandidate, importAddressLabel } from "./candidate-address";
+import { EntranceScopeField } from "../apartments/EntranceScopeField";
+import { ChoiceChip } from "../ui/ChoiceChip";
+import {
+  canShareCandidate,
+  groupImportCandidates,
+  importAddressLabel,
+} from "./candidate-address";
 import { importCommitPatch } from "./commit-patch";
-import { extractCandidates } from "./extract";
+import { inspectScreenshot } from "./extract";
 import { runRecognitionBatch, RecognitionError } from "./recognition-work";
 import { recognize } from "./recognize";
-import { exactApartment } from "./match";
-import { hasUnsubmittedImportWork } from "./exit-policy";
+import { buildingAddress, exactApartment } from "./match";
+import {
+  hasUnsubmittedImportWork,
+  savedImportDestination,
+} from "./exit-policy";
 import { ServerDraft } from "./server-draft";
 import { exitImport } from "./navigation";
 import { createImageCache } from "./storage";
 import { keepImportSession } from "./session-gate";
+import { needsScreenshotReview } from "./review-issues";
 import type { ContributionRequest } from "../apartments/contribution-address-search";
 type S = components["schemas"];
 const issueLabels: Record<string, string> = {
@@ -126,11 +139,15 @@ export function ImportSession(p: {
   testControls?: ReactNode;
   initialReview?: { sources: Source[]; rows: Candidate[] };
   onCompleted?: (rows: Candidate[]) => void;
+  onOpenLibrary?: (params: {
+    tab: "saved";
+    revision: string;
+    entry_id?: string;
+  }) => void;
 }) {
   const { session } = p;
   const latest = useRef(p);
   latest.current = p;
-  const params = useLocalSearchParams<{ mode?: string }>();
   const [sources, setSources] = useState<Source[]>(
       p.initialReview?.sources ?? [],
     ),
@@ -139,7 +156,7 @@ export function ImportSession(p: {
       p.initialReview ? "review" : "select",
     ),
     [mode, setMode] = useState<"private_only" | "private_and_share">(
-      params.mode === "private" ? "private_only" : "private_and_share",
+      p.initialReview ? "private_and_share" : "private_only",
     ),
     [locked, setLocked] = useState(false),
     [attested, setAttested] = useState(false),
@@ -192,8 +209,14 @@ export function ImportSession(p: {
   function change(id: string, patch: Partial<Candidate>) {
     const row = rowsRef.current.find((r) => r.id === id);
     if (!row || row.privateId) return;
+    const addressChanged =
+      ("address" in patch && patch.address !== row.address) ||
+      ("target" in patch && patch.target?.id !== row.target?.id);
     update(id, {
       ...patch,
+      ...(addressChanged && isEntranceScope(row.scope)
+        ? { scope: unconfirmedEntrance }
+        : {}),
       revision: row.revision + 1,
       selected: false,
       status: undefined,
@@ -215,7 +238,7 @@ export function ImportSession(p: {
       address,
       sourceAddress: address,
       value,
-      scope: "门别未注明",
+      scope: unconfirmedEntrance,
       issues,
       target: null,
       selected: false,
@@ -329,37 +352,53 @@ export function ImportSession(p: {
     try {
       const outcome = await runRecognitionBatch(
         sources.filter(
-          (s) => s.state !== "recognized" && (!sourceId || sourceId === s.id),
+          (s) =>
+            s.state !== "recognized" &&
+            s.state !== "restricted" &&
+            (!sourceId || sourceId === s.id),
         ),
         task.signal,
         async (source, signal) => {
-          const lines = await recognize(source.uri, signal);
-          const extracted = extractCandidates(lines);
+          const lines = await recognize(
+            source.uri,
+            signal,
+            undefined,
+            "carrier",
+          );
+          const inspected = inspectScreenshot(lines);
           const candidates: Candidate[] = [];
-          for (const e of extracted) {
+          for (const e of inspected.candidates) {
             if (signal.aborted) break;
-            const row = candidate(source.id, e.address, e.value, e.issues);
-            if (e.address) {
+            const address = buildingAddress(e.address);
+            const issues = [...e.issues];
+            if (address.needsReview && !issues.includes("请核对地址"))
+              issues.push("请核对地址");
+            const row = candidate(source.id, address.address, e.value, issues);
+            if (e.carrierDoorLabel) {
+              row.carrierDoorLabel = e.carrierDoorLabel;
+            }
+            if (address.street && !address.needsReview) {
               try {
                 const page = await request<S["ApartmentPage"]>(
                   "/v1/apartments?query=" +
-                    encodeURIComponent(e.address.split(",")[0].slice(0, 200)),
+                    encodeURIComponent(address.street.slice(0, 200)),
                   { signal },
                 );
-                row.target = exactApartment(e.address, page.items);
-                row.selected = !!row.target && !row.issues.length;
+                row.target = exactApartment(address.address, page.items);
               } catch {
                 /* Unavailable matching stays editable; cancellation is checked before publish. */
               }
             }
+            row.selected =
+              mode === "private_only" && !!row.address && !row.issues.length;
             candidates.push(row);
           }
-          return candidates;
+          return { candidates, deliveryOnly: inspected.deliveryOnly };
         },
         {
           start: (s) =>
             sourceState(s.id, { state: "processing", error: undefined }),
-          result: (s, candidates) => {
+          result: (s, { candidates, deliveryOnly }) => {
             if (!valid()) return;
             anyRows ||= candidates.length > 0;
             setRows((old) => [
@@ -367,8 +406,15 @@ export function ImportSession(p: {
               ...candidates,
             ]);
             sourceState(s.id, {
-              state: candidates.length ? "recognized" : "failed",
-              error: candidates.length ? undefined : "未识别到公寓密码",
+              state: deliveryOnly
+                ? "restricted"
+                : candidates.length
+                  ? "recognized"
+                  : "failed",
+              error:
+                deliveryOnly || candidates.length
+                  ? undefined
+                  : "未识别到公寓密码",
             });
           },
           failed: (s, e) =>
@@ -409,8 +455,12 @@ export function ImportSession(p: {
     }
     // The previous submission fixed its scope and durable plans. Continue only
     // unfinished images in an explicit new draft; never append to that plan.
-    const remaining = sources.filter((s) => s.state !== "recognized");
-    for (const source of sources.filter((s) => s.state === "recognized")) {
+    const remaining = sources.filter(
+      (s) => s.state !== "recognized" && s.state !== "restricted",
+    );
+    for (const source of sources.filter(
+      (s) => s.state === "recognized" || s.state === "restricted",
+    )) {
       dispose(source.uri);
       allUris.current.delete(source.uri);
     }
@@ -429,6 +479,22 @@ export function ImportSession(p: {
     setError(null);
   }
   const exitPromptOpen = useRef(false);
+  const reviewScroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const reviewOffset = useRef(0);
+  const returnOffset = useRef<number | null>(null);
+  function openReviewEditor(id: string) {
+    returnOffset.current = reviewOffset.current;
+    setEditing(id);
+  }
+  useEffect(() => {
+    if (editing || stage !== "review" || returnOffset.current === null) return;
+    const offset = returnOffset.current;
+    const timer = setTimeout(() => {
+      reviewScroll.current?.scrollTo({ y: offset, animated: false });
+      returnOffset.current = null;
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [editing, stage]);
   usePreventRemove(
     !exitAccepted && (busy || hasUnsubmittedImportWork(rows, sources, mode)),
     ({ repeat }) => {
@@ -457,17 +523,12 @@ export function ImportSession(p: {
     },
   );
   function finish() {
-    if (hasUnsubmittedImportWork(rows, sources, mode)) return leave();
-    if (p.onCompleted) return p.onCompleted(rows);
-    const first = rows.find(
-      (r) => r.shared && (r.sharedApartmentId || r.target?.id),
-    );
-    if (mode === "private_and_share" && first)
-      router.replace({
-        pathname: "/",
-        params: { apartment_id: first.sharedApartmentId ?? first.target!.id },
-      });
-    else leave();
+    const unfinished = hasUnsubmittedImportWork(rows, sources, mode);
+    if (p.onCompleted && !unfinished) return p.onCompleted(rows);
+    const params = savedImportDestination(rows, String(Date.now()));
+    if (!params) return leave();
+    if (p.onOpenLibrary && !unfinished) return p.onOpenLibrary(params);
+    router.dismissTo({ pathname: "/apartments/library", params });
   }
   function leave() {
     if (!running.current) exitImport(router);
@@ -482,6 +543,7 @@ export function ImportSession(p: {
   }
   useFocusEffect(
     useCallback(() => {
+      if (Platform.OS !== "android") return;
       const sub = BackHandler.addEventListener("hardwareBackPress", () => {
         backWithinImport();
         return true;
@@ -491,12 +553,7 @@ export function ImportSession(p: {
   );
   async function submit() {
     if (running.current || !attested) return;
-    const selected = rows.filter(
-      (r) =>
-        r.selected &&
-        complete(r) &&
-        (!r.privateId || (mode === "private_and_share" && !r.shared)),
-    );
+    const selected = pending;
     if (!selected.length) return;
     running.current = true;
     setBusy(true);
@@ -528,43 +585,58 @@ export function ImportSession(p: {
     !!r.value.trim() &&
     r.value.trim().length <= 32 &&
     !!r.scope.trim() &&
-    !!(canShareCandidate(r) || (mode === "private_only" && r.address.trim()));
+    (mode === "private_only"
+      ? !!r.address.trim()
+      : canShareCandidate(r) &&
+        (isEntranceScope(r.scope) ||
+          (!!p.initialReview && r.scope !== unconfirmedEntrance)));
   const pending = rows.filter(
     (r) =>
       r.selected &&
       complete(r) &&
+      !needsScreenshotReview(r) &&
       (!r.privateId || (mode === "private_and_share" && !r.shared)),
   );
   const editor = rows.find((r) => r.id === editing);
-  function chooseMode() {
-    if (locked || busy) return;
-    const choose = (next: typeof mode) => {
-      if (next === mode) return;
-      setMode(next);
-      setAttested(false);
+  const skippedScreenshots = sources.filter(
+    (s) => s.state === "restricted",
+  ).length;
+  function chooseMode(next: typeof mode) {
+    if (locked || busy || mode === next) return;
+    setMode(next);
+    setAttested(false);
+    if (next === "private_and_share")
       setRows((old) =>
-        old.map((r) => ({
-          ...r,
-          selected:
-            r.selected && (next === "private_only" || canShareCandidate(r)),
-        })),
+        old.map((r) =>
+          r.selected && (!canShareCandidate(r) || !isEntranceScope(r.scope))
+            ? { ...r, selected: false }
+            : r,
+        ),
       );
-    };
-    Alert.alert("保存方式", undefined, [
-      { text: "共享并保存", onPress: () => choose("private_and_share") },
-      { text: "仅自己保存", onPress: () => choose("private_only") },
-      { text: "取消", style: "cancel" },
-    ]);
   }
   const addressReview = rows.find((r) => r.needsAddressReview && !r.privateId);
+  const sharedRow = rows.find(
+    (r) => r.shared && (r.sharedApartmentId || r.target),
+  );
+  const sharedApartmentId =
+    sharedRow?.sharedApartmentId ?? sharedRow?.target?.id;
   function reviewAddress() {
     if (!addressReview) return;
     setAttested(false);
     setStage("review");
-    setEditing(addressReview.id);
+    openReviewEditor(addressReview.id);
   }
   return (
     <ApartmentPage
+      key={editing ? "candidate" : stage}
+      scrollRef={!editing && stage === "review" ? reviewScroll : undefined}
+      onScroll={
+        !editing && stage === "review"
+          ? (offset) => {
+              reviewOffset.current = offset;
+            }
+          : undefined
+      }
       title={
         editing
           ? "核对公寓"
@@ -606,6 +678,8 @@ export function ImportSession(p: {
             <ActionButton
               label="完成核对"
               onPress={() => {
+                if (editor && complete(editor))
+                  update(editor.id, { reviewedRevision: editor.revision });
                 setEditing(null);
               }}
             />
@@ -621,36 +695,16 @@ export function ImportSession(p: {
             <>
               {stage === "review" ? (
                 <>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`保存方式：${mode === "private_only" ? "仅自己保存" : "共享并保存"}`}
-                    accessibilityState={{ disabled: locked || busy }}
-                    disabled={locked || busy}
-                    onPress={chooseMode}
-                    style={styles.scopeRow}
-                  >
-                    <Text style={styles.meta}>保存方式</Text>
-                    <Text style={styles.label}>
-                      {mode === "private_only" ? "仅自己保存" : "共享并保存"}
-                    </Text>
-                    {!locked ? <Text style={styles.link}>更改</Text> : null}
-                  </Pressable>
                   {mode === "private_and_share" && !p.canContribute ? (
                     <Text style={styles.error}>共享资格待核验</Text>
                   ) : null}
                   {pending.length ? (
-                    <Pressable
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: attested, disabled: busy }}
+                    <CheckField
+                      label={`我已核对，并有权${mode === "private_only" ? "保存" : "共享"}所选资料`}
+                      checked={attested}
                       disabled={busy}
-                      onPress={() => setAttested((x) => !x)}
-                      style={styles.check}
-                    >
-                      <Text style={styles.meta}>
-                        {attested ? "☑" : "□"} 我已核对，并有权
-                        {mode === "private_only" ? "保存" : "共享"}所选资料
-                      </Text>
-                    </Pressable>
+                      onChange={setAttested}
+                    />
                   ) : null}
                 </>
               ) : null}
@@ -661,7 +715,9 @@ export function ImportSession(p: {
                       ? "核对地址"
                       : pending.length
                         ? `重试 ${pending.length} 条`
-                        : "完成"
+                        : rows.some((r) => r.privateId) && !p.onCompleted
+                          ? "查看我的公寓"
+                          : "完成"
                     : mode === "private_only"
                       ? `确认保存 ${pending.length} 条`
                       : `确认共享 ${pending.length} 条`
@@ -685,6 +741,23 @@ export function ImportSession(p: {
                       : void submit()
                 }
               />
+              {stage === "result" &&
+              !p.onCompleted &&
+              sharedApartmentId &&
+              !pending.length &&
+              !addressReview ? (
+                <ActionButton
+                  label="在地图查看"
+                  secondary
+                  disabled={busy}
+                  onPress={() =>
+                    router.replace({
+                      pathname: "/",
+                      params: { apartment_id: sharedApartmentId },
+                    })
+                  }
+                />
+              ) : null}
             </>
           )}
         </View>
@@ -786,22 +859,28 @@ export function ImportSession(p: {
               else change(editor.id, { target: null, confirmedAddress: null });
             }}
           />
-          <Field
-            label="门禁码"
+          <AccessCodeFields
             value={editor.value}
-            maxLength={32}
-            editable={!editor.privateId}
-            onChangeText={(value) => change(editor.id, { value })}
-            autoCapitalize="none"
-            autoCorrect={false}
+            address={
+              editor.target ? importAddressLabel(editor.target) : editor.address
+            }
+            scope={editor.scope}
+            hideScope
+            disabled={busy || !!editor.privateId}
+            onValueChange={(value) => change(editor.id, { value })}
+            onScopeChange={(scope) =>
+              change(editor.id, {
+                scope: scope || unconfirmedEntrance,
+              })
+            }
           />
-          <Field
-            label="门别"
+          <EntranceScopeField
             value={editor.scope}
-            maxLength={100}
-            editable={!editor.privateId}
-            placeholder="例如：行人门"
-            onChangeText={(scope) => change(editor.id, { scope })}
+            sourceLabel={editor.carrierDoorLabel}
+            disabled={busy || !!editor.privateId}
+            onChange={(scope) =>
+              change(editor.id, { scope: scope || unconfirmedEntrance })
+            }
           />
           <Pressable
             accessibilityRole="button"
@@ -819,9 +898,36 @@ export function ImportSession(p: {
       ) : (
         <>
           {stage === "review" ? (
-            <Text style={styles.label}>
-              {rows.length} 条资料
-              {rows.length ? ` · 已选 ${pending.length} 条` : ""}
+            <>
+              <Text style={styles.label}>保存方式</Text>
+              <View style={styles.modeRow}>
+                <ChoiceChip
+                  label="仅自己保存"
+                  selected={mode === "private_only"}
+                  disabled={locked || busy}
+                  onPress={() => chooseMode("private_only")}
+                />
+                <ChoiceChip
+                  label="共享并保存"
+                  selected={mode === "private_and_share"}
+                  disabled={locked || busy}
+                  onPress={() => chooseMode("private_and_share")}
+                />
+              </View>
+              <Text style={styles.meta}>
+                {mode === "private_only"
+                  ? "存入「我的公寓」，以后随时查。你也可以之后再决定是否共享。"
+                  : "同时存入「我的公寓」。有资格的司机可查阅，并可反馈这条码是否有用。"}
+              </Text>
+              <Text style={styles.label}>
+                {rows.length} 条资料
+                {rows.length ? ` · 已选 ${pending.length} 条` : ""}
+              </Text>
+            </>
+          ) : null}
+          {stage === "review" && skippedScreenshots > 0 ? (
+            <Text style={styles.meta}>
+              已跳过 {skippedScreenshots} 张仅供本次派送的截图
             </Text>
           ) : null}
           {sources.some(
@@ -853,7 +959,7 @@ export function ImportSession(p: {
                       ),
                     );
                     setRows((old) => [...old, r]);
-                    setEditing(r.id);
+                    openReviewEditor(r.id);
                   }}
                 />
                 <ActionButton
@@ -864,78 +970,117 @@ export function ImportSession(p: {
                 />
               </View>
             ))}
-          {rows.map((r, index) => (
-            <View key={r.id} style={styles.card}>
-              <Text style={styles.label}>
-                {r.target
-                  ? importAddressLabel(r.target)
-                  : r.address || `待核对 ${index + 1}`}
-              </Text>
-              <Text style={styles.code}>{r.value || "缺少门禁码"}</Text>
-              {r.scope && r.scope !== "门别未注明" ? (
-                <Text style={styles.meta}>{r.scope}</Text>
-              ) : null}
-              {r.error ? (
-                <Text style={styles.error}>{r.error}</Text>
-              ) : r.status ? (
-                <Text style={styles.meta}>
-                  {r.status === "active"
-                    ? "已私存 · 已共享"
-                    : r.status === "pending"
-                      ? "已私存 · 共享尚未发布"
-                      : r.status === "same_value"
-                        ? "已私存 · 同码记录"
-                        : "已保存到我的公寓"}
-                </Text>
-              ) : stage === "result" ? (
-                <Text style={styles.meta}>未提交</Text>
-              ) : !canShareCandidate(r) && mode === "private_and_share" ? (
-                <Text style={styles.meta}>公寓待匹配</Text>
-              ) : r.issues.length ? (
-                <Text style={styles.meta}>
-                  {r.issues
-                    .map(
-                      (i) =>
-                        issueLabels[i] ??
-                        (/^[a-z_]+$/.test(i) ? "请核对识别结果" : i),
-                    )
-                    .join(" · ")}
-                </Text>
-              ) : null}
-              {stage === "review" ? (
-                <View style={styles.modeRow}>
-                  <Pressable
-                    accessibilityRole="checkbox"
-                    accessibilityLabel={`选择第 ${index + 1} 条`}
-                    accessibilityState={{
-                      checked: r.selected,
-                      disabled: busy || !complete(r) || !!r.privateId,
-                    }}
-                    disabled={busy || !complete(r) || !!r.privateId}
-                    style={styles.check}
-                    onPress={() => {
-                      update(r.id, { selected: !r.selected });
-                      setAttested(false);
-                    }}
+          {groupImportCandidates(rows).map(([key, group]) => {
+            const first = group[0]!;
+            return (
+              <View
+                key={key}
+                style={[
+                  styles.card,
+                  group.some(({ row }) => row.selected) &&
+                    stage === "review" &&
+                    styles.selectedCard,
+                ]}
+              >
+                <AddressLine
+                  line={
+                    first.row.target
+                      ? importAddressLabel(first.row.target)
+                      : first.row.address || `待核对 ${first.index + 1}`
+                  }
+                  expanded
+                  compact
+                />
+                {group.map(({ row: r, index }, position) => (
+                  <View
+                    key={r.id}
+                    style={[
+                      styles.entryRow,
+                      position > 0 && styles.entryDivider,
+                    ]}
                   >
-                    <Text>{r.selected ? "☑" : "□"} 选择</Text>
-                  </Pressable>
-                  {!r.privateId ? (
-                    <Pressable
-                      accessibilityRole="button"
-                      disabled={busy}
-                      style={styles.check}
-                      onPress={() => {
-                        setEditing(r.id);
-                      }}
-                    >
-                      <Text style={styles.link}>编辑</Text>
-                    </Pressable>
-                  ) : null}
-                </View>
-              ) : null}
-            </View>
-          ))}
+                    <View style={styles.codeBand}>
+                      <Text style={[styles.code, { flexShrink: 1 }]}>
+                        {r.value || "缺少门禁码"}
+                      </Text>
+                      <Text style={styles.door}>{r.scope}</Text>
+                    </View>
+                    {r.carrierDoorLabel && r.carrierDoorLabel !== r.scope ? (
+                      <Text style={styles.meta}>
+                        截图标注 · {r.carrierDoorLabel}
+                      </Text>
+                    ) : null}
+                    {r.error ? (
+                      <Text style={styles.error}>{r.error}</Text>
+                    ) : r.status ? (
+                      <Text style={styles.meta}>
+                        {r.status === "active"
+                          ? "已私存 · 已共享"
+                          : r.status === "pending"
+                            ? "已私存 · 共享尚未发布"
+                            : r.status === "same_value"
+                              ? "已私存 · 同码记录"
+                              : "已保存到我的公寓"}
+                      </Text>
+                    ) : stage === "result" ? (
+                      <Text style={styles.meta}>未提交</Text>
+                    ) : !canShareCandidate(r) &&
+                      mode === "private_and_share" ? (
+                      <Text style={styles.meta}>公寓待匹配</Text>
+                    ) : null}
+                    {stage === "review" &&
+                    mode === "private_and_share" &&
+                    !r.privateId &&
+                    r.scope === unconfirmedEntrance ? (
+                      <Text style={styles.meta}>共享前请确认入口归属</Text>
+                    ) : null}
+                    {stage === "review" &&
+                    !r.status &&
+                    needsScreenshotReview(r) ? (
+                      <Text style={styles.meta}>
+                        {r.issues
+                          .map(
+                            (i) =>
+                              issueLabels[i] ??
+                              (/^[a-z_]+$/.test(i) ? "请核对识别结果" : i),
+                          )
+                          .join(" · ")}
+                      </Text>
+                    ) : null}
+                    {stage === "review" ? (
+                      <View style={styles.modeRow}>
+                        <CheckField
+                          label="选择"
+                          accessibilityLabel={`选择第 ${index + 1} 条`}
+                          checked={r.selected}
+                          disabled={
+                            busy ||
+                            !complete(r) ||
+                            needsScreenshotReview(r) ||
+                            !!r.privateId
+                          }
+                          onChange={(selected) => {
+                            update(r.id, { selected });
+                            setAttested(false);
+                          }}
+                        />
+                        {!r.privateId ? (
+                          <Pressable
+                            accessibilityRole="button"
+                            disabled={busy}
+                            style={styles.check}
+                            onPress={() => openReviewEditor(r.id)}
+                          >
+                            <Text style={styles.link}>核对</Text>
+                          </Pressable>
+                        ) : null}
+                      </View>
+                    ) : null}
+                  </View>
+                ))}
+              </View>
+            );
+          })}
           {!rows.length ? (
             <Text style={styles.meta}>暂无待确认记录</Text>
           ) : null}
@@ -956,6 +1101,12 @@ export function ImportSession(p: {
   );
 }
 const styles = StyleSheet.create({
+  entryRow: { gap: 8 },
+  entryDivider: {
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.color.border,
+  },
   headerAction: {
     minWidth: 48,
     minHeight: 48,
@@ -985,7 +1136,13 @@ const styles = StyleSheet.create({
     height: 210,
     backgroundColor: tokens.color.surfaceMuted,
   },
-  modeRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  modeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   check: { minHeight: 48, justifyContent: "center", paddingVertical: 8 },
   card: {
     borderWidth: 1,
@@ -994,6 +1151,18 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
+  selectedCard: { borderColor: tokens.color.brandPrimary },
+  codeBand: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: tokens.color.surfaceMuted,
+  },
+  door: { color: tokens.color.textSecondary, fontSize: 13, lineHeight: 20 },
   code: {
     fontSize: 28,
     lineHeight: 36,
@@ -1001,5 +1170,5 @@ const styles = StyleSheet.create({
     color: tokens.color.ink,
   },
   error: { fontSize: 14, color: tokens.color.danger },
-  link: { color: tokens.color.brandPrimary },
+  link: { color: tokens.color.brandText },
 });

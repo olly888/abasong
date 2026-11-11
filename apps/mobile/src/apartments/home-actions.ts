@@ -24,3 +24,26 @@ export function apartmentResume(locked: boolean, hasSelection: boolean) {
       ? "reload_selection"
       : "keep_destination";
 }
+
+// Explicit navigation (including a newly shared address) outranks an old
+// reading position. Keep the intent until the target row is actually visible.
+export function rememberApartmentDestination(
+  memory: {
+    apartmentId?: string;
+    destinationKey?: string;
+    camera?: unknown;
+    pendingFocusId?: string;
+  },
+  apartmentId?: string,
+  destinationKey?: string,
+) {
+  if (!apartmentId && !destinationKey) return;
+  if (
+    memory.apartmentId !== apartmentId ||
+    memory.destinationKey !== destinationKey
+  )
+    memory.camera = undefined;
+  memory.apartmentId = apartmentId;
+  memory.destinationKey = destinationKey;
+  memory.pendingFocusId = apartmentId;
+}

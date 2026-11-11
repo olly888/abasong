@@ -44,17 +44,19 @@ export function Choice<T extends string>({
   options,
   onChange,
   disabled = false,
+  compact = false,
 }: {
   label: string;
   value: T;
   options: ReadonlyArray<readonly [T, string]>;
   onChange: (v: T) => void;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   return (
     <View style={{ gap: 10 }}>
       <Text style={requestStyles.label}>{label}</Text>
-      <View style={requestStyles.choices}>
+      <View style={[requestStyles.choices, compact && { gap: 4 }]}>
         {options.map(([v, name]) => (
           <Pressable
             key={v}
@@ -64,6 +66,7 @@ export function Choice<T extends string>({
             onPress={() => onChange(v)}
             style={[
               requestStyles.choice,
+              compact && { paddingHorizontal: 8, minWidth: 48 },
               value === v && requestStyles.selected,
             ]}
           >
@@ -163,8 +166,8 @@ export const requestStyles = StyleSheet.create({
     gap: 12,
     backgroundColor: tokens.color.surface,
   },
-  status: { color: tokens.color.brandPrimary, fontSize: 13, fontWeight: "600" },
-  price: { color: tokens.color.brandPrimary, fontSize: 19, fontWeight: "700" },
+  status: { color: tokens.color.brandText, fontSize: 13, fontWeight: "600" },
+  price: { color: tokens.color.brandText, fontSize: 19, fontWeight: "700" },
   choices: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   choice: {
     paddingHorizontal: 14,
@@ -179,5 +182,5 @@ export const requestStyles = StyleSheet.create({
     backgroundColor: tokens.color.brandSurface,
   },
   choiceText: { fontSize: 14, color: tokens.color.textSecondary },
-  selectedText: { color: tokens.color.brandPrimary, fontWeight: "600" },
+  selectedText: { color: tokens.color.brandText, fontWeight: "600" },
 });

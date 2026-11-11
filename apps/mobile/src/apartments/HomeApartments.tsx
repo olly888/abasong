@@ -1,5 +1,16 @@
+import {
+  HomeWorkspace,
+  type WorkspaceControls,
+} from "../components/HomeWorkspace";
+import { HomeResultList } from "../ui/HomeResultList";
+import { HomeApartmentCard } from "./HomeApartmentCard";
+import { useVisibleAccess } from "./useVisibleAccess";
 import { NearbyCarousel } from "./NearbyCarousel";
-import { apartmentResume, recenterHome } from "./home-actions";
+import {
+  apartmentResume,
+  recenterHome,
+  rememberApartmentDestination,
+} from "./home-actions";
 import type { MapCameraSnapshot } from "../components/map-camera";
 import {
   CollaborationHome,
@@ -19,6 +30,9 @@ import {
   observationPoint,
   discoveryInput,
   matchesDistanceContext,
+  nearbyResultState,
+  nearbyRangeLabel,
+  type ProviderDiscoveryStatus,
   type DiscoveryObservation,
   type NearbySnapshot,
 } from "./nearby-policy";
@@ -44,7 +58,6 @@ import {
 import {
   AppState,
   Linking,
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -62,7 +75,8 @@ import { watchDevicePosition } from "./location-stream";
 import { serialLatest } from "./serial-latest";
 import { HomeArrivalPanel } from "./HomeArrivalPanel";
 import { MapTools } from "../components/HomeChrome";
-import { Icon } from "../ui/Icon";
+import { MapCardFrame } from "../ui/MapCardFrame";
+import { MapStatusRow } from "../ui/MapStatusRow";
 import { ApartmentSheet } from "./ApartmentSheet";
 import { useAuth } from "../auth/AuthProvider";
 import { AccountError } from "../auth/api-client";
@@ -70,11 +84,16 @@ import { dataRequest } from "./client";
 type S = components["schemas"];
 export type ApartmentReadingMemory = {
   apartmentId?: string;
+  pendingFocusId?: string;
   destinationKey?: string;
   camera?: MapCameraSnapshot;
+  scroll?: number;
+  nearby?: NearbyCardCandidate[];
+  range?: ReturnType<typeof nearbyRangeLabel>;
 };
 export function HomeApartments({
   toolbar,
+  workspace,
   apartmentId,
   destinationKey,
   mode = "公寓",
@@ -84,6 +103,7 @@ export function HomeApartments({
   onToggleList = () => {},
 }: {
   toolbar: ReactNode;
+  workspace?: WorkspaceControls;
   apartmentId?: string;
   destinationKey?: string;
   mode?: HomeMode;
@@ -98,20 +118,30 @@ export function HomeApartments({
     memory: createDiscoveryMemory(),
     reading: {} as ApartmentReadingMemory,
   });
+  const appliedDestination = useRef<string | undefined>(undefined);
   if (discovery.current.owner !== auth.session?.user.id)
     discovery.current = {
       owner: auth.session?.user.id,
       memory: createDiscoveryMemory(),
       reading: {},
     };
+  const destinationIntent =
+    apartmentId || destinationKey
+      ? JSON.stringify([auth.session?.user.id, apartmentId, destinationKey])
+      : undefined;
+  if (!destinationIntent) appliedDestination.current = undefined;
   if (
     auth.phase === "ready" &&
     auth.session &&
-    (apartmentId || destinationKey)
+    destinationIntent &&
+    destinationIntent !== appliedDestination.current
   ) {
-    discovery.current.reading.apartmentId = apartmentId;
-    discovery.current.reading.destinationKey = destinationKey;
-    discovery.current.reading.camera = undefined;
+    appliedDestination.current = destinationIntent;
+    rememberApartmentDestination(
+      discovery.current.reading,
+      apartmentId,
+      destinationKey,
+    );
   }
   const [focused, setFocused] = useState(false),
     [active, setActive] = useState(AppState.currentState !== "background"),
@@ -142,26 +172,95 @@ export function HomeApartments({
   useEffect(() => {
     if (auth.phase !== "ready") clearSearchDestination();
   }, [auth.phase]);
-  if (!focused || !active || auth.phase !== "ready" || !auth.session)
+  if (!focused || !active || auth.phase !== "ready" || !auth.session) {
+    const signingIn = ["restoring", "loading-account", "signing-out"].includes(
+      auth.phase,
+    );
+    if (workspace)
+      return (
+        <HomeWorkspace
+          header={toolbar}
+          controls={workspace}
+          map={<HomeMap topInset={138} bottomInset={12} />}
+          title={
+            mode === "公寓"
+              ? "附近公寓"
+              : mode === "找活"
+                ? "附近配送需求"
+                : "附近可接活司机"
+          }
+          apartment={mode === "公寓"}
+          onContribute={openContributionMenu}
+        >
+          <View style={{ paddingHorizontal: 16 }}>
+            <MapStatusRow
+              state={
+                signingIn
+                  ? "loading"
+                  : auth.phase === "error"
+                    ? "error"
+                    : "unavailable"
+              }
+              title={
+                signingIn
+                  ? "正在确认登录"
+                  : auth.phase === "error" && auth.session
+                    ? "账号资料暂时无法加载"
+                    : mode === "公寓"
+                      ? "登录后使用公寓资料"
+                      : mode === "找活"
+                        ? "登录后查看配送需求"
+                        : "登录后查看可接活司机"
+              }
+              action={
+                signingIn
+                  ? undefined
+                  : auth.phase === "error" && auth.session
+                    ? { label: "重新加载", onPress: auth.retryAccount }
+                    : {
+                        label: "登录",
+                        onPress: () => router.push("/auth/phone"),
+                      }
+              }
+            />
+          </View>
+        </HomeWorkspace>
+      );
     return (
       <View style={styles.root}>
         <HomeMap />
         {toolbar}
-        <MapTools bottom={344} />
-        <View style={styles.panel}>
-          <View style={styles.handleSpace}>
-            <View style={styles.handle} />
-          </View>
-          <View style={{ paddingHorizontal: 22 }}>
-            <EmptyApartment
-              title="登录后使用公寓资料"
-              action="登录"
-              onPress={() => router.push("/auth/phone")}
-            />
-          </View>
-        </View>
+        {focused && active ? (
+          <MapCardFrame style={styles.statusPanel}>
+            {signingIn ? (
+              <MapStatusRow state="loading" title="正在确认登录" />
+            ) : auth.phase === "error" && auth.session ? (
+              <MapStatusRow
+                state="error"
+                title="账号资料暂时无法加载"
+                action={{ label: "重新加载", onPress: auth.retryAccount }}
+              />
+            ) : (
+              <MapStatusRow
+                state="unavailable"
+                title={
+                  mode === "公寓"
+                    ? "登录后使用公寓资料"
+                    : mode === "找活"
+                      ? "登录后查看配送需求"
+                      : "登录后查看可接活司机"
+                }
+                action={{
+                  label: "登录",
+                  onPress: () => router.push("/auth/phone"),
+                }}
+              />
+            )}
+          </MapCardFrame>
+        ) : null}
       </View>
     );
+  }
   return (
     <View style={styles.root}>
       <View
@@ -177,6 +276,7 @@ export function HomeApartments({
             ":" +
             (destinationKey ?? "")
           }
+          workspace={workspace}
           toolbar={toolbar}
           apartmentId={apartmentId}
           destinationKey={destinationKey}
@@ -203,6 +303,7 @@ export function HomeApartments({
 
 export function HomeApartmentContent({
   toolbar,
+  workspace,
   apartmentId,
   destinationKey,
   mode = "公寓",
@@ -215,6 +316,7 @@ export function HomeApartmentContent({
   onToggleList = () => {},
 }: {
   toolbar: ReactNode;
+  workspace?: WorkspaceControls;
   apartmentId?: string;
   destinationKey?: string;
   mode?: HomeMode;
@@ -238,7 +340,18 @@ export function HomeApartmentContent({
     onAdd?: (apartment: S["Apartment"]) => void;
   };
 }) {
-  const collapsedHeight = compactCardHeight(useWindowDimensions().fontScale);
+  const window = useWindowDimensions();
+  const workspaceMeasurements = useRef<
+    NonNullable<WorkspaceControls["measurements"]>
+  >({});
+  const workspaceControls = workspace
+    ? { ...workspace, measurements: workspaceMeasurements.current }
+    : undefined;
+  const collapsedHeight = compactCardHeight(window.fontScale);
+  const localListMemory = useRef<{ scroll?: number }>({});
+  const [listFocusRevision, setListFocusRevision] = useState(
+    apartmentId || readingMemory?.pendingFocusId ? 1 : 0,
+  );
   const fallbackMemory = useRef(createDiscoveryMemory());
   const modeRef = useRef(mode),
     previousMode = useRef(mode);
@@ -268,7 +381,10 @@ export function HomeApartmentContent({
     providerRef = useRef<NearbySnapshot | null>(null);
   const providerLast = useRef(0),
     providerEpoch = useRef(0),
-    providerStatus = useRef<"idle" | "loading" | "ok" | "unavailable">("idle");
+    providerStatus = useRef<ProviderDiscoveryStatus>("idle");
+  const [rangeLabel, setRangeLabel] = useState(
+    readingMemory?.range ?? nearbyRangeLabel(null, "idle"),
+  );
   const [point, setPoint] = useState<S["Point"]>(),
     [cameraTarget, setCameraTarget] = useState<S["Point"] | undefined>(
       readingMemory?.camera?.center,
@@ -281,7 +397,9 @@ export function HomeApartmentContent({
     [cameraRevision, setCameraRevision] = useState(0),
     [blocked, setBlocked] = useState(false),
     [locationNotice, setLocationNotice] = useState<string | null>(null),
-    [nearbyItems, setNearbyItems] = useState<NearbyCardCandidate[]>([]),
+    [nearbyItems, setNearbyItems] = useState<NearbyCardCandidate[]>(
+      workspace ? (readingMemory?.nearby ?? []) : [],
+    ),
     [compactHeight, setCompactHeight] = useState(192),
     [providerSelected, setProviderSelected] = useState<
       S["NearbyCandidate"] | null
@@ -296,6 +414,7 @@ export function HomeApartmentContent({
     [busy, setBusy] = useState(false),
     [locating, setLocating] = useState(false),
     [loaded, setLoaded] = useState(false),
+    [sharingPaused, setSharingPaused] = useState(false),
     [favorite, setFavorite] = useState<S["LibraryEntry"] | null>(null),
     [bookmarkKnown, setBookmarkKnown] = useState(false),
     [bookmarkBusy, setBookmarkBusy] = useState(false),
@@ -305,7 +424,7 @@ export function HomeApartmentContent({
     [error, setError] = useState<string | null>(null),
     [notice, setNotice] = useState("正在定位"),
     [lookupState, setLookupState] = useState<
-      "loading" | "nearby" | "ambiguous" | "empty" | "error"
+      "loading" | "nearby" | "ambiguous" | "empty" | "error" | "partial"
     >("loading");
   const apartmentViewport = useRef<MapCameraSnapshot | undefined>(
       readingMemory?.camera,
@@ -337,6 +456,21 @@ export function HomeApartmentContent({
           ...options,
           signal: options.signal ?? control.current.signal,
         });
+  const visibleAccess = useVisibleAccess({
+    scope: ownerId + ":" + (session?.access_token ?? "test"),
+    enabled: !!workspace && mode === "公寓",
+    canRead: !!(__DEV__ && testData
+      ? testData.canRead
+      : auth.me?.capabilities.includes("access.read")),
+    expandedId: expanded ? selected?.id : undefined,
+    read: (id, signal) =>
+      request<S["AccessList"]>(`/v1/apartments/${id}/access-records`, {
+        signal,
+      }),
+  });
+  useEffect(() => {
+    if (workspace && readingMemory) readingMemory.nearby = nearbyItems;
+  }, [workspace, readingMemory, nearbyItems]);
   const alive = () => !control.current.signal.aborted;
   useEffect(() => {
     control.current = new AbortController();
@@ -382,20 +516,29 @@ export function HomeApartmentContent({
     if (modeRef.current !== "公寓" || manualLocked.current) return;
     setNearbyItems(items);
     setCandidates(items.flatMap((c) => (c.apartment ? [c.apartment] : [])));
-    setLookupState(
-      items.length
-        ? "nearby"
-        : providerStatus.current === "loading"
-          ? "loading"
-          : providerStatus.current === "unavailable"
-            ? "error"
-            : "empty",
-    );
-    const current = selectionRef.current?.id ?? providerSelectionKey.current;
-    if (
+    const provider = providerStatus.current;
+    const snapshot = providerRef.current;
+    const current = latestObservation.current;
+    const providerUsable =
+      snapshot &&
+      snapshot.until > Date.now() &&
       current &&
+      distanceM(snapshot.point, observationPoint(current)) <= 15;
+    const activeSnapshot = providerUsable ? snapshot : catalogRef.current;
+    const displayStatus =
+      (provider === "ok" || provider === "partial") && !providerUsable
+        ? "unavailable"
+        : provider;
+    const label = nearbyRangeLabel(activeSnapshot, displayStatus);
+    setRangeLabel(label);
+    if (readingMemory) readingMemory.range = label;
+    setLookupState(nearbyResultState(items.length > 0, displayStatus));
+    const selectedKey =
+      selectionRef.current?.id ?? providerSelectionKey.current;
+    if (
+      selectedKey &&
       items[0] &&
-      (items[0].key === current || items[0].apartment?.id === current)
+      (items[0].key === selectedKey || items[0].apartment?.id === selectedKey)
     )
       return;
     if (items[0]) void chooseNearby(items[0], false);
@@ -413,6 +556,8 @@ export function HomeApartmentContent({
       point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
       until: Date.parse(lookup.expires_at),
       context: lookup.distance_context,
+      radius_m: lookup.radius_m,
+      coverage: lookup.coverage,
     };
     const cache = providerRef.current;
     if (
@@ -430,8 +575,20 @@ export function HomeApartmentContent({
         ),
       );
     // Reuse the unexpired in-memory provider response; no stationary 30s poll.
-    if (providerRef.current || Date.now() - providerLast.current < 30000)
+    if (providerRef.current) return;
+    if (Date.now() - providerLast.current < 30000) {
+      if (providerStatus.current === "idle" && latestObservation.current) {
+        providerStatus.current = "unavailable";
+        updateNearby(
+          nearbyFromSnapshots(
+            catalogRef.current,
+            null,
+            latestObservation.current,
+          ),
+        );
+      }
       return;
+    }
     providerLast.current = Date.now();
     providerStatus.current = "loading";
     if (latestObservation.current) {
@@ -464,7 +621,7 @@ export function HomeApartmentContent({
     void request<S["NearbyDiscovery"]>("/v1/apartments/discover/mapbox", {
       method: "POST",
       signal: stream.current?.signal,
-      body: discoveryInput(origin),
+      body: discoveryInput(origin, !!workspace),
     })
       .then((extra) => {
         if (
@@ -478,19 +635,28 @@ export function HomeApartmentContent({
           distanceM(observationPoint(latestObservation.current), {
             lng: fix.coords.longitude,
             lat: fix.coords.latitude,
-          }) > 50
+          }) > 15
         ) {
           unavailable();
           return;
         }
-        if (extra.provider_status === "ok") {
-          providerStatus.current = "ok";
+        if (extra.provider_status === "ok" || extra.expansion) {
+          providerStatus.current =
+            extra.provider_status === "unavailable"
+              ? "unavailable"
+              : extra.coverage?.mapbox === "partial" ||
+                  extra.expansion?.stop_reason === "budget_exhausted"
+                ? "partial"
+                : "ok";
           providerRef.current = {
             items: extra.items,
             until: Date.parse(extra.expires_at),
             point: { lng: fix.coords.longitude, lat: fix.coords.latitude },
             context: extra.distance_context,
             complete: !!extra.distance_context,
+            radius_m: extra.radius_m,
+            coverage: extra.coverage,
+            expansion: extra.expansion,
           };
           updateNearby(
             nearbyFromSnapshots(
@@ -520,6 +686,7 @@ export function HomeApartmentContent({
     setRecords([]);
     setMapContext(null);
     setLoaded(false);
+    setSharingPaused(false);
     setReadError(false);
     setBusy(false);
     setProviderSelected(c);
@@ -553,6 +720,7 @@ export function HomeApartmentContent({
     setMapContext(null);
     setRecords([]);
     setLoaded(false);
+    setSharingPaused(false);
     setBusy(false);
     setError(null);
   }
@@ -602,7 +770,10 @@ export function HomeApartmentContent({
       invalidateAutomaticCard();
       setCandidates([]);
       setNearbyItems([]);
-      setLookupState("empty");
+      setLookupState("loading");
+      const label = nearbyRangeLabel(null, "idle");
+      setRangeLabel(label);
+      if (readingMemory) readingMemory.range = label;
     };
     const fail = (reason: string) => {
       if (!valid()) return;
@@ -612,6 +783,9 @@ export function HomeApartmentContent({
       providerStatus.current = "idle";
       setNearbyItems([]);
       setCandidates([]);
+      const label = nearbyRangeLabel(null, "idle");
+      setRangeLabel(label);
+      if (readingMemory) readingMemory.range = label;
       queue.invalidate();
       setLocating(false);
       setPoint(undefined);
@@ -763,8 +937,12 @@ export function HomeApartmentContent({
       resetApartments: () => {
         if (readingMemory) {
           readingMemory.apartmentId = undefined;
+          readingMemory.pendingFocusId = undefined;
           readingMemory.destinationKey = undefined;
           readingMemory.camera = undefined;
+          readingMemory.scroll = 0;
+          readingMemory.nearby = [];
+          readingMemory.range = undefined;
         }
         clearSearchDestination();
         if (temporary) setTemporary(undefined);
@@ -777,6 +955,7 @@ export function HomeApartmentContent({
         setNearbyItems([]);
         setCandidates([]);
         setLookupState("loading");
+        setRangeLabel(nearbyRangeLabel(null, "idle"));
         invalidateAutomaticCard();
       },
       openSettings: () => {
@@ -835,6 +1014,7 @@ export function HomeApartmentContent({
     setRecords([]);
     setMapContext(null);
     setLoaded(false);
+    setSharingPaused(false);
     setReadError(false);
     if (origin !== "retry") setExpanded(false);
     setError(null);
@@ -858,6 +1038,10 @@ export function HomeApartmentContent({
         }
       })(),
       (async () => {
+        if (workspace) {
+          setBusy(false);
+          return;
+        }
         try {
           if (
             __DEV__ && testData
@@ -870,7 +1054,8 @@ export function HomeApartmentContent({
             if (alive() && version === generation.current) {
               if (result.items.some((r) => r.apartment_id !== p.id))
                 throw new Error("密码资料与地址不一致，请重试");
-              setRecords(result.items);
+              setRecords(result.sharing_paused ? [] : result.items);
+              setSharingPaused(result.sharing_paused === true);
               setLoaded(true);
             }
           }
@@ -912,18 +1097,39 @@ export function HomeApartmentContent({
         method: "PUT",
         body: { client_event_id: randomUUID(), value },
       });
+      if (workspace && alive()) {
+        visibleAccess.refresh(r.apartment_id);
+        return version === generation.current;
+      }
       if (selected && alive() && version === generation.current) {
         const result = await request<S["AccessList"]>(
           `/v1/apartments/${selected.id}/access-records`,
         );
         if (alive() && version === generation.current) {
-          setRecords(result.items);
+          setRecords(result.sharing_paused ? [] : result.items);
+          setSharingPaused(result.sharing_paused === true);
           return true;
         }
       }
       return false;
     } catch (e) {
+      if (
+        workspace &&
+        alive() &&
+        e instanceof AccountError &&
+        ([401, 403, 404].includes(e.status) ||
+          e.code === "APARTMENT_SHARING_PAUSED")
+      )
+        visibleAccess.fail(r.apartment_id, e);
       if (alive() && version === generation.current) {
+        if (
+          e instanceof AccountError &&
+          e.code === "APARTMENT_SHARING_PAUSED"
+        ) {
+          setRecords([]);
+          setSharingPaused(true);
+          return false;
+        }
         if (e instanceof AccountError && [401, 403, 404].includes(e.status)) {
           setRecords([]);
           setReadError(true);
@@ -932,7 +1138,8 @@ export function HomeApartmentContent({
       }
       return false;
     } finally {
-      if (alive() && version === generation.current) setFeedbackBusy(null);
+      // Moving the list focus must not leave every feedback control locked.
+      if (alive()) setFeedbackBusy(null);
     }
   }
   async function save() {
@@ -1055,6 +1262,7 @@ export function HomeApartmentContent({
   if (mode !== "公寓")
     return (
       <CollaborationHome
+        workspace={workspaceControls}
         mode={mode}
         list={list}
         toolbar={toolbar}
@@ -1074,6 +1282,255 @@ export function HomeApartmentContent({
         }
       />
     );
+  if (workspace) {
+    const items = [...nearbyItems];
+    if (selected && !items.some((c) => c.apartment?.id === selected.id))
+      items.unshift({
+        key: selected.id,
+        source: "catalog",
+        address: null,
+        distance_m: 0,
+        classification: "catalog_community",
+        requires_address_confirmation: false,
+        apartment: selected,
+        point: selected.point,
+      });
+    if (providerSelected && !items.some((c) => c.key === providerSelected.key))
+      items.unshift(providerSelected);
+    const rowKey = (c: NearbyCardCandidate) => c.apartment?.id ?? c.key;
+    const focus = (c: NearbyCardCandidate, scroll = false) => {
+      void chooseNearby(c);
+      if (scroll) setListFocusRevision((v) => v + 1);
+    };
+    const addCandidate = (c: NearbyCardCandidate) => {
+      manualLocked.current = true;
+      if (readingMemory) {
+        readingMemory.apartmentId = c.apartment?.id;
+        readingMemory.destinationKey = undefined;
+      }
+      if (c.apartment) {
+        if (__DEV__ && testData?.onAdd) testData.onAdd(c.apartment);
+        else
+          router.push({
+            pathname: "/apartments/contribute",
+            params: { apartment_id: c.apartment.id },
+          });
+      } else {
+        const key = randomUUID();
+        setNearbyContribution(key, ownerId, c);
+        router.push({
+          pathname: "/apartments/contribute",
+          params: { nearby_key: key },
+        });
+      }
+    };
+    const rowState = selected ? visibleAccess.rows.get(selected.id) : undefined;
+    return (
+      <View style={styles.root}>
+        <HomeWorkspace
+          header={toolbar}
+          controls={workspaceControls!}
+          title={
+            nearbyItems.length || !items.length ? rangeLabel.title : "公寓"
+          }
+          statusNote={nearbyItems.length ? rangeLabel.note : undefined}
+          count={items.length || undefined}
+          apartment
+          onContribute={openContributionMenu}
+          locating={locating}
+          canRecenter={!!point}
+          onLocate={() => {
+            returnToPosition();
+            setListFocusRevision((v) => v + 1);
+          }}
+          map={
+            <HomeMap
+              point={cameraTarget}
+              cameraState={
+                restoredViewport.current?.revision === cameraRevision
+                  ? restoredViewport.current.snapshot
+                  : undefined
+              }
+              onCameraSnapshot={(snapshot) => {
+                apartmentViewport.current = snapshot;
+                if (readingMemory) readingMemory.camera = snapshot;
+              }}
+              cameraRevision={cameraRevision}
+              cameraIntent={cameraIntent}
+              cameraZoom={cameraZoom}
+              frameSelected={frameSelected}
+              topInset={window.height > 650 ? 168 : 108}
+              bottomInset={12}
+              location={point}
+              destination={providerSelected?.point ?? temporary?.point}
+              apartments={candidates}
+              selectedId={selected?.id ?? providerSelected?.key}
+              selectedPoint={
+                selectedNearby?.point ??
+                selected?.point ??
+                providerSelected?.point
+              }
+              providerFeatureId={
+                selectedNearby?.provider_feature_id ??
+                providerSelected?.provider_feature_id
+              }
+              nearbyCandidates={items}
+              onNearbySelect={(c) => focus(c, true)}
+              mapContext={mapContext}
+              onSelect={(p) => {
+                void select(p);
+                setListFocusRevision((v) => v + 1);
+              }}
+            />
+          }
+        >
+          {temporary ? (
+            <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+              <AddressLine line={temporary.title} expanded />
+              <Text style={styles.address}>{temporary.label}</Text>
+              <Text style={styles.muted}>
+                {temporary.match_status === "ambiguous"
+                  ? "请选择对应公寓"
+                  : "暂未匹配到公寓资料"}
+              </Text>
+              {temporary.apartments.map((p) => (
+                <ListRow
+                  key={p.id}
+                  title={<AddressLine line={p.address_line1} compact />}
+                  subtitle={locality(p)}
+                  onPress={() => void select(p)}
+                />
+              ))}
+              {temporary.address ? (
+                <ActionButton
+                  label="添加门禁码"
+                  onPress={() => {
+                    const key = randomUUID();
+                    setNearbyContribution(key, ownerId, {
+                      address: temporary.address!,
+                    });
+                    router.push({
+                      pathname: "/apartments/contribute",
+                      params: { nearby_key: key },
+                    });
+                  }}
+                />
+              ) : null}
+              <ActionButton
+                label="搜索其他地址"
+                variant="text"
+                onPress={() => router.push("/apartments")}
+              />
+              <Text style={styles.muted}>{temporary.attribution}</Text>
+            </ScrollView>
+          ) : items.length ? (
+            <HomeResultList
+              items={items}
+              getKey={rowKey}
+              selectedKey={selected?.id ?? providerSelected?.key}
+              focusRevision={listFocusRevision}
+              memory={readingMemory ?? localListMemory.current}
+              onInteract={() => {
+                manualLocked.current = true;
+              }}
+              onFocus={(c) => {
+                if (rowKey(c) !== (selected?.id ?? providerSelected?.key))
+                  focus(c);
+              }}
+              onVisible={(rows) => {
+                if (
+                  readingMemory?.pendingFocusId &&
+                  rows.some(
+                    (r) => r.apartment?.id === readingMemory.pendingFocusId,
+                  )
+                )
+                  readingMemory.pendingFocusId = undefined;
+                visibleAccess.visible(
+                  rows.flatMap((r) => (r.apartment ? [r.apartment.id] : [])),
+                );
+              }}
+              header={
+                locationNotice ? (
+                  <MapStatusRow
+                    state="unavailable"
+                    title={locationNotice}
+                    action={{
+                      label: blocked ? "打开设置" : "重新定位",
+                      onPress: () =>
+                        void (blocked ? openLocationSettings() : locate(true)),
+                    }}
+                  />
+                ) : null
+              }
+              renderItem={(c) => (
+                <HomeApartmentCard
+                  candidate={c}
+                  observation={latestObservation.current}
+                  state={
+                    !canRead
+                      ? { status: "denied", records: [] }
+                      : visibleAccess.rows.get(c.apartment?.id ?? "")
+                  }
+                  selected={
+                    rowKey(c) === (selected?.id ?? providerSelected?.key)
+                  }
+                  onOpen={() => {
+                    focus(c);
+                    if (c.apartment) setExpanded(true);
+                  }}
+                  onAdd={() => addCandidate(c)}
+                  onRetry={() =>
+                    c.apartment && visibleAccess.retry(c.apartment.id)
+                  }
+                />
+              )}
+            />
+          ) : (
+            <View style={{ paddingHorizontal: 16 }}>
+              <HomeArrivalPanel
+                state={
+                  locationNotice
+                    ? "location"
+                    : locating
+                      ? "loading"
+                      : lookupState
+                }
+                message={locationNotice ?? notice}
+                candidates={candidates}
+                onSelect={(p) => void select(p)}
+                blocked={blocked}
+                onRetry={() => {
+                  providerLast.current = 0;
+                  providerStatus.current = "idle";
+                  void (blocked ? openLocationSettings() : locate(true));
+                }}
+              />
+            </View>
+          )}
+        </HomeWorkspace>
+        {expanded && selected ? (
+          <ApartmentSheet
+            apartment={selected}
+            distanceCandidate={selectedNearby}
+            observation={latestObservation.current}
+            records={canRead ? (rowState?.records ?? []) : []}
+            status={!canRead ? "denied" : (rowState?.status ?? "loading")}
+            expanded
+            saved={!!favorite?.favorite}
+            bookmarkBusy={bookmarkBusy || !bookmarkKnown}
+            feedbackBusy={feedbackBusy}
+            error={error}
+            onExpand={setExpanded}
+            onAdd={add}
+            onOther={() => setExpanded(false)}
+            onRetry={() => visibleAccess.retry(selected.id)}
+            onBookmark={() => void save()}
+            onFeedback={feedback}
+          />
+        ) : null}
+      </View>
+    );
+  }
   return (
     <View style={styles.root}>
       <View
@@ -1243,11 +1700,13 @@ export function HomeApartmentContent({
                 status={
                   !canRead
                     ? "denied"
-                    : readError
-                      ? "error"
-                      : !loaded && busy
-                        ? "loading"
-                        : "ready"
+                    : sharingPaused
+                      ? "paused"
+                      : readError
+                        ? "error"
+                        : !loaded && busy
+                          ? "loading"
+                          : "ready"
                 }
                 expanded={expanded}
                 saved={!!favorite?.favorite}
@@ -1319,6 +1778,7 @@ export function HomeApartmentContent({
                 generation.current++;
                 setRecords([]);
                 setLoaded(false);
+                setSharingPaused(false);
                 setBusy(true);
                 setReadError(false);
               }}
@@ -1339,137 +1799,50 @@ export function HomeApartmentContent({
           );
         })()
       ) : (
-        <View
-          onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}
-          style={styles.panel}
+        <MapCardFrame
+          onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height + 12)}
+          style={styles.statusPanel}
         >
-          <View style={styles.handleSpace}>
-            <View style={styles.handle} />
-          </View>
-          <ScrollView contentContainerStyle={styles.inner}>
-            {error ? (
-              <Text accessibilityRole="alert" style={styles.error}>
-                {error}
-              </Text>
-            ) : null}
-            <HomeArrivalPanel
-              state={
-                locationNotice ? "location" : locating ? "loading" : lookupState
-              }
-              message={locationNotice ?? notice}
-              candidates={candidates}
-              onSelect={(p) => void select(p)}
-              onContribute={openContributionMenu}
-              onRetry={() =>
-                locationNotice
-                  ? blocked
-                    ? void openLocationSettings()
-                    : void locate(true)
-                  : (() => {
-                      providerLast.current = 0;
-                      providerStatus.current = "idle";
-                      void locate(false, false);
-                    })()
-              }
-              blocked={blocked}
-            />
-          </ScrollView>
-        </View>
+          {error ? (
+            <Text accessibilityRole="alert" style={styles.error}>
+              {error}
+            </Text>
+          ) : null}
+          <HomeArrivalPanel
+            state={
+              locationNotice ? "location" : locating ? "loading" : lookupState
+            }
+            message={locationNotice ?? notice}
+            candidates={candidates}
+            onSelect={(p) => void select(p)}
+            onContribute={openContributionMenu}
+            onRetry={() =>
+              locationNotice
+                ? blocked
+                  ? void openLocationSettings()
+                  : void locate(true)
+                : (() => {
+                    providerLast.current = 0;
+                    providerStatus.current = "idle";
+                    void locate(false, false);
+                  })()
+            }
+            blocked={blocked}
+          />
+        </MapCardFrame>
       )}
     </View>
   );
 }
-function EmptyApartment({
-  title,
-  action,
-  busy = false,
-  onPress,
-  onRetry,
-  retryLabel = "重新定位",
-}: {
-  title: string;
-  action: string;
-  busy?: boolean;
-  onPress: () => void;
-  onRetry?: () => void;
-  retryLabel?: string;
-}) {
-  return (
-    <View style={styles.mapEmpty}>
-      <View style={styles.emptyIcon}>
-        <Icon name="box" color="#6D829E" />
-      </View>
-      <Text style={styles.emptyHeading}>{title}</Text>
-      <Text style={styles.emptySubtitle}>也可以直接搜索地址。</Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: busy, busy }}
-        disabled={busy}
-        onPress={onPress}
-        style={styles.emptyAction}
-      >
-        {busy ? (
-          <ActivityIndicator color={tokens.color.ink} />
-        ) : (
-          <Text
-            style={{ fontSize: 16, fontWeight: "600", color: tokens.color.ink }}
-          >
-            {action}
-          </Text>
-        )}
-      </Pressable>
-      {onRetry ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={onRetry}
-          style={{ minHeight: 48, justifyContent: "center" }}
-        >
-          <Text style={styles.link}>{retryLabel}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
 const styles = StyleSheet.create({
-  mapEmpty: {
-    paddingVertical: 38,
-    paddingHorizontal: 16,
-    alignItems: "center",
-  },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 17,
-    backgroundColor: "#F1F4F8",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 15,
-  },
-  emptyHeading: {
-    fontSize: 19,
-    lineHeight: 26,
-    fontWeight: "600",
-    color: tokens.color.ink,
-    textAlign: "center",
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    lineHeight: 24,
-    color: tokens.color.textMuted,
-    marginTop: 10,
-    marginBottom: 18,
-    textAlign: "center",
-  },
-  emptyAction: {
-    minHeight: 52,
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: tokens.color.controlBorder,
-    alignSelf: "stretch",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+  statusPanel: {
+    position: "absolute",
+    left: tokens.space[16].value,
+    right: tokens.space[16].value,
+    bottom: tokens.space[12].value,
+    paddingHorizontal: tokens.space[16].value,
+    paddingVertical: tokens.space[4].value,
+    zIndex: 20,
   },
   root: { flex: 1 },
   panel: {
@@ -1523,7 +1896,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 8,
   },
-  link: { fontSize: 14, color: tokens.color.brandPrimary },
+  link: { fontSize: 14, color: tokens.color.brandText },
   record: {
     paddingTop: 12,
     paddingBottom: 15,

@@ -1,3 +1,4 @@
+import { tokens } from "@abasong/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppState, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,7 +17,7 @@ const apartment: S["Apartment"] = {
   address_line1: "100 TEST Arrival Ave",
   city: "Test City",
   state: "CA",
-  postal_code: null,
+  postal_code: "90000",
   point: { lng: -118.2437, lat: 34.0522 },
   confidence: "field_verified",
 };
@@ -363,7 +364,7 @@ export default function ArrivalLab() {
             setRetest((n) => n + 1);
           }}
         >
-          <Text style={{ color: "#1467d8" }}>重测</Text>
+          <Text style={{ color: tokens.color.brandText }}>重测</Text>
         </Pressable>
       </View>
       <View style={{ height: 42 }}>

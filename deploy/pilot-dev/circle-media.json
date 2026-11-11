@@ -1,0 +1,146 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Abasong pilot-dev private circle images and scoped task policies for us-west-1",
+  "Resources": {
+    "CircleMediaBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          },
+          {
+            "Key": "Purpose",
+            "Value": "circle-media"
+          }
+        ]
+      }
+    },
+    "CircleMediaBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "CircleMediaBucket"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DenyInsecureTransport",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "CircleMediaBucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${CircleMediaBucket.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ApiCircleMediaPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "AbasongPilotApiCircleMedia",
+        "Roles": [
+          "abasong-pilot-dev-api-task"
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "${CircleMediaBucket.Arn}/circle-posts/*"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "WorkerCircleMediaPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "AbasongPilotWorkerCircleMedia",
+        "Roles": [
+          "abasong-pilot-dev-worker-task"
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:DeleteObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "${CircleMediaBucket.Arn}/circle-posts/*"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "BucketName": {
+      "Value": {
+        "Ref": "CircleMediaBucket"
+      }
+    },
+    "BucketArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CircleMediaBucket",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

@@ -268,7 +268,7 @@
     "synthetic_cleanup_verified": true
   },
   "b6_03": {
-    "status": "ios_cellular_cold_launch_login_and_account_verified",
+    "status": "ios_cellular_apartment_and_west_covina_delivery_verified",
     "ios_bundle_identifier": "com.abasong.pilot",
     "ios_native_compiled": true,
     "ios_signed": true,
@@ -278,7 +278,88 @@
     "cellular_sms_login_verified": true,
     "cellular_account_load_verified": true,
     "cellular_verification_source": "operator_reported_on_physical_iphone",
-    "remote_push_verified": false
+    "cellular_verified_build_number": "1",
+    "ios_v3_3_home_update": {
+      "build_number": "2",
+      "signed": true,
+      "installed_on_iphone_13_pro": true,
+      "launch_request": "accepted_after_reconnect",
+      "cellular_modes_verified": true,
+      "cellular_modes_scope": "empty_states_and_jobs_people_map_list_parity",
+      "cellular_modes_verification_source": "operator_reported_on_physical_iphone",
+      "cellular_apartment_search_card_and_code_verified": true,
+      "cellular_apartment_verification_source": "operator_reported_on_physical_iphone",
+      "cellular_apartment_fixture": "AP01_public_address_and_synthetic_access_record",
+      "cellular_apartment_fixture_cleanup_verified": true,
+      "cellular_apartment_contribution_verified": true,
+      "cellular_apartment_owner_correction_verified": true,
+      "cellular_apartment_return_to_original_card_verified": true,
+      "cellular_apartment_write_fixture_cleanup_verified": true,
+      "field_automatic_apartment_match_verified": false,
+      "field_automatic_apartment_match_status": "deferred_by_operator"
+    },
+    "west_covina_delivery": {
+      "scenario_count": 2,
+      "publisher_verification": "operator_on_physical_iphone_13_pro",
+      "applicant_verification": "real_sms_account_cloud_api",
+      "ended_requests_verified": 2,
+      "warehouse_gap_verified": 1,
+      "message_kms_envelopes_verified": 4,
+      "revocation_and_fixture_cleanup_verified": true
+    },
+    "distribution_preflight": {
+      "candidate_build_number": "2",
+      "rollback_build_number": "1",
+      "signatures_and_bundle_receipts_verified": true,
+      "device_rollback_rehearsed": false,
+      "provisioning_expires_at_los_angeles": "2026-11-14T11:25:00-08:00",
+      "archived_mobile_source_matches": 207,
+      "local_engineering_tests_passed": 510,
+      "local_requests_media_push_checks_passed": 620,
+      "android_native_distribution_verified": false,
+      "invite_release_isolation_verified": true,
+      "original_frozen_candidate_git_sha": "e15f6ad690fea1c32a288996dbf90d001645b72a",
+      "frozen_candidate_git_sha": "477e7ec4ac2d502e59f3a9dc5031a00085a8af45",
+      "frozen_candidate_draft_pr": "https://github.com/olly888/abasong/pull/107",
+      "exact_candidate_remote_ci_verified": true,
+      "exact_candidate_remote_ci_run": "https://github.com/olly888/abasong/actions/runs/42431690583",
+      "new_frozen_candidate_archive_signed": true,
+      "frozen_candidate_installed_on_iphone_13_pro": true,
+      "private_media_bound_in_deployed_template": true,
+      "private_media_s3_proposal": "../technical/B6-03_私有图片S3变更方案.md",
+      "private_media_s3_proposal_template_validated": true,
+      "cloud_private_media_verified": true,
+      "cloud_private_media_http_checks_passed": 29,
+      "cloud_private_media_iam_simulations_passed": 6,
+      "cloud_private_media_synthetic_cleanup_verified": true,
+      "cloud_private_media_native_device_verified": true,
+      "cloud_private_media_ios_cellular_publisher_verified": true,
+      "cloud_private_media_android_emulator_publisher_verified": true,
+      "cloud_private_media_native_two_account_reads_verified": true,
+      "cloud_private_media_native_removed_detail_verified_on_android": true,
+      "cloud_private_media_native_fixtures_remaining": 0,
+      "android_picker_correction_git_sha": "7a9ce9497c415e8cf917ee0e834eb0d50907e9d6",
+      "native_modal_safe_area_correction": "477e7ec",
+      "native_modal_safe_area_ios_and_android_emulator_verified": true,
+      "corrected_candidate_exact_remote_ci_verified": true,
+      "push_enabled_in_deployed_template": false,
+      "distribution_invites_open": false
+    },
+    "remote_push_verified": false,
+    "ios_remote_push_preflight": {
+      "worktree_branch": "codex/b6-03-push",
+      "local_git_sha": "bc953b7fbde2bebf9247f3923d8a6f95d7d64836",
+      "local_engineering_tests_passed": 511,
+      "synthetic_apns_prebuild_verified": true,
+      "push_build_refused_without_approved_team": true,
+      "deployed_worker_push_mode": "disabled",
+      "eligible_device_bindings": 0,
+      "recent_push_event_candidates": 0,
+      "open_push_deliveries": 0,
+      "apple_membership_status": "operator_check_pending",
+      "expo_project_configured": false,
+      "signed_push_build_verified": false
+    }
   },
   "controlled_implementation": {
     "eligible_batches": [],
@@ -938,5 +1019,90 @@
     "source_commit": "e6e55ab727c48fd8d3f5383dfbb3b678867bef89",
     "source_CI": 42333171347,
     "cleanup": "0_disposable_databases_and_roles"
-  }
+  },
+  "current_workstream": {
+    "target": "V3.5.1-UI-detail",
+    "date": "2026-11-09",
+    "batch": "DTL-03",
+    "state": "scoped_dual_native_pass_signed_build3_installed_owner_home_return_pass",
+    "report": "../technical/V3.5.1_DTL-03_可见读取回程与签名包验收.md",
+    "next": "DTL-04_contribution_and_two_scenario_form_details",
+    "candidate_branch": "codex/dtl03-pilot",
+    "source_commit": "f970904172e658de565bfe0e7a7d034fe21371b2",
+    "accepted_parent": "3e36678572b8473020b324951790c6e5fe7f8737",
+    "pull_request": "https://github.com/olly888/abasong/pull/109",
+    "evidence": {
+      "engineering_files": 99,
+      "engineering_tests": 594,
+      "lint_types_build": "passed",
+      "native_acceptance": "iOS_Android_simulators_scoped_pass",
+      "remote_CI": {
+        "run_id": 42763282240,
+        "conclusion": "success",
+        "exact_head_sha": true,
+        "jobs": [
+          "Secret history scan",
+          "Engineering verification"
+        ]
+      },
+      "iphone": {
+        "model": "iPhone 13 Pro",
+        "build": 3,
+        "installed": true,
+        "launched": true,
+        "file_backed_sources_match": 237,
+        "owner_home_search_detail_return": "passed",
+        "cellular_this_build": "not_verified"
+      }
+    },
+    "not_claimed": [
+      "cloud0023_rollout",
+      "new_cellular_business_verification",
+      "Android_physical_device",
+      "whole_app_screen_reader_acceptance",
+      "field_or_participant_acceptance"
+    ],
+    "historical_fields_note": "All other B5/B6/M7 snapshots retain their original scope. This object and DEVELOPMENT_STATUS.md define the current batch."
+  },
+  "workstream_history": [
+    {
+      "target": "V3.5-Muse",
+      "date": "2026-11-08",
+      "batch": "M7-01",
+      "state": "frozen_candidate_exact_ci_pass_native_pending",
+      "report": "../technical/V3.5_M7-01_统一候选与集成验收.md",
+      "next": "affected_native_acceptance_after_unlock",
+      "candidate_branch": "codex/v35-m7-integration",
+      "accepted_parent": "477e7ec4ac2d502e59f3a9dc5031a00085a8af45",
+      "evidence": {
+        "engineering_tests": 561,
+        "library_http_database_checks": 328,
+        "requests_http_database_checks": 660,
+        "import_http_database_checks": 125,
+        "generated_drift": false,
+        "native_acceptance": "pending_locked_Mac",
+        "ios_android_hermes_exports": "passed",
+        "release_invitation_isolation": "passed",
+        "remote_CI": {
+          "run_id": 42537634392,
+          "conclusion": "success",
+          "exact_candidate_tree": true
+        },
+        "mobile_input_http_pg": {
+          "assertions": 32,
+          "http_calls": 40
+        }
+      },
+      "not_claimed": [
+        "native_gestures_while_mac_locked",
+        "cloud_rollout",
+        "signed_build",
+        "invitation_distribution",
+        "field_or_participant_acceptance"
+      ],
+      "historical_fields_note": "Other B5/B6 snapshots remain historical; current Muse work is tracked here and in DEVELOPMENT_STATUS.md.",
+      "source_commit": "a9c245b29a85ae72d08216d52beb2d22b100be2e",
+      "pull_request": "https://github.com/olly888/abasong/pull/108"
+    }
+  ]
 }

@@ -14,6 +14,9 @@ import {
   publicApartmentId,
 } from "./public-apartment-data";
 import { localTarget } from "../d0/database-target";
+const firstSyntheticCode = "*00148#";
+const secondSyntheticCode = "#00259*";
+
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     admin = localTarget(env.DATABASE_ADMIN_URL),
@@ -179,6 +182,7 @@ async function main() {
       "0020_dsp_team_profiles.sql",
       "0021_circle_text.sql",
       "0022_circle_media.sql",
+      "0023_apartment_sharing_controls.sql",
     ])
       await db.query(readFileSync(`database/migrations/${file}`, "utf8"));
     const password = randomBytes(24).toString("hex");
@@ -551,14 +555,14 @@ async function main() {
       candidates: [
         {
           address_text: "300 S Santa Fe Ave, Los Angeles, CA 90012",
-          value: "TEST-GATE-1",
+          value: firstSyntheticCode,
           method: "keypad",
           scope: { label: "TEST entrance" },
           review_issues: ["uncertain_address", "uncertain_characters"],
         },
         {
           address_text: "Unlisted Example street",
-          value: "TEST-GATE-2",
+          value: secondSyntheticCode,
           method: "keypad",
           review_issues: ["ambiguous_pair"],
         },
@@ -621,6 +625,8 @@ async function main() {
     );
     const cid = extracted.items[0].id,
       cid2 = extracted.items[1].id;
+    assert.equal(extracted.items[0].value, firstSyntheticCode);
+    assert.equal(extracted.items[1].value, secondSyntheticCode);
     assert.equal(extracted.items[0].state, "needs_review");
     assert.equal(extracted.items[0].confirmation_revision, null);
     assert(extracted.items[0].issues.includes("uncertain_address"));
@@ -666,7 +672,8 @@ async function main() {
       "SELECT payload::text FROM abasong.import_batches WHERE id=$1",
       [bid],
     );
-    assert(!stored.rows[0].payload.includes("TEST-GATE-1"));
+    assert(!stored.rows[0].payload.includes(firstSyntheticCode));
+    assert(!stored.rows[0].payload.includes(secondSyntheticCode));
     checks++;
     const row = await req(
       "PATCH",
@@ -925,12 +932,32 @@ async function main() {
       shareBody.items[0]!.client_commit_id,
     );
     await db.query("DROP TRIGGER block_shared ON abasong.access_records");
-    const shared = await req(
+    await db.query(
+      "INSERT INTO abasong.apartment_sharing_operations(id,apartment_id,version,paused,actor_id,reason) VALUES($1,$2,1,true,$3,'property_request')",
+      [randomUUID(), publicApartmentId, actor],
+    );
+    const paused = await req(
       "POST",
       sb + "/commit",
       a,
       200,
       { ...shareBody, expected_batch_version: partial.batch.version },
+      randomUUID(),
+    );
+    assert.equal(paused.results[0].private_record_id, saved);
+    assert.equal(paused.results[0].share_status, "failed");
+    assert.equal(paused.results[0].error_code, "APARTMENT_SHARING_PAUSED");
+    assert.equal(paused.results[0].retryable, true);
+    await db.query(
+      "INSERT INTO abasong.apartment_sharing_operations(id,apartment_id,version,paused,actor_id,reason) VALUES($1,$2,2,false,$3,'property_confirmed')",
+      [randomUUID(), publicApartmentId, actor],
+    );
+    const shared = await req(
+      "POST",
+      sb + "/commit",
+      a,
+      200,
+      { ...shareBody, expected_batch_version: paused.batch.version },
       randomUUID(),
     );
     assert.equal(shared.results[0].private_record_id, saved);
@@ -953,7 +980,7 @@ async function main() {
       a,
       200,
     );
-    assert.equal(liveCodes.items[0].value, "TEST-GATE-1");
+    assert.equal(liveCodes.items[0].value, firstSyntheticCode);
     await db.query(
       "UPDATE abasong.capabilities SET revoked_at=now() WHERE id=$1",
       [cap],
@@ -1209,6 +1236,113 @@ async function main() {
       "UPDATE abasong.import_batches SET version=version-1,payload=$2 WHERE id=$1",
       [bid, encrypted],
     );
+    const entranceBatch = await req(
+      "POST",
+      path,
+      a,
+      201,
+      { ...createBody, mode: "private_only", client_batch_id: randomUUID() },
+      randomUUID(),
+    );
+    const entrancePath = path + "/" + entranceBatch.id;
+    const entranceImage = await req(
+      "POST",
+      entrancePath + "/sources/local",
+      a,
+      201,
+      {
+        ...srcInput,
+        client_source_id: randomUUID(),
+        expected_batch_version: entranceBatch.version,
+      },
+      randomUUID(),
+    );
+    const entranceRows = await req(
+      "POST",
+      entrancePath + "/sources/" + entranceImage.id + "/extractions",
+      a,
+      201,
+      {
+        ...extractBody,
+        candidates: ["入口待确认", "车库入口"].map((label, i) => ({
+          ...extractBody.candidates[i],
+          address_text: "298 TEST Entrance Ave, TEST City, CA 90000",
+          scope: { label },
+          review_issues: [],
+        })),
+      },
+      randomUUID(),
+    );
+    const entranceItems = entranceRows.items.map(
+      (candidate: { id: string; revision: number }) => ({
+        candidate_id: candidate.id,
+        expected_revision: candidate.revision,
+      }),
+    );
+    const entranceBeforeConfirm = await req("GET", entrancePath, a, 200);
+    await req(
+      "POST",
+      entrancePath + "/candidates/confirm",
+      a,
+      200,
+      {
+        expected_batch_version: entranceBeforeConfirm.version,
+        fields_confirmed: true,
+        items: entranceItems,
+      },
+      randomUUID(),
+    );
+    const entranceBeforeCommit = await req("GET", entrancePath, a, 200);
+    const entranceResult = await req(
+      "POST",
+      entrancePath + "/commit",
+      a,
+      200,
+      {
+        expected_batch_version: entranceBeforeCommit.version,
+        mode: "private_only",
+        source_attested: true,
+        items: entranceItems.map(
+          (item: { candidate_id: string; expected_revision: number }) => ({
+            candidate_id: item.candidate_id,
+            confirmed_revision: item.expected_revision,
+            client_commit_id: randomUUID(),
+          }),
+        ),
+      },
+      randomUUID(),
+    );
+    const privateEntryId = entranceResult.results[0].private_entry_id;
+    assert(
+      privateEntryId,
+      entranceResult.results
+        .map((item: { error_code: string | null }) => item.error_code ?? "none")
+        .join(","),
+    );
+    assert(
+      entranceResult.results.every(
+        (item: {
+          private_entry_id: string;
+          private_status: string;
+          share_status: string;
+        }) =>
+          item.private_entry_id === privateEntryId &&
+          item.private_status === "saved" &&
+          item.share_status === "not_requested",
+      ),
+    );
+    const libraryEntryPath = "/v1/me/apartment-library/" + privateEntryId;
+    const savedEntrances = await req("GET", libraryEntryPath, a, 200);
+    assert.deepEqual(
+      new Set(
+        savedEntrances.records.map(
+          (record: { scope_label: string }) => record.scope_label,
+        ),
+      ),
+      new Set(["入口待确认", "车库入口"]),
+    );
+    await req("GET", libraryEntryPath, b, 404);
+    checks += 3;
     // Removed rows are retained in encrypted owner history but must not
     // inflate the resume-list count or resurrect after client process loss.
     const emptyDraft = await req(

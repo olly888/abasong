@@ -98,7 +98,7 @@ it("hides an expired snapshot even with a newer GPS fix and does not relabel old
 it("rejects wrong observation IDs and forged renewed distance leases without mutating the original response", () => {
   const lookup = {
     items: [candidate],
-    radius_m: 200,
+    radius_m: 200 as const,
     truncated: false,
     provider_status: "ok" as const,
     expires_at: new Date(now + 60000).toISOString(),

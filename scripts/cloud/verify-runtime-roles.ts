@@ -10,9 +10,34 @@ import {
 
 function main() {
   const { account, mode } = runtimeTarget();
-  if (mode !== "--verify") throw new Error("Read-only verification required");
+  if (!["--verify", "--verify-media"].includes(mode))
+    throw new Error("Read-only verification required");
   const aws = awsRuntime();
   assertRuntimeCaller(aws, account);
+  let bucket = "";
+  if (mode === "--verify-media") {
+    const stacks = aws([
+      "cloudformation",
+      "describe-stacks",
+      "--stack-name",
+      "abasong-pilot-dev-runtime",
+    ]).Stacks as Array<{
+      StackId: string;
+      Parameters: Array<{ ParameterKey: string; ParameterValue: string }>;
+    }>;
+    if (
+      stacks.length !== 1 ||
+      !stacks[0]!.StackId.startsWith(
+        `arn:aws:cloudformation:us-west-1:${account}:stack/abasong-pilot-dev-runtime/`,
+      )
+    )
+      throw new Error("Unreviewed runtime stack");
+    bucket =
+      stacks[0]!.Parameters.find(
+        (p) => p.ParameterKey === "CircleMediaBucketName",
+      )?.ParameterValue ?? "";
+    if (!bucket) throw new Error("Deployed media binding required");
+  }
   const folder = ".tooling/cloud-runtime";
   const parameters = JSON.parse(
     readFileSync(`${folder}/service-roles-parameters.json`, "utf8"),
@@ -44,7 +69,9 @@ function main() {
     );
   }
   const results = [];
-  for (const resource of Object.values(serviceRoleTemplate().Resources)) {
+  for (const [logicalId, resource] of Object.entries(
+    serviceRoleTemplate(bucket).Resources,
+  )) {
     const desired = resolve(
       (resource as { Properties: unknown }).Properties,
     ) as {
@@ -85,7 +112,23 @@ function main() {
       "--role-name",
       desired.RoleName,
     ]).PolicyNames as string[];
-    if (attached.length || inline.length !== 1 || inline[0] !== "PilotOnly")
+    const mediaPolicy =
+      bucket && logicalId === "ApiTaskRole"
+        ? {
+            name: "AbasongPilotApiCircleMedia",
+            actions: ["s3:GetObject", "s3:PutObject"],
+          }
+        : bucket && logicalId === "WorkerTaskRole"
+          ? {
+              name: "AbasongPilotWorkerCircleMedia",
+              actions: ["s3:DeleteObject"],
+            }
+          : null;
+    const expectedInline = [
+      "PilotOnly",
+      ...(mediaPolicy ? [mediaPolicy.name] : []),
+    ].sort();
+    if (attached.length || !isDeepStrictEqual(inline.sort(), expectedInline))
       throw new Error("Unexpected runtime permissions");
     const doc = aws([
       "iam",
@@ -97,6 +140,34 @@ function main() {
     ]).PolicyDocument;
     if (!isDeepStrictEqual(doc, desired.Policies[0]!.PolicyDocument))
       throw new Error("Runtime role policy differs");
+    if (mediaPolicy) {
+      const mediaDoc = aws([
+        "iam",
+        "get-role-policy",
+        "--role-name",
+        desired.RoleName,
+        "--policy-name",
+        mediaPolicy.name,
+      ]).PolicyDocument as {
+        Version: string;
+        Statement: Array<{ Action: string | string[] }>;
+      };
+      const [statement] = mediaDoc.Statement;
+      if (
+        !statement ||
+        mediaDoc.Version !== "2012-10-17" ||
+        mediaDoc.Statement.length !== 1 ||
+        !isDeepStrictEqual(
+          { ...statement, Action: [statement.Action].flat().sort() },
+          {
+            Effect: "Allow",
+            Action: mediaPolicy.actions,
+            Resource: `arn:aws:s3:::${bucket}/circle-posts/*`,
+          },
+        )
+      )
+        throw new Error("Runtime media permission differs");
+    }
     results.push({ role: desired.RoleName, trust_and_policy_verified: true });
   }
   writeFileSync(

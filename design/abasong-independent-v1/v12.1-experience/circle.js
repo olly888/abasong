@@ -131,16 +131,9 @@
         : `<div class="circle-status"><h2>还没有动态</h2>${btn("new-post", "发布动态", "button secondary")}</div>`;
     return `<div class="root-content circle-root"><div class="page-scroll circle-scroll"><div class="page-head circle-root-head"><span class="spacer"></span><h1>司机圈</h1>${btn("circle-publish", "发布", "circle-publish")}</div><div class="circle-feed">${content}</div></div></div>${bottomNav("circle")}`;
   };
-  inboxPage = () => {
-    if (state.inboxTab !== "notices") return base.inboxPage();
-    const notices = model.notifications.filter(
-      (n) => !n.actor || !model.blocks.includes(n.actor),
-    );
-    return page(
-      "消息",
-      `<div class="segmented">${btn("inbox-tab", "对话", "", 'data-id="chats"')}${btn("inbox-tab", "通知", "active", 'data-id="notices"')}</div>${notices.length ? notices.map((n) => `<button class="list-button" data-action="notice" data-id="${n.id}"><span class="avatar">${I("bell")}</span><div class="list-main"><div class="list-title">${esc(n.title)}</div><div class="list-sub">${esc(n.sub)}</div></div>${n.read ? "" : '<span class="notification-dot"></span>'}</button>`).join("") : empty("暂无通知")}`,
-    );
-  };
+  inboxPage = () => base.inboxPage(model.notifications.filter(
+    (n) => !n.actor || !model.blocks.includes(n.actor),
+  ));
   function unavailable(title) {
     return page(
       "动态",
@@ -164,8 +157,16 @@
       job: "",
       images: [],
     });
+    if (uxV34) return v34PostForm(f);
     return `<div class="root-content circle-editor"><div class="page-scroll">${header("发布动态")}<form data-submit="post" novalidate>${ui.publishError ? `<p class="circle-error" role="alert">${esc(ui.publishError)}</p>` : ""}${field("post", "text", "内容", "textarea", { placeholder: "分享配送经验、提问或路上见闻", max: 2000 })}${photoEditor(f)}<div class="circle-editor-options">${field("post", "topic", "内容标签", "text", { optional: true, choices: [["", "不选择"], ...topics] })}${field("post", "region", "配送区域", "text", { optional: true, choices: [["", "不选择"], ...areas] })}${field("post", "job", "关联我的支援需求", "text", { optional: true, choices: [["", "不关联"], ...model.jobs.filter((j) => j.owner === "me" && j.status !== "draft" && !j.discarded).map((j) => [j.id, `${j.region} · ${statusLabel(j.status)}`])] })}</div></form></div><div class="circle-editor-actions"><button class="button" type="submit" form="circle-post-form" ${ui.publishing ? "disabled" : ""}>${ui.publishing ? "发布中" : ui.publishError ? "重新发布" : "发布"}</button></div></div>`;
   };
+  function v34PostForm(f) {
+    const jobs = model.jobs.filter((j) => j.owner === "me" && j.status !== "draft" && !j.discarded);
+    const linked = jobs.find((j) => j.id === f.job);
+    const options = (key, label, selected, control) => `<details class="v34-disclosure v34-post-option" data-post-option="${key}" ${f[`${key}Open`] ? "open" : ""}><summary><b>${label}</b><span class="v34-edit">${esc(selected || "选填")}</span></summary>${control}</details>`;
+    const chips = `<fieldset class="v34-choice"><legend>内容标签 <small>选填</small></legend><div>${topics.map((topic) => btn("circle-topic", topic, "v34-inline", `data-id="${esc(topic)}" aria-pressed="${topic === f.topic}"`)).join("")}</div></fieldset>`;
+    return `<div class="root-content circle-editor"><div class="page-scroll">${header("发布动态")}<form data-submit="post" novalidate>${field("post", "text", "写一条动态", "textarea", { placeholder: "分享配送经验、问个问题，或记录路上见闻", max: 2000 })}${photoEditor(f)}${chips}${options("region", "添加配送地区", f.region, field("post", "region", "配送地区", "text", { choices: [["", "不添加"], ...areas] }))}${options("job", "关联我发布的需求", linked ? `${linked.region} · ${statusLabel(linked.status)}` : f.job ? "待重新选择" : "", field("post", "job", "选择需求", "text", { choices: [["", "不关联"], ...jobs.map((j) => [j.id, `${j.region} · ${statusLabel(j.status)}`])] }))}</form></div><div class="circle-editor-actions">${ui.publishError ? `<p class="circle-error" role="alert">${esc(ui.publishError)}</p>` : ""}<button class="button" type="submit" form="circle-post-form" ${ui.publishing || !f.text.trim() ? "disabled" : ""}>${ui.publishing ? "发布中" : ui.publishError ? "重新发布" : "发布"}</button></div></div>`;
+  }
   const sensitive = (text) =>
     /(?:门禁码|门禁密码|(?:门禁|大门|进门|公寓|行人门|侧门).{0,8}(?:密码|门禁码|门码)|gate\s*code|access\s*code)\s*[:：]?\s*[#*\d]{4,}/i.test(
       text,
@@ -383,6 +384,16 @@
   };
   actions = (a, b) => {
     const id = b?.dataset.id;
+    if (uxV34 && a === "circle-topic") {
+      if (!state.forms.post || ui.publishing || !topics.includes(id)) return;
+      const f = state.forms.post;
+      f.topic = f.topic === id ? "" : id;
+      render();
+      document.querySelectorAll('[data-action="circle-topic"]').forEach((option) => {
+        if (option.dataset.id === id) option.focus({ preventScroll: true });
+      });
+      return;
+    }
     if (a === "circle-add-photo") {
       if (ui.publishing || photos(state.forms.post).length >= 3) return;
       modal("menu", {
@@ -626,10 +637,26 @@
     ui.lastView = state.route.view;
   };
   document.addEventListener("input", (e) => {
+    if (uxV34 && e.target.matches('[data-submit="post"] [name="text"]')) {
+      const publishButton = $(".circle-editor-actions button[type=submit]");
+      if (publishButton) publishButton.disabled = ui.publishing || !e.target.value.trim();
+    }
     if (e.target.id !== "comment-input" || state.route.view !== "post") return;
     ui.drafts[state.route.args.id] = e.target.value;
     const send = $('.circle-composer [type="submit"]');
     if (send) send.disabled = !e.target.value.trim();
+  });
+  document.addEventListener("toggle", (e) => {
+    if (uxV34 && state.route.view === "postForm" && e.target.isConnected && e.target.matches("[data-post-option]"))
+      state.forms.post[`${e.target.dataset.postOption}Open`] = e.target.open;
+  }, true);
+  document.addEventListener("change", (e) => {
+    if (uxV34 && state.route.view === "postForm" && e.target.matches("[data-post-option] select")) {
+      const key = e.target.name;
+      state.forms.post[`${key}Open`] = false;
+      render();
+      $(`[data-post-option="${key}"] summary`)?.focus({ preventScroll: true });
+    }
   });
   $("#circle-state").addEventListener("change", (e) => {
     ui.scenario = e.target.value;

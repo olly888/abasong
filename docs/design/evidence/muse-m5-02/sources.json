@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-08",
+  "scope": "M5-02 partial working-tree snapshot; not a commit, signed build, or native screenshot",
+  "files": [
+    {
+      "path": "apps/mobile/src/apartments/AccessCodeFields.tsx",
+      "sha256": "313ad616a5f8c359bc20e46f9c40f4d30f4c639bdc94cac482a423792729f8bd"
+    },
+    {
+      "path": "apps/mobile/src/apartments/DoorScopeField.tsx",
+      "sha256": "cbd7d0d572b0b85a61a1b73eb5b4bb25f814f7418551b412e6c0f1a2d33f4760"
+    },
+    {
+      "path": "apps/mobile/src/apartments/ContributionForm.tsx",
+      "sha256": "d41b8786a650aa85d68b7a3425f83bc07ba53fd01395867bbe3b790b7711a07d"
+    },
+    {
+      "path": "apps/mobile/src/apartments/CorrectionForm.tsx",
+      "sha256": "e1a823f5723467f360f85977cd59949721bb45d84bb7ecd82990e4a106f92658"
+    },
+    {
+      "path": "apps/mobile/src/ui/CheckField.tsx",
+      "sha256": "067bad39c8746594f4420d5667ea9db1e891a4e129d35c96bb911bc8d0abd078"
+    },
+    {
+      "path": "apps/mobile/src/imports/ImportScreen.tsx",
+      "sha256": "a172695cd489bddf4d74ba2f6a9476e947cfa26f579bbe2b36b2423eac2f30b8"
+    },
+    {
+      "path": "apps/mobile/src/design/AccessContributionLab.tsx",
+      "sha256": "3b64450c30ede6cc87433f4d5500c45ad3833307f207195c55bc5cbef90ccc78"
+    },
+    {
+      "path": "apps/mobile/src/app/access-contribution-lab.tsx",
+      "sha256": "44fa765b0f2c46184e1114989919f6e5b9380b3fe8f438959aa9ef8d86489f10"
+    },
+    {
+      "path": "scripts/d1/verify-native-contribution.ts",
+      "sha256": "ccd760e1fb48c27019dce2c565c508d24fdc92a533b216724ecb69df19cd3a8a"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/muse-v35.css",
+      "sha256": "21d2f37104645c9949d79bed0db09cb71201f54f3f4e0c57ab7c7e54039def16"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/app.js",
+      "sha256": "c36b52103522921dded23bb256884ad53992844351948af85a785c57a3a29814"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/imports.js",
+      "sha256": "2f0df6694fb4ddec455c7a09dabb8770e229faba6cb7696cc8bc1b70c0647f4e"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/library.js",
+      "sha256": "380a04e119f5f3e18b3b2c0855af2f77e52f3dce19b3ab0eb6c3c78bd8c89e1d"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/muse-v35-contribution-checks.browser.js",
+      "sha256": "5acae06b5c8a43bee9527108d6ed7db5bf286bc0a0799519fc06f769f3d8280e"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/muse-v35-contribution-components.browser.js",
+      "sha256": "96e297b08717cf152ce3975a99eb00f5333b822685c50640fe91f0c25d2cb9d0"
+    }
+  ]
+}

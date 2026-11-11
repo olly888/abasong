@@ -111,7 +111,7 @@ describe("R4-08 two-scene native contracts", () => {
     expect(canApplyTo(r)).toBe(true);
     expect(
       requestQuantity({ ...r, quantity_mode: "unknown", parcel_count: null }),
-    ).toBe("件数待确认");
+    ).toBe("数量待确认");
     expect(canApplyTo({ ...r, remaining_drivers: 0 })).toBe(false);
     expect(
       canApplyTo({ ...r, quantity_mode: "exact", remaining_parcels: 0 }),
@@ -149,7 +149,7 @@ describe("R4-08 two-scene native contracts", () => {
     expect(hasEditableGap(deliveryFixture())).toBe(true);
   });
   it("allows optional capacity for unknown/estimate, enforces known minimum and whole-route exact quantity", () => {
-    const r = deliveryFixture();
+    const r = deliveryFixture("warehouse_shortage", now);
     expect(applicationInput(r, "2026-11-06", "12:00", "")).not.toHaveProperty(
       "capacity_parcels",
     );

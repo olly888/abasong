@@ -8,6 +8,7 @@ import io
 import json
 from pathlib import Path
 import subprocess
+from tempfile import NamedTemporaryFile
 
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
@@ -34,19 +35,35 @@ def pixels(bounds):
     return tuple(x * 3 for x in bounds)
 
 
-scene_raw = subprocess.check_output([
-    "node", "-e",
-    "require('./apps/api/node_modules/sharp')(process.argv[1]).png().toBuffer().then(b=>process.stdout.write(b)).catch(e=>{console.error(e);process.exitCode=1})",
-    str(root / "deploy/invitation/invite/scene.svg"),
-], cwd=root)
-scene = Image.open(io.BytesIO(scene_raw)).convert("RGB")
-scene.save(assets / "scene.png", optimize=True)
+def render_svg(path):
+    raw = subprocess.check_output([
+        "node", "-e",
+        "require('./apps/api/node_modules/sharp')(process.argv[1]).png().toBuffer().then(b=>process.stdout.write(b)).catch(e=>{console.error(e);process.exitCode=1})",
+        str(path),
+    ], cwd=root)
+    return Image.open(io.BytesIO(raw))
+
+
+def save_png(image, name):
+    target = assets / name
+    # Metro can watch these files while the poster is generated.
+    with NamedTemporaryFile(dir=assets, suffix=".tmp", delete=False) as temp:
+        path = Path(temp.name)
+    try:
+        image.save(path, format="PNG", optimize=True)
+        path.replace(target)
+    finally:
+        path.unlink(missing_ok=True)
+
+
+scene = render_svg(root / "deploy/invitation/invite/scene.svg").convert("RGB")
+save_png(scene, "scene.png")
 
 matrix = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=4)
 matrix.add_data(local["testUrl"])
 matrix.make(fit=True)
 qr = matrix.make_image(fill_color=ink, back_color="white").convert("RGB")
-qr.save(assets / "qr-test.png", optimize=True)
+save_png(qr, "qr-test.png")
 
 poster = Image.new("RGB", pixels((350, 423)), "white")
 draw = ImageDraw.Draw(poster)
@@ -58,9 +75,11 @@ def label(x, y, text, size, fill=ink, heavy=False, latin=False):
     return draw.textlength(text, font=f) / 3
 
 
-draw.rounded_rectangle(pixels((20, 22, 52, 54)), 27, fill=blue)
-label(29, 27, "a", 25, "white", latin=True)
-label(61, 28, "abasong", 23, latin=True)
+original = render_svg(root / "docs/design/brand/abasong_wordmark_primary.svg").convert("RGBA")
+width = 144 * 3
+height = round(width * original.height / original.width)
+wordmark = original.resize((width, height), Image.Resampling.LANCZOS)
+poster.paste(wordmark, pixels((20, 22)), wordmark)
 label(20, 78, content["firstLine"], 25, heavy=True)
 x = label(20, 114, content["secondLine"], 25, heavy=True)
 label(20 + x, 114, content["highlight"], 25, blue, heavy=True)
@@ -76,4 +95,4 @@ label(20 + side + 13, 321, content["scan"], 15, heavy=True)
 label(20 + side + 13, 348, content["scanCaption"], 13)
 label(20 + side + 13, 372, local["testLabel"], 12, colors["textSecondary"])
 label(20, 401, content["source"], 12, colors["textSecondary"])
-poster.save(assets / "abasong-invite-test.png", optimize=True)
+save_png(poster, "abasong-invite-test.png")

@@ -1,12 +1,18 @@
 # Abasong 研发文档入口
 
-更新 2026-11-06。当前按[总计划 1.47](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-04 司机圈私有图片](technical/B5_04_司机圈私有图片实施验收.md)已接入选图、拍照、上传重试和鉴权阅读。本地 D0 为 22 次迁移、57 张表。[B5-05 邀请司机](technical/B5_05_邀请司机与接收页实施验收.md)完成双端本机核对，正式分发留在 B6-03。
+**最新交付：**[V3.5.1 DTL-03 可见读取、回程与签名包](technical/V3.5.1_DTL-03_可见读取回程与签名包验收.md)已完成本批双端原生范围核对；594项工程测试通过，冻结 `f970904` 的远程CI两项通过。build3已安装到iPhone13Pro，用户确认扩大地图、三模式及2445搜索／详情返回正常。下一项为DTL-04贡献与两场景表单细节；云端扩围、蜂窝业务和完整读屏仍独立计证。
 
-[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。[B6-01 执行包](usability/B6-01_可用性与现场测试执行包.md)已备好招募、主持、现场与截图记录。真人观察仍为 0/7。云业务、真实推送、独立包和现场验收按 B6 推进。
+**M7 云端待办与前轮追溯：**[Muse/V3.5 对齐方案](product/Abasong_V3.5_Muse原型对齐落地方案.md)处于[M7-01](technical/V3.5_M7-01_统一候选与集成验收.md)。冻结 `3e36678` 的131项实现哈希一致，对应 [CI42565285486](https://github.com/olly888/abasong/actions/runs/42565285486) 两项通过；独立 Release 已安装 iPhone 13 Pro。[本轮真机界面与读屏](technical/V3.5_M7-01_iPhone真机界面与读屏验收.md)获用户确认：首页三模式／安全区、2445搜索与详情返回、贡献及发帖草稿键盘／退出保护，以及首页和贡献表单实际 VoiceOver 均按范围通过。共享按钮置灰对应暂无共享资格，本轮未提交。此前[第六批模拟器补验](technical/V3.5_M7-01_截图回程系统返回与读屏环境补验.md)的截图核对和系统返回保持有效。[云端对齐预检](technical/V3.5_M7-01_云端契约对齐与升级预检.md)已完成：DevWest仍为22版；冻结提交的本地定向与数据库回归通过，0022→0023预演保留原表数据。本批迁移／服务更新已获授权，两份冻结镜像构建及容器检查通过；用户现不便操作，已暂停云端执行并取消登录窗口；完整本地加密备份已获明确授权；最新IAM登录页异常待排查，尚未导出或部署。已完成[本地兼容性回归](technical/V3.5_M7-01_离线兼容性回归与待办.md)：新增13项，相关7文件72项通过，应用实现及冻结候选不变。蜂窝业务、现场、TalkBack及全页面辅助功能仍单列。
+
+更新 2026-11-09。当前按[总计划 1.70](Abasong_V12.1_项目开发与验收总计划.md)推进。[B5-04 司机圈私有图片](technical/B5_04_司机圈私有图片实施验收.md)已接入选图、拍照、上传重试和鉴权阅读。该批当时为22次迁移、57张表；冻结源码现含23次迁移，本次一次性库验证58张FORCE RLS表，DevWest实际仍为22版／57表。[B5-05 邀请司机](technical/B5_05_邀请司机与接收页实施验收.md)完成双端本机核对，正式分发留在 B6-03。
+
+[22任务](technical/V3.2_App对齐开发任务清单.csv)、[差异表](technical/V3.2_代码差异清单.csv)、[工程状态](../DEVELOPMENT_STATUS.md)和[机器状态](product/V3.2_开发基准状态.json)同步维护。[B6-01 执行包](usability/B6-01_可用性与现场测试执行包.md)已备好招募、主持、现场与截图记录。真人观察仍为 0/7。云业务与独立包已有分项证据；真实推送、正式分发和现场等未完成项按 B6 单独记录。
 
 原型入口：[首页](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery#home)、[两场景发布](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=delivery)、[我的](../design/abasong-independent-v1/v12.1-experience/index.html?v=r3-delivery&task=me)。产品确认只覆盖主要体验，原型图不代表App已更新。当前和目标依据[可开发基准](Abasong_V3.2_可开发与可验收基线.md)；之前全文保留在[审查前档案](archive/app-alignment-audit-20261105/README.md)。
 
 ## 当前入口
+
+- [V3.4 两场景原生发布与核对](technical/V3.4_两场景原生发布与核对验收.md)：仓库和途中代送的表单、核对、需求详情、报名与联系，以及双端隔离验收。
 
 - [B5-02 本人 DSP 团队、自愿联系与发布身份](technical/B5_02_本人DSP团队与发布身份实施验收.md)。
 - [B5-01本人资料、经验、自愿联系与我的](technical/B5_01_本人资料与我的实施验收.md)：本地实现及权限/原生收尾；[执行证据](technical/B5_01_执行证据.json)。
@@ -39,6 +45,8 @@
 
 ## 产品与原型
 
+- [P1 附近洗手间候选与验证方案](product/Abasong_P1_附近洗手间候选与验证方案.md)：方向已认可，先 West Covina 10–20 地点核对及轻量原型；未采集/未实现，不改变 M7 原生验收主线。
+
 - [产品体验升级与需求收敛](product/Abasong_V12.1_产品体验升级与需求收敛方案.md)：目标优先级、日期/区域/数量含义、UX01–10。
 - [页面功能与交互规格](product/Abasong_V12.1_页面功能信息与交互规格.md)、[当前39活动节点目录](product/V12.1_页面与状态目录.json)、[制作清单](product/V12.1_页面制作清单.csv)。
 - [V3.2新版原型](../design/abasong-independent-v1/v12.1-experience/index.html)、[说明](../design/abasong-independent-v1/v12.1-experience/README.md)、[R2a实际检查](../design/abasong-independent-v1/v12.1-experience/验收记录.md)：核心地图/滑卡/找活找人/仓库流程可体验，34项浏览器检查通过，主流程已获产品认可；App未改。
@@ -51,8 +59,12 @@
 
 ## 设计与文案
 
-- **现行基础及组件：**[设计系统V3.1](design/Abasong_设计系统_V3.1_现行规范.md)、[令牌JSON](design/tokens-v3.json)；[逐页核对/未测记录](design/D2_设计系统收敛与逐页核对.md)。
-- **目标原型：**[V3.2升级方案](design/Abasong_设计系统_V3.2_升级方案.md)、[文案与状态V1](design/Abasong_界面文案与状态规范_V1.md)、[升级追踪JSON](design/experience-upgrade-matrix.json)。启用范围以[R4报告](technical/R4_01_距离契约与公寓卡片实施验收.md)记录，不声明全App已迁移。
+- **当前细节批次。** [V3.5.1 方案](design/V3.5.1_UI细节逐页评审与优化方案.md)的 DTL-01–03 已完成各自范围。DTL-04 已构建门禁键盘与截图识别的签名 build 4，待安装。两场景发布的到场、接手与下架已完成本地实现和浏览器回归，双端原生补验见[开发状态](../DEVELOPMENT_STATUS.md#current-priority--muse-home-alignment-plan-v35-target)。
+
+- [V3.4 UI/UX 深度评审与升级提案](design/Abasong_UIUX深度评审与升级方案_V3.4提案.md)覆盖两场景发布、司机圈发帖、「我的」和地图。现行设计系统为下方 V3.3。
+
+- **唯一现行设计系统** [V3.3](design/Abasong_设计系统_V3.3_现行规范.md)、[正式品牌原件](design/brand/README.md)、[令牌源](design/tokens-v3.json)、[图标源](design/icons-lucide.json)。[历史规范和逐页核对](design/D2_设计系统收敛与逐页核对.md)。
+- **前轮原型与实施追溯：**[V3.2升级方案](design/Abasong_设计系统_V3.2_升级方案.md)、[文案与状态V1](design/Abasong_界面文案与状态规范_V1.md)、[升级追踪JSON](design/experience-upgrade-matrix.json)。启用范围以[R4报告](technical/R4_01_距离契约与公寓卡片实施验收.md)记录，不声明全App已迁移。
 - [UI样板证据](design/D2_UI样板对齐实施与验收.md)、[iOS框架评估](design/D2_UI对齐审查与iOS原生方案评估.md)。保持RN/Expo，局部系统原生控件，不全面改写SwiftUI。
 
 ## 技术与实现
@@ -66,6 +78,10 @@
 7. [云运行层](technical/A4_运行身份与服务凭据实施验收.md)、[云业务待验](technical/A4_云业务配置与双账号验收.md)、[内测配置](technical/A4_A5_独立内测配置与限期资格验收.md)。真实账号、业务KMS、远程推送和现场集中B6，不标阶段通过。
 
 ## 研究及历史
+
+[洛杉矶公寓门禁数据渠道与授权接入调研](research/洛杉矶公寓门禁数据渠道与授权接入调研_2026-11-08.md)：确认 Beans 商业接口、司机团队资料导出工具及物业授权访问渠道；LA 门禁覆盖、许可和价格仍待核实。未采集真实门禁码、未接入供应商，不改变 M7 主线。
+
+[附近洗手间产品、API 与公开资源调研](research/附近洗手间产品_API与公开资源调研_2026-11-08.md)：已核对专门密码共享产品、OSM、REFUGE 与当地官方资料；REFUGE 城市检索返回 5 条 West Covina 线索，六个洛杉矶公开 CSV 可读。未验证现场可用性、商业数据接入授权或密码有效性，保持 P1 候选。
 
 [DoorDash司机端深度研究](research/DoorDash_司机端深度研究与Abasong借鉴方案_2026-11-04.md)依据用户截图和官方来源，研究不等于功能批准或已实现。公开公寓样本是验收题库，不是全城市地址库。
 

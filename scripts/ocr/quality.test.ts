@@ -1,7 +1,14 @@
 import { expect, test } from "vitest";
-import { measure, validateDataset, evaluateDataset, type Expected } from "./quality";
+import {
+  measure,
+  validateDataset,
+  evaluateDataset,
+  type Expected,
+} from "./quality";
 const expected: Expected & { value: string } = {
-  address: "100 TEST Ave", value: "0017#", issues: [],
+  address: "100 TEST Ave",
+  value: "0017#",
+  issues: [],
 };
 function sample() {
   return {
@@ -57,10 +64,46 @@ test("full symbols/zeros/case and pair counts are measured exactly", () => {
   ).toBe(false);
   expect(
     measure([expected], [{ ...expected, address: "102 TEST Ave" }]),
-  ).toMatchObject({ code_exact: true, pairing_and_review_exact: false });
+  ).toMatchObject({
+    code_exact: true,
+    address_code_pairs_exact: false,
+    pairing_and_review_exact: false,
+  });
   expect(
     measure([expected], [expected, expected]).pairing_and_review_exact,
   ).toBe(false);
+});
+test("compares address/code pairs independently of review prompts and comma spacing", () => {
+  const one = { ...expected, address: "100 TEST Ave, Example City, CA" };
+  const two = {
+    ...expected,
+    address: "102 TEST Ave, Example City, CA",
+    value: "*00283#",
+  };
+  expect(
+    measure(
+      [one],
+      [
+        {
+          ...one,
+          address: "100 TEST Ave, Example City,CA",
+          issues: ["请核对地址"],
+        },
+      ],
+    ),
+  ).toMatchObject({
+    address_code_pairs_exact: true,
+    pairing_and_review_exact: false,
+  });
+  expect(
+    measure(
+      [one, two],
+      [
+        { ...one, value: two.value },
+        { ...two, value: one.value },
+      ],
+    ),
+  ).toMatchObject({ code_exact: true, address_code_pairs_exact: false });
 });
 test("unknown values are excluded from correct-password denominators and require a review hint", () => {
   const unknown = { ...expected, value: null, issues: ["请核对字符"] };
@@ -103,7 +146,9 @@ test("metadata cannot inflate samples by duplicate IDs/hashes or claim macOS as 
   nested.samples[0]!.observations[0]!.platform = ["ios"] as unknown as string;
   expect(() => validateDataset(nested)).toThrow();
   const nestedHint = sample();
-  nestedHint.samples[0]!.expected[0]!.issues = [["请核对字符"]] as unknown as string[];
+  nestedHint.samples[0]!.expected[0]!.issues = [
+    ["请核对字符"],
+  ] as unknown as string[];
   expect(() => validateDataset(nestedHint)).toThrow();
 });
 test("report reuses the production parser and contains no truth or recognized text", () => {

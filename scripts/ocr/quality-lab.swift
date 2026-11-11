@@ -22,7 +22,47 @@ let samples=[
   Sample(id:"SYN-009",rows:[row(a,0),row(b,0,1),row("Gate code: "+p,2),row("Entry code: "+q,2,1)],expected:[expected(a,p),expected(b,q)]),
   Sample(id:"SYN-010",rows:[row(a,0),row("Gate code: aB0x#",1)],expected:[expected(a,"aB0x#")])
 ]
-guard CommandLine.arguments.count==2 else { fatalError("Specify a synthetic .tooling output folder") }
+// The ten Glendale screenshots inform the layouts only. All displayed
+// addresses, unit identifiers and values below were invented for this lab.
+let ga="100 TEST Orchard St", gb="102 TEST Orchard St", gc="200 TEST Sample Ave"
+let locality="Example City, CA 90000", firstCode="*00148#", secondCode="#00259*"
+func carrierDetail(_ number: String, _ street: String, _ unit: String, _ door: String, _ code: String) -> Sample {
+  let address=street+" "+unit+", "+locality
+  return Sample(id:"SYN-1"+number,rows:[
+    row("地图模式",0),row(street+" "+unit,5),row(locality,6),
+    row("派送引导",7),row(door+" "+code,8),row("TEST parcel reference",9)
+  ],expected:[expected(address,code)])
+}
+func nearbyList(_ number: String, _ markers: [String]) -> Sample {
+  Sample(id:"SYN-1"+number,rows:[
+    row("门禁 Code",0),row(ga+" Apt 901, "+locality,1)
+  ]+markers.enumerated().map{row($0.element,$0.offset+2)}+[
+    row(gb+" Apt 902",6),row("社区门禁 "+firstCode,7),
+    row(gc+" Unit 903",9),row("楼门门禁 "+secondCode,10),row("快递柜",12)
+  ],expected:[])
+}
+let glendaleSamples=[
+  carrierDetail("01",ga,"Apt 901","社区门禁","90000"),
+  carrierDetail("02",gb,"Apt 902","楼门门禁",firstCode),
+  carrierDetail("03",gc,"Unit 903","楼门门禁","0031648"),
+  nearbyList("04",["附近的 Code (30)","只用于本次派送"]),
+  nearbyList("05",["附近的 Co de","只 用 于 本 次 派 送"]),
+  nearbyList("06",["附近的 Code (30)"]),
+  nearbyList("07",["这是对的","上报新 Code"]),
+  Sample(id:"SYN-108",rows:[
+    row(ga+" Apt 901",1),row(locality,2),row("社区门禁 "+firstCode,3),
+    row(gb+" Apt 902",6),row(locality,7),row("楼门门禁 "+secondCode,8)
+  ],expected:[
+    expected(ga+" Apt 901, "+locality,firstCode),
+    expected(gb+" Apt 902, "+locality,secondCode)
+  ]),
+  nearbyList("09",["附近 的","Code (30)"]),
+  nearbyList("10",["只用于本次派送。"])
+]
+let args=CommandLine.arguments
+guard args.count==2 || (args.count==3 && args[2]=="--glendale") else { fatalError("Specify a synthetic .tooling output folder and optional --glendale") }
+let glendale=args.count==3
+let suite=glendale ? glendaleSamples : samples
 let root=URL(fileURLWithPath:FileManager.default.currentDirectoryPath,isDirectory:true),output=URL(fileURLWithPath:CommandLine.arguments[1],isDirectory:true).standardizedFileURL
 let allowed=root.appendingPathComponent(".tooling",isDirectory:true).resolvingSymlinksInPath().path+"/"
 guard output.resolvingSymlinksInPath().path.hasPrefix(allowed) else { fatalError("Synthetic output must remain inside .tooling") }
@@ -30,7 +70,7 @@ try FileManager.default.createDirectory(at:output,withIntermediateDirectories:tr
 guard output.resolvingSymlinksInPath().path.hasPrefix(allowed) else { fatalError("Synthetic output must remain inside .tooling") }
 guard try FileManager.default.contentsOfDirectory(atPath:output.path).isEmpty else { fatalError("Use an empty synthetic output folder") }
 var captures:[[String:Any]]=[]
-for sample in samples {
+for sample in suite {
   let width=960,height=1280
   let bitmap=NSBitmapImageRep(bitmapDataPlanes:nil,pixelsWide:width,pixelsHigh:height,bitsPerSample:8,samplesPerPixel:4,hasAlpha:true,isPlanar:false,colorSpaceName:.deviceRGB,bytesPerRow:0,bitsPerPixel:0)!
   NSGraphicsContext.saveGraphicsState();NSGraphicsContext.current=NSGraphicsContext(bitmapImageRep:bitmap)
@@ -42,7 +82,7 @@ for sample in samples {
   let image=bitmap.cgImage!,data=bitmap.representation(using:.png,properties:[:])!,filename=sample.id+".png"
   try data.write(to:output.appendingPathComponent(filename))
   let hash=SHA256.hash(data:data).map{String(format:"%02x",$0)}.joined(),started=Date()
-  let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate;request.usesLanguageCorrection=false;request.recognitionLanguages=["en-US"]
+  let request=VNRecognizeTextRequest();request.recognitionLevel = .accurate;request.usesLanguageCorrection=false;request.recognitionLanguages=glendale ? ["zh-Hans","en-US"] : ["en-US"]
   try VNImageRequestHandler(cgImage:image,options:[:]).perform([request])
   let observations=(request.results ?? []).prefix(600).compactMap{observation -> [String:Any]? in
     guard let candidate=observation.topCandidates(1).first else{return nil}
@@ -58,4 +98,4 @@ for sample in samples {
 }
 let manifest=try JSONSerialization.data(withJSONObject:["version":1,"samples":captures],options:[.prettyPrinted,.sortedKeys])
 try manifest.write(to:output.appendingPathComponent("manifest.json"))
-print("PASS: generated \(samples.count) synthetic images and real macOS Vision captures; raw text remains in ignored output; no cloud or phone-device claim")
+print("PASS: generated \(suite.count) synthetic images and real macOS Vision captures; raw text remains in ignored output; no cloud or phone-device claim")

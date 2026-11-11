@@ -1,9 +1,9 @@
 // Internal operator command only. Never registered as a mobile HTTP controller.
-import { decodeJwt } from "jose";
 import { z } from "zod";
 import type { Pool } from "pg";
 import type { TokenVerifier } from "../auth/token-verifier";
 import { ApiError } from "../common/api-error";
+import { requireReviewAccess, verifyReviewIdentity } from "./review-access";
 const inputSchema = z
   .object({
     source_id: z.string().uuid(),
@@ -20,36 +20,12 @@ export class StopContributionCommand {
   async run(authorization: string, input: unknown, apply = false) {
     const b = inputSchema.safeParse(input);
     if (!b.success) throw new ApiError(400, "INVALID_INPUT", "停显参数无效");
-    const actor = await this.verifier.verify(authorization);
-    // Signature/issuer/audience/expiry were verified above; never trust unverified aal.
-    if (decodeJwt(authorization.slice(7)).aal !== "aal2")
-      throw new ApiError(403, "STAFF_MFA_REQUIRED", "管理员必须完成MFA");
+    const actor = await verifyReviewIdentity(this.verifier, authorization);
     const p = b.data,
       c = await this.db.connect();
     try {
       await c.query("BEGIN");
-      const user = (
-        await c.query(
-          "SELECT status,session_invalid_before FROM abasong.users WHERE id=$1 FOR SHARE",
-          [actor.userId],
-        )
-      ).rows[0];
-      if (!user || user.status !== "active")
-        throw new ApiError(403, "STAFF_REQUIRED", "无管理员权限");
-      if (
-        user.session_invalid_before &&
-        actor.issuedAt * 1000 <= user.session_invalid_before.getTime()
-      )
-        throw new ApiError(401, "SESSION_REVOKED", "管理员会话已结束");
-      if (
-        !(
-          await c.query(
-            "SELECT id FROM abasong.capabilities WHERE user_id=$1 AND capability='ops.review' AND revoked_at IS NULL AND valid_from<=now() AND (valid_until IS NULL OR valid_until>now()) FOR SHARE",
-            [actor.userId],
-          )
-        ).rowCount
-      )
-        throw new ApiError(403, "STAFF_REQUIRED", "无管理员权限");
+      await requireReviewAccess(c, actor);
       await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
         "operator.source.stop:" + p.operation_id,
       ]);

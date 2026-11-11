@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extractCandidates, type OcrLine } from "./extract";
+import { buildingAddress } from "./match";
 const line = (text: string, y: number, x = 0.1): OcrLine => ({
   text,
   y,
@@ -152,4 +153,93 @@ it("keeps conflicting city lines unresolved rather than attaching the first city
   expect(result.value).toBe("*0012#");
   expect(result.address).toBe("100 Example Ave");
   expect(result.issues).toContain("地址对应不明");
+});
+
+describe("carrier screenshots with explicit door labels", () => {
+  it("keeps equal values separate by label and preserves literal characters", () => {
+    const result = extractCandidates([
+      line("100 Example Ave Apt 19,", 0.1),
+      line("Test City,CA 90001", 0.126),
+      line("凹 社区门禁 #00a7* | 楼门门禁 #00a7*", 0.2),
+    ]);
+    expect(
+      result.map(({ address, value, carrierDoorLabel }) => ({
+        address: buildingAddress(address).address,
+        value,
+        carrierDoorLabel,
+      })),
+    ).toEqual([
+      {
+        address: "100 Example Ave, Test City, CA 90001",
+        value: "#00a7*",
+        carrierDoorLabel: "社区门禁",
+      },
+      {
+        address: "100 Example Ave, Test City, CA 90001",
+        value: "#00a7*",
+        carrierDoorLabel: "楼门门禁",
+      },
+    ]);
+  });
+
+  it("flags a lost separator and an all-zero value without editing either", () => {
+    const result = extractCandidates([
+      line("100 Example Ave", 0.1),
+      line("凹 社区门禁 #00371楼门门禁 0000*", 0.18),
+    ]);
+    expect(result.map(({ value, issues }) => ({ value, issues }))).toEqual([
+      { value: "#00371", issues: ["请核对字符"] },
+      { value: "0000*", issues: ["请核对字符"] },
+    ]);
+  });
+
+  it("anchors separated detail cards to their heading, then respects a new address", () => {
+    const result = extractCandidates([
+      line("100 Example Ave 27 TEST CITY CA", 0.18),
+      line("90001 US", 0.2),
+      line("门禁信息 (2)", 0.34),
+      line("社区门禁", 0.41),
+      line("0007*", 0.47),
+      line("创建：2026/01/01", 0.5),
+      line("楼门门禁", 0.64),
+      line("#0008", 0.7),
+      line("102 Example Ave", 0.8),
+      line("楼门门禁 A0009", 0.85),
+    ]);
+    expect(result.map(({ address, value }) => [address, value])).toEqual([
+      ["100 Example Ave 27 TEST CITY CA 90001 US", "0007*"],
+      ["100 Example Ave 27 TEST CITY CA 90001 US", "#0008"],
+      ["102 Example Ave", "A0009"],
+    ]);
+  });
+
+  it("joins a three-line duplicate locality while tolerating slight edge clipping", () => {
+    const result = extractCandidates([
+      line("100 Example Ave, Test City", 0.53),
+      line("CA 90001 Apt 42 Test City CA", 0.55),
+      line("90001 US", 0.58),
+      { ...line("map text", 0.6), x: -0.008 },
+      line("凹 社区门禁 A0032|楼门门禁 #0032", 0.68),
+    ]);
+    expect(
+      result.map(({ address }) => buildingAddress(address).address),
+    ).toEqual([
+      "100 Example Ave, Test City, CA 90001",
+      "100 Example Ave, Test City, CA 90001",
+    ]);
+  });
+
+  it("rejects tracking text, notes and values from a different column", () => {
+    expect(
+      extractCandidates([
+        line("100 Example Ave", 0.1),
+        line("备注 楼门门禁 1234", 0.17),
+        line("社区门禁", 0.24),
+        line("9982", 0.27, 0.7),
+        line("楼门门禁", 0.34),
+        line("098765432100043", 0.39),
+        line("楼门门禁 1234 请放前台", 0.47),
+      ]),
+    ).toEqual([]);
+  });
 });

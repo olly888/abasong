@@ -11,6 +11,8 @@ import {
 } from '../../auth/AuthControls';
 import { normalizePhone, phoneCountries } from '../../auth/phone';
 import { tokens } from '@abasong/ui';
+import { BrandWordmark } from '../../ui/BrandWordmark';
+import { Icon } from '../../ui/Icon';
 export default function PhoneLogin() {
   const auth = useAuth();
   const [number, setNumber] = useState(''),
@@ -53,16 +55,23 @@ export default function PhoneLogin() {
   ].filter((item) => item.url?.startsWith('https://'));
   return (
     <AuthPage title="手机号登录" subtitle="使用手机号登录 Abasong">
+      <BrandWordmark />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="选择国家或地区"
         disabled={busy}
         onPress={() => setChoosing(true)}
-        style={{ minHeight: 48, justifyContent: 'center' }}
+        style={{
+          minHeight: tokens.size.touchMin.value,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: tokens.space[8].value,
+        }}
       >
         <Text style={{ fontSize: 16, color: tokens.color.ink }}>
-          {country.name} {country.code} ⌄
+          {country.name} {country.code}
         </Text>
+        <Icon name="down" size={tokens.size.iconSmall.value} />
       </Pressable>
       <Field
         label="手机号"

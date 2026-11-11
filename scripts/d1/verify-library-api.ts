@@ -1,5 +1,6 @@
 import { prepareContributionBackfill } from "./verify-contribution-backfill";
 import { verifyContributionManagement } from "./verify-contribution-management";
+import { verifyVisibleAccess } from "./verify-visible-access";
 import { verifyPilotAccess } from "./verify-pilot-access";
 import { verifyNearby } from "./verify-nearby";
 import { verifyKmsServices } from "./verify-kms-services";
@@ -18,6 +19,7 @@ import { Client, escapeLiteral } from "pg";
 import { localTarget } from "../d0/database-target";
 import { verifyPublicArrival } from "./verify-public-arrival";
 import { verifyPublicEntrances } from "./verify-public-entrances";
+import { verifyGlendaleDiscovery } from "./verify-glendale-discovery";
 async function main() {
   const env = parseEnv(readFileSync(".env", "utf8")),
     admin = localTarget(env.DATABASE_ADMIN_URL),
@@ -182,6 +184,7 @@ async function main() {
       "0020_dsp_team_profiles.sql",
       "0021_circle_text.sql",
       "0022_circle_media.sql",
+      "0023_apartment_sharing_controls.sql",
     ])
       await db.query(readFileSync("database/migrations/" + f, "utf8"));
     const password = randomBytes(24).toString("hex");
@@ -796,6 +799,20 @@ async function main() {
       "INSERT INTO abasong.capabilities(id,user_id,capability,reason) VALUES($1,$2,'access.contribute','synthetic test')",
       [cap, actor],
     );
+    const unconfirmedScope = await req(
+      "POST",
+      `/v1/apartments/${aid}/access-records`,
+      a,
+      422,
+      {
+        value: body.value,
+        method: "keypad",
+        scope: { label: "入口待确认" },
+        source_attested: true,
+      },
+      randomUUID(),
+    );
+    assert.equal(unconfirmedScope.code, "ACCESS_SCOPE_CONFIRMATION_REQUIRED");
     const sk = randomUUID(),
       shared = await req(
         "POST",
@@ -1241,10 +1258,15 @@ async function main() {
     const arrivalReader = randomUUID();
     await db.query("INSERT INTO abasong.users(id) VALUES($1)", [arrivalReader]);
     await db.query(
+      "INSERT INTO abasong.profiles(user_id,display_name) VALUES($1,'TEST Glendale reader')",
+      [arrivalReader],
+    );
+    await db.query(
       "INSERT INTO abasong.capabilities(user_id,capability,reason) VALUES($1,'access.read','disposable public-arrival test')",
       [arrivalReader],
     );
     await verifyPublicArrival(db, req, a, b, await token(arrivalReader));
+    await verifyGlendaleDiscovery(db, req, a, await token(arrivalReader));
     await verifyPublicEntrances(db, req, await token(arrivalReader));
     await verifySearchMatching(db, sensitive.href, actor, issued);
     await verifyNearby(db, sensitive.href, issued);
@@ -1321,6 +1343,7 @@ async function main() {
       admin.href,
       issuer,
     );
+    await verifyVisibleAccess(db, req, token, base);
     await verifyPilotAccess(db, admin.href, issuer, token, req, aid);
     await verifyKmsServices(db, sensitive.href, issued);
     console.log(
@@ -1352,16 +1375,17 @@ main().catch((error: unknown) => {
   )
     console.error("Database verification SQLSTATE: " + error.code);
   if (error instanceof Error) {
-    const location = error.stack
+    const locations = error.stack
       ?.split("\n")
-      .find(
+      .filter(
         (line) =>
           /^\s+at /.test(line) &&
-          /verify-(?:library-api|public-arrival|public-entrances|nearby-coverage|search-matching)\.ts/.test(
+          /verify-(?:library-api|public-arrival|public-entrances|glendale-discovery|nearby-coverage|search-matching)\.ts/.test(
             line,
           ),
-      );
-    if (location) console.error(location.trim());
+      )
+      .slice(0, 3);
+    for (const location of locations ?? []) console.error(location.trim());
   }
   console.error(
     "Private-library verification failed (assertion/setup/runtime); no sensitive details emitted",

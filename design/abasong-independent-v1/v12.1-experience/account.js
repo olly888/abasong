@@ -156,7 +156,8 @@
     return `${label(day)} ${time12(d.startTime || "15:00")}–${end !== day ? label(end) + " " : ""}${time12(d.endTime || "18:30")} 可接活`;
   }
   function item(action, title, sub = "") {
-    return `<button class="account-row" data-action="${action}"><span><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span>${I("chevron")}</button>`;
+    const icon = { "lib-list": "bookmark", "my-posts": "box", "my-applications": "users", "invite-open": "send", organization: "warehouse", settings: "settings" }[action];
+    return `<button class="account-row" data-action="${action}">${uxV34 && icon ? `<i class="v34-account-icon" aria-hidden="true">${I(icon)}</i>` : ""}<span><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span>${I("chevron")}</button>`;
   }
   function effectiveAvailability() {
     const a = model.availability,
@@ -167,14 +168,15 @@
     );
   }
   mePage = () => {
+    const pageTitle = uxV34 ? '<h1 class="v34-sr-only">我的</h1>' : rootHeader("我的");
     if (!state.logged)
-      return `<div class="root-content"><div class="page-scroll account-scroll">${rootHeader("我的")}<div class="profile-hero">${I("user")}<h2>欢迎使用 Abasong</h2></div>${btn("login", "登录", "button")}</div></div>${bottomNav("me")}`;
+      return `<div class="root-content"><div class="page-scroll account-scroll">${pageTitle}${uxV34 ? '<h2 class="v34-account-guest">登录 Abasong</h2>' : `<div class="profile-hero">${I("user")}<h2>欢迎使用 Abasong</h2></div>`}${btn("login", "登录", "button")}</div></div>${bottomNav("me")}`;
     const av = model.availability,
       live = effectiveAvailability();
     const summary = live
       ? `${av.date === window.abasongExperience.demoDay ? "今天" : av.date === "2026-11-05" ? "明天" : esc(av.date || "")} ${time12(av.start)}–${av.endDate && av.endDate !== av.date ? esc(av.endDate) + " " : ""}${time12(av.end)} · ${esc(av.regions.join(" / "))}`
       : "暂不接活";
-    return `<div class="root-content"><div class="page-scroll account-scroll">${rootHeader("我的")}<button class="account-identity" data-action="edit-profile" aria-label="编辑个人资料">${avatar("me")}<span><strong>${esc(model.profile.name)}</strong><small>个人资料与联系方式</small></span>${I("chevron")}</button><section class="account-availability-row"><div><b>接活状态</b>${live ? `<button class="account-availability-summary" data-action="availability" aria-label="修改接活时段">${summary}</button>` : `<small>${summary}</small>`}</div><button class="switch ${live ? "on" : ""}" role="switch" aria-label="接活状态" aria-checked="${live}" aria-busy="${!!ui.availabilityBusy}" data-action="account-toggle-availability" ${ui.availabilityBusy ? "disabled" : ""}></button></section>${ui.availabilityError ? `<div class="account-availability-error" role="alert">${esc(ui.availabilityError)}</div>` : ""}<div class="account-contribution">${btn("lib-contribute", I("plus") + "共享门禁码", "button")}</div><section class="account-group account-main-tools">${item("lib-list", "我的公寓", "我保存的 · 我共享的")}${item("my-posts", "我的发布")}${item("my-applications", "我的报名")}</section><section class="account-group account-secondary-tools">${item("invite-open", "邀请司机")}${account.teamIntent || own()?.name ? item("organization", "我的团队", own()?.name || "添加团队资料") : ""}</section><section class="account-group">${item("settings", "设置")}</section></div></div>${bottomNav("me")}`;
+    return `<div class="root-content"><div class="page-scroll account-scroll">${pageTitle}<button class="account-identity" data-action="edit-profile" aria-label="编辑个人资料">${avatar("me")}<span><strong>${esc(model.profile.name)}</strong><small>${uxV34 ? "编辑资料" : "个人资料与联系方式"}</small></span>${I("chevron")}</button><section class="account-availability-row"><div><b>接活状态</b>${live ? `<button class="account-availability-summary" data-action="availability" aria-label="修改接活时段">${summary}</button>` : `<small>${summary}</small>`}</div><button class="switch ${live ? "on" : ""}" role="switch" aria-label="接活状态" aria-checked="${live}" aria-busy="${!!ui.availabilityBusy}" data-action="account-toggle-availability" ${ui.availabilityBusy ? "disabled" : ""}></button></section>${ui.availabilityError ? `<div class="account-availability-error" role="alert">${esc(ui.availabilityError)}</div>` : ""}<div class="account-contribution">${btn("lib-contribute", I("plus") + "共享门禁码", "button")}</div><section class="account-group account-main-tools">${item("lib-list", "我的公寓", "我保存的 · 我共享的")}${item("my-posts", "我的发布")}${item("my-applications", "我的报名")}</section><section class="account-group account-secondary-tools">${item("invite-open", "邀请司机")}${item("organization", "我的团队", own()?.name || "添加团队资料")}</section><section class="account-group">${item("settings", "设置")}</section></div></div>${bottomNav("me")}`;
   };
 
   profilePage = () => {
@@ -566,7 +568,7 @@
         account.teamIntent = true;
         model.organization = account.team.name;
         if (
-          ui.teamPublishIntent &&
+          !uxV34 && ui.teamPublishIntent &&
           ui.teamPublishIntent === state.forms.request
         )
           state.forms.request.asOrg = true;

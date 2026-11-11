@@ -7,27 +7,27 @@
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
     <meta name="color-scheme" content="light" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%231467d8%27/%3E%3Ctext x=%277%27 y=%2725%27 fill=%27white%27 font-size=%2728%27 font-family=%27Arial%27%3Ea%3C/text%3E%3C/svg%3E"
-    />
-    <title>Abasong · V3.2 交互原型</title>
-    <link rel="stylesheet" href="../v12.1-import/tokens.css" />
-    <link rel="stylesheet" href="prototype.css" />
-    <link rel="stylesheet" href="foundation.css" />
-    <link rel="stylesheet" href="imports.css" />
-    <link rel="stylesheet" href="library.css" />
-    <link rel="stylesheet" href="experience.css?v=r3-delivery" />
-    <link rel="stylesheet" href="circle.css?v=r3-delivery" />
-    <link rel="stylesheet" href="account.css?v=r3-delivery" />
-    <link rel="stylesheet" href="invitation.css?v=r3-delivery" />
-    <link rel="stylesheet" href="delivery.css?v=r3-delivery" />
+    <title>Abasong · 交互原型</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../v12.1-import/tokens.css?v=brand-v1" />
+    <link rel="stylesheet" href="prototype.css?v=brand-v1" />
+    <link rel="stylesheet" href="foundation.css?v=door-options" />
+    <link rel="stylesheet" href="imports.css?v=brand-v1" />
+    <link rel="stylesheet" href="library.css?v=brand-v1" />
+    <link rel="stylesheet" href="experience.css?v=home-states" />
+    <link rel="stylesheet" href="circle.css?v=brand-v1" />
+    <link rel="stylesheet" href="account.css?v=brand-v1" />
+    <link rel="stylesheet" href="invitation.css?v=brand-v1" />
+    <link rel="stylesheet" href="delivery.css?v=brand-v1" />
+    <link rel="stylesheet" href="ux-v34.css?v=v34-1" />
+    <link rel="stylesheet" href="muse-v35.css?v=m11" />
+    <link rel="stylesheet" href="muse-v351-detail.css?v=compact-results" />
   </head>
   <body>
     <div class="studio">
       <aside class="lab left">
         <div class="studio-brand">
-          <span class="brand-symbol">a</span>abasong
+          <img class="brand-wordmark" src="../assets/brand/abasong_wordmark_primary.svg" alt="Abasong 阿巴送" />
         </div>
         <p class="version">V12.1 · V3.2 体验提案</p>
         <h1>让每一次<br />配送，更顺利。</h1>
@@ -48,6 +48,8 @@
             <option value="empty">当前公寓暂无密码</option>
             <option value="offline">密码读取失败</option>
             <option value="street">附近没有公寓</option>
+            <option value="house">独立住宅，附近无公寓</option>
+            <option value="nearby-error">附近公寓读取失败</option>
             <option value="denied">位置未开启</option>
             <option value="unqualified">没有查看资格</option>
             <option value="guest">尚未登录</option>
@@ -202,14 +204,17 @@
         </div>
       </aside>
     </div>
-    <script src="app.js?v=r3-delivery"></script>
-    <script src="imports.js?v=r4-13"></script>
-    <script src="library.js?v=r3-delivery"></script>
+    <script src="icons.js?v=brand-v1"></script>
+    <script src="app.js?v=v34-1"></script>
+    <script src="imports.js?v=door-options"></script>
+    <script src="library.js?v=door-options"></script>
     <script src="photo-search.js?v=r3-delivery"></script>
-    <script src="experience.js?v=r3-delivery"></script>
-    <script src="circle.js?v=r3-delivery"></script>
-    <script src="account.js?v=r3-delivery"></script>
-    <script src="invitation.js?v=r3-delivery"></script>
-    <script src="delivery.js?v=r3-delivery"></script>
+    <script src="experience.js?v=v34-1"></script>
+    <script src="circle.js?v=v34-1"></script>
+    <script src="account.js?v=v34-1"></script>
+    <script src="invitation.js?v=brand-v1"></script>
+    <script src="delivery.js?v=v34-1"></script>
+    <script src="muse-v35.js?v=compact-results"></script>
+    <script src="muse-v35-delivery.js?v=m5-01"></script>
   </body>
 </html>

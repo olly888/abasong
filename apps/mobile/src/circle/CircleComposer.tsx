@@ -6,6 +6,7 @@ import {
   Linking,
   Platform,
   Text,
+  View,
 } from "react-native";
 import { usePreventRemove } from "expo-router";
 import { ActionButton, Field, FormError } from "../ui/Controls";
@@ -19,6 +20,9 @@ import {
   uploadCirclePhoto,
 } from "./photo-input";
 import { PageFrame } from "../ui/PageFrame";
+import { ChoiceChip } from "../ui/ChoiceChip";
+import { ComposerOption } from "./ComposerOption";
+import { typeStyles } from "../ui/foundation";
 import { SelectionField } from "../ui/SelectionField";
 import { AccountError } from "../auth/api-client";
 import {
@@ -41,18 +45,27 @@ export function CircleComposer({
   request,
   onBack,
   onDone,
+  onPickerActorChange,
 }: {
   actor: string;
   request: CircleRequest;
   onBack: () => void;
   onDone: (post: Circle["Post"]) => void;
+  onPickerActorChange?: (actor: string | null) => void;
 }) {
   const [draft, setDraft] = useState(() => getPostDraft(actor));
   const [regions, setRegions] = useState<Circle["Region"][]>([]);
   const [requests, setRequests] = useState<DeliverySummary[]>([]);
-  const [optionsError, setOptionsError] = useState(false);
-  const [optionsRevision, reloadOptions] = useState(0);
-  const [optionsLoading, setOptionsLoading] = useState(true);
+  const [regionOpen, setRegionOpen] = useState(!!draft.fields.region_id);
+  const [requestOpen, setRequestOpen] = useState(!!draft.fields.request_id);
+  const [regionWanted, wantRegions] = useState(!!draft.fields.region_id);
+  const [requestWanted, wantRequests] = useState(!!draft.fields.request_id);
+  const [regionError, setRegionError] = useState(false);
+  const [requestError, setRequestError] = useState(false);
+  const [regionRevision, retryRegions] = useState(0);
+  const [requestRevision, retryRequests] = useState(0);
+  const [regionLoading, setRegionLoading] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [choosing, setChoosing] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -64,47 +77,63 @@ export function CircleComposer({
   const fields = draft.fields;
   const editsLocked = busy || picking || !!draft.submission;
 
+  // Optional data is loaded independently on demand; failures never block text.
   useEffect(() => {
+    if (!regionWanted) return;
     const c = new AbortController();
-    setOptionsLoading(true);
-    setOptionsError(false);
-    const signal = c.signal;
-    void Promise.allSettled([
-      request<Circle["RegionPage"]>("/v1/regions?limit=100", { signal }),
-      request<{ items: DeliverySummary[] }>(
-        "/v1/me/requests?request_schema_version=2&limit=50",
-        { signal },
+    setRegionLoading(true);
+    setRegionError(false);
+    void request<Circle["RegionPage"]>("/v1/regions?limit=100", {
+      signal: c.signal,
+    })
+      .then((page) => {
+        if (!c.signal.aborted) setRegions(page.items);
+      })
+      .catch(() => {
+        if (!c.signal.aborted) setRegionError(true);
+      })
+      .finally(() => {
+        if (!c.signal.aborted) setRegionLoading(false);
+      });
+    return () => c.abort();
+  }, [request, regionWanted, regionRevision]);
+  useEffect(() => {
+    if (!requestWanted) return;
+    const c = new AbortController();
+    setRequestLoading(true);
+    setRequestError(false);
+    void Promise.allSettled(
+      [1, 2].map((v) =>
+        request<{ items: DeliverySummary[] }>(
+          `/v1/me/requests?request_schema_version=${v}&limit=50`,
+          { signal: c.signal },
+        ),
       ),
-      request<{ items: DeliverySummary[] }>(
-        "/v1/me/requests?request_schema_version=1&limit=50",
-        { signal },
-      ),
-    ]).then(([regionPage, ...requestPages]) => {
-      if (signal.aborted) return;
-      setRegions(
-        regionPage.status === "fulfilled" ? regionPage.value.items : [],
+    ).then((pages) => {
+      if (c.signal.aborted) return;
+      const items = pages.flatMap((p) =>
+        p.status === "fulfilled" ? p.value.items : [],
       );
       setRequests(
-        requestPages
-          .flatMap((result) =>
-            result.status === "fulfilled" ? result.value.items : [],
-          )
-          .filter((r) => r.status !== "draft"),
+        items.filter(
+          (r, i) =>
+            r.status !== "draft" && items.findIndex((x) => x.id === r.id) === i,
+        ),
       );
-      setOptionsError(
-        regionPage.status === "rejected" ||
-          requestPages.some((r) => r.status === "rejected"),
-      );
-      setOptionsLoading(false);
+      setRequestError(pages.some((p) => p.status === "rejected"));
+      setRequestLoading(false);
     });
     return () => c.abort();
-  }, [request, optionsRevision]);
+  }, [request, requestWanted, requestRevision]);
   useEffect(
     () => () => {
       working.current?.abort();
-      picker.current?.abort();
+      if (picker.current) {
+        picker.current.abort();
+        onPickerActorChange?.(null);
+      }
     },
-    [],
+    [onPickerActorChange],
   );
   const dirty = !!(
     fields.body ||
@@ -153,6 +182,7 @@ export function CircleComposer({
       return;
     const c = new AbortController();
     picker.current = c;
+    onPickerActorChange?.(actor);
     setPicking(true);
     try {
       const { photos, rejected } = await selectCirclePhotos(
@@ -180,7 +210,10 @@ export function CircleComposer({
       }
     } finally {
       picker.current = null;
-      if (!c.signal.aborted) setPicking(false);
+      if (!c.signal.aborted) {
+        setPicking(false);
+        onPickerActorChange?.(null);
+      }
     }
   }
   function openPhotoMenu() {
@@ -277,12 +310,6 @@ export function CircleComposer({
   }
   const regionLabel = (id: string | null) =>
     regions.find((r) => r.id === id)?.label;
-  const topicOptions = [
-    ["", "不选择"],
-    ...Object.entries(circleTopics),
-  ] as ReadonlyArray<
-    readonly [NonNullable<Circle["PostInput"]["topic"]> | "", string]
-  >;
   const regionOptions: [string, string][] = [
     ["", "不选择"],
     ...regions.map((r): [string, string] => [r.id, r.label]),
@@ -293,7 +320,7 @@ export function CircleComposer({
       r.id,
       [
         requestTitle(r),
-        regionLabel(r.region_id),
+        regionLabel(r.region_id) ?? (r.region_id ? "地区暂未加载" : ""),
         r.route_label,
         statusLabels[r.status],
       ]
@@ -329,22 +356,25 @@ export function CircleComposer({
               busy ? "发布中" : error || draft.submission ? "重新发布" : "发布"
             }
             busy={busy}
-            disabled={picking}
+            disabled={picking || !fields.body.trim()}
             onPress={() => void publish()}
           />
         </>
       }
     >
       <Field
-        label="内容"
+        label="写一条动态"
         multiline
         maxLength={2000}
-        style={{ minHeight: 132 }}
+        style={{ minHeight: 156, textAlignVertical: "top" }}
         value={fields.body}
         editable={!editsLocked}
         placeholder="分享配送经验、提问或路上见闻"
         onChangeText={(body) => change({ ...fields, body })}
       />
+      {fields.body.length >= 1800 ? (
+        <Text style={typeStyles.secondary}>{fields.body.length}/2000</Text>
+      ) : null}
       {Platform.OS !== "web" ? (
         <CirclePhotoEditor
           photos={draft.photos}
@@ -387,36 +417,118 @@ export function CircleComposer({
           />
         </BottomSheet>
       ) : null}
-      <SelectionField
-        label="内容标签（选填）"
-        value={fields.topic ?? ""}
-        options={topicOptions}
-        disabled={editsLocked}
-        onChange={(topic) => change({ ...fields, topic: topic || undefined })}
-      />
-      <SelectionField
-        label="配送区域（选填）"
-        value={fields.region_id ?? ""}
-        options={regionOptions}
-        disabled={editsLocked || optionsLoading}
-        onChange={(region) =>
-          change({ ...fields, region_id: region || undefined })
-        }
-      />
-      <SelectionField
-        label="关联我的支援需求（选填）"
-        value={fields.request_id ?? ""}
-        options={requestOptions}
-        disabled={editsLocked || optionsLoading}
-        onChange={(id) => change({ ...fields, request_id: id || undefined })}
-      />
-      {optionsError ? (
-        <ActionButton
-          label="重新加载选项"
-          variant="text"
-          onPress={() => reloadOptions((n) => n + 1)}
-        />
-      ) : null}
+      <View style={{ gap: 8 }}>
+        <Text style={typeStyles.label}>内容标签（选填）</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          {Object.entries(circleTopics).map(([topic, label]) => (
+            <ChoiceChip
+              key={topic}
+              label={label}
+              selected={fields.topic === topic}
+              disabled={editsLocked}
+              onPress={() =>
+                change({
+                  ...fields,
+                  topic:
+                    fields.topic === topic
+                      ? undefined
+                      : (topic as NonNullable<Circle["PostInput"]["topic"]>),
+                })
+              }
+            />
+          ))}
+        </View>
+      </View>
+      <View>
+        <ComposerOption
+          title="添加配送地区"
+          open={regionOpen}
+          disabled={editsLocked}
+          summary={
+            fields.region_id
+              ? regionOptions.find(([id]) => id === fields.region_id)?.[1]
+              : undefined
+          }
+          onToggle={() => {
+            setRegionOpen(!regionOpen);
+            wantRegions(true);
+          }}
+          onClear={() => {
+            change({ ...fields, region_id: undefined });
+            setRegionOpen(false);
+          }}
+        >
+          {regionLoading ? (
+            <Text style={typeStyles.secondary}>正在加载地区…</Text>
+          ) : (
+            <SelectionField
+              label="配送地区（选填）"
+              value={fields.region_id ?? ""}
+              options={regionOptions}
+              disabled={editsLocked}
+              onChange={(id) => {
+                change({ ...fields, region_id: id || undefined });
+                setRegionOpen(false);
+              }}
+            />
+          )}
+          {regionError ? (
+            <>
+              <FormError message="地区暂时无法加载" />
+              <ActionButton
+                label="重试加载地区"
+                variant="text"
+                disabled={editsLocked}
+                onPress={() => retryRegions((n) => n + 1)}
+              />
+            </>
+          ) : null}
+        </ComposerOption>
+        <ComposerOption
+          title="关联我发布的需求"
+          open={requestOpen}
+          disabled={editsLocked}
+          summary={
+            fields.request_id
+              ? requestOptions.find(([id]) => id === fields.request_id)?.[1]
+              : undefined
+          }
+          onToggle={() => {
+            setRequestOpen(!requestOpen);
+            wantRequests(true);
+          }}
+          onClear={() => {
+            change({ ...fields, request_id: undefined });
+            setRequestOpen(false);
+          }}
+        >
+          {requestLoading ? (
+            <Text style={typeStyles.secondary}>正在加载需求…</Text>
+          ) : (
+            <SelectionField
+              label="我发布的需求（选填）"
+              value={fields.request_id ?? ""}
+              options={requestOptions}
+              disabled={editsLocked}
+              onChange={(id) => {
+                change({ ...fields, request_id: id || undefined });
+                setRequestOpen(false);
+              }}
+            />
+          )}
+          {requestError ? (
+            <>
+              <FormError message="部分需求暂时无法加载" />
+              <ActionButton
+                label="重试加载需求"
+                variant="text"
+                disabled={editsLocked}
+                onPress={() => retryRequests((n) => n + 1)}
+              />
+            </>
+          ) : null}
+        </ComposerOption>
+      </View>
     </PageFrame>
   );
 }

@@ -218,7 +218,7 @@ function Review() {
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: tokens.color.surface },
   heading: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, gap: 3 },
-  tag: { color: tokens.color.brandPrimary, fontSize: 12, fontWeight: "600" },
+  tag: { color: tokens.color.brandText, fontSize: 12, fontWeight: "600" },
   title: { fontSize: 23, fontWeight: "700", color: tokens.color.ink },
   muted: { fontSize: 13, lineHeight: 19, color: tokens.color.textSecondary },
   map: { flex: 1, minHeight: 160 },
@@ -245,7 +245,7 @@ const s = StyleSheet.create({
     borderColor: tokens.color.brandPrimary,
   },
   buttonText: {
-    color: tokens.color.brandPrimary,
+    color: tokens.color.brandText,
     fontSize: 15,
     fontWeight: "600",
   },

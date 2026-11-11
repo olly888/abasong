@@ -1080,22 +1080,51 @@ export class ImportsService {
                   );
                   p.apartmentId = aid;
                 }
-                const entry = await this.apartments.createEntryTx(
-                  c,
-                  a,
-                  aid ? { apartment_id: aid } : { address: x.address_text },
-                  p.entryKey,
-                );
+                // A private, unresolved address may have several entrance rows.
+                // Reuse only an exact address saved by this owner in this batch.
+                const sibling = aid
+                  ? undefined
+                  : b.candidates.find((other) => {
+                      const saved = b.plans[other.id]?.result;
+                      return (
+                        other.id !== cid &&
+                        other.address_text === x.address_text &&
+                        saved?.private_entry_id &&
+                        !saved.apartment_id
+                      );
+                    });
+                const previousEntry = sibling
+                  ? b.plans[sibling.id]?.result.private_entry_id
+                  : undefined;
+                const existing = previousEntry
+                  ? (
+                      await c.query<{ id: string }>(
+                        "SELECT id FROM abasong.personal_apartments WHERE owner_id=$1 AND id=$2",
+                        [a.userId, previousEntry],
+                      )
+                    ).rows[0]?.id
+                  : undefined;
+                const entryId =
+                  existing ??
+                  (
+                    await this.apartments.createEntryTx(
+                      c,
+                      a,
+                      aid ? { apartment_id: aid } : { address: x.address_text },
+                      p.entryKey,
+                    )
+                  ).id;
                 const record = await this.apartments.createRecordTx(
                   c,
                   a,
-                  entry.id,
+                  entryId,
                   { value: x.value, scope_label: x.scope.label ?? "大门" },
                   p.recordKey,
                 );
                 out.private_status = "saved";
                 out.apartment_id = aid ?? null;
                 out.private_record_id = record.id;
+                out.private_entry_id = entryId;
                 out.error_code = null;
                 out.retryable = false;
               } else if (

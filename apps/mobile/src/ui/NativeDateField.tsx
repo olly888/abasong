@@ -1,5 +1,13 @@
+import { SafeAreaModal } from "./SafeAreaModal";
 import { useState } from "react";
-import { Keyboard, Modal, Platform, Pressable, Text, View } from "react-native";
+import {
+  Keyboard,
+  Platform,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
@@ -21,6 +29,8 @@ export type DateFieldProps = {
   disabled?: boolean;
   optional?: boolean;
   compactDate?: boolean;
+  inlineLabel?: string;
+  inlineSelected?: boolean;
   onChange: (value: string) => void;
 };
 export function NativeDateField({
@@ -31,8 +41,12 @@ export function NativeDateField({
   disabled = false,
   optional = false,
   compactDate = false,
+  inlineLabel,
+  inlineSelected = false,
   onChange,
 }: DateFieldProps) {
+  const { fontScale } = useWindowDimensions();
+  const largeText = fontScale >= 1.6;
   const [open, setOpen] = useState(false),
     [draft, setDraft] = useState(() => pickerDate(mode, value, date));
   function choose() {
@@ -52,79 +66,104 @@ export function NativeDateField({
       setOpen(true);
     }
   }
+  const modalTitle = (
+    <Text
+      accessibilityRole="header"
+      style={{
+        fontSize: 17,
+        fontWeight: "600",
+        color: tokens.color.ink,
+        textAlign: "center",
+      }}
+    >
+      {label}
+    </Text>
+  );
   return (
     <View style={{ gap: 8 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Text
-          style={{ fontSize: 14, fontWeight: "600", color: tokens.color.ink }}
+      {!inlineLabel ? (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
         >
-          {label}
-        </Text>
-        {optional && value ? (
-          <Pressable
-            onPress={() => onChange("")}
-            disabled={disabled}
-            accessibilityRole="button"
-            accessibilityLabel={`清除${label}`}
-            hitSlop={12}
+          <Text
+            style={{ fontSize: 14, fontWeight: "600", color: tokens.color.ink }}
           >
-            <Text style={{ fontSize: 14, color: tokens.color.brandPrimary }}>
-              清除
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
+            {label}
+          </Text>
+          {optional && value ? (
+            <Pressable
+              onPress={() => onChange("")}
+              disabled={disabled}
+              accessibilityRole="button"
+              accessibilityLabel={`清除${label}`}
+              hitSlop={12}
+            >
+              <Text style={{ fontSize: 14, color: tokens.color.brandText }}>
+                清除
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
       <Pressable
         disabled={disabled}
         accessibilityRole="button"
         accessibilityLabel={`${label}，${value ? pickerLabel(mode, value, date) : optional ? "选填" : "请选择"}`}
-        accessibilityState={{ disabled }}
+        accessibilityState={{
+          disabled,
+          ...(inlineLabel ? { selected: inlineSelected } : {}),
+        }}
         onPress={choose}
         style={({ pressed }) => ({
-          minHeight: 52,
-          paddingHorizontal: 14,
-          paddingVertical: 12,
+          minHeight: inlineLabel ? 48 : 52,
+          paddingHorizontal: inlineLabel ? 12 : 14,
+          paddingVertical: inlineLabel ? 8 : 12,
           borderWidth: 1,
-          borderColor: tokens.color.controlBorder,
+          borderColor: inlineSelected
+            ? tokens.color.brandPrimary
+            : tokens.color.controlBorder,
           borderRadius: 10,
           flexDirection: "row",
           alignItems: "center",
           gap: 10,
           backgroundColor: disabled
             ? tokens.color.disabledSurface
-            : pressed
-              ? tokens.color.surfaceMuted
-              : tokens.color.surface,
+            : inlineSelected
+              ? tokens.color.brandSurface
+              : pressed
+                ? tokens.color.surfaceMuted
+                : tokens.color.surface,
         })}
       >
         <Text
           style={{
-            flex: 1,
-            fontSize: 16,
+            flex: inlineLabel ? undefined : 1,
+            fontSize: inlineLabel ? 14 : 16,
             lineHeight: 24,
             color: disabled
               ? tokens.color.disabledText
-              : value
-                ? tokens.color.ink
-                : tokens.color.textSecondary,
+              : inlineSelected
+                ? tokens.color.brandText
+                : value
+                  ? tokens.color.ink
+                  : tokens.color.textSecondary,
           }}
         >
-          {value
-            ? pickerLabel(mode, value, date, compactDate)
-            : optional
-              ? "选填"
-              : "请选择"}
+          {inlineLabel ??
+            (value
+              ? pickerLabel(mode, value, date, compactDate)
+              : optional
+                ? "选填"
+                : "请选择")}
         </Text>
         <Icon name="down" size={18} color={tokens.color.textSecondary} />
       </Pressable>
       {Platform.OS === "ios" ? (
-        <Modal
+        <SafeAreaModal
           visible={open}
           transparent
           animationType="slide"
@@ -147,6 +186,7 @@ export function NativeDateField({
                 gap: 12,
               }}
             >
+              {largeText ? modalTitle : null}
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
               >
@@ -157,15 +197,7 @@ export function NativeDateField({
                     onPress={() => setOpen(false)}
                   />
                 </View>
-                <Text
-                  style={{
-                    fontSize: 17,
-                    fontWeight: "600",
-                    color: tokens.color.ink,
-                  }}
-                >
-                  {label}
-                </Text>
+                {largeText ? null : modalTitle}
                 <View style={{ flex: 1 }}>
                   <ActionButton
                     label="完成"
@@ -191,7 +223,7 @@ export function NativeDateField({
               ) : null}
             </SafeAreaView>
           </View>
-        </Modal>
+        </SafeAreaModal>
       ) : null}
     </View>
   );

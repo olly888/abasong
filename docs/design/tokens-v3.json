@@ -1,5 +1,85 @@
 {
-  "$description": "Abasong V3.1 current design tokens; sole editable token source. Native dimensions are logical points/dp, web uses CSS px.",
+  "$description": "Abasong current design tokens. Brand artwork uses the fixed brand palette; interface colors reference their roles. Native dimensions use logical points/dp.",
+  "brand": {
+    "blue": {
+      "$type": "color",
+      "$value": "{palette.blue.600}"
+    },
+    "black": {
+      "$type": "color",
+      "$value": "#000000"
+    },
+    "white": {
+      "$type": "color",
+      "$value": "#FFFFFF"
+    }
+  },
+  "palette": {
+    "blue": {
+      "50": {
+        "$type": "color",
+        "$value": "#EEF4FF"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#DCE9FF"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#BDDBFF"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#95C2FF"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#68A2FF"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#3985FF"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#1769FF"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#0E4EBA"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#0B3D91"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#092B66"
+      }
+    },
+    "status": {
+      "success": {
+        "$type": "color",
+        "$value": "#12805A"
+      },
+      "warning": {
+        "$type": "color",
+        "$value": "#B45309"
+      },
+      "danger": {
+        "$type": "color",
+        "$value": "#C2261B"
+      },
+      "help": {
+        "$type": "color",
+        "$value": "#0E7C86"
+      },
+      "rescue": {
+        "$type": "color",
+        "$value": "#E4571C"
+      }
+    }
+  },
   "color": {
     "ink": {
       "$type": "color",
@@ -63,7 +143,7 @@
     },
     "danger": {
       "$type": "color",
-      "$value": "#AE3734"
+      "$value": "{palette.status.danger}"
     },
     "dangerSoft": {
       "$type": "color",
@@ -71,15 +151,15 @@
     },
     "info": {
       "$type": "color",
-      "$value": "#245CC4"
+      "$value": "{palette.blue.700}"
     },
     "infoSoft": {
       "$type": "color",
-      "$value": "#EDF3FE"
+      "$value": "{palette.blue.50}"
     },
     "focus": {
       "$type": "color",
-      "$value": "#245CC4"
+      "$value": "{palette.blue.700}"
     },
     "mapLand": {
       "$type": "color",
@@ -103,19 +183,19 @@
     },
     "brandPrimary": {
       "$type": "color",
-      "$value": "#1467D8"
+      "$value": "{brand.blue}"
     },
     "brandPressed": {
       "$type": "color",
-      "$value": "#1054B3"
+      "$value": "{palette.blue.800}"
     },
     "brandSurface": {
       "$type": "color",
-      "$value": "#EDF4FF"
+      "$value": "{palette.blue.50}"
     },
     "onBrand": {
       "$type": "color",
-      "$value": "#FFFFFF"
+      "$value": "{brand.white}"
     },
     "dangerPressed": {
       "$type": "color",
@@ -132,6 +212,10 @@
     "overlay": {
       "$type": "color",
       "$value": "rgba(16,17,20,0.32)"
+    },
+    "brandText": {
+      "$type": "color",
+      "$value": "{palette.blue.700}"
     }
   },
   "space": {
@@ -278,6 +362,10 @@
         "value": 20,
         "unit": "px"
       }
+    },
+    "iconStroke": {
+      "$type": "number",
+      "$value": 2
     }
   },
   "fontSize": {
@@ -415,7 +503,7 @@
     },
     "actionHighlightText": {
       "$type": "color",
-      "$value": "{color.brandPrimary}"
+      "$value": "{color.brandText}"
     },
     "textPrimary": {
       "$type": "color",

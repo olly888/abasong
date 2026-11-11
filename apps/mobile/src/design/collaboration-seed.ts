@@ -1,3 +1,4 @@
+import { localDateTime } from "../requests/presentation";
 import { deliveryFixture } from "../requests/delivery-fixtures";
 import { hydrateDelivery, deliveryInput } from "../requests/delivery-fields";
 export function collaborationSeed(f: { region: string; pickup: string }) {
@@ -13,6 +14,9 @@ export function collaborationSeed(f: { region: string; pickup: string }) {
       address_source: "provider_permanent",
     };
   const fields = hydrateDelivery(seed, true).fields;
+  const start = localDateTime(null, Date.now() + 30 * 60000);
+  fields.date = start.date;
+  fields.start = start.time;
   fields.route = "TEST R4-12";
   return deliveryInput(seed.scenario, fields, true);
 }

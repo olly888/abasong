@@ -115,73 +115,78 @@ export function CircleFeed({
         right={<TextButton label="发布" onPress={() => setMenu(true)} />}
       />
       {header}
-      <View
-        style={{ flex: 1, opacity: verified ? 1 : 0 }}
-        pointerEvents={verified ? "auto" : "none"}
-        accessibilityElementsHidden={!verified}
-        importantForAccessibility={verified ? "auto" : "no-hide-descendants"}
-      >
-        <FlatList
-          data={rows}
-          keyExtractor={(p) => p.id}
-          renderItem={item}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
-          ItemSeparatorComponent={() => (
-            <View
-              style={{ borderBottomWidth: 1, borderColor: tokens.color.border }}
-            />
-          )}
-          refreshing={verified && busy && !cursor}
-          onRefresh={() => {
-            setVerified(false);
-            void load();
-          }}
-          ListEmptyComponent={
-            verified && !busy && !error ? (
-              <StatusPanel
-                state="empty"
-                title="还没有动态"
-                action={{ label: "发布动态", onPress: onPublish }}
-              />
-            ) : undefined
-          }
-          ListFooterComponent={
-            error && verified ? (
-              <View>
-                <FormError message="动态暂时无法加载" />
-                <ActionButton
-                  label="重试"
-                  variant="text"
-                  onPress={() => void load(cursor ?? undefined)}
-                />
-              </View>
-            ) : cursor ? (
-              <ActionButton
-                label="加载更多"
-                variant="text"
-                busy={busy}
-                onPress={() => void load(cursor)}
-              />
-            ) : undefined
-          }
-        />
-      </View>
-      {!verified ? (
+      <View style={{ flex: 1 }}>
         <View
-          pointerEvents="box-none"
-          style={{ position: "absolute", top: 120, left: 20, right: 20 }}
+          style={{ flex: 1, opacity: verified ? 1 : 0 }}
+          pointerEvents={verified ? "auto" : "none"}
+          accessibilityElementsHidden={!verified}
+          importantForAccessibility={verified ? "auto" : "no-hide-descendants"}
         >
-          <StatusPanel
-            state={error ? "error" : "loading"}
-            title={error ? "动态暂时无法加载" : "正在加载动态"}
-            action={
-              error
-                ? { label: "重新加载", onPress: () => void load() }
-                : undefined
+          <FlatList
+            data={rows}
+            keyExtractor={(p) => p.id}
+            renderItem={item}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
+            ItemSeparatorComponent={() => (
+              <View
+                style={{
+                  borderBottomWidth: 1,
+                  borderColor: tokens.color.border,
+                }}
+              />
+            )}
+            refreshing={verified && busy && !cursor}
+            onRefresh={() => {
+              setVerified(false);
+              void load();
+            }}
+            ListEmptyComponent={
+              verified && !busy && !error ? (
+                <StatusPanel
+                  state="empty"
+                  title="还没有动态"
+                  action={{ label: "发布动态", onPress: onPublish }}
+                />
+              ) : undefined
+            }
+            ListFooterComponent={
+              error && verified ? (
+                <View>
+                  <FormError message="动态暂时无法加载" />
+                  <ActionButton
+                    label="重试"
+                    variant="text"
+                    onPress={() => void load(cursor ?? undefined)}
+                  />
+                </View>
+              ) : cursor ? (
+                <ActionButton
+                  label="加载更多"
+                  variant="text"
+                  busy={busy}
+                  onPress={() => void load(cursor)}
+                />
+              ) : undefined
             }
           />
         </View>
-      ) : null}
+        {!verified ? (
+          <View
+            pointerEvents="box-none"
+            style={{ position: "absolute", top: 16, left: 20, right: 20 }}
+          >
+            <StatusPanel
+              state={error ? "error" : "loading"}
+              title={error ? "动态暂时无法加载" : "正在加载动态"}
+              action={
+                error
+                  ? { label: "重新加载", onPress: () => void load() }
+                  : undefined
+              }
+            />
+          </View>
+        ) : null}
+      </View>
       {menu ? (
         <BottomSheet onRequestClose={() => setMenu(false)}>
           <ActionButton
@@ -192,7 +197,7 @@ export function CircleFeed({
             }}
           />
           <ActionButton
-            label="发临时需求"
+            label="发需求"
             secondary
             onPress={() => {
               setMenu(false);

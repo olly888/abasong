@@ -3347,6 +3347,15 @@ paths:
           - extra_drivers
           - vehicle_help
           - other_help
+      - name: scenario
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - warehouse_shortage
+          - delivery_handoff
+        description: 新版两场景筛选，与 request_schema_version=2 一起使用；代送同时包含整条线路与部分包裹。
       - name: request_schema_version
         in: query
         required: false
@@ -10402,6 +10411,9 @@ components:
         observation_id:
           type: string
           format: uuid
+        expand:
+          type: boolean
+          description: 仅Mapbox发现端点支持；显式true启用200/500/1000m受控扩围，省略保持200m
       required:
       - point
       - observed_at
@@ -10512,7 +10524,10 @@ components:
           maxItems: 20
         radius_m:
           type: integer
-          minimum: 200
+          enum:
+          - 200
+          - 500
+          - 1000
         expires_at:
           type: string
           format: date-time
@@ -10531,6 +10546,10 @@ components:
           type: string
           enum:
           - temporary
+        coverage:
+          $ref: '#/components/schemas/NearbyCoverage'
+        expansion:
+          $ref: '#/components/schemas/NearbyExpansion'
         distance_context:
           $ref: '#/components/schemas/DistanceContext'
       required:
@@ -10541,7 +10560,78 @@ components:
       - provider_status
       - attribution
       - use_mode
-      description: 本次定位快照的一组候选；Mapbox成功响应包含同原点目录及地图候选，按同源距离排序去重。新增距离字段为加法兼容；新服务总返回，旧服务缺失时客户端隐藏距离。
+      description: 同一次定位快照的候选，最多20条；expand省略为200m兼容模式。扩围不足3且本档查询完整才进入下一档；失败保留上一有效范围的公共地址并标注失败，绝不含门禁正文。
+        距离字段为加法兼容；旧服务缺失时客户端隐藏距离。
+    NearbyCoverage:
+      type: object
+      additionalProperties: false
+      properties:
+        catalog:
+          type: string
+          enum:
+          - queried
+          - capped
+        mapbox:
+          type: string
+          enum:
+          - not_requested
+          - queried
+          - partial
+          - unavailable
+      required:
+      - catalog
+      - mapbox
+      description: 仅表示本次来源查询范围及预算状态，不保证现实世界分类/地址完整。Tilequery九瓦片覆盖不足、50条封顶或地址解析未完成时为partial。
+    NearbyExpansion:
+      type: object
+      additionalProperties: false
+      properties:
+        attempted_radii_m:
+          type: array
+          items:
+            type: integer
+            enum:
+            - 200
+            - 500
+            - 1000
+          minItems: 1
+          maxItems: 3
+        stop_reason:
+          type: string
+          enum:
+          - fixed
+          - sufficient
+          - max_radius
+          - coverage_incomplete
+          - provider_unavailable
+          - budget_exhausted
+        catalog_queries:
+          type: integer
+          minimum: 1
+          maximum: 3
+        tilequery_requests:
+          type: integer
+          minimum: 0
+          maximum: 7
+        reverse_requests:
+          type: integer
+          minimum: 0
+          maximum: 4
+        metadata_requests:
+          type: integer
+          minimum: 0
+          maximum: 1
+        elapsed_ms:
+          type: integer
+          minimum: 0
+      required:
+      - attempted_radii_m
+      - stop_reason
+      - catalog_queries
+      - tilequery_requests
+      - reverse_requests
+      - metadata_requests
+      - elapsed_ms
     ConfirmedAddressAccessScope:
       type: object
       additionalProperties: false
@@ -10782,6 +10872,11 @@ components:
         next_cursor:
           type: string
           nullable: true
+        sharing_paused:
+          type: boolean
+          enum:
+          - true
+          description: 公寓暂停共享时返回；items 为空，地址仍可查看。
       required:
       - items
       - config_version
@@ -12435,6 +12530,11 @@ components:
           type: integer
           nullable: true
           minimum: 0
+        sharing_paused:
+          type: boolean
+          enum:
+          - true
+          description: 公寓暂停共享，历史贡献保留，正文不返回。
       required:
       - id
       - record_id
@@ -12540,10 +12640,15 @@ components:
         unread_notifications:
           type: integer
           minimum: 0
+        unread_circle_replies:
+          type: integer
+          minimum: 0
+          description: 本人仍可查看的未读司机圈回复；是 unread_notifications 的子集，不额外计入总数。
       required:
       - unread_conversations
       - unread_messages
       - unread_notifications
+      - unread_circle_replies
     ShareCreateInput:
       type: object
       additionalProperties: false
@@ -14859,6 +14964,10 @@ components:
           type: string
           format: uuid
           nullable: true
+        private_entry_id:
+          type: string
+          format: uuid
+          description: 已保存资料所属的本人公寓条目 ID。仅在本人保存成功时返回。
       required:
       - candidate_id
       - confirmed_revision

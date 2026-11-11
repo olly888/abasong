@@ -10,7 +10,7 @@ import { DeliveryDetailBody } from "../requests/DeliveryDetailBody";
 import { ApplicationSheet } from "../requests/ApplySheet";
 import { GapEditor } from "../requests/GapSheet";
 import { deliveryFixture } from "../requests/delivery-fixtures";
-import { requestTitle } from "../requests/presentation";
+import { requestPickupRegion, requestTitle } from "../requests/presentation";
 import { AvailabilityFlow } from "../drivers/AvailabilityFlow";
 import { useConversationData } from "../messages/useConversation";
 import { ConversationLayout } from "../messages/ConversationLayout";
@@ -314,6 +314,10 @@ function Lab() {
           <ApplicationSheet
             request={current}
             regionLabel={regions.find((r) => r.id === current.region_id)?.label}
+            pickupRegionLabel={requestPickupRegion(
+              current,
+              Object.fromEntries(regions.map((r) => [r.id, r.label])),
+            )}
             transport={request}
             onClose={() => setApplying(false)}
             onRefresh={() => void operation(() => open(current.id))}

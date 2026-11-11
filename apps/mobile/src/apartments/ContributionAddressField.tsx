@@ -31,6 +31,7 @@ export function ContributionAddressField(p: {
   disabled: boolean;
   request: ContributionRequest;
   onChange: (value: ContributionAddress) => void;
+  onEdit?: () => void;
 }) {
   const latest = useRef(p);
   latest.current = p;
@@ -61,7 +62,8 @@ export function ContributionAddressField(p: {
     [attribution, setAttribution] = useState(""),
     [retry, setRetry] = useState(0),
     [focus, setFocus] = useState(false);
-  function changed(value: ContributionAddress) {
+  function changed(value: ContributionAddress, userEdit = true) {
+    if (userEdit) latest.current.onEdit?.();
     latest.current.onChange(value);
   }
   function cancel() {
@@ -80,7 +82,7 @@ export function ContributionAddressField(p: {
     prefill.current = controller;
     setTargetState("loading");
     setError(null);
-    changed({ kind: "pending" });
+    changed({ kind: "pending" }, false);
     try {
       const apartment = await latest.current.request<S["Apartment"]>(
         "/v1/apartments/" + encodeURIComponent(id),
@@ -89,7 +91,7 @@ export function ContributionAddressField(p: {
       if (controller.signal.aborted) return;
       if (apartment.id !== id)
         throw new Error("公寓资料与所选地址不一致，请重新读取");
-      changed({ kind: "apartment", apartment });
+      changed({ kind: "apartment", apartment }, false);
       setView("chosen");
       setTargetState("none");
     } catch (e) {

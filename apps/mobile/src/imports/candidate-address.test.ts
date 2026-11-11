@@ -2,8 +2,10 @@ import { it, expect } from "vitest";
 import {
   canShareCandidate,
   canRepairImportResult,
+  groupImportCandidates,
   importAddressLabel,
 } from "./candidate-address";
+import { appliesToEntrance, unconfirmedEntrance } from "@abasong/contracts";
 import { importCommitPatch } from "./commit-patch";
 import type { Candidate } from "./types";
 import type { components } from "@abasong/contracts";
@@ -29,6 +31,38 @@ const result: components["schemas"]["ImportCommitResult"] = {
   error_code: "ADDRESS_CONFIRMATION_REQUIRED",
   retryable: false,
 };
+
+it("groups entrance rows without merging the address next door or losing source IDs", () => {
+  const groups = groupImportCandidates([
+    { ...row, id: "building", scope: "楼栋门" },
+    { ...row, id: "neighbor", address: "202 TEST Ave, TEST City, CA 90000" },
+    { ...row, id: "garage", scope: "车库入口", sourceId: "second-image" },
+    { ...row, id: "unknown-one", address: "" },
+    { ...row, id: "unknown-two", address: "" },
+  ]);
+  expect(groups.map(([, items]) => items.map(({ row }) => row.id))).toEqual([
+    ["building", "garage"],
+    ["neighbor"],
+    ["unknown-one"],
+    ["unknown-two"],
+  ]);
+  expect(groups[0]?.[1][1]).toMatchObject({
+    index: 2,
+    row: { sourceId: "second-image" },
+  });
+});
+
+it("only expands an explicitly confirmed community code across entrances", () => {
+  for (const entrance of ["楼栋门", "车库入口"] as const) {
+    expect(appliesToEntrance("社区通用", entrance)).toBe(true);
+    expect(appliesToEntrance("社区门禁", entrance)).toBe(false);
+    expect(appliesToEntrance(unconfirmedEntrance, entrance)).toBe(false);
+  }
+  expect(appliesToEntrance("楼栋门", "车库入口")).toBe(false);
+  expect(appliesToEntrance("车库入口", "楼栋门")).toBe(false);
+  expect(appliesToEntrance("车库门", "车库入口")).toBe(true);
+  expect(appliesToEntrance("车库门", "楼栋门")).toBe(false);
+});
 it("does not make OCR text shareable until there is an explicit structured address", () => {
   expect(canShareCandidate(row)).toBe(false);
   const a = {

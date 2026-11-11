@@ -68,12 +68,12 @@ export function defaultDeliveryFields(
       scenario === "warehouse_shortage" ? "warehouse" : "contact_handoff",
     warehouse: emptyWarehouse(),
     date: current.date,
-    start: current.time,
-    asap: true,
+    start: "",
+    asap: scenario === "delivery_handoff",
     pickupEnd: "",
     completion: "contact",
     deliveryEnd: "",
-    quantityMode: "estimate",
+    quantityMode: scenario === "warehouse_shortage" ? "estimate" : "exact",
     quantity: "",
     drivers: scenario === "warehouse_shortage" ? "1" : "",
     scope: "partial",
@@ -97,7 +97,8 @@ export function changeDeliveryField<K extends keyof DeliveryFields>(
   now = Date.now(),
 ): DeliveryFields {
   const next = { ...f, [key]: value };
-  if (key === "date") {
+  if (key === "date" && value !== f.date) {
+    next.start = "";
     if (value !== localDateTime(null, now).date) next.asap = false;
     if (f.endDate === f.date) next.endDate = String(value);
   }
@@ -105,12 +106,24 @@ export function changeDeliveryField<K extends keyof DeliveryFields>(
     next.pickupRegion = "";
     next.warehouse = emptyWarehouse();
   }
+  if (key === "unit" && value !== f.unit) next.amount = "";
+  if (key === "warehouse") {
+    const w = value as WarehouseFields;
+    if (
+      (["line", "city", "state", "postal"] as const).some(
+        (part) => w[part] !== f.warehouse[part],
+      )
+    ) {
+      next.pickupRegion = "";
+      next.warehouse = { ...w, confirmed: false };
+    }
+  }
   if (key === "quantityMode" && value === "unknown") {
     next.quantity = "";
     next.minimum = "";
   }
   if (key === "scope" && value === "whole_route") next.minimum = "";
-  if (key === "completion") next.deliveryEnd = "";
+  if (key === "completion" && value !== f.completion) next.deliveryEnd = "";
   return next;
 }
 export function dayAfter(date: string, count = 1) {
@@ -127,6 +140,8 @@ export function hydrateDelivery(
     throw new Error("这条历史需求请重新发布为两场景需求");
   const scenario = r.scenario;
   const f = defaultDeliveryFields(scenario, now);
+  const date = r.handoff_date ?? localDateTime(r.starts_at, now).date;
+  const automaticExpiry = r.pickup_deadline_at ?? laDayEnd(date);
   const start = localDateTime(r.starts_at, now),
     end = localDateTime(r.expires_at, now);
   const p = r.pickup;
@@ -156,17 +171,21 @@ export function hydrateDelivery(
                 p.address_confirmed,
             }
           : emptyWarehouse(),
-      date: copy ? f.date : (r.handoff_date ?? start.date),
-      start: copy ? f.start : start.time,
-      asap: copy || r.handoff_mode === "asap",
+      date: copy ? f.date : date,
+      start: copy || !r.starts_at ? f.start : start.time,
+      asap: copy ? f.asap : r.handoff_mode ? r.handoff_mode === "asap" : f.asap,
       pickupEnd: copy
         ? ""
         : r.pickup_deadline_at
           ? localDateTime(r.pickup_deadline_at).time
           : "",
-      deliveryEnd: copy
-        ? ""
-        : r.delivery_deadline_at
+      deliveryEnd:
+        !copy &&
+        r.delivery_deadline_at &&
+        Date.parse(r.delivery_deadline_at) !==
+          Date.parse(
+            laDayEnd(r.completion_mode === "next_day" ? dayAfter(date) : date),
+          )
           ? localDateTime(r.delivery_deadline_at).time
           : "",
       completion: r.completion_mode ?? "contact",
@@ -184,16 +203,106 @@ export function hydrateDelivery(
       experience: r.experience_requirement,
       terms: r.private_payment_terms ?? "",
       description: r.description ?? "",
-      customExpiry: !copy && !!r.expires_at,
-      endDate: copy ? f.endDate : end.date,
-      end: copy ? f.end : end.time,
+      customExpiry:
+        !copy &&
+        !!r.expires_at &&
+        Date.parse(r.expires_at) !== Date.parse(automaticExpiry),
+      endDate: copy || !r.expires_at ? (copy ? f.endDate : date) : end.date,
+      end: copy || !r.expires_at ? f.end : end.time,
     },
   };
 }
-function positive(value: string, label: string, required: boolean) {
+export type DeliveryAnchor =
+  | keyof DeliveryFields
+  | "identity"
+  | "places"
+  | "schedule"
+  | "load"
+  | "conditions"
+  | "extra"
+  | "warehouseLine"
+  | "warehouseCity"
+  | "warehouseState"
+  | "warehousePostal"
+  | "warehouseConfirm";
+
+export class DeliveryFieldError extends Error {
+  constructor(
+    public readonly field: DeliveryAnchor,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+export function warehouseAddressIssue(w: WarehouseFields) {
+  if (!/^\d\S*\s+.+$/.test(w.line.trim()))
+    return new DeliveryFieldError("warehouseLine", "请填写门牌与街道");
+  if (!w.city.trim())
+    return new DeliveryFieldError("warehouseCity", "请填写城市");
+  if (!/^[A-Z]{2}$/.test(w.state))
+    return new DeliveryFieldError("warehouseState", "请输入两字母州名，如 CA");
+  if (w.postal && !/^\d{5}(?:-\d{4})?$/.test(w.postal))
+    return new DeliveryFieldError("warehousePostal", "请核对邮编");
+  return null;
+}
+function invalid(field: DeliveryAnchor, message: string): never {
+  throw new DeliveryFieldError(field, message);
+}
+export function laDayEnd(date: string) {
+  return new Date(
+    Date.parse(laInstant(dayAfter(date), "00:00")) - 1,
+  ).toISOString();
+}
+type Draft = S["RequestDraftInputV2"];
+export function effectiveDeliveryTimes(input: {
+  handoff_date?: string | null;
+  pickup_deadline_at?: string | null;
+  delivery_deadline_at?: string | null;
+  expires_at?: string | null;
+  completion_mode?: Draft["completion_mode"] | null;
+}) {
+  const date = input.handoff_date;
+  return {
+    expiry:
+      input.expires_at ??
+      input.pickup_deadline_at ??
+      (date ? laDayEnd(date) : null),
+    completion:
+      !input.completion_mode || input.completion_mode === "contact"
+        ? null
+        : (input.delivery_deadline_at ??
+          (date
+            ? laDayEnd(
+                input.completion_mode === "next_day" ? dayAfter(date) : date,
+              )
+            : null)),
+  };
+}
+function dateTime(
+  field: DeliveryAnchor,
+  date: string,
+  time: string,
+  original?: string | null,
+) {
+  try {
+    if (original) {
+      const local = localDateTime(original);
+      if (date === local.date && time === local.time) return original;
+    }
+    return laInstant(date, time);
+  } catch (e) {
+    return invalid(field, e instanceof Error ? e.message : "请检查日期或时间");
+  }
+}
+function positive(
+  value: string,
+  field: DeliveryAnchor,
+  label: string,
+  required: boolean,
+) {
   if (!value.trim() && !required) return null;
   if (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 2147483647)
-    throw new Error(`请填写${label}的正整数`);
+    return invalid(field, `请填写${label}的正整数`);
   return Number(value);
 }
 export function deliveryInput(
@@ -202,93 +311,130 @@ export function deliveryInput(
   publish: boolean,
   original?: DeliveryRequest | null,
   now = Date.now(),
-): S["RequestDraftInputV2"] {
+): Draft {
   const today = localDateTime(null, now).date;
-  const unchangedDay =
-    !!original &&
-    original.status !== "draft" &&
-    "handoff_date" in original &&
-    original.handoff_date === f.date;
-  const unchangedAsap =
-    unchangedDay &&
-    "handoff_mode" in original! &&
-    original.handoff_mode === "asap";
-  if (f.asap && f.date !== today && !unchangedAsap)
-    throw new Error("尽快接手仅适用于今天，请重新选择日期和时间");
-  if (
-    publish &&
-    (!f.region || !f.carrier.trim() || f.carrier === "其他" || !f.pickupRegion)
-  )
-    throw new Error("请选择派送区域、快递公司和取件区域");
-  if (publish && f.date < today && !unchangedDay)
-    throw new Error("请选择今天或之后的接手日期");
-  const starts = f.asap ? null : laInstant(f.date, f.start);
-  // An unchanged published ASAP start must not be reset by editing its text.
-  const oldAsap =
+  const old =
     original &&
-    original.status !== "draft" &&
-    "handoff_mode" in original &&
-    original.handoff_mode === "asap" &&
-    original.handoff_date === f.date;
-  const start = starts;
-  const effectiveStart = oldAsap && f.asap ? original.starts_at : starts;
+    "request_schema_version" in original &&
+    original.status !== "draft"
+      ? original
+      : null;
+  const unchangedDay = old?.handoff_date === f.date;
+  const unchangedAsap = unchangedDay && old?.handoff_mode === "asap";
+  const w = f.warehouse;
+  if (publish) {
+    if (f.pickupKind === "warehouse") {
+      const issue = warehouseAddressIssue(w);
+      if (issue) throw issue;
+      if (!w.confirmed)
+        invalid("warehouseConfirm", "请确认这是本次仓库取件地址");
+    }
+    if (!f.pickupRegion)
+      invalid(
+        "pickupRegion",
+        f.pickupKind === "warehouse" ? "请选择取件区域" : "请选择交接地区",
+      );
+    if (!f.region) invalid("region", "请选择派送区域");
+    if (!f.carrier.trim()) invalid("carrier", "请选择快递公司");
+    if (f.carrier === "其他") invalid("carrier", "请填写快递公司名称");
+    if (f.date < today && !unchangedDay)
+      invalid("date", "请选择今天或之后的接手日期");
+  }
+  if (f.asap && f.date !== today && !unchangedAsap)
+    invalid("date", "尽快到场仅适用于今天，请重新选择日期和时间");
+  if (publish && !f.asap && !f.start)
+    invalid(
+      "start",
+      scenario === "warehouse_shortage"
+        ? "请选择希望到场时间"
+        : "请选择希望接手时间",
+    );
+  const start =
+    f.asap || !f.start
+      ? null
+      : dateTime(
+          "start",
+          f.date,
+          f.start,
+          old?.handoff_mode === "scheduled" ? old.starts_at : null,
+        );
+  if (publish && start && Date.parse(start) < now && start !== old?.starts_at)
+    invalid("start", "请选择尚未过去的到场时间");
+  const arrival = f.asap
+    ? unchangedAsap && old?.starts_at
+      ? Date.parse(old.starts_at)
+      : now
+    : Date.parse(start ?? "");
+  const drivers =
+    scenario === "warehouse_shortage"
+      ? positive(f.drivers, "drivers", "司机人数", publish)
+      : null;
+  if (publish && f.scope === "whole_route" && f.quantityMode !== "exact")
+    invalid("quantityMode", "整批接手须先确认整批件数");
   const qty =
     f.quantityMode === "unknown"
       ? null
-      : positive(f.quantity, "包裹数量", publish);
-  const drivers = positive(
-    f.drivers,
-    "司机人数",
-    publish && scenario === "warehouse_shortage",
-  );
+      : positive(f.quantity, "quantity", "包裹数量", publish);
+  let price: number | null = null;
+  if (f.unit !== "negotiable") {
+    if (publish && !f.amount.trim())
+      invalid("amount", "请填写报价，或选择联系议价");
+    if (f.amount.trim()) {
+      try {
+        price = centsInput(f.amount);
+      } catch (e) {
+        invalid("amount", e instanceof Error ? e.message : "请检查报价");
+      }
+      if (price === 0 && !(old?.price_cents === 0 && old.price_unit === f.unit))
+        invalid("amount", "请输入大于零的报价");
+    }
+  }
+  const deliveryEnd =
+    f.completion !== "contact" && f.deliveryEnd
+      ? dateTime(
+          "deliveryEnd",
+          f.completion === "next_day" ? dayAfter(f.date) : f.date,
+          f.deliveryEnd,
+          old?.delivery_deadline_at,
+        )
+      : null;
+  if (publish && deliveryEnd && Date.parse(deliveryEnd) < arrival)
+    invalid("deliveryEnd", "送完时间不能早于到场时间");
+  const pickupEnd = f.pickupEnd
+    ? dateTime("pickupEnd", f.date, f.pickupEnd, old?.pickup_deadline_at)
+    : null;
+  if (publish && pickupEnd && Date.parse(pickupEnd) < arrival)
+    invalid("pickupEnd", "最迟接手不能早于到场时间");
   const minimum =
     f.scope === "partial" && f.quantityMode !== "unknown"
-      ? positive(f.minimum, "最低件数", false)
+      ? positive(f.minimum, "minimum", "最低件数", false)
       : null;
-  if (publish && f.scope === "whole_route" && f.quantityMode !== "exact")
-    throw new Error("整批接手须先确认整批件数");
   if (
     qty !== null &&
     f.quantityMode === "exact" &&
     minimum !== null &&
     minimum > qty
   )
-    throw new Error("最低件数不能超过确定数量");
-  if (publish && f.unit !== "negotiable" && !f.amount.trim())
-    throw new Error("请填写报价，或选择联系议价");
-  const w = f.warehouse;
-  if (
-    publish &&
-    f.pickupKind === "warehouse" &&
-    (!w.line.trim() ||
-      !w.city.trim() ||
-      !/^[A-Z]{2}$/.test(w.state) ||
-      (!!w.postal && !/^\d{5}(?:-\d{4})?$/.test(w.postal)) ||
-      !w.confirmed)
-  )
-    throw new Error("请补全仓库地址并确认取件地址");
-  const pickupEnd = f.pickupEnd ? laInstant(f.date, f.pickupEnd) : null;
-  const expiry = f.customExpiry ? laInstant(f.endDate, f.end) : null;
-  if (
-    publish &&
-    pickupEnd &&
-    Date.parse(pickupEnd) <=
-      Math.max(now, Date.parse(effectiveStart ?? "") || 0)
-  )
-    throw new Error("最晚取件须晚于到场时间");
-  if (
-    publish &&
-    expiry &&
-    Date.parse(expiry) <= Math.max(now, Date.parse(effectiveStart ?? "") || 0)
-  )
-    throw new Error("需求有效时间须晚于到场时间");
-  const deliveryEnd =
-    f.completion !== "contact" && f.deliveryEnd
-      ? laInstant(
-          f.completion === "next_day" ? dayAfter(f.date) : f.date,
-          f.deliveryEnd,
-        )
+    invalid("minimum", "最低件数不能超过确定数量");
+  if (publish && f.customExpiry && !f.endDate)
+    invalid("endDate", "请选择下架日期");
+  if (publish && f.customExpiry && !f.end) invalid("end", "请选择下架时间");
+  const expiry =
+    f.customExpiry && f.endDate && f.end
+      ? dateTime("end", f.endDate, f.end, old?.expires_at)
       : null;
+  if (publish) {
+    const expires = Date.parse(expiry ?? pickupEnd ?? laDayEnd(f.date));
+    const expiryField = f.customExpiry
+      ? "end"
+      : pickupEnd
+        ? "pickupEnd"
+        : "date";
+    if (expires <= now) invalid(expiryField, "请选择尚未过去的下架时间");
+    if (expiry && expires <= arrival) invalid("end", "下架时间需晚于到场时间");
+    if (expiry && pickupEnd && expires > Date.parse(pickupEnd))
+      invalid("end", "下架时间不能晚于最迟接手时间");
+  }
   return {
     request_schema_version: 2,
     scenario,
@@ -311,8 +457,7 @@ export function deliveryInput(
     drivers_needed: drivers,
     minimum_parcels: minimum,
     price_unit: f.unit,
-    price_cents:
-      f.unit === "negotiable" || !f.amount.trim() ? null : centsInput(f.amount),
+    price_cents: price,
     sorted_state: f.sorted,
     handoff_requirement: f.handoff,
     experience_requirement: f.experience,

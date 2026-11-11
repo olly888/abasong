@@ -1,0 +1,892 @@
+{
+  "date": "2026-11-09",
+  "batch": "DTL-01",
+  "scope": "Formal synthetic browser prototype only; no native, real Mapbox or API acceptance.",
+  "geometry": {
+    "checks": [
+      {
+        "name": "390×844 apartments 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "390×844 jobs 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "390×844 people 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "430×932 apartments 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "430×932 jobs 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "430×932 people 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "320×568 apartments 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "320×568 jobs 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "320×568 people 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "360×640 apartments 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "360×640 jobs 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "360×640 people 同槽位/首卡/安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "normal 卡片等高/地址保留",
+        "status": "PASS"
+      },
+      {
+        "name": "empty 卡片等高/地址保留",
+        "status": "PASS"
+      },
+      {
+        "name": "one-error 卡片等高/地址保留",
+        "status": "PASS"
+      },
+      {
+        "name": "slow 卡片等高/地址保留",
+        "status": "PASS"
+      },
+      {
+        "name": "guest 卡片等高/地址保留",
+        "status": "PASS"
+      },
+      {
+        "name": "unqualified 卡片等高/地址保留",
+        "status": "PASS"
+      },
+      {
+        "name": "paused 卡片等高/地址保留",
+        "status": "PASS"
+      },
+      {
+        "name": "house 不制造空白公寓卡",
+        "status": "PASS"
+      },
+      {
+        "name": "nearby-error 不制造空白公寓卡",
+        "status": "PASS"
+      },
+      {
+        "name": "denied 不制造空白公寓卡",
+        "status": "PASS"
+      },
+      {
+        "name": "标题预览不抢选中，键盘聚焦完整滚入后可打开",
+        "status": "PASS"
+      },
+      {
+        "name": "32字符完整保留，核心条增高，后续槽位不重叠",
+        "status": "PASS"
+      },
+      {
+        "name": "大字下三模式允许增高，来源及跨日时段可滚动读取",
+        "status": "PASS"
+      },
+      {
+        "name": "无脚本运行异常",
+        "status": "PASS"
+      }
+    ],
+    "passed": 26,
+    "failed": 0,
+    "metrics": [
+      {
+        "width": 390,
+        "height": 844,
+        "mode": "apartments",
+        "map": 381,
+        "list": 240,
+        "listTop": 531,
+        "listBottom": 771,
+        "rows": [
+          {
+            "height": 180,
+            "width": 358,
+            "top": 535,
+            "bottom": 715,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 727,
+            "bottom": 907,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 919,
+            "bottom": 1099,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 44,
+        "overflow": false,
+        "nav": 771
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "mode": "jobs",
+        "map": 381,
+        "list": 240,
+        "listTop": 531,
+        "listBottom": 771,
+        "rows": [
+          {
+            "height": 180,
+            "width": 358,
+            "top": 535,
+            "bottom": 715,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 727,
+            "bottom": 907,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 919,
+            "bottom": 1099,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 1111,
+            "bottom": 1291,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 1303,
+            "bottom": 1483,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 44,
+        "overflow": false,
+        "nav": 771
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "mode": "people",
+        "map": 381,
+        "list": 240,
+        "listTop": 531,
+        "listBottom": 771,
+        "rows": [
+          {
+            "height": 180,
+            "width": 358,
+            "top": 535,
+            "bottom": 715,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 727,
+            "bottom": 907,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 358,
+            "top": 919,
+            "bottom": 1099,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 44,
+        "overflow": false,
+        "nav": 771
+      },
+      {
+        "width": 430,
+        "height": 932,
+        "mode": "apartments",
+        "map": 469,
+        "list": 240,
+        "listTop": 619,
+        "listBottom": 859,
+        "rows": [
+          {
+            "height": 180,
+            "width": 398,
+            "top": 623,
+            "bottom": 803,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 815,
+            "bottom": 995,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 1007,
+            "bottom": 1187,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 44,
+        "overflow": false,
+        "nav": 859
+      },
+      {
+        "width": 430,
+        "height": 932,
+        "mode": "jobs",
+        "map": 469,
+        "list": 240,
+        "listTop": 619,
+        "listBottom": 859,
+        "rows": [
+          {
+            "height": 180,
+            "width": 398,
+            "top": 623,
+            "bottom": 803,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 815,
+            "bottom": 995,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 1007,
+            "bottom": 1187,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 1199,
+            "bottom": 1379,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 1391,
+            "bottom": 1571,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 44,
+        "overflow": false,
+        "nav": 859
+      },
+      {
+        "width": 430,
+        "height": 932,
+        "mode": "people",
+        "map": 469,
+        "list": 240,
+        "listTop": 619,
+        "listBottom": 859,
+        "rows": [
+          {
+            "height": 180,
+            "width": 398,
+            "top": 623,
+            "bottom": 803,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 815,
+            "bottom": 995,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 398,
+            "top": 1007,
+            "bottom": 1187,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 44,
+        "overflow": false,
+        "nav": 859
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "mode": "apartments",
+        "map": 160,
+        "list": 185,
+        "listTop": 310,
+        "listBottom": 495,
+        "rows": [
+          {
+            "height": 180,
+            "width": 288,
+            "top": 314,
+            "bottom": 494,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 506,
+            "bottom": 686,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 698,
+            "bottom": 878,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 0,
+        "overflow": false,
+        "nav": 495
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "mode": "jobs",
+        "map": 160,
+        "list": 185,
+        "listTop": 310,
+        "listBottom": 495,
+        "rows": [
+          {
+            "height": 180,
+            "width": 288,
+            "top": 314,
+            "bottom": 494,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 506,
+            "bottom": 686,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 698,
+            "bottom": 878,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 890,
+            "bottom": 1070,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 1082,
+            "bottom": 1262,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 0,
+        "overflow": false,
+        "nav": 495
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "mode": "people",
+        "map": 160,
+        "list": 185,
+        "listTop": 310,
+        "listBottom": 495,
+        "rows": [
+          {
+            "height": 180,
+            "width": 288,
+            "top": 314,
+            "bottom": 494,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 506,
+            "bottom": 686,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 288,
+            "top": 698,
+            "bottom": 878,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 0,
+        "overflow": false,
+        "nav": 495
+      },
+      {
+        "width": 360,
+        "height": 640,
+        "mode": "apartments",
+        "map": 221,
+        "list": 196,
+        "listTop": 371,
+        "listBottom": 567,
+        "rows": [
+          {
+            "height": 180,
+            "width": 328,
+            "top": 375,
+            "bottom": 555,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 567,
+            "bottom": 747,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 759,
+            "bottom": 939,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 0,
+        "overflow": false,
+        "nav": 567
+      },
+      {
+        "width": 360,
+        "height": 640,
+        "mode": "jobs",
+        "map": 221,
+        "list": 196,
+        "listTop": 371,
+        "listBottom": 567,
+        "rows": [
+          {
+            "height": 180,
+            "width": 328,
+            "top": 375,
+            "bottom": 555,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 567,
+            "bottom": 747,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 759,
+            "bottom": 939,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 951,
+            "bottom": 1131,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 1143,
+            "bottom": 1323,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 0,
+        "overflow": false,
+        "nav": 567
+      },
+      {
+        "width": 360,
+        "height": 640,
+        "mode": "people",
+        "map": 221,
+        "list": 196,
+        "listTop": 371,
+        "listBottom": 567,
+        "rows": [
+          {
+            "height": 180,
+            "width": 328,
+            "top": 375,
+            "bottom": 555,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 567,
+            "bottom": 747,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          },
+          {
+            "height": 180,
+            "width": 328,
+            "top": 759,
+            "bottom": 939,
+            "heading": 46,
+            "core": 71,
+            "footer": 129,
+            "overflow": false
+          }
+        ],
+        "preview": 0,
+        "overflow": false,
+        "nav": 567
+      }
+    ],
+    "errors": [],
+    "scope": "Synthetic HTML prototype only"
+  },
+  "regression": {
+    "checks": [
+      {
+        "name": "320px 三模式上下分区、无横向溢出、安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "390px 三模式上下分区、无横向溢出、安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "430px 三模式上下分区、无横向溢出、安全区",
+        "status": "PASS"
+      },
+      {
+        "name": "逐字搜索地址并点候选，回到对应卡片",
+        "status": "PASS"
+      },
+      {
+        "name": "我的与首页共享入口使用同一手填表单",
+        "status": "PASS"
+      },
+      {
+        "name": "地图点第二张→详情→返回保留选中与滚动",
+        "status": "PASS"
+      },
+      {
+        "name": "纵向滚动停稳后同步地图，不改区域筛选",
+        "status": "PASS"
+      },
+      {
+        "name": "模式各自保存列表位置和镜头；定位不清除找人筛选",
+        "status": "PASS"
+      },
+      {
+        "name": "第三张无码→统一表单→失败保留→重试→原公寓完整码",
+        "status": "PASS"
+      },
+      {
+        "name": "本人纠正保留前导零，返回原公寓；旧值不再显示",
+        "status": "PASS"
+      },
+      {
+        "name": "详情有用反馈采用现有排序，不新增点赞计数",
+        "status": "PASS"
+      },
+      {
+        "name": "未收录搜索地址可确认后贡献，不丢地址",
+        "status": "PASS"
+      },
+      {
+        "name": "场景 house-nearby：准确状态与正文隔离",
+        "status": "PASS"
+      },
+      {
+        "name": "场景 house：准确状态与正文隔离",
+        "status": "PASS"
+      },
+      {
+        "name": "场景 denied：准确状态与正文隔离",
+        "status": "PASS"
+      },
+      {
+        "name": "场景 guest：准确状态与正文隔离",
+        "status": "PASS"
+      },
+      {
+        "name": "场景 unqualified：准确状态与正文隔离",
+        "status": "PASS"
+      },
+      {
+        "name": "场景 paused：准确状态与正文隔离",
+        "status": "PASS"
+      },
+      {
+        "name": "第二张失败与无码区分，单张重试不影响其他地址",
+        "status": "PASS"
+      },
+      {
+        "name": "慢响应期间切模式再返回，迟到内容只填原地址",
+        "status": "PASS"
+      },
+      {
+        "name": "附近发现失败有重试，与正常零结果不同",
+        "status": "PASS"
+      },
+      {
+        "name": "距离失效隐藏数值；粗略位置标约",
+        "status": "PASS"
+      },
+      {
+        "name": "筛选仅两场景；无结果清除筛选；地图点区域真实过滤",
+        "status": "PASS"
+      },
+      {
+        "name": "找活失败、空态和加载中分别呈现",
+        "status": "PASS"
+      },
+      {
+        "name": "需求详情仓库地图及返回、报名入口保持可达",
+        "status": "PASS"
+      },
+      {
+        "name": "模式发布入口复用 V3.4 两场景及表单",
+        "status": "PASS"
+      },
+      {
+        "name": "大字号及320×568小屏可滚动操作，不横向裁切",
+        "status": "PASS"
+      },
+      {
+        "name": "三模式首屏完整第一张，第二张只露标题行",
+        "status": "PASS"
+      },
+      {
+        "name": "整卡键盘进入详情，添加按钮独立且不重复跳转",
+        "status": "PASS"
+      },
+      {
+        "name": "公寓卡保留城市与来源；长街道和长码不横向溢出",
+        "status": "PASS"
+      },
+      {
+        "name": "跨日可接时段保留结束日期；未来不冒充当前可用",
+        "status": "PASS"
+      },
+      {
+        "name": "议价、待确认件数和尽快到场保持真实语义",
+        "status": "PASS"
+      },
+      {
+        "name": "筛选入口可达，应用条件后显示摘要并可清除",
+        "status": "PASS"
+      },
+      {
+        "name": "320×568小屏搜索、消息和定位入口仍可点击",
+        "status": "PASS"
+      },
+      {
+        "name": "地图标记不把无码或无资格对象暗示为已有门禁码",
+        "status": "PASS"
+      },
+      {
+        "name": "旧版入口未启用新布局",
+        "status": "PASS"
+      },
+      {
+        "name": "无运行异常、无外部服务请求",
+        "status": "PASS"
+      }
+    ],
+    "passed": 37,
+    "failed": 0,
+    "errors": [],
+    "external": [],
+    "scope": "Synthetic browser prototype only; no native, Mapbox or API acceptance."
+  },
+  "source_sha256": {
+    "design/abasong-independent-v1/v12.1-experience/index.html": "aa641f93378ece71b6c20c6c38cdb1b317be342e00df2bd4720657ba0c0759dd",
+    "design/abasong-independent-v1/v12.1-experience/muse-v35.js": "d1d424a2b8f2d4ded976f15a8eec7d457318527a99cf280e91ec671491d325a3",
+    "design/abasong-independent-v1/v12.1-experience/muse-v35.css": "e32b43a3376793d70a7db5cede3e3e00a2b1d3301221c3bff886e85cd30680f0",
+    "design/abasong-independent-v1/v12.1-experience/muse-v351-detail.css": "f283444cd847485bbb0052a3a862b20e69b783822ccc4b60dbc9850d7cbad0dd",
+    "design/abasong-independent-v1/v12.1-experience/muse-v351-detail-checks.browser.js": "8d54f6427712643b97a0bf46ed3b5706572837e9251c300dde2f0d029659de57",
+    "design/abasong-independent-v1/v12.1-experience/muse-v35-checks.browser.js": "cba227d4f8463a27c38d3aa0f92b2b8cdd9271cb3c05a7b87f0e50d3de778733"
+  }
+}

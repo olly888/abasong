@@ -141,6 +141,26 @@ async function main() {
     `/v1/me/contributions/${original.id}/summary`,
   );
   check(oldSummary.useful_count === 1);
+  // M5-02: clearing an optional door must not silently reassign it to a gate.
+  const current = result.replacement!;
+  const doorless = await own<S["ContributionChangeResult"]>(
+    `/v1/me/contributions/${current.id}/corrections`,
+    {
+      method: "POST",
+      key: randomUUID(),
+      body: {
+        expected_version: current.version,
+        value: "#0010*",
+        scope: { label: "门别未注明" },
+        source_attested: true,
+      },
+    },
+  );
+  check(doorless.replacement?.scope_label === "门别未注明");
+  check(doorless.replacement?.apartment_id === apartments[0]!.id);
+  check((await read(0)).items.some((r) => r.value === "#0010*"));
+  check((await read(0)).items.some((r) => r.value === "*0012#"));
+
   await assert.rejects(
     other(`/v1/me/contributions/${original.id}/summary`),
     (e: unknown) => e instanceof AccountError && e.status === 404,

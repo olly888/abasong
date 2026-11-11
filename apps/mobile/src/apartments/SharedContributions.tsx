@@ -10,8 +10,7 @@ import { router, useFocusEffect } from "expo-router";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { ActionButton, FormError } from "../auth/AuthControls";
-import { useAuth } from "../auth/AuthProvider";
-import { dataRequest } from "./client";
+import type { ContributionRequest } from "./contribution-address-search";
 import { AddressLine } from "./AddressLine";
 import { visibleContributionValue } from "./contribution-visibility";
 type S = components["schemas"];
@@ -25,25 +24,32 @@ export function contributionStatus(s: S["ContributionSummary"]) {
     ? "已停止共享"
     : s.status === "corrected"
       ? "本人已纠正"
-      : s.record_status === "active"
-        ? "已共享"
-        : "已停止展示";
+      : s.sharing_paused
+        ? "该公寓暂不共享"
+        : s.record_status === "active"
+          ? "已共享"
+          : "已停止展示";
 }
-export function SharedContributions() {
-  const auth = useAuth(),
-    session = auth.session!;
+export function SharedContributions({
+  userId,
+  canRead,
+  transport,
+}: {
+  userId: string;
+  canRead: boolean;
+  transport: ContributionRequest;
+}) {
   const [rows, setRows] = useState<Row[]>([]),
     [next, setNext] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   const controller = useRef(new AbortController()),
     epoch = useRef(0);
-  const canRead = auth.me?.capabilities.includes("access.read");
   const request = <T,>(
     path: string,
-    options: Parameters<typeof dataRequest>[2] = {},
+    options: Parameters<ContributionRequest>[1] = {},
   ) =>
-    dataRequest<T>(session, path, {
+    transport<T>(path, {
       ...options,
       signal: controller.current.signal,
     });
@@ -72,7 +78,8 @@ export function SharedContributions() {
             items.slice(i, i + 4).map(async (row) => {
               if (
                 row.source.status !== "active" ||
-                row.source.record_status !== "active"
+                row.source.record_status !== "active" ||
+                row.source.sharing_paused
               )
                 return;
               try {
@@ -113,7 +120,7 @@ export function SharedContributions() {
       return () => {
         epoch.current++;
       };
-    }, [session.user.id, canRead]),
+    }, [userId, canRead]),
   );
   return (
     <View style={{ gap: 16 }}>
@@ -195,7 +202,7 @@ export function SharedContributionCard({
         <Text selectable style={styles.code}>
           {visibleValue}
         </Text>
-      ) : s.status === "active" ? (
+      ) : s.status === "active" && !s.sharing_paused ? (
         <Text style={styles.muted}>
           {!canRead
             ? "暂无资料查看资格"
@@ -256,7 +263,7 @@ const styles = StyleSheet.create({
     gap: 12,
     flexWrap: "wrap",
   },
-  status: { fontSize: 13, fontWeight: "600", color: tokens.color.brandPrimary },
+  status: { fontSize: 13, fontWeight: "600", color: tokens.color.brandText },
   muted: { fontSize: 13, color: tokens.color.textSecondary, lineHeight: 20 },
   code: { fontSize: 30, fontWeight: "700", color: tokens.color.ink },
   feedback: { flexDirection: "row", gap: 24, flexWrap: "wrap" },
@@ -271,6 +278,6 @@ const styles = StyleSheet.create({
   actionLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: tokens.color.brandPrimary,
+    color: tokens.color.brandText,
   },
 });

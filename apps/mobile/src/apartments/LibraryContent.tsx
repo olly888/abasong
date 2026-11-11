@@ -1,0 +1,549 @@
+import { StatusPanel } from "../ui/Feedback";
+import { SharedContributions } from "./SharedContributions";
+import { AddressLine } from "./AddressLine";
+import { AccessCodeFields } from "./AccessCodeFields";
+import { EntranceScopeField } from "./EntranceScopeField";
+import { SavedApartmentCodes } from "./SavedApartmentCodes";
+import { openContributionMenu } from "./contribution-entry";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect, router } from "expo-router";
+import { randomUUID } from "expo-crypto";
+import { unconfirmedEntrance, type components } from "@abasong/contracts";
+import { IconButton } from "../ui/Primitives";
+import { tokens } from "@abasong/ui";
+import {
+  ActionButton,
+  ApartmentPage,
+  Field,
+  FormError,
+} from "../auth/AuthControls";
+import type { ContributionRequest } from "./contribution-address-search";
+type S = components["schemas"];
+export type LibraryParams = {
+  tab?: string;
+  revision?: string;
+  entry_id?: string;
+};
+export function LibraryContent({
+  params,
+  userId,
+  canRead,
+  canContribute,
+  transport,
+  onBack,
+}: {
+  params: LibraryParams;
+  userId: string;
+  canRead: boolean;
+  canContribute: boolean;
+  transport: ContributionRequest;
+  onBack?: () => void;
+}) {
+  const [sharedRevision, setSharedRevision] = useState(0);
+  const controller = useRef(new AbortController());
+  const [items, setItems] = useState<
+      (S["LibraryDetail"] & {
+        shared?: S["AccessRecord"];
+        sharedError?: string;
+      })[]
+    >([]),
+    [tab, setTab] = useState<"saved" | "shared">(
+      params.tab === "shared" ? "shared" : "saved",
+    ),
+    [selected, setSelected] = useState<S["LibraryDetail"] | null>(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState<string | null>(null),
+    [region, setRegion] = useState(""),
+    [code, setCode] = useState(""),
+    [scope, setScope] = useState(""),
+    [note, setNote] = useState(""),
+    [edit, setEdit] = useState<S["PrivateRecord"] | null>(null),
+    [next, setNext] = useState<string | null>(null);
+  const generation = useRef(0);
+  const openedImport = useRef<string | null>(null);
+  useEffect(() => {
+    if (params.tab === "shared" || params.tab === "saved") setTab(params.tab);
+    if (params.tab === "saved" && params.revision) setSelected(null);
+  }, [params.tab, params.revision]);
+  const request = <T,>(
+    path: string,
+    opts: Parameters<ContributionRequest>[1] = {},
+  ) =>
+    transport<T>(path, {
+      ...opts,
+      signal: controller.current.signal,
+    });
+  useEffect(() => {
+    controller.current = new AbortController();
+    return () => controller.current.abort();
+  }, []);
+  async function load(cursor?: string) {
+    const version = ++generation.current;
+    setBusy(true);
+    setError(null);
+    try {
+      const page = await request<S["LibraryPage"]>(
+        "/v1/me/apartment-library?limit=20" +
+          (cursor ? "&cursor=" + cursor : ""),
+      );
+      const details = await Promise.all(
+        page.items.map(async (e) => {
+          const detail = await request<S["LibraryDetail"]>(
+            "/v1/me/apartment-library/" + e.id,
+          );
+          if (!detail.records.length && e.apartment_id && canRead) {
+            try {
+              const shared = await request<S["AccessList"]>(
+                "/v1/apartments/" + e.apartment_id + "/access-records",
+              );
+              return shared.sharing_paused
+                ? { ...detail, sharedError: "该公寓暂不共享门禁码" }
+                : { ...detail, shared: shared.items[0] };
+            } catch {
+              return { ...detail, sharedError: "共享资料暂不可用" };
+            }
+          }
+          return detail;
+        }),
+      );
+      if (version !== generation.current || controller.current.signal.aborted)
+        return;
+      setItems((old) => (cursor ? [...old, ...details] : details));
+      setNext(page.next_cursor);
+    } catch (e) {
+      if (version === generation.current && !controller.current.signal.aborted)
+        setError(e instanceof Error ? e.message : "加载失败");
+    } finally {
+      if (version === generation.current) setBusy(false);
+    }
+  }
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+      let active = true;
+      const entryId = params.entry_id;
+      const openKey = entryId ? `${entryId}:${params.revision ?? ""}` : null;
+      if (entryId && openedImport.current !== openKey) {
+        void request<S["LibraryDetail"]>(
+          "/v1/me/apartment-library/" + encodeURIComponent(entryId),
+        )
+          .then((detail) => {
+            if (!active) return;
+            openedImport.current = openKey;
+            setTab("saved");
+            choose(detail);
+          })
+          .catch(() => {
+            if (active) setError("刚保存的公寓暂时无法打开");
+          });
+      }
+      return () => {
+        active = false;
+        generation.current++;
+      };
+    }, [params.entry_id, params.revision, userId]),
+  );
+  async function run(action: () => Promise<void>) {
+    setBusy(true);
+    setError(null);
+    try {
+      await action();
+    } catch (e) {
+      if (!controller.current.signal.aborted)
+        setError(e instanceof Error ? e.message : "操作失败");
+    } finally {
+      setBusy(false);
+    }
+  }
+  function choose(item: S["LibraryDetail"]) {
+    setSelected(item);
+    setRegion(item.entry.region);
+    setCode("");
+    setNote("");
+    setScope("");
+    setEdit(null);
+  }
+  async function refreshSelected(id: string) {
+    const detail = await request<S["LibraryDetail"]>(
+      "/v1/me/apartment-library/" + id,
+    );
+    choose(detail);
+    await load();
+  }
+  function confirmDelete(label: string, action: () => Promise<void>) {
+    Alert.alert(label, "共享贡献不会被删除。", [
+      { text: "取消", style: "cancel" },
+      { text: "删除", style: "destructive", onPress: () => void run(action) },
+    ]);
+  }
+  if (selected)
+    return (
+      <ApartmentPage title="公寓详情" onBack={() => setSelected(null)}>
+        <AddressLine line={selected.entry.address} expanded />
+        {selected.entry.name !== selected.entry.address ? (
+          <Text style={styles.muted}>{selected.entry.name}</Text>
+        ) : null}
+        <FormError message={error} />
+        <Text style={styles.label}>我的记录 · 仅自己可见</Text>
+        {selected.records.map((r) => (
+          <View style={styles.card} key={r.id}>
+            <Text style={styles.code}>{r.value}</Text>
+            <Text>{r.scope_label}</Text>
+            {r.note ? <Text>{r.note}</Text> : null}
+            <View style={styles.row}>
+              <ActionButton
+                label="修改"
+                secondary
+                disabled={busy}
+                onPress={() => {
+                  setEdit(r);
+                  setCode(r.value);
+                  setScope(r.scope_label);
+                  setNote(r.note);
+                }}
+              />
+              <ActionButton
+                label="删除"
+                secondary
+                disabled={busy}
+                onPress={() =>
+                  confirmDelete("删除私人记录？", async () => {
+                    await request("/v1/me/private-access-records/" + r.id, {
+                      method: "DELETE",
+                    });
+                    await refreshSelected(selected.entry.id);
+                  })
+                }
+              />
+            </View>
+            {r.scope_label === unconfirmedEntrance ? (
+              <Text style={styles.muted}>
+                可以随时自己查看，确认入口后可选择共享。
+              </Text>
+            ) : selected.entry.apartment_id && canContribute ? (
+              <ActionButton
+                label="共享这条"
+                secondary
+                disabled={busy}
+                onPress={() =>
+                  Alert.alert(
+                    "共享这条资料？",
+                    "请确认你有权共享。有资格的司机可查阅并反馈是否有用，私人备注仅自己可见。",
+                    [
+                      { text: "取消" },
+                      {
+                        text: "确认共享",
+                        onPress: () =>
+                          void run(async () => {
+                            const result = await request<
+                              S["ContributionResult"]
+                            >(
+                              "/v1/me/private-access-records/" +
+                                r.id +
+                                "/share",
+                              {
+                                method: "POST",
+                                key: randomUUID(),
+                                body: {
+                                  expected_version: r.version,
+                                  source_attested: true,
+                                },
+                              },
+                            );
+                            Alert.alert(
+                              result.outcome === "created_pending"
+                                ? "历史贡献尚未发布"
+                                : "已共享",
+                            );
+                            await load();
+                          }),
+                      },
+                    ],
+                  )
+                }
+              />
+            ) : null}
+          </View>
+        ))}
+        <Text style={styles.label}>
+          {edit ? "修改私人记录" : "添加私人记录"}
+        </Text>
+        <AccessCodeFields
+          value={code}
+          address={selected.entry.address}
+          scope={scope}
+          onValueChange={setCode}
+          onScopeChange={setScope}
+          hideScope
+          disabled={busy}
+        />
+        <EntranceScopeField value={scope} onChange={setScope} disabled={busy} />
+        <Field
+          label="私人备注"
+          value={note}
+          onChangeText={setNote}
+          maxLength={300}
+        />
+        <ActionButton
+          label="仅自己保存"
+          busy={busy}
+          disabled={!code.trim()}
+          onPress={() =>
+            void run(async () => {
+              await request(
+                edit
+                  ? "/v1/me/private-access-records/" + edit.id
+                  : "/v1/me/apartment-library/" +
+                      selected.entry.id +
+                      "/records",
+                {
+                  method: edit ? "PATCH" : "POST",
+                  key: randomUUID(),
+                  body: {
+                    value: code,
+                    scope_label: scope || unconfirmedEntrance,
+                    note,
+                    ...(edit ? { expected_version: edit.version } : {}),
+                  },
+                },
+              );
+              await refreshSelected(selected.entry.id);
+            })
+          }
+        />
+        <Field
+          label="区域"
+          value={region}
+          onChangeText={setRegion}
+          maxLength={60}
+        />
+        <ActionButton
+          label="保存区域"
+          secondary
+          busy={busy}
+          onPress={() =>
+            void run(async () => {
+              await request("/v1/me/apartment-library/" + selected.entry.id, {
+                method: "PATCH",
+                key: randomUUID(),
+                body: { expected_version: selected.entry.version, region },
+              });
+              await refreshSelected(selected.entry.id);
+            })
+          }
+        />
+        {selected.entry.apartment_id ? (
+          <ActionButton
+            label="查看当前共享资料"
+            secondary
+            onPress={() =>
+              router.push({
+                pathname: "/apartments",
+                params: { apartment_id: selected.entry.apartment_id! },
+              })
+            }
+          />
+        ) : null}
+        <ActionButton
+          label="移除我的公寓"
+          secondary
+          disabled={busy}
+          onPress={() =>
+            confirmDelete("移除本人公寓及私人记录？", async () => {
+              await request("/v1/me/apartment-library/" + selected.entry.id, {
+                method: "DELETE",
+              });
+              setSelected(null);
+              await load();
+            })
+          }
+        />
+      </ApartmentPage>
+    );
+  return (
+    <ApartmentPage
+      title="我的公寓"
+      onBack={onBack}
+      headerRight={
+        <IconButton
+          name="refresh"
+          label="刷新"
+          disabled={busy}
+          onPress={() => {
+            if (tab === "shared") setSharedRevision((v) => v + 1);
+            else void load();
+          }}
+        />
+      }
+      footer={
+        <>
+          {tab === "shared" ? (
+            <ActionButton
+              label="＋ 共享门禁码"
+              onPress={openContributionMenu}
+            />
+          ) : (
+            <ActionButton
+              label="＋ 添加门禁码"
+              onPress={() =>
+                Alert.alert("添加到我的公寓", undefined, [
+                  {
+                    text: "从截图添加",
+                    onPress: () => router.push("/apartments/import"),
+                  },
+                  {
+                    text: "快速填写",
+                    onPress: () =>
+                      router.push("/apartments/contribute?mode=private"),
+                  },
+                  { text: "取消", style: "cancel" },
+                ])
+              }
+            />
+          )}
+        </>
+      }
+    >
+      <View style={styles.tabs}>
+        {(["saved", "shared"] as const).map((value) => (
+          <Pressable
+            key={value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === value }}
+            onPress={() => setTab(value)}
+            style={[styles.tab, tab === value && styles.selectedTab]}
+          >
+            <Text
+              style={[
+                styles.tabLabel,
+                tab === value && {
+                  color: tokens.color.brandText,
+                  fontWeight: "600",
+                },
+              ]}
+            >
+              {value === "saved" ? "我保存的" : "我共享的"}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <FormError message={tab === "saved" ? error : null} />
+      {tab === "saved" ? (
+        <>
+          {items.length === 0 && !busy && !error ? (
+            <StatusPanel
+              state="empty"
+              title="还没有保存的公寓"
+              description="把常跑公寓的门禁码存下来，下次到门口直接查。"
+            />
+          ) : null}
+          {busy && !items.length ? (
+            <StatusPanel state="loading" title="正在加载公寓" />
+          ) : null}
+          {error ? (
+            <ActionButton
+              label="重新加载"
+              variant="secondary"
+              disabled={busy}
+              onPress={() => void load()}
+            />
+          ) : null}
+          {items.map((d) => (
+            <Pressable
+              accessibilityRole="button"
+              key={d.entry.id}
+              style={styles.card}
+              onPress={() => choose(d)}
+            >
+              <AddressLine line={d.entry.address} compact />
+              {d.entry.name !== d.entry.address ? (
+                <Text style={styles.muted}>{d.entry.name}</Text>
+              ) : null}
+              <Text style={styles.muted}>
+                {d.entry.region} · {d.records.length ? "私人记录" : "收藏公寓"}
+              </Text>
+              {d.records.length ? (
+                <SavedApartmentCodes records={d.records} />
+              ) : d.shared ? (
+                <>
+                  <Text style={styles.code}>{d.shared.value}</Text>
+                  <Text>{d.shared.scope.label ?? "大门"} · 共享资料</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.muted}>
+                    {!canRead
+                      ? "暂未开通资料查看资格"
+                      : (d.sharedError ?? "暂无共享密码")}
+                  </Text>
+                  <ActionButton
+                    label="查看当前共享资料"
+                    secondary
+                    onPress={() =>
+                      router.push({
+                        pathname: "/apartments",
+                        params: { apartment_id: d.entry.apartment_id ?? "" },
+                      })
+                    }
+                  />
+                </>
+              )}
+            </Pressable>
+          ))}
+          {next ? (
+            <ActionButton
+              label="加载更多"
+              busy={busy}
+              secondary
+              onPress={() => void load(next)}
+            />
+          ) : null}
+        </>
+      ) : (
+        <>
+          <Text style={styles.muted}>
+            同行可反馈门禁码是否有用，你可以在这里查看反馈。
+          </Text>
+          <SharedContributions
+            key={String(params.revision) + ":" + sharedRevision}
+            userId={userId}
+            canRead={canRead}
+            transport={transport}
+          />
+        </>
+      )}
+    </ApartmentPage>
+  );
+}
+const styles = StyleSheet.create({
+  card: {
+    padding: 18,
+    borderRadius: 16,
+    backgroundColor: tokens.color.surface,
+    borderWidth: 1,
+    borderColor: tokens.color.border,
+    gap: 8,
+  },
+  tabs: {
+    flexDirection: "row",
+    gap: 8,
+    borderBottomWidth: 1,
+    borderColor: tokens.color.border,
+  },
+  tab: {
+    flex: 1,
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 3,
+    borderBottomColor: "transparent",
+  },
+  selectedTab: { borderBottomColor: tokens.color.brandPrimary },
+  tabLabel: { fontSize: 15, color: tokens.color.textMuted },
+  empty: { alignItems: "center", paddingVertical: 38, gap: 18 },
+  code: { fontSize: 30, fontWeight: "700", color: tokens.color.ink },
+  label: { fontSize: 18, fontWeight: "600", color: tokens.color.ink },
+  row: { flexDirection: "row", gap: 12, flexWrap: "wrap" },
+  muted: { fontSize: 13, color: tokens.color.textSecondary },
+});

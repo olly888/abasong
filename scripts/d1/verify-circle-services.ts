@@ -201,6 +201,20 @@ async function checkCircle({
   await reply(other, "TEST changed reply", replyKey, 409);
   await reply(auth, "TEST self reply");
   const n = (await notices(auth))[0]!;
+  const summary = (token: string) =>
+    call<S["InboxSummary"]>("/v1/me/inbox-summary", "GET", token);
+  const beforeCircleRead = await summary(auth);
+  check(
+    beforeCircleRead.unread_circle_replies === 1 &&
+      beforeCircleRead.unread_notifications >= 1,
+  );
+  check((await summary(other)).unread_circle_replies === 0);
+  await list(auth);
+  await call<S["Post"]>(detail, "GET", auth);
+  check(
+    JSON.stringify(await summary(auth)) === JSON.stringify(beforeCircleRead),
+  );
+
   check(
     n.comment_id === comment.id &&
       n.object_id === post.id &&
@@ -304,6 +318,22 @@ async function checkCircle({
     );
     await http("/v1/me/notifications/" + n.id + "/read", "PUT", auth);
     check((await notices(auth))[0]?.read_at !== null);
+    const afterCircleRead = await summary(auth);
+    check(
+      afterCircleRead.unread_circle_replies === 0 &&
+        afterCircleRead.unread_notifications ===
+          beforeCircleRead.unread_notifications - 1,
+    );
+    check(
+      afterCircleRead.unread_messages === beforeCircleRead.unread_messages &&
+        afterCircleRead.unread_conversations ===
+          beforeCircleRead.unread_conversations,
+    );
+    await http("/v1/me/notifications/" + n.id + "/read", "PUT", auth);
+    check(
+      JSON.stringify(await summary(auth)) === JSON.stringify(afterCircleRead),
+    );
+
     const toRemove = await reply(other, "TEST deleted reply");
     await http("/v1/comments/" + toRemove.id, "DELETE", other);
     await http("/v1/comments/" + toRemove.id, "DELETE", other);
@@ -345,11 +375,13 @@ async function checkCircle({
     check(sent.length === 1);
     await http(block, "DELETE", auth);
     check((await notices(auth)).length === 2);
+    check((await summary(auth)).unread_circle_replies === 1);
     await http(detail, "DELETE", auth);
     await http(detail, "DELETE", auth);
     await http(detail, "GET", auth, 404);
     await reply(other, "TEST no reply to deleted post", randomUUID(), 404);
     check((await notices(auth)).length === 0);
+    check((await summary(auth)).unread_circle_replies === 0);
     check(
       (
         await db.query(

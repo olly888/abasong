@@ -353,12 +353,12 @@ export default function HomeMap({
           <Mapbox.FillLayer
             id="selected-sdk-building-fill"
             belowLayerID="abasong-house-numbers"
-            style={{ fillColor: "#1467D8", fillOpacity: 0.22 }}
+            style={{ fillColor: tokens.color.brandPrimary, fillOpacity: 0.22 }}
           />
           <Mapbox.LineLayer
             id="selected-sdk-building-line"
             belowLayerID="abasong-house-numbers"
-            style={{ lineColor: "#1467D8", lineWidth: 2 }}
+            style={{ lineColor: tokens.color.brandPrimary, lineWidth: 2 }}
           />
         </Mapbox.ShapeSource>
       ) : null}
@@ -380,7 +380,7 @@ export default function HomeMap({
               id="selected-building-fill"
               belowLayerID="abasong-house-numbers"
               style={{
-                fillColor: "#1467D8",
+                fillColor: tokens.color.brandPrimary,
                 fillOpacity: [
                   "interpolate",
                   ["linear"],
@@ -397,7 +397,7 @@ export default function HomeMap({
             <Mapbox.LineLayer
               id="selected-building-line"
               belowLayerID="abasong-house-numbers"
-              style={{ lineColor: "#1467D8", lineWidth: 2 }}
+              style={{ lineColor: tokens.color.brandPrimary, lineWidth: 2 }}
             />
           </Mapbox.ShapeSource>
           <Mapbox.ShapeSource
@@ -452,7 +452,7 @@ export default function HomeMap({
               width: 22,
               height: 22,
               backgroundColor: "#FFFFFF",
-              borderColor: "#1467D8",
+              borderColor: tokens.color.brandPrimary,
               borderWidth: 4,
               transform: [{ rotate: "45deg" }],
             }}
@@ -471,7 +471,7 @@ export default function HomeMap({
               borderRadius: 8,
               borderWidth: 3,
               borderColor: "#FFFFFF",
-              backgroundColor: "#1467D8",
+              backgroundColor: tokens.color.brandPrimary,
             }}
           />
         </Mapbox.PointAnnotation>
@@ -496,7 +496,7 @@ export default function HomeMap({
                 borderRadius: 11,
                 borderWidth: 3,
                 borderColor: "#FFFFFF",
-                backgroundColor: p.id === selectedId ? "#1467D8" : "#111111",
+                backgroundColor: p.id === selectedId ? tokens.color.brandPrimary : "#111111",
               }}
             />
           </Mapbox.PointAnnotation>

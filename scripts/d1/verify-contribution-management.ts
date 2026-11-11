@@ -46,6 +46,9 @@ export async function verifyContributionManagement(
     StopContributionCommand,
   } = require("../../apps/api/dist/operations/stop-contribution.js");
   const {
+    ApartmentSharingCommand,
+  } = require("../../apps/api/dist/operations/apartment-sharing.js");
+  const {
     TokenVerifier,
   } = require("../../apps/api/dist/auth/token-verifier.js");
   const previous = {
@@ -126,7 +129,15 @@ export async function verifyContributionManagement(
       scope: { label: "TEST gate" },
       source_attested: true,
     });
-    const old = await share(one!, "TEST-OLD#");
+    const oldKey = randomUUID();
+    const old = await call<S["ContributionResult"]>(
+      "POST",
+      publicPath,
+      one!,
+      201,
+      body("TEST-OLD#"),
+      oldKey,
+    );
     await share(two!, "TEST-OLD#");
     await share(one!, "TEST-OLD#");
     let a = await find(one!, old.record_id);
@@ -163,6 +174,241 @@ export async function verifyContributionManagement(
     );
     a = await find(one!, old.record_id);
     assert.equal(a.useful_count, 1);
+    const office = new ApartmentSharingCommand(operatorPool, verifier);
+    const pauseInput = {
+      apartment_id: apartment,
+      expected_version: 0,
+      operation_id: randomUUID(),
+      action: "pause",
+      reason: "property_request",
+    };
+    const operate = (input: unknown, apply = false, jwt = operatorToken) =>
+      office.run(`Bearer ${jwt}`, input, apply);
+    const hasCode = (code: string) => (e: { code?: string }) => e.code === code;
+    await assert.rejects(
+      operate(pauseInput, true, await token(operator)),
+      hasCode("STAFF_MFA_REQUIRED"),
+    );
+    await assert.rejects(
+      operate(pauseInput, true, await token(owners[0]!, "aal2")),
+      hasCode("STAFF_REQUIRED"),
+    );
+    const secondRecord = await call<S["ContributionResult"]>(
+      "POST",
+      publicPath,
+      two!,
+      201,
+      { ...body("TEST-GARAGE#"), scope: { label: "车库门" } },
+      randomUUID(),
+    );
+    const neighbor = (
+      await db.query(
+        "INSERT INTO abasong.apartments(name,address_line1,city,source_id,point,status) VALUES('TEST Neighbor','101 TEST Management Ave','Los Angeles',$1,'SRID=4326;POINT(-118.25 34.05)'::extensions.geography,'active') RETURNING id",
+        [source],
+      )
+    ).rows[0].id;
+    const neighborPath = `/v1/apartments/${neighbor}/access-records`;
+    const neighborRecord = await call<S["ContributionResult"]>(
+      "POST",
+      neighborPath,
+      two!,
+      201,
+      body("TEST-NEIGHBOR#"),
+      randomUUID(),
+    );
+    const library = "/v1/me/apartment-library";
+    const entry = await call<S["LibraryEntry"]>(
+      "POST",
+      library,
+      one!,
+      201,
+      { apartment_id: apartment },
+      randomUUID(),
+    );
+    const privateRecord = await call<S["PrivateRecord"]>(
+      "POST",
+      `${library}/${entry.id}/records`,
+      one!,
+      201,
+      { value: "TEST-PRIVATE#", scope_label: "行人门" },
+      randomUUID(),
+    );
+    const preview = await operate({
+      ...pauseInput,
+      expected_version: undefined,
+    });
+    assert.equal(preview.current_version, 0);
+    assert.equal(preview.affected_records, 2);
+    assert.equal(preview.affected_sources, 3);
+    assert.equal(preview.apartment.address_line1, "100 TEST Management Ave");
+    assert.equal(preview.applied, false);
+    assert.equal((await read()).items.length, 2);
+    assert.equal((await operate(pauseInput, true)).current_version, 1);
+    assert.equal((await operate(pauseInput, true)).replayed, true);
+    await assert.rejects(
+      operate({ ...pauseInput, reason: "authorization_review" }, true),
+      hasCode("IDEMPOTENCY_CONFLICT"),
+    );
+    assert.deepEqual((await read()).items, []);
+    assert.equal((await read()).sharing_paused, true);
+    await call("GET", `/v1/apartments/${apartment}`, reader!, 200);
+    assert.equal(
+      (await call<S["AccessList"]>("GET", neighborPath, reader!, 200)).items[0]
+        ?.id,
+      neighborRecord.record_id,
+    );
+    const detail = await call<S["ContributionDetail"]>(
+      "GET",
+      `${root}/${a.id}`,
+      one!,
+      200,
+    );
+    assert.equal(detail.value, null);
+    assert.equal(detail.source.sharing_paused, true);
+    assert.equal(detail.source.can_correct, false);
+    assert.equal(
+      (await find(two!, secondRecord.record_id)).sharing_paused,
+      true,
+    );
+    const rejected = async (
+      method: string,
+      path: string,
+      payload: unknown,
+      key?: string,
+    ) =>
+      assert.equal(
+        (await call<{ code: string }>(method, path, one!, 409, payload, key))
+          .code,
+        "APARTMENT_SHARING_PAUSED",
+      );
+    await rejected("POST", publicPath, body("TEST-OLD#"), oldKey);
+    await rejected(
+      "POST",
+      publicPath,
+      { ...body("TEST-NEW-SCOPE#"), scope: { label: "大堂门" } },
+      randomUUID(),
+    );
+    await rejected(
+      "POST",
+      "/v1/apartments/address-contributions",
+      {
+        ...body("TEST-ADDRESS#"),
+        address: {
+          address_line1: "100 TEST Management Ave",
+          city: "Los Angeles",
+          state: "CA",
+          postal_code: null,
+        },
+        address_confirmed: true,
+      },
+      randomUUID(),
+    );
+    await rejected(
+      "POST",
+      `${root}/${a.id}/corrections`,
+      correction(a, "TEST-PAUSED-CORRECTION#"),
+      randomUUID(),
+    );
+    await rejected(
+      "POST",
+      `/v1/me/private-access-records/${privateRecord.id}/share`,
+      { expected_version: privateRecord.version, source_attested: true },
+      randomUUID(),
+    );
+    await rejected("PUT", `/v1/access-records/${old.record_id}/feedback`, {
+      client_event_id: randomUUID(),
+      value: "useful",
+    });
+    assert.equal(
+      (
+        await call<S["LibraryDetail"]>(
+          "GET",
+          `${library}/${entry.id}`,
+          one!,
+          200,
+        )
+      ).records.length,
+      1,
+    );
+    const resumeInput = {
+      ...pauseInput,
+      action: "resume",
+      reason: "property_confirmed",
+      operation_id: randomUUID(),
+    };
+    await assert.rejects(
+      operate(resumeInput, true),
+      hasCode("VERSION_CONFLICT"),
+    );
+    assert.equal(
+      (await operate({ ...resumeInput, expected_version: 1 }, true))
+        .current_version,
+      2,
+    );
+    const past = await operate(pauseInput, true);
+    assert.equal(past.applied_version, 1);
+    assert.equal(past.current_version, 2);
+    assert.equal(past.paused, false);
+    assert.deepEqual(
+      new Set((await read()).items.map((x) => x.id)),
+      new Set([old.record_id, secondRecord.record_id]),
+    );
+    assert.equal((await find(one!, old.record_id)).useful_count, 1);
+    assert.deepEqual(
+      (
+        await db.query(
+          "SELECT action,actor_id,object_id FROM abasong.audit_events WHERE id=ANY($1::uuid[]) ORDER BY action",
+          [[pauseInput.operation_id, resumeInput.operation_id]],
+        )
+      ).rows,
+      ["pause", "resume"].map((action) => ({
+        action: `operator.apartment.${action}`,
+        actor_id: operator,
+        object_id: apartment,
+      })),
+    );
+    const competingPause = {
+      ...pauseInput,
+      apartment_id: neighbor,
+      operation_id: randomUUID(),
+    };
+    const [firstPause, secondPause, publish] = await Promise.all([
+      operate(competingPause, true).then(
+        () => "applied",
+        (e: { code: string }) => e.code,
+      ),
+      operate({ ...competingPause, operation_id: randomUUID() }, true).then(
+        () => "applied",
+        (e: { code: string }) => e.code,
+      ),
+      fetch(base + neighborPath, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${reader}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": randomUUID(),
+        },
+        body: JSON.stringify(body("TEST-APARTMENT-RACE#")),
+        signal: AbortSignal.timeout(10000),
+      }),
+    ]);
+    assert.deepEqual([firstPause, secondPause].sort(), [
+      "VERSION_CONFLICT",
+      "applied",
+    ]);
+    assert([201, 409].includes(publish.status));
+    if (publish.status === 409)
+      assert.equal((await publish.json()).code, "APARTMENT_SHARING_PAUSED");
+    else await publish.body?.cancel();
+    const neighborPaused = await call<S["AccessList"]>(
+      "GET",
+      neighborPath,
+      reader!,
+      200,
+    );
+    assert.equal(neighborPaused.sharing_paused, true);
+    assert.deepEqual(neighborPaused.items, []);
+    assert.equal((await read()).items.length, 2);
     const snapshot = (
       await db.query(
         "SELECT r.contributed_at,r.version,s.ciphertext,s.nonce,s.auth_tag FROM abasong.access_records r JOIN abasong.access_secrets s ON s.record_id=r.id WHERE r.id=$1",
@@ -457,6 +703,14 @@ export async function verifyContributionManagement(
     const c = new Client({ connectionString: sensitive });
     await c.connect();
     try {
+      await assert.rejects(
+        c.query("SELECT reason FROM abasong.apartment_sharing_operations"),
+        /permission denied/,
+      );
+      await assert.rejects(
+        c.query("UPDATE abasong.apartment_sharing_operations SET paused=false"),
+        /permission denied/,
+      );
       await c.query("BEGIN");
       await c.query("SELECT set_config('abasong.actor_id',$1,true)", [
         owners[1],

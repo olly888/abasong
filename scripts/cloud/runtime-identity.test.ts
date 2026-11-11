@@ -30,6 +30,43 @@ it("keeps IAM initialization separate from billable secret creation without drop
   ).toBe(true);
 });
 
+it("keeps the worker deny-all guard except for deletion under the configured media prefix", () => {
+  const bucket = "abasong-pilot-dev-circle-media-test";
+  const base = serviceRoleTemplate();
+  const enabled = serviceRoleTemplate(bucket);
+  const workerPolicy = (template: typeof base) =>
+    (
+      template.Resources.WorkerTaskRole as {
+        Properties: { Policies: Array<{ PolicyDocument: unknown }> };
+      }
+    ).Properties.Policies[0]!.PolicyDocument;
+  expect(workerPolicy(base)).toEqual({
+    Version: "2012-10-17",
+    Statement: [{ Effect: "Deny", Action: "*", Resource: "*" }],
+  });
+  expect(workerPolicy(enabled)).toEqual({
+    Version: "2012-10-17",
+    Statement: [
+      { Effect: "Deny", NotAction: "s3:DeleteObject", Resource: "*" },
+      {
+        Effect: "Deny",
+        Action: "s3:DeleteObject",
+        NotResource: {
+          "Fn::Sub": "arn:${AWS::Partition}:s3:::" + bucket + "/circle-posts/*",
+        },
+      },
+    ],
+  });
+  expect({
+    ...enabled,
+    Resources: {
+      ...enabled.Resources,
+      WorkerTaskRole: base.Resources.WorkerTaskRole,
+    },
+  }).toEqual(base);
+  expect(() => serviceRoleTemplate("another-bucket")).toThrow();
+});
+
 it("does not let the daily principal mutate IAM, pass a CFN role or decrypt service data", () => {
   const p = runtimeSetupPolicy("111122223333", "test@example.com");
   const pass = p.Statement.find((s) => s.Sid === "PassOnlyEcsRuntimeRoles")!;

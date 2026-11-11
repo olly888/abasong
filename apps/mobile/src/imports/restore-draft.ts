@@ -30,6 +30,8 @@ export async function restoreDraftView(
       const result = item.commit_result;
       if (result) {
         row.privateId = result.private_record_id ?? undefined;
+        if (result.private_entry_id)
+          row.privateEntryId = result.private_entry_id;
         row.sharedApartmentId = result.apartment_id ?? undefined;
         row.shared = ["active", "pending", "same_value"].includes(
           result.share_status,

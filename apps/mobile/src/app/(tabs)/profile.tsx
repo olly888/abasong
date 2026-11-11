@@ -1,19 +1,12 @@
 import { openContributionMenu } from "../../apartments/contribution-entry";
 import { useState, useCallback } from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "../../auth/AuthProvider";
 import { MyAccount } from "../../profile/MyAccount";
 import { dataRequest } from "../../apartments/client";
 import type { ProfileRequest } from "../../profile/profile-session";
-import { PageHeader } from "../../ui/PageFrame";
 import { ActionButton, FormError } from "../../auth/AuthControls";
 import { tokens } from "@abasong/ui";
 export default function Profile() {
@@ -62,9 +55,6 @@ export default function Profile() {
     );
   return (
     <SafeAreaView style={styles.page} edges={["top"]}>
-      <View style={{ marginHorizontal: -20 }}>
-        <PageHeader title="我的" />
-      </View>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ gap: 20, paddingTop: 24, paddingBottom: 24 }}
@@ -118,7 +108,7 @@ export default function Profile() {
           </>
         ) : (
           <>
-            <Text style={styles.name}>欢迎使用 Abasong</Text>
+            <Text style={styles.name}>登录 Abasong</Text>
             <ActionButton
               label="登录"
               onPress={() => router.push("/auth/phone")}
@@ -148,7 +138,7 @@ const styles = StyleSheet.create({
   initial: {
     fontSize: 24,
     fontWeight: "600",
-    color: tokens.color.brandPrimary,
+    color: tokens.color.brandText,
   },
   name: { fontSize: 24, fontWeight: "600", color: tokens.color.ink },
   secondary: {

@@ -54,15 +54,21 @@ out('AddressSuggestions',{'items':arr(ref('AddressSuggestion')),'session_token':
 obj('AddressRetrieveInput',{'provider_result_id':string(4096),'session_token':uid},['provider_result_id','session_token'])
 out('TemporaryAddress',{'label':string(300),'title':string(200),'point':ref('Point'),'use_mode':enum('temporary'),'attribution':string(2000),'match_status':enum('matched','ambiguous','unmatched'),'apartments':arr(ref('Apartment'))})
 # ADD-18: discovery is not a claim of arrival and never contains secret values.
-obj('NearbyInput',{**S['ResolveInput']['properties'],'observation_id':uid},S['ResolveInput']['required'])
+obj('NearbyInput',{**S['ResolveInput']['properties'],'observation_id':uid,'expand':{**boolean,'description':'仅Mapbox发现端点支持；显式true启用200/500/1000m受控扩围，省略保持200m'}},S['ResolveInput']['required'])
 out('DistanceContext',{'observation_id':nullable_id,'observed_at':dt,'accuracy_m':{'type':'number','minimum':0,'maximum':100000},'accuracy_permission':enum('precise','approximate'),'valid_until':dt})
 S['DistanceContext']['description']='当前请求的定位快照，不重复返回坐标、不持久化；valid_until最多为observed_at后20秒。仅用于距离与请求关联，不表示到达、入口或读取资格。'
 out('NearbyCandidate',{'key':string(100),'source':enum('catalog','mapbox'),'apartment':{'allOf':[ref('Apartment')],'nullable':True},'address':{'allOf':[ref('SearchAddress')],'nullable':True},'point':ref('Point'),'distance_m':{'type':'number','minimum':0},'classification':enum('catalog_community','apartments'),'requires_address_confirmation':boolean})
-out('NearbyDiscovery',{'items':{**arr(ref('NearbyCandidate')),'maxItems':20},'radius_m':integer(200),'expires_at':dt,'truncated':boolean,'provider_status':enum('not_requested','ok','unavailable'),'attribution':string(2000),'use_mode':enum('temporary')})
+out('NearbyDiscovery',{'items':{**arr(ref('NearbyCandidate')),'maxItems':20},'radius_m':{'type':'integer','enum':[200,500,1000]},'expires_at':dt,'truncated':boolean,'provider_status':enum('not_requested','ok','unavailable'),'attribution':string(2000),'use_mode':enum('temporary')})
+out('NearbyCoverage',{'catalog':enum('queried','capped'),'mapbox':enum('not_requested','queried','partial','unavailable')})
+S['NearbyCoverage']['description']='仅表示本次来源查询范围及预算状态，不保证现实世界分类/地址完整。Tilequery九瓦片覆盖不足、50条封顶或地址解析未完成时为partial。'
+out('NearbyExpansion',{'attempted_radii_m':{'type':'array','items':{'type':'integer','enum':[200,500,1000]},'minItems':1,'maxItems':3},'stop_reason':enum('fixed','sufficient','max_radius','coverage_incomplete','provider_unavailable','budget_exhausted'),'catalog_queries':integer(1,maximum=3),'tilequery_requests':integer(0,maximum=7),'reverse_requests':integer(0,maximum=4),'metadata_requests':integer(0,maximum=1),'elapsed_ms':integer(0)})
+S['NearbyDiscovery']['properties']['coverage']=ref('NearbyCoverage')
+S['NearbyDiscovery']['properties']['expansion']=ref('NearbyExpansion')
+S['NearbyDiscovery']['description']='同一次定位快照的候选，最多20条；expand省略为200m兼容模式。扩围不足3且本档查询完整才进入下一档；失败保留上一有效范围的公共地址并标注失败，绝不含门禁正文。'
 S['NearbyCandidate']['properties']['distance_basis']=enum('address_point','community_boundary','building_footprint','building_point_upper_bound')
 S['NearbyCandidate']['properties']['distance_basis']['description']='与distance_m同一计算来源。最后一项为补充Tilequery返回点的保守上界；均非入口/路线距离。旧响应缺字段时不显示距离数字。'
 S['NearbyDiscovery']['properties']['distance_context']=ref('DistanceContext')
-S['NearbyDiscovery']['description']='本次定位快照的一组候选；Mapbox成功响应包含同原点目录及地图候选，按同源距离排序去重。新增距离字段为加法兼容；新服务总返回，旧服务缺失时客户端隐藏距离。'
+S['NearbyDiscovery']['description']+=' 距离字段为加法兼容；旧服务缺失时客户端隐藏距离。'
 S['NearbyCandidate']['properties']['provider_feature_id']=string(200,minLength=1,description='会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可')
 S['NearbyCandidate']['properties']['apartment']['description']='已有业务公寓的唯一完整地址与空间匹配；Mapbox来源也可关联。发现响应不含密码正文'
 S['NearbyCandidate']['properties']['requires_address_confirmation']={**boolean,'description':'未关联或存在歧义时需核对地址；不是贡献人工审核'}
@@ -77,6 +83,7 @@ obj('AccessScope',{'label':string(100),'timezone':string(80),'weekdays':arr(inte
 obj('AccessInput',{'method':enum('keypad','front_desk','digital_access','no_fixed_code','other'),'value':string(500,minLength=1),'scope':ref('AccessScope'),'source_attested':{'type':'boolean','enum':[True]}},['method','value','source_attested'])
 out('AccessRecord',{'id':uid,'apartment_id':uid,'method':enum('keypad','front_desk','digital_access','no_fixed_code','other'),'value':string(500),'scope':ref('AccessScope'),'contributed_at':dt,'last_success_at':nullable_dt,'last_failure_at':nullable_dt,'effective_useful':boolean,'my_feedback':{'type':'string','enum':['useful','not_useful','withdrawn'],'nullable':True},'verification_label':enum('community_contribution','verified_source')})
 out('AccessList',{'items':arr(ref('AccessRecord')),'config_version':integer(1),'next_cursor':{'type':'string','nullable':True}})
+S['AccessList']['properties']['sharing_paused']={'type':'boolean','enum':[True],'description':'公寓暂停共享时返回；items 为空，地址仍可查看。'}
 out('ContributionResult',{'record_id':uid,'outcome':enum('created_pending','created_active','same_value_validation'),'contributed_at':dt})
 S['ContributionResult']['description']='新贡献成功返回created_active，无人工审核；created_pending仅兼容旧请求重放，不表示当前仍在共享。same_value_validation不刷新贡献时间或增加有用票。'
 obj('FeedbackInput',{'client_event_id':uid,'value':enum('useful','not_useful','withdrawn'),'reason':string(200)},['client_event_id','value'])
@@ -154,11 +161,12 @@ S['Application']['required'].append('applicant_profile')
 S['AccessRecord']['properties']['contributor_display_name']=string(60)
 S['AccessRecord']['required'].append('contributor_display_name')
 out('ContributionSummary',{'id':uid,'record_id':uid,'apartment_id':uid,'address_label':string(300),'event_type':enum('created','same_value_validation','withdrawal_requested','withdrawn','corrected'),'record_status':enum('pending','active','review','invalid','withdrawn'),'occurred_at':dt,'status':enum('active','withdrawn','corrected'),'version':integer(1),'scope_label':string(100),'can_correct':boolean,'other_source_count':integer(0),'useful_count':integer(0),'not_useful_count':integer(0),'last_feedback_at':nullable_dt,'views_count':{'type':'integer','nullable':True,'minimum':0}})
+S['ContributionSummary']['properties']['sharing_paused']={'type':'boolean','enum':[True],'description':'公寓暂停共享，历史贡献保留，正文不返回。'}
 page('ContributionSummaryPage','ContributionSummary')
 out('ContributionDetail',{'source':ref('ContributionSummary'),'value':string(32,nullable=True)})
 obj('ContributionCorrectionInput',{'expected_version':integer(1),'value':string(32,minLength=1),'scope':ref('ConfirmedAddressAccessScope'),'source_attested':{'type':'boolean','enum':[True]}},['expected_version','value','scope','source_attested'])
 out('ContributionChangeResult',{'operation':enum('corrected'),'applied_version':integer(1),'source':ref('ContributionSummary'),'replacement':{'allOf':[ref('ContributionSummary')],'nullable':True}})
-out('InboxSummary',{'unread_conversations':integer(0),'unread_messages':integer(0),'unread_notifications':integer(0)})
+out('InboxSummary',{'unread_conversations':integer(0),'unread_messages':integer(0),'unread_notifications':integer(0),'unread_circle_replies':dict(integer(0),description='本人仍可查看的未读司机圈回复；是 unread_notifications 的子集，不额外计入总数。')})
 obj('ShareCreateInput',{'public_preview_confirmed':{'type':'boolean','enum':[True]}},['public_preview_confirmed'])
 out('RequestShare',{'id':uid,'public_url':string(1000),'expires_at':dt})
 out('PublicRequestSummary',{'carrier':string(80,nullable=True),'kind':string(50),'region_label':string(200),'pickup_area':string(200,nullable=True),'starts_at':dt,'expires_at':dt,'parcel_count':{'type':'integer','nullable':True},'drivers_needed':{'type':'integer','nullable':True},'minimum_parcels':{'type':'integer','nullable':True},'accepts_partial':boolean,'price_cents':{'type':'integer','nullable':True},'price_unit':string(30,nullable=True),'currency':enum('USD'),'experience_requirement':string(50),'public_publisher_name':string(60),'public_organization_name':string(120,nullable=True)})

@@ -1,9 +1,9 @@
+import { SafeAreaModal } from "../ui/SafeAreaModal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
   Image,
-  Modal,
   PanResponder,
   Pressable,
   StyleSheet,
@@ -110,7 +110,7 @@ function Photo({
               onPress={() => retry((n) => n + 1)}
             >
               <Text
-                style={{ color: full ? foreground : tokens.color.brandPrimary }}
+                style={{ color: full ? foreground : tokens.color.brandText }}
               >
                 重试
               </Text>
@@ -206,7 +206,7 @@ function PhotoViewer({
     transform.scale > 1 ? reset() : change({ scale: 2, x: 0, y: 0 });
   const white = tokens.color.surface;
   return (
-    <Modal
+    <SafeAreaModal
       animationType="fade"
       onRequestClose={onClose}
       supportedOrientations={["portrait", "landscape"]}
@@ -274,7 +274,7 @@ function PhotoViewer({
           </View>
         ) : null}
       </SafeAreaView>
-    </Modal>
+    </SafeAreaModal>
   );
 }
 

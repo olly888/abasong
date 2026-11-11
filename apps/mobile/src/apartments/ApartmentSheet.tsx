@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import {
-  ActivityIndicator,
   PanResponder,
   Pressable,
   ScrollView,
@@ -9,11 +8,18 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import type { components } from "@abasong/contracts";
+import {
+  appliesToEntrance,
+  isEntranceScope,
+  type EntranceScope,
+  type components,
+} from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
 import { ActionButton } from "../auth/AuthControls";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/Primitives";
+import { ChoiceChip } from "../ui/ChoiceChip";
+import { MapStatusRow } from "../ui/MapStatusRow";
 import {
   anchorOffset,
   contributionMeta,
@@ -33,13 +39,15 @@ import { ApartmentMeta } from "./ApartmentMeta";
 import type { NearbyCardCandidate } from "./distance-presentation";
 import type { DiscoveryObservation } from "./nearby-policy";
 type S = components["schemas"];
+type EntranceFilter = Exclude<EntranceScope, "社区通用"> | "全部入口";
+const entranceFilters = ["全部入口", "楼栋门", "车库入口"] as const;
 export type SheetProps = {
   apartment: S["Apartment"];
   distanceCandidate?: NearbyCardCandidate;
   observation?: DiscoveryObservation | null;
   embedded?: boolean;
   records: S["AccessRecord"][];
-  status: "loading" | "ready" | "denied" | "error";
+  status: "loading" | "ready" | "denied" | "error" | "paused";
   expanded: boolean;
   saved: boolean;
   bookmarkBusy?: boolean;
@@ -65,6 +73,10 @@ export function ApartmentSheet(p: SheetProps) {
     anchor = useRef<Anchor | null>(null),
     mounted = useRef(true);
   const [bodyHeight, setBodyHeight] = useState(0);
+  const [filter, setFilter] = useState<{
+    apartmentId: string;
+    value: EntranceFilter;
+  } | null>(null);
   const baseHeight = compactCardHeight(useWindowDimensions().fontScale);
   const collapsedHeight = Math.max(
     baseHeight,
@@ -73,6 +85,19 @@ export function ApartmentSheet(p: SheetProps) {
   );
   const canRead = p.status === "ready",
     records = canRead ? p.records : [];
+  const showEntranceFilters = records.some((record) =>
+    isEntranceScope(record.scope.label ?? ""),
+  );
+  const entrance =
+    showEntranceFilters && filter?.apartmentId === p.apartment.id
+      ? filter.value
+      : "全部入口";
+  const visibleRecords =
+    entrance === "全部入口"
+      ? records
+      : records.filter((record) =>
+          appliesToEntrance(record.scope.label, entrance),
+        );
   const current = useRef(p);
   current.current = p;
   const pan = useRef(
@@ -254,23 +279,20 @@ export function ApartmentSheet(p: SheetProps) {
           </View>
 
           {p.status === "loading" ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <ActivityIndicator color={tokens.color.brandPrimary} />
-              <Text style={styles.meta}>正在读取</Text>
-            </View>
+            <MapStatusRow state="loading" title="正在读取门禁码" />
           ) : null}
           {p.status === "denied" ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <Text style={styles.stateTitle}>暂未开通资料查看资格</Text>
-            </View>
+            <MapStatusRow state="unavailable" title="暂未开通资料查看资格" />
+          ) : null}
+          {p.status === "paused" ? (
+            <MapStatusRow state="unavailable" title="该公寓暂不共享门禁码" />
           ) : null}
           {p.status === "error" ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <Text accessibilityRole="alert" style={styles.body}>
-                暂时无法读取门禁码
-              </Text>
-              <ActionButton label="重新读取" onPress={p.onRetry} />
-            </View>
+            <MapStatusRow
+              state="error"
+              title="门禁码暂时无法加载"
+              action={{ label: "重新读取", onPress: p.onRetry }}
+            />
           ) : null}
           {p.expanded && p.error && p.status !== "error" ? (
             <Text accessibilityRole="alert" style={styles.error}>
@@ -278,12 +300,14 @@ export function ApartmentSheet(p: SheetProps) {
             </Text>
           ) : null}
           {canRead && !records.length ? (
-            <View style={[styles.state, !p.expanded && styles.compactState]}>
-              <Text style={styles.stateTitle}>暂无共享门禁码</Text>
-              {!p.expanded ? (
-                <ActionButton label="添加门禁码" onPress={p.onAdd} />
-              ) : null}
-            </View>
+            <MapStatusRow
+              title="暂无共享门禁码"
+              action={
+                p.expanded
+                  ? undefined
+                  : { label: "添加门禁码", onPress: p.onAdd }
+              }
+            />
           ) : null}
           {canRead && !p.expanded && records[0] ? (
             <>
@@ -307,10 +331,29 @@ export function ApartmentSheet(p: SheetProps) {
           ) : null}
           {p.expanded ? (
             <>
-              <View style={{ paddingTop: 18, paddingBottom: 14 }}>
-                <ActionButton label="＋ 添加门禁码" onPress={p.onAdd} />
-              </View>
-              {records.map((r) => (
+              {p.status !== "paused" ? (
+                <View style={{ paddingTop: 18, paddingBottom: 14 }}>
+                  <ActionButton label="＋ 添加门禁码" onPress={p.onAdd} />
+                </View>
+              ) : null}
+              {showEntranceFilters ? (
+                <View style={styles.entranceFilters}>
+                  {entranceFilters.map((value) => (
+                    <ChoiceChip
+                      key={value}
+                      label={value}
+                      selected={entrance === value}
+                      onPress={() =>
+                        setFilter({ apartmentId: p.apartment.id, value })
+                      }
+                    />
+                  ))}
+                </View>
+              ) : null}
+              {showEntranceFilters && !visibleRecords.length ? (
+                <Text style={styles.meta}>暂无适用于该入口的门禁码</Text>
+              ) : null}
+              {visibleRecords.map((r) => (
                 <View
                   key={r.id}
                   onLayout={(e) => {
@@ -363,7 +406,7 @@ export function ApartmentSheet(p: SheetProps) {
                             fontSize: 14,
                             color:
                               r.my_feedback === v
-                                ? tokens.color.brandPrimary
+                                ? tokens.color.brandText
                                 : tokens.color.ink,
                           }}
                         >
@@ -393,6 +436,7 @@ export function ApartmentSheet(p: SheetProps) {
   );
 }
 const styles = StyleSheet.create({
+  entranceFilters: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   panel: {
     position: "absolute",
     left: 16,
@@ -484,9 +528,6 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.color.brandSurface,
     borderColor: tokens.color.brandPrimary,
   },
-  state: { paddingVertical: 20, gap: 14 },
-  compactState: { paddingVertical: 12, gap: 8 },
-  stateTitle: { fontSize: 22, fontWeight: "600", color: tokens.color.ink },
   linkRow: {
     minHeight: 44,
     flexDirection: "row",
@@ -495,7 +536,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 0,
   },
-  link: { fontSize: 14, color: tokens.color.brandPrimary },
+  link: { fontSize: 14, color: tokens.color.brandText },
   error: {
     fontSize: 14,
     lineHeight: 22,

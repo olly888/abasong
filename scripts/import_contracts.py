@@ -71,6 +71,8 @@ def add_import_contracts(S, obj, out, ref, string, enum, integer, arr, uid, dt,
         'contribution_id': nullable_id, 'error_code': string(80, nullable=True), 'retryable': boolean})
     out('ImportCommitResponse', {'batch': ref('ImportBatch'), 'results': arr(ref('ImportCommitResult'))})
     S['ImportCommitResult']['properties']['apartment_id'] = nullable_id
+    S['ImportCommitResult']['properties']['private_entry_id'] = {
+        **uid, 'description': '已保存资料所属的本人公寓条目 ID。仅在本人保存成功时返回。'}
     S['ImportCandidate']['properties']['commit_result'] = ref('ImportCommitResult')
     obj('ImportDeviceCandidateInput', {'address_text': string(300), 'value': string(32),
         'method': deepcopy(S['AccessInput']['properties']['method']), 'scope': ref('ImportScope'),

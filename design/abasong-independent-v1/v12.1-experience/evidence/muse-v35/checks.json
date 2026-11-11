@@ -1,0 +1,135 @@
+{
+  "checks": [
+    {
+      "name": "320px 三模式上下分区、无横向溢出、安全区",
+      "status": "PASS"
+    },
+    {
+      "name": "390px 三模式上下分区、无横向溢出、安全区",
+      "status": "PASS"
+    },
+    {
+      "name": "430px 三模式上下分区、无横向溢出、安全区",
+      "status": "PASS"
+    },
+    {
+      "name": "逐字搜索地址并点候选，回到对应卡片",
+      "status": "PASS"
+    },
+    {
+      "name": "我的与首页共享入口使用同一手填表单",
+      "status": "PASS"
+    },
+    {
+      "name": "地图点第二张→详情→返回保留选中与滚动",
+      "status": "PASS"
+    },
+    {
+      "name": "纵向滚动停稳后同步地图，不改区域筛选",
+      "status": "PASS"
+    },
+    {
+      "name": "模式各自保存列表位置和镜头；定位不清除找人筛选",
+      "status": "PASS"
+    },
+    {
+      "name": "第三张无码→统一表单→失败保留→重试→原公寓完整码",
+      "status": "PASS"
+    },
+    {
+      "name": "本人纠正保留前导零，返回原公寓；旧值不再显示",
+      "status": "PASS"
+    },
+    {
+      "name": "详情有用反馈采用现有排序，不新增点赞计数",
+      "status": "PASS"
+    },
+    {
+      "name": "未收录搜索地址可确认后贡献，不丢地址",
+      "status": "PASS"
+    },
+    {
+      "name": "场景 house-nearby：准确状态与正文隔离",
+      "status": "PASS"
+    },
+    {
+      "name": "场景 house：准确状态与正文隔离",
+      "status": "PASS"
+    },
+    {
+      "name": "场景 denied：准确状态与正文隔离",
+      "status": "PASS"
+    },
+    {
+      "name": "场景 guest：准确状态与正文隔离",
+      "status": "PASS"
+    },
+    {
+      "name": "场景 unqualified：准确状态与正文隔离",
+      "status": "PASS"
+    },
+    {
+      "name": "场景 paused：准确状态与正文隔离",
+      "status": "PASS"
+    },
+    {
+      "name": "第二张失败与无码区分，单张重试不影响其他地址",
+      "status": "PASS"
+    },
+    {
+      "name": "慢响应期间切模式再返回，迟到内容只填原地址",
+      "status": "PASS"
+    },
+    {
+      "name": "附近发现失败有重试，与正常零结果不同",
+      "status": "PASS"
+    },
+    {
+      "name": "距离失效隐藏数值；粗略位置标约",
+      "status": "PASS"
+    },
+    {
+      "name": "筛选仅两场景；无结果清除筛选；地图点区域真实过滤",
+      "status": "PASS"
+    },
+    {
+      "name": "找活失败、空态和加载中分别呈现",
+      "status": "PASS"
+    },
+    {
+      "name": "需求详情仓库地图及返回、报名入口保持可达",
+      "status": "PASS"
+    },
+    {
+      "name": "模式发布入口复用 V3.4 两场景及表单",
+      "status": "PASS"
+    },
+    {
+      "name": "大字号及320×568小屏可滚动操作，不横向裁切",
+      "status": "PASS"
+    },
+    {
+      "name": "旧版入口未启用新布局",
+      "status": "PASS"
+    },
+    {
+      "name": "无运行异常、无外部服务请求",
+      "status": "PASS"
+    }
+  ],
+  "passed": 29,
+  "failed": 0,
+  "errors": [],
+  "external": [],
+  "scope": "Synthetic browser prototype only; no native, Mapbox or API acceptance.",
+  "date": "2026-11-08",
+  "prototype": "V3.5-M1",
+  "environment": "Chromium mobile browser contexts; viewport widths 320/390/430, short screen 320x568",
+  "sourceSha256": {
+    "index.html": "097a8bafa040426f784b671274fa19c6b1910c63928f904ba015c7e3b1aa1800",
+    "app.js": "3d724e9c0e9c141d3234c29671fc71d3ae4dbc1915e83c7a31d23afa6a688fbb",
+    "muse-v35.css": "72c9a6f7096729d61028ab5234bc79076b9229ec4fa9e26e45943d9882c6aabe",
+    "muse-v35.js": "6a89685fcb7034de0d7706e3f459cf1835dba84bf41c56c1430f2abe8ac7d8b3",
+    "muse-v35-checks.browser.js": "3d701274ad2a582688b2eba3f4c76b57aa77c326010a9dee65a29981f3806a2d"
+  }
+}

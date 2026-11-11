@@ -1,5 +1,19 @@
 # D0 依赖与运行时基线
 
+2026-11-10 DTL-04 截图导入增加 Android 本机简体中文识别。Gradle 仅在 OCR 模块增加固定版本 `com.google.mlkit:text-recognition-chinese:16.0.1`，模型随应用打包。iOS 截图导入复用系统 Vision 的简体中文和英文。两端地址相机沿用英文入口，旧原生壳可通过能力标记走兼容路径。此依赖随下一次原生构建分发。[Google ML Kit Android 文档](https://developers.google.com/ml-kit/vision/text-recognition/v2/android)。
+
+2026-11-08 M6-01：无新增依赖、契约、迁移或云资源。复用现有React Native/Expo与Lucide，新增ChoiceChip、ComposerOption；圈内正文／标签／可选字段与我的菜单对齐。锁屏原生验收待补，详见[M6-01报告](docs/technical/V3.5_M6-01_司机圈与我的视觉收敛验收.md)。
+
+2026-11-08 M5-02：无新增依赖、原生模块、契约、迁移或云资源。复用既有字段、Lucide和品牌token，统一门禁码/三选门别/勾选组件与截图核对卡。561工程、125导入检查、31贡献断言/78 HTTP、4原型与6RN-web组通过；双端Hermes导出通过，原生键盘/手势/视觉待补。详见[M5-02报告](docs/technical/V3.5_M5-02_贡献截图与门别对齐验收.md)。
+
+2026-11-08 M5-01：无新增依赖、原生模块、契约、迁移或云资源。复用已锁Expo58/RN0.88、共用字体/颜色、原生日期与既有表单/报名transport。新增共用摘要及分组、报名字段锚点定位；[561工程/652接口数据库检查及浏览器证据](docs/technical/V3.5_M5-01_详情报名与核对验收.md)通过。双端Hermes导出通过，原生手势与键盘待补；未重签或部署。
+
+2026-11-08 M4-02：无新增依赖、原生模块、迁移、外部服务或费用。复用现有Nest/Zod/PostgreSQL、React Native列表与AbortController；新增可选scenario查询参数并同步契约生成源。iOS/Android Hermes导出通过，原生手势待解锁，未云部署或重签。详见[M4-02报告](docs/technical/V3.5_M4-02_协作查询与分页验收.md)。
+
+2026-11-08 M4-01：无新增包、原生模块、迁移或云资源。复用Node24 AbortSignal、Zod、现有Mapbox临时Tilequery/Geocoding及PostGIS。新增只读TileJSON元数据调用（进程内五分钟缓存maxzoom）用于九瓦片范围判断；一次扩围最多3次catalog、7次Tilequery、4次逆地理、1次元数据，共享8秒供应商中止预算。未运行实时供应商探测，不持久保存临时地址，不改变账号计费或访问资格。详见[M4报告](docs/technical/V3.5_M4_受控扩围与覆盖验收.md)。
+
+2026-11-07 设计系统 V3.3：通过 Expo SDK 58 兼容安装并精确锁定 `react-native-svg 15.16.0`，pnpm 与 iOS CocoaPods 锁已同步。Lucide 1.70.0 仅选用所需的上游 SVG 路径，许可入库，原型与 App 由同一份映射生成。两端 Debug 模拟器包实际重编译。iOS 本地由供应商脚本恢复匹配的 React Native、Hermes、Expo Debug 预编译模块，再使用模拟器临时签名。
+
 2026-11-06 R4-09：无新增包、SDK、原生模块、迁移或锁变更。复用Expo58 Router及RN0.88 AppState/Switch、已安装DateTimePicker9.2.1和V3.2共用控件；时段仍为既有版本化PUT，关闭只提交开关及版本。仅刷新显示，不增加后台自动续期/定位/推送或云调用。
 
 2026-11-06 R4-08：通过 Expo58 `expo install` 安装并精确锁定 expo-clipboard 58.0.4，用于仓库完整地址原生复制；不读取既有剪贴板。复用现有 expo-linking58.0.15、RNMapbox10.3.16 及临时地址搜索会话；无新地图供应商、迁移或云资源。本批重新编译 iOS／Android 开发应用，实际结果见 R4-08 报告。
@@ -201,3 +215,10 @@ app.json加入config plugin，prebuild --no-install --no-clean保留既有目录
 - Expo SDK 58：以 `expo install` 解析并锁定 `expo-asset@58.0.20`（将已有传递依赖升级并声明为直接依赖）和 `expo-media-library@58.0.13`。更新 pnpm lock 与 iOS Podfile.lock。
 - MediaLibrary 仅用于邀请图新增；iOS `addOnly`，Android 10+ MediaStore，Android 13+ 图像/视频/音频及部分媒体读取权限均从合并清单移除。既有照片选择仍使用系统选择器。
 - 系统分享、剪贴板、临时文件继续复用现有能力。海报生成脚本的 Pillow/qrcode 只用于本机生成合成素材，不进入 App 或运行服务。
+
+
+## 2026-11-08 M7 Android 实际读屏测试环境
+
+仅增加本机忽略目录内的官方Android SDK系统镜像：`system-images;android-37.0;google_apis_playstore;arm64-v8a` 和 `system-images;android-36;google_apis_playstore;arm64-v8a`。新增许可由用户亲自阅读接受。分别建立独立A11y测试AVD，保留D0原设备和数据；两版启动均失败，尚未运行TalkBack，不把下载或AVD创建计为读屏验收。未从第三方下载APK，没有Google账号登录或新增系统权限。
+
+产品依赖、pnpm/Pod/Gradle锁文件及原生包不变；本轮只运行既有Debug容器和冻结源码9d31f95。原设备字号临时2.0用于代表性首页测试，用户确认后已恢复并只读核对为1.0；Display size未改。详见[补验记录](docs/technical/V3.5_M7-01_Android贡献与读屏补验.md)。

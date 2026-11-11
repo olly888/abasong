@@ -14,8 +14,8 @@ import {
   type AddressChoices,
   type ContributionRequest,
 } from "../apartments/contribution-address-search";
-import type { WarehouseFields } from "./delivery-fields";
-import { emptyWarehouse } from "./delivery-fields";
+import type { DeliveryAnchor, WarehouseFields } from "./delivery-fields";
+import { emptyWarehouse, warehouseAddressIssue } from "./delivery-fields";
 import { requestStyles as s } from "./RequestUi";
 export function ConfirmRow({
   checked,
@@ -42,7 +42,7 @@ export function ConfirmRow({
         minHeight: 48,
       }}
     >
-      <Text style={{ color: tokens.color.brandPrimary, fontSize: 24 }}>
+      <Text style={{ color: tokens.color.brandText, fontSize: 24 }}>
         {checked ? "☑" : "□"}
       </Text>
       <Text style={[s.text, { flex: 1 }]}>{label}</Text>
@@ -54,14 +54,27 @@ export function WarehouseAddressField({
   onChange,
   request,
   disabled,
+  anchor = (_field, child) => child,
 }: {
   value: WarehouseFields;
   onChange: (v: WarehouseFields) => void;
   request: ContributionRequest;
   disabled: boolean;
+  anchor?: (
+    field: DeliveryAnchor,
+    child: React.ReactNode,
+    fallback?: DeliveryAnchor[],
+  ) => React.ReactNode;
 }) {
   const [query, setQuery] = useState(""),
-    [manual, setManual] = useState(false),
+    [manual, setManual] = useState(
+      () =>
+        value.source === "publisher_entered" &&
+        !value.confirmed &&
+        Boolean(
+          value.line || value.city || value.postal || value.state !== "CA",
+        ),
+    ),
     [choices, setChoices] = useState<AddressChoices | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
@@ -95,29 +108,43 @@ export function WarehouseAddressField({
   if (value.line && !manual)
     return (
       <View style={{ gap: 10 }}>
-        <Text style={s.text}>
-          {[value.line, value.city, value.state, value.postal]
-            .filter(Boolean)
-            .join(", ")}
-        </Text>
-        <ActionButton
-          label="更换仓库地址"
-          variant="text"
-          disabled={disabled || busy}
-          onPress={() => {
-            search.cancel();
-            setQuery("");
-            setChoices(null);
-            setError(null);
-            onChange({ ...emptyWarehouse(), name: value.name });
-          }}
-        />
-        <ConfirmRow
-          checked={value.confirmed}
-          onChange={(confirmed) => onChange({ ...value, confirmed })}
-          disabled={disabled || busy}
-          label="确认这是本次取件地址"
-        />
+        {anchor(
+          "warehouseLine",
+          <View style={{ gap: 8 }}>
+            <Text style={s.label}>仓库地址</Text>
+            <Text style={s.text}>
+              {[
+                value.line,
+                value.city,
+                [value.state, value.postal].filter(Boolean).join(" "),
+              ]
+                .filter(Boolean)
+                .join(", ")}
+            </Text>
+            <ActionButton
+              label="更换仓库地址"
+              variant="text"
+              disabled={disabled || busy}
+              onPress={() => {
+                search.cancel();
+                setQuery("");
+                setChoices(null);
+                setError(null);
+                onChange({ ...emptyWarehouse(), name: value.name });
+              }}
+            />
+          </View>,
+          ["warehouseCity", "warehouseState", "warehousePostal"],
+        )}
+        {anchor(
+          "warehouseConfirm",
+          <ConfirmRow
+            checked={value.confirmed}
+            onChange={(confirmed) => onChange({ ...value, confirmed })}
+            disabled={disabled || busy}
+            label="确认这是本次取件地址"
+          />,
+        )}
       </View>
     );
   return (
@@ -126,37 +153,60 @@ export function WarehouseAddressField({
         <>
           {(
             [
-              ["line", "门牌与街道"],
-              ["city", "城市"],
-              ["state", "州"],
-              ["postal", "邮编"],
+              ["line", "门牌与街道", "warehouseLine"],
+              ["city", "城市", "warehouseCity"],
+              ["state", "州", "warehouseState"],
+              ["postal", "邮编（选填）", "warehousePostal"],
             ] as const
-          ).map(([k, label]) => (
-            <Field
-              key={k}
-              label={label}
-              value={value[k]}
-              editable={!disabled}
-              autoCapitalize={k === "state" ? "characters" : "words"}
-              maxLength={k === "state" ? 2 : k === "postal" ? 10 : 200}
-              keyboardType={
-                k === "postal" ? "numbers-and-punctuation" : "default"
-              }
-              onChangeText={(v) =>
-                onChange({
-                  ...value,
-                  [k]: k === "state" ? v.toUpperCase() : v,
-                  confirmed: false,
-                })
-              }
-            />
+          ).map(([k, label, id]) => (
+            <View key={k}>
+              {anchor(
+                id,
+                <Field
+                  label={label}
+                  value={value[k]}
+                  editable={!disabled}
+                  autoCapitalize={k === "state" ? "characters" : "words"}
+                  maxLength={
+                    k === "state"
+                      ? 2
+                      : k === "postal"
+                        ? 10
+                        : k === "city"
+                          ? 100
+                          : 200
+                  }
+                  keyboardType={
+                    k === "postal" ? "numbers-and-punctuation" : "default"
+                  }
+                  onChangeText={(v) => {
+                    setError(null);
+                    onChange({
+                      ...value,
+                      [k]: k === "state" ? v.toUpperCase() : v,
+                      confirmed: false,
+                    });
+                  }}
+                />,
+              )}
+            </View>
           ))}
-          <ConfirmRow
-            checked={value.confirmed}
-            onChange={(confirmed) => onChange({ ...value, confirmed })}
-            disabled={disabled}
-            label="确认这是本次取件地址"
-          />
+          <FormError message={error} />
+          {anchor(
+            "warehouseConfirm",
+            <ActionButton
+              label="使用此地址"
+              variant="secondary"
+              disabled={disabled}
+              onPress={() => {
+                const issue = warehouseAddressIssue(value);
+                if (issue) return setError(issue.message);
+                Keyboard.dismiss();
+                setError(null);
+                setManual(false);
+              }}
+            />,
+          )}
           <ActionButton
             label="改用地址搜索"
             variant="text"
@@ -171,19 +221,28 @@ export function WarehouseAddressField({
         </>
       ) : (
         <>
-          <Field
-            label="仓库地址"
-            placeholder="门牌、街道、城市、州"
-            value={query}
-            editable={!disabled}
-            onChangeText={(v) => {
-              search.cancel();
-              setQuery(v);
-              setChoices(null);
-              setError(null);
-            }}
-            autoCorrect={false}
-          />
+          {anchor(
+            "warehouseLine",
+            <Field
+              label="仓库地址"
+              placeholder="门牌、街道、城市、州"
+              value={query}
+              editable={!disabled}
+              onChangeText={(v) => {
+                search.cancel();
+                setQuery(v);
+                setChoices(null);
+                setError(null);
+              }}
+              autoCorrect={false}
+            />,
+            [
+              "warehouseCity",
+              "warehouseState",
+              "warehousePostal",
+              "warehouseConfirm",
+            ],
+          )}
           {busy ? (
             <ActivityIndicator accessibilityLabel="正在查找仓库地址" />
           ) : null}

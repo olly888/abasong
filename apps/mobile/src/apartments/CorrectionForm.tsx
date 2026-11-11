@@ -1,22 +1,23 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
-import {
-  ActionButton,
-  ApartmentPage,
-  Field,
-  FormError,
-} from "../auth/AuthControls";
+import { ActionButton, ApartmentPage, FormError } from "../auth/AuthControls";
 import { AccountError } from "../auth/api-client";
 import { AddressLine } from "./AddressLine";
+import { unspecifiedDoor } from "./DoorScopeField";
 import type { ContributionRequest } from "./contribution-address-search";
 import { createContributionAttempt } from "./contribution-attempt";
+import { AccessCodeFields } from "./AccessCodeFields";
+import { CheckField } from "../ui/CheckField";
+import { typeStyles } from "../ui/foundation";
+import { useAccessFormExit } from "./useAccessFormExit";
 type S = components["schemas"];
 export function CorrectionForm(p: {
   id: string;
   request: ContributionRequest;
+  canReadOriginal?: boolean;
   onBack: () => void;
   onSaved: (result: S["ContributionChangeResult"]) => void;
   testControls?: ReactNode;
@@ -25,7 +26,8 @@ export function CorrectionForm(p: {
   const latest = useRef(p);
   latest.current = p;
   const controller = useRef(new AbortController()),
-    attempt = useRef(createContributionAttempt(randomUUID));
+    attempt = useRef(createContributionAttempt(randomUUID)),
+    original = useRef("");
   const [source, setSource] = useState<S["ContributionSummary"] | null>(null),
     [value, setValue] = useState(""),
     [scope, setScope] = useState(""),
@@ -34,6 +36,9 @@ export function CorrectionForm(p: {
     [error, setError] = useState<string | null>(null),
     [conflict, setConflict] = useState(false),
     [committed, setCommitted] = useState(false);
+  const changed =
+    value !== original.current || (!!source && scope !== source.scope_label);
+  const exit = useAccessFormExit(!committed && (changed || attested), busy);
   const request = <T,>(
     path: string,
     options: Parameters<ContributionRequest>[1] = {},
@@ -48,16 +53,25 @@ export function CorrectionForm(p: {
     setBusy(true);
     setError(null);
     try {
-      const s = await request<S["ContributionSummary"]>(
-        "/v1/me/contributions/" + id + "/summary",
-        { signal },
-      );
+      const path = "/v1/me/contributions/" + id;
+      const detail = latest.current.canReadOriginal
+        ? await request<S["ContributionDetail"]>(path, { signal }).catch(
+            () => null,
+          )
+        : null;
+      if (signal.aborted) return;
+      const s =
+        detail?.source ??
+        (await request<S["ContributionSummary"]>(path + "/summary", {
+          signal,
+        }));
       if (signal.aborted) return;
       if (s.id !== id) throw new Error("贡献资料与所选记录不一致，请重新读取");
       setSource(s);
       setScope(s.scope_label);
       setConflict(false);
-      setValue("");
+      original.current = s.can_correct ? (detail?.value ?? "") : "";
+      setValue(original.current);
       setAttested(false);
     } catch (e) {
       if (!signal.aborted)
@@ -78,13 +92,14 @@ export function CorrectionForm(p: {
     };
   }, [id]);
   function back() {
-    latest.current.onBack();
+    exit.back(() => latest.current.onBack());
   }
   async function submit() {
     if (
       !source ||
       source.id !== id ||
       !source.can_correct ||
+      !changed ||
       !value.trim() ||
       !scope.trim() ||
       !attested ||
@@ -109,6 +124,7 @@ export function CorrectionForm(p: {
       );
       attempt.current.finish(true);
       if (controller.current.signal.aborted) return;
+      exit.release();
       setCommitted(true);
       setValue("");
       setAttested(false);
@@ -128,7 +144,7 @@ export function CorrectionForm(p: {
   }
   return (
     <ApartmentPage
-      title="纠正密码"
+      title="纠正门禁码"
       onBack={() => {
         if (!busy) back();
       }}
@@ -147,7 +163,9 @@ export function CorrectionForm(p: {
               <ActionButton
                 label="确认纠正并共享"
                 busy={busy}
-                disabled={!value.trim() || !scope.trim() || !attested}
+                disabled={
+                  !changed || !value.trim() || !scope.trim() || !attested
+                }
                 onPress={() => void submit()}
               />
             )
@@ -165,7 +183,10 @@ export function CorrectionForm(p: {
         />
       ) : (
         <>
-          <AddressLine line={source.address_label} expanded />
+          <View style={{ gap: 8 }}>
+            <Text style={typeStyles.label}>公寓地址</Text>
+            <AddressLine line={source.address_label} expanded />
+          </View>
           {committed ? (
             <>
               <Text>已纠正并共享</Text>
@@ -173,57 +194,36 @@ export function CorrectionForm(p: {
             </>
           ) : !source.can_correct ? (
             <>
-              <Text>这条贡献当前不能纠正</Text>
+              <Text>
+                {source.sharing_paused
+                  ? "该公寓暂不共享门禁码"
+                  : "这条贡献当前不能纠正"}
+              </Text>
               <ActionButton label="返回共享记录" secondary onPress={back} />
             </>
           ) : (
             <>
-              <Field
-                label="正确密码"
+              <AccessCodeFields
+                correction
                 value={value}
-                onChangeText={(v) => {
+                address={source.address_label}
+                scope={scope}
+                disabled={busy || conflict}
+                onValueChange={(v) => {
                   setValue(v);
                   setAttested(false);
                 }}
-                maxLength={32}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="off"
-                editable={!busy && !conflict}
-              />
-              <Field
-                label="门别"
-                value={scope}
-                onChangeText={(v) => {
-                  setScope(v);
+                onScopeChange={(v) => {
+                  setScope(v || unspecifiedDoor);
                   setAttested(false);
                 }}
-                maxLength={100}
-                editable={!busy && !conflict}
               />
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityLabel="我已核对，并有权共享这条资料"
-                accessibilityState={{
-                  checked: attested,
-                  disabled: busy || conflict,
-                }}
+              <CheckField
+                label="我已核对，并有权共享这条资料"
+                checked={attested}
                 disabled={busy || conflict}
-                onPress={() => setAttested((v) => !v)}
-                style={{
-                  minHeight: 48,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 24, color: tokens.color.brandPrimary }}
-                >
-                  {attested ? "☑" : "□"}
-                </Text>
-                <Text style={{ flex: 1 }}>我已核对，并有权共享这条资料</Text>
-              </Pressable>
+                onChange={setAttested}
+              />
               <Text
                 style={{
                   fontSize: 13,

@@ -226,11 +226,19 @@ export function assertRuntimeParameters(
     definitions = obj(buildRuntimeTemplates().runtime.Parameters);
   equal(
     Object.keys(input).sort(),
-    Object.keys(definitions).sort(),
+    Object.keys(definitions)
+      .filter(
+        (name) =>
+          name !== "CircleMediaBucketName" || Object.hasOwn(input, name),
+      )
+      .sort(),
     "Parameter inventory changed",
   );
   for (const [name, definition] of Object.entries(definitions)) {
-    const value = input[name],
+    const value =
+        name === "CircleMediaBucketName" && !Object.hasOwn(input, name)
+          ? ""
+          : input[name],
       pattern = obj(definition).AllowedPattern;
     if (
       typeof value !== "string" ||

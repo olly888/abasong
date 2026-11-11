@@ -1,8 +1,8 @@
+import { SafeAreaModal } from "./SafeAreaModal";
 import { useEffect, useRef, useState } from "react";
 import {
   ActionSheetIOS,
   Keyboard,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -104,7 +104,7 @@ export function SelectionField<T extends string>({
         </Text>
         <Icon name="down" size={18} color={tokens.color.textSecondary} />
       </Pressable>
-      <Modal
+      <SafeAreaModal
         visible={open}
         transparent
         animationType="slide"
@@ -163,7 +163,7 @@ export function SelectionField<T extends string>({
                       fontSize: 16,
                       color:
                         id === value
-                          ? tokens.color.brandPrimary
+                          ? tokens.color.brandText
                           : tokens.color.ink,
                     }}
                   >
@@ -179,7 +179,7 @@ export function SelectionField<T extends string>({
             />
           </SafeAreaView>
         </View>
-      </Modal>
+      </SafeAreaModal>
     </View>
   );
 }

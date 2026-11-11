@@ -17,16 +17,22 @@ async (page) => {
   const action = a => p.locator(`#app [data-action="${a}"]`);
   const fresh = async (task = "invite") => { await p.setViewportSize({ width: 1400, height: 980 }); await p.goto(`http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-invite&task=${task}&case=${checks.length}`); await p.waitForFunction(() => window.abasongInvitation); };
   const run = async (name, f, task = "invite") => { try { await fresh(task); await f(); checks.push({ name, status: "PASS" }); } catch (e) { checks.push({ name, status: "FAIL", reason: e.message.slice(0,600) }); } effects.push(await p.evaluate(() => window.invitationSideEffects)); };
-  await run("我的：保留开关/共享/管理分组，邀请与条件团队在次级组、设置之前", async () => {
+  await run("我的：保留开关/共享/管理分组，邀请与我的团队在次级组、设置之前", async () => {
     assert(await p.locator(".account-main-tools").evaluate(n => n.nextElementSibling.classList.contains("account-secondary-tools")), "secondary after main");
     assert((await p.locator(".account-secondary-tools [data-action]").allTextContents()).join("|").includes("邀请司机|我的团队"), "menu order");
     await action("invite-open").click(); assert((await p.locator("#screen-id").innerText()) === "U15", "invitation screen");
     await action("back").click(); assert((await p.locator("#screen-id").innerText()) === "U01", "back to My");
   }, "me");
-  await run("不代表DSP的司机仍能邀请；不恢复常联系/收费/成员管理", async () => {
-    await p.evaluate(() => { window.abasongAccount.state.team = null; window.abasongAccount.state.teamIntent = false; render(); });
-    assert(await action("invite-open").isVisible(), "all drivers"); assert(await action("organization").count() === 0, "no forced team");
+  await run("未创建团队的司机可直接打开团队资料", async () => {
+    await p.evaluate(() => { window.abasongAccount.state.team = null; window.abasongAccount.state.teamIntent = false; model.organization = ""; render(); });
+    assert(await action("invite-open").isVisible(), "all drivers");
+    assert((await action("organization").innerText()).includes("添加团队资料"), "team setup visible");
     assert(!/常联系|邀请成员|会员|钱包/.test(await p.locator("#app").innerText()), "no scope expansion");
+    await action("organization").click();
+    assert((await p.locator("#screen-id").innerText()) === "U10", "team editor reachable");
+    assert((await p.locator('[name="name"]').inputValue()) === "", "blank initial team");
+    await action("back").click();
+    assert((await p.locator("#screen-id").innerText()) === "U01", "return to My");
   }, "me");
   await run("邀请图价值/覆盖说明清楚，二维码与链接同源，不附个人/业务资料", async () => {
     const body = await p.locator("#app").innerText(), meta = await p.evaluate(() => ({ target: abasongInvitation.target, text: abasongInvitation.text, name: model.profile.name }));

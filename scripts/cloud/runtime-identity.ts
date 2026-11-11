@@ -549,8 +549,8 @@ export function runtimeComputePolicy(account: string) {
 
 /** Split the reviewed blueprint so root is used only for IAM initialization,
  * while the MFA project principal creates all billable resources. */
-export function serviceRoleTemplate() {
-  const identity = buildRuntimeTemplates().identities;
+export function serviceRoleTemplate(circleMediaBucketName = "") {
+  const identity = buildRuntimeTemplates(circleMediaBucketName).identities;
   const resources = Object.fromEntries(
     Object.entries(identity.Resources).filter(
       ([, r]) => (r as Record<string, unknown>).Type === "AWS::IAM::Role",

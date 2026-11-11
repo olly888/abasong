@@ -1,22 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Text, Pressable, View } from "react-native";
+import { Text } from "react-native";
 import { randomUUID } from "expo-crypto";
 import type { components } from "@abasong/contracts";
 import { tokens } from "@abasong/ui";
-import {
-  ActionButton,
-  ApartmentPage,
-  Field,
-  FormError,
-} from "../auth/AuthControls";
+import { ActionButton, ApartmentPage, FormError } from "../auth/AuthControls";
 import { createContributionAttempt } from "./contribution-attempt";
 import { ContributionAddressField } from "./ContributionAddressField";
+import { unspecifiedDoor } from "./DoorScopeField";
 import {
   privateAddressText,
   validContributionAddress,
   type ContributionAddress,
   type ContributionRequest,
 } from "./contribution-address-search";
+import { AccessCodeFields } from "./AccessCodeFields";
+import { CheckField } from "../ui/CheckField";
+import { useAccessFormExit } from "./useAccessFormExit";
 type S = components["schemas"];
 export function ContributionForm(p: {
   initialApartmentId?: string;
@@ -39,9 +38,14 @@ export function ContributionForm(p: {
     [confirmed, setConfirmed] = useState(false),
     [busy, setBusy] = useState(false),
     [attempted, setAttempted] = useState(false),
+    [addressEdited, setAddressEdited] = useState(false),
     [error, setError] = useState<string | null>(null);
   const current = useRef(p);
   current.current = p;
+  const exit = useAccessFormExit(
+    addressEdited || !!value || !!scope || confirmed || attempted,
+    busy,
+  );
   const control = useRef(new AbortController()),
     attempt = useRef(createContributionAttempt(randomUUID));
   const changeAddress = useCallback((next: ContributionAddress) => {
@@ -67,10 +71,7 @@ export function ContributionForm(p: {
   }, []);
   const ready = validContributionAddress(address, isPrivate),
     canSubmit =
-      ready &&
-      !!value.trim() &&
-      (!isPrivate || !!scope.trim()) &&
-      (isPrivate || (confirmed && p.canContribute));
+      ready && !!value.trim() && (isPrivate || (confirmed && p.canContribute));
   async function submit() {
     if (busy || !canSubmit) return;
     const target = address.kind === "apartment" ? address.apartment : null;
@@ -109,10 +110,11 @@ export function ContributionForm(p: {
         await request("/v1/me/apartment-library/" + entry.id + "/records", {
           method: "POST",
           key: intent.recordKey,
-          body: { value, scope_label: scope },
+          body: { value, scope_label: scope || unspecifiedDoor },
         });
         if (control.current.signal.aborted) return;
         committed = true;
+        exit.release();
         setValue("");
         current.current.onPrivateSaved();
       } else {
@@ -120,7 +122,7 @@ export function ContributionForm(p: {
         const content = {
           method: "keypad",
           value,
-          ...(scope.trim() ? { scope: { label: scope.trim() } } : {}),
+          ...(scope ? { scope: { label: scope } } : {}),
           source_attested: true,
         };
         let result: S["ContributionResult"], apartmentId: string;
@@ -144,6 +146,7 @@ export function ContributionForm(p: {
         }
         if (control.current.signal.aborted) return;
         committed = true;
+        exit.release();
         setValue("");
         setConfirmed(false);
         current.current.onShared(apartmentId, result.outcome);
@@ -159,7 +162,7 @@ export function ContributionForm(p: {
   return (
     <ApartmentPage
       title={isPrivate ? "添加私人记录" : "添加门禁码"}
-      onBack={p.onBack}
+      onBack={() => exit.back(p.onBack)}
       footer={
         <>
           <FormError message={error} />
@@ -191,30 +194,21 @@ export function ContributionForm(p: {
         disabled={busy}
         request={request}
         onChange={changeAddress}
+        onEdit={() => setAddressEdited(true)}
       />
-      <Field
-        label="门禁码"
-        placeholder="保留 #、* 和开头的 0"
+      <AccessCodeFields
         value={value}
-        editable={!busy}
-        onChangeText={(v) => {
+        address={privateAddressText(address)}
+        scope={scope}
+        disabled={busy}
+        onValueChange={(v) => {
           setValue(v);
           setConfirmed(false);
         }}
-        maxLength={32}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <Field
-        label={isPrivate ? "门别" : "门别（选填）"}
-        placeholder="例如：行人门"
-        value={scope}
-        editable={!busy}
-        onChangeText={(v) => {
+        onScopeChange={(v) => {
           setScope(v);
           setConfirmed(false);
         }}
-        maxLength={100}
       />
       {!isPrivate && !p.canContribute ? (
         <Text style={{ color: tokens.color.textSecondary }}>
@@ -222,51 +216,12 @@ export function ContributionForm(p: {
         </Text>
       ) : null}
       {!isPrivate ? (
-        <Pressable
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: confirmed, disabled: busy || !ready }}
+        <CheckField
+          label="我已核对公寓地址，并有权共享"
+          checked={confirmed}
           disabled={busy || !ready}
-          onPress={() => setConfirmed((v) => !v)}
-          style={{
-            flexDirection: "row",
-            gap: 10,
-            alignItems: "center",
-            minHeight: 48,
-          }}
-        >
-          <View
-            style={{
-              height: 20,
-              width: 20,
-              borderWidth: 1.5,
-              borderColor: confirmed
-                ? tokens.color.brandPrimary
-                : tokens.color.controlBorder,
-              borderRadius: 4,
-              backgroundColor: confirmed
-                ? tokens.color.brandPrimary
-                : tokens.color.surface,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {confirmed ? (
-              <Text style={{ color: tokens.color.onBrand, fontSize: 14 }}>
-                ✓
-              </Text>
-            ) : null}
-          </View>
-          <Text
-            style={{
-              fontSize: 14,
-              lineHeight: 22,
-              color: tokens.color.ink,
-              flex: 1,
-            }}
-          >
-            我已核对公寓地址，并有权共享
-          </Text>
-        </Pressable>
+          onChange={setConfirmed}
+        />
       ) : null}
     </ApartmentPage>
   );

@@ -132,17 +132,26 @@ export function validateDataset(raw: unknown): QualityDataset {
   }
   return raw as unknown as QualityDataset;
 }
-const address = (s: string) => s.normalize("NFC").trim().replace(/\s+/g, " ");
+const address = (s: string) =>
+  s
+    .normalize("NFC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ", ");
 const issueKey = (s: readonly string[]) => [...s].sort().join("\u0000");
 // Multiset matching: duplicate candidates count, unknown truth values are not
 // treated as correct passwords, and a wildcard cannot steal a known match.
-function pairing(expected: Expected[], actual: Extracted[]) {
+function pairing(
+  expected: Expected[],
+  actual: Extracted[],
+  compareReview: boolean,
+) {
   if (expected.length !== actual.length) return false;
   const assigned = new Map<number, number>();
   const matches = (e: Expected, a: Extracted) =>
     address(e.address) === address(a.address) &&
     (e.value === null || e.value === a.value) &&
-    issueKey(e.issues) === issueKey(a.issues);
+    (!compareReview || issueKey(e.issues) === issueKey(a.issues));
   function assign(e: number, seen: Set<number>): boolean {
     for (let a = 0; a < actual.length; a++)
       if (!seen.has(a) && matches(expected[e]!, actual[a]!)) {
@@ -167,7 +176,10 @@ export function measure(expected: Expected[], actual: Extracted[]) {
       ? JSON.stringify(expected.map((e) => e.value).sort()) ===
         JSON.stringify(actual.map((a) => a.value).sort())
       : null,
-    pairing_and_review_exact: pairing(expected, actual),
+    address_code_pairs_exact: eligible
+      ? pairing(expected, actual, false)
+      : null,
+    pairing_and_review_exact: pairing(expected, actual, true),
     negative_false_positive: expected.length === 0 && actual.length > 0,
     negative_candidate_count: expected.length === 0 ? actual.length : 0,
   };
@@ -203,6 +215,9 @@ export function evaluateDataset(data: QualityDataset) {
       samples: rows.length,
       known_code_samples: known.length,
       code_exact_samples: known.filter((r) => r.code_exact).length,
+      address_code_pairs_exact_samples: known.filter(
+        (r) => r.address_code_pairs_exact,
+      ).length,
       pairing_and_review_exact_samples: rows.filter(
         (r) => r.pairing_and_review_exact,
       ).length,

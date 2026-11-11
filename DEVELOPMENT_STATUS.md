@@ -2,6 +2,21 @@
 
 Updated 2026-11-11 (America/Los_Angeles). Current sources: [product baseline](产品基线.md), [docs index](docs/README.md), [master plan 1.70](docs/Abasong_V12.1_项目开发与验收总计划.md), [scoped readiness](docs/product/V3.2_开发基准状态.json). Prior current documents are [fully archived](docs/archive/app-alignment-audit-20261105/README.md).
 
+## Handover backlog — V12 PRD gaps (2026-11-11)
+
+Source: section-by-section comparison of the [V12 PRD](Abasong_PRD_V12_首版产品需求.md) against snapshot `43d4a26` (`claude/handover-snapshot-20261111`). Owner approved these priorities on 2026-11-11. None is started. They do not change the DTL-04 / M7 cloud sequence above.
+
+| ID | Priority | PRD | Gap | Done when |
+|---|---|---|---|---|
+| H-01 | High, before any public distribution | §13 | Report entry exists only on circle detail. Requests, driver profiles, conversations and access records have none. Whether the report endpoint accepts non-circle objects is unverified. | Each of those surfaces can file a report that reaches the `reports` table, with isolated HTTP/DB checks. |
+| H-02 | High, required for App Store | §13 | No account deletion entry or endpoint. `deletion_jobs` has no code reference. No written retention policy. | Owner-approved retention rules, an in-app deletion request, and a worker job that executes and audits it. |
+| H-03 | High, before the pilot | §14 | No instrumentation. Match accuracy, time-to-card, response rate and cost cannot be measured. | A minimal privacy-reviewed event set covering the §14 table, with no access codes, message bodies or precise GPS. |
+| H-04 | Medium | §5.3, §15 | Feedback window is configured as 7 days everywhere. The 7 vs 30 day comparison was not run. | Owner freezes the value and config version, with acceptance samples recorded. |
+| H-05 | Medium, may be waived | §11.3 | Mapbox vs Google field comparison on 30–50 apartments has only an empty template. | Results recorded, or an explicit owner decision to waive. |
+| H-06 | Medium | §5.4, §13 | No outward-facing channel for property or rights-holder objections. Operator pause tooling exists. | A published contact route and an operator runbook step linking it to pause/stop commands. |
+
+Open questions from the same comparison: whether dropping applicant experience from applications (§6.2) was intentional, and whether V1 request kinds (`partial_route`, `vehicle_help` and others) are still reachable through the API.
+
 **iPhone 14 Pro pilot installation — 2026-11-11.** Recompiled signed Release build 5 from the build 4 baseline plus the My Team visibility fix. All 239 file-backed mobile business sources were compared to build 4. Only the expected MyAccount source differs. The wired iPhone 14 Pro had no prior pilot installation and was covered by an existing organization development profile. Strict signature verification, installation, device inventory for version 0.1.0 (5), launch and process status passed. The account menu after physical sign-in was not exercised. [Acceptance](docs/technical/B5_02_本人DSP团队与发布身份实施验收.md#iphone-14-pro-内测安装).
 
 **My Team entry — 2026-11-10.** Every signed-in account can open My Team from the secondary section of My, including delivery-only accounts without an existing team. Team summary loading is independent of profile and availability loading. The current prototype uses the same rule. On the iOS and Android simulators, the delivery-only fixture opened the empty editor, created the team on iOS, updated the carrier on Android, and reloaded the update on iOS. Isolated API checks confirmed that business contact sharing was still off and a second account could not read the owner's own-team detail. The test database and role were cleaned. Passed 627 workspace tests, lint, types and builds, and 40 browser prototype checks. The change is local and has not been installed on the signed pilot. [Acceptance](docs/technical/B5_02_本人DSP团队与发布身份实施验收.md#我的团队入口补验).

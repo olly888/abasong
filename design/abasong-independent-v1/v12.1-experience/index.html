@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>Abasong · 交互原型</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../v12.1-import/tokens.css?v=brand-v1" />
+    <link rel="stylesheet" href="prototype.css?v=brand-v1" />
+    <link rel="stylesheet" href="foundation.css?v=door-options" />
+    <link rel="stylesheet" href="imports.css?v=brand-v1" />
+    <link rel="stylesheet" href="library.css?v=brand-v1" />
+    <link rel="stylesheet" href="experience.css?v=home-states" />
+    <link rel="stylesheet" href="circle.css?v=brand-v1" />
+    <link rel="stylesheet" href="account.css?v=brand-v1" />
+    <link rel="stylesheet" href="invitation.css?v=brand-v1" />
+    <link rel="stylesheet" href="delivery.css?v=brand-v1" />
+    <link rel="stylesheet" href="ux-v34.css?v=v34-1" />
+    <link rel="stylesheet" href="muse-v35.css?v=m11" />
+    <link rel="stylesheet" href="muse-v351-detail.css?v=compact-results" />
+  </head>
+  <body>
+    <div class="studio">
+      <aside class="lab left">
+        <div class="studio-brand">
+          <img class="brand-wordmark" src="../assets/brand/abasong_wordmark_primary.svg" alt="Abasong 阿巴送" />
+        </div>
+        <p class="version">V12.1 · V3.2 体验提案</p>
+        <h1>让每一次<br />配送，更顺利。</h1>
+        <div class="flow-links">
+          <button data-ex-flow="apartments">
+            01 <span>公寓查码与贡献</span>
+          </button>
+          <button data-ex-flow="jobs">02 <span>找活与仓库取件</span></button>
+          <button data-ex-flow="people">
+            03 <span>找人及可接活声明</span>
+          </button>
+          <button data-ex-flow="publish">04 <span>发布临时需求</span></button>
+        </div>
+        <div class="lab-control">
+          <label for="scenario">公寓场景</label
+          ><select id="scenario">
+            <option value="normal">附近三处公寓</option>
+            <option value="empty">当前公寓暂无密码</option>
+            <option value="offline">密码读取失败</option>
+            <option value="street">附近没有公寓</option>
+            <option value="house">独立住宅，附近无公寓</option>
+            <option value="nearby-error">附近公寓读取失败</option>
+            <option value="denied">位置未开启</option>
+            <option value="unqualified">没有查看资格</option>
+            <option value="guest">尚未登录</option>
+            <option value="contribution-save-error">贡献保存失败</option>
+          </select>
+        </div>
+        <div class="lab-control">
+          <label for="distance-quality">公寓距离状态</label>
+          <select id="distance-quality">
+            <option value="fresh">定位正常</option>
+            <option value="approximate">位置较粗略</option>
+            <option value="stale">位置已过期</option>
+          </select>
+          <label for="support-scenario">找活／找人场景</label
+          ><select id="support-scenario">
+            <option value="ready">正常结果</option>
+            <option value="empty">无符合条件的结果</option>
+            <option value="error">读取失败</option>
+            <option value="slow">慢响应 · 2秒</option>
+          </select>
+        </div>
+        <div class="lab-control">
+          <label for="circle-state">司机圈场景</label
+          ><select id="circle-state">
+            <option value="normal">正常动态</option>
+            <option value="empty">暂无动态</option>
+            <option value="loading">加载中</option>
+            <option value="error">加载失败</option>
+            <option value="source-unavailable">关联需求不可查看</option>
+            <option value="deleted">动态已删除</option>
+          </select>
+        </div>
+        <label class="lab-check"
+          ><input
+            type="checkbox"
+            id="circle-post-fail"
+          />下一次动态发布失败</label
+        >
+        <label class="lab-check"
+          ><input type="checkbox" id="circle-reply-fail" />下一次回复失败</label
+        >
+        <div class="lab-control">
+          <label for="circle-photo-state">图片场景（TEST 合成）</label
+          ><select id="circle-photo-state">
+            <option value="normal">正常图片</option>
+            <option value="gallery-denied">相册权限拒绝</option>
+            <option value="camera-denied">相机权限拒绝</option>
+            <option value="read-error">选图读取失败</option>
+            <option value="view-error">查看加载失败</option>
+          </select>
+        </div>
+        <label class="lab-check"
+          ><input
+            type="checkbox"
+            id="circle-image-fail"
+          />下一张图片上传失败</label
+        >
+        <label class="lab-check"
+          ><input
+            type="checkbox"
+            id="account-save-fail"
+          />下一次资料或接活保存失败</label
+        >
+        <div class="lab-control">
+          <label for="account-peer-state">TEST 对方团队联系方式</label
+          ><select id="account-peer-state">
+            <option value="private">默认不公开</option>
+            <option value="open">本人主动公开</option>
+            <option value="deleted">账号注销</option>
+          </select>
+        </div>
+        <label class="lab-check"><input type="checkbox" id="delivery-save-fail" />下一次配送需求保存失败</label>
+        <label class="lab-check"
+          ><input
+            type="checkbox"
+            id="pickup-map-fail"
+          />取件地图暂时不可用</label
+        >
+        <label class="lab-check"
+          ><input type="checkbox" id="send-fail" />下一条合成消息发送失败</label
+        >
+        <label class="lab-check"
+          ><input type="checkbox" id="change-price" />报名时条件发生变化</label
+        >
+        <div class="lab-control">
+          <label for="invite-scenario">邀请操作（仅演示）</label>
+          <select id="invite-scenario">
+            <option value="ready">正常预览</option>
+            <option value="share-error">系统分享不可用</option>
+            <option value="save-denied">保存权限未允许</option>
+            <option value="save-error">图片保存失败</option>
+            <option value="copy-error">复制失败</option>
+          </select>
+          <label for="invite-receiver-state">接收邀请状态（仅演示）</label>
+          <select id="invite-receiver-state">
+            <option value="unavailable">尚未开放分发</option>
+            <option value="installed">已安装 · 模拟打开</option>
+            <option value="ios-pilot">iOS 内测 · 模拟入口</option>
+            <option value="android-unavailable">Android 尚未开放</option>
+            <option value="wechat">微信浏览器 · 模拟跳转受阻</option>
+          </select>
+          <button class="reset" data-action="invite-open">邀请司机页</button>
+          <button class="reset" data-action="invite-preview">接收邀请页</button>
+          <p>邀请仅为交互演示，二维码为 TEST 保留域名。不会发送、访问剪贴板、保存相册或下载 App。</p>
+        </div>
+        <p><a href="review.html">核心任务与开发基准</a></p>
+        <button class="reset" data-ex-flow="reset">重置本次体验</button>
+      </aside>
+      <main class="device" id="device" aria-label="Abasong 手机原型">
+        <div class="statusbar">
+          <b>2:20</b>
+          <div class="device-island"></div>
+          <span aria-hidden="true">▮▮▮ &nbsp; ▰</span>
+        </div>
+        <div id="app"></div>
+        <div id="overlay"></div>
+        <div id="toast" role="status" aria-live="polite"></div>
+      </main>
+      <aside class="lab right">
+        <div class="review-label">当前页面</div>
+        <h2 id="screen-title">首页 · 公寓</h2>
+        <p id="screen-id" class="version">H01</p>
+        <div class="review-rule"></div>
+        <h3>本轮先体验</h3>
+        <p>
+          横滑公寓卡 → 展开／收起 →
+          贡献密码。切换找活或找人，选区域、日期，再查看列表与详情。
+        </p>
+        <p>
+          需求详情点取件地址，查看地图、复制或选择导航；关闭地图及返回时保留原来的上下文。
+        </p>
+        <div class="review-rule"></div>
+        <h3>原型范围</h3>
+        <p class="prototype-note">
+          示意地图与合成业务资料，不调用定位、Mapbox、OCR、短信或消息服务。密码均为虚构。城市和商业地址仅作地点示例，不表示实际仓库、承运商或用工关系。导航按钮由你点击后才打开外部地图。
+        </p>
+        <p class="prototype-note">
+          演示时间固定为2026年11月4日2:20
+          PM（洛杉矶），用于核对今天、明天与到期。地图尺度为交互示意。真实覆盖、原生操作与现场待后续验收。
+        </p>
+        <div class="review-rule"></div>
+        <label for="inspect-page" class="review-label">页面目录</label
+        ><select id="inspect-page" aria-label="页面目录">
+          <option value="">选择页面检查</option>
+        </select>
+        <div hidden>
+          <button data-import-lab="mixed">混合截图</button
+          ><input type="checkbox" id="import-submit-fail" /><input
+            type="checkbox"
+            id="import-ocr-fail"
+          />
+        </div>
+      </aside>
+    </div>
+    <script src="icons.js?v=brand-v1"></script>
+    <script src="app.js?v=v34-1"></script>
+    <script src="imports.js?v=door-options"></script>
+    <script src="library.js?v=door-options"></script>
+    <script src="photo-search.js?v=r3-delivery"></script>
+    <script src="experience.js?v=v34-1"></script>
+    <script src="circle.js?v=v34-1"></script>
+    <script src="account.js?v=v34-1"></script>
+    <script src="invitation.js?v=brand-v1"></script>
+    <script src="delivery.js?v=v34-1"></script>
+    <script src="muse-v35.js?v=compact-results"></script>
+    <script src="muse-v35-delivery.js?v=m5-01"></script>
+  </body>
+</html>

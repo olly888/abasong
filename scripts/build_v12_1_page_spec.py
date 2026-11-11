@@ -8,12 +8,11 @@ def page(id,name,surface,entry,info,actions,states,api,req,accept):
 page('A02','手机号登录','全屏二级页；保留来源意图','报名、联系、看受控资料或我的登录入口','返回|+1区号选择与手机号|获取验证码|必要协议链接', '返回::G03::退出登录并回原来源，不丢草稿|获取验证码::A03::校验格式后请求OTP，禁重复请求','默认|号码错误|发送中|限流/失败|来源需求已终止','', 'AUTH,V12-15','登录前后身份变化不复用上一个账号的缓存；无业务资料在此页公开。')
 page('A03','验证码与恢复','二级页，同一认证流程','A02发送成功','掩码手机号|验证码输入|重发倒计时|更改号码|验证错误', '更改号码::A02::清除验证码并保留安全来源|验证::A04::Auth成功后bootstrap，老用户直接回来源|重发::A03::遵守供应商限流，不默认每点发短信','输入|验证中|错误/过期|重发受限|登录成功回跳','bootstrapMe','AUTH,V12-15','OTP不进日志；登录后重新请求来源对象，不能自动提交旧报价报名。')
 page('A04','首次最小资料','二级页，仅新账号','A03新账号','显示名|保存按钮；经验和车辆不强制在首次查码前填写','保存::H01::bootstrap完成后回原意图，H01只是无来源时默认','空|保存中|校验失败|资格待审核','bootstrapMe,patchMyProfile','AUTH','显示名不能自带官方核验身份；登录不自动授予密码资格。')
-page('H01','首页·公寓','首页根状态，公寓卡收起/展开','首次启动、首页导航、主动切公寓','搜索、消息|公寓/找活/找人|定位与公寓建筑|收起：名称/英文地址/首条密码/贡献时间|展开：各条密码、必要门别/时段、实测时间、反馈、添加|独立＋发需求|三项底部导航', '搜索::S01::带公寓视图|消息::M01::开统一消息|点卡/拖手柄::H01::同一面板展开，不新建一层页|不是这栋::L01::候选/手动纠错|点密码::B01::大字模式|有用/没用::H01::作用于本记录；失败回滚，重排保留阅读锚点|添加/更新::B02::公寓ID带入；新增记录不覆盖历史|＋发需求::P01::独立于卡片|定位::H01::主动解除选择锁定后重新匹配','冷启动|唯一命中收起|历史展开|多候选|暂无密码|无固定码|无资格|定位拒绝|粗略/旧位置|弱网/底图失败|记录失效/撤回|反馈提交失败','resolveApartment,getApartment,readAccessRecords,feedbackAccess','V12-01,V12-02,V12-03,V12-04,V12-05,V12-06,V12-07,V12-08','首次默认公寓；卡外无有用/没用/更新行，无楼宇/入口/停车菜单；GPS不抢走已选公寓。')
+page('H01','首页·公寓','首页根状态，公寓卡收起/展开','首次启动、首页导航、主动切公寓','搜索、消息|公寓/找活/找人|前台真实定位/稳定匹配/建筑高亮/建筑内门牌号|收起：名称/英文地址/完整首条密码（仅阅读，不跳转）/贡献时间|展开：各条密码、必要门别/时段、实测时间、反馈、添加|独立＋发需求|三项底部导航', '搜索::S01::带公寓视图|消息::M01::开统一消息|点卡/拖手柄::H01::同一面板展开，不新建一层页|不是这栋::L01::候选/手动纠错|有用/没用::H01::作用于本记录；失败回滚，重排保留阅读锚点|添加/更新::B02::公寓ID带入；新增记录不覆盖历史|＋发需求::P01::独立于卡片|定位::H01::主动解除选择锁定后重新匹配','冷启动|唯一可信范围稳定命中收起|建筑映射缺失|来源过期|手动选择锁定|历史展开|多候选|暂无密码|无固定码|无资格|定位拒绝|粗略/旧位置|弱网/底图失败|记录失效/撤回|反馈提交失败','resolveApartment,getApartment,getApartmentMapContext,readAccessRecords,feedbackAccess','V12-01,V12-02,V12-03,V12-04,V12-05,V12-06,V12-07,V12-08','首次默认公寓；卡外无有用/没用/更新行，无楼宇/入口/停车菜单；GPS不抢走已选公寓；最近点不构成自动认定，未经核对不画建筑关联门牌号，来源无效不绘制。')
 page('H02','首页·找活','与H01同一路由的地图状态','首页切找活','搜索与消息|区域需求标记/聚合|日期/支援类型筛选|选中卡：配送区、具体日期/时段、数量/人数、最低量、报价单位、截止/缺口|独立发需求与导航', '点标记::H02::选中并更新卡，不切身份|卡片::D01::看需求条件|搜索/筛选::S01::找区域/承运商/支援类型|＋发需求::P01::统一发布|列表::H02::同视图切可操作需求列表，不叠新导航','有需求|列表替代地图|无需求|区域无结果|过期/关闭即时移除|加载失败','listRequests,listRegions','V12-09,ADD-01,ADD-03','地图定位配送区，取件地区另列；所有配送支援明确当次件数与时间，不伪造报价或到场承诺；只有一条可见选中卡。')
 page('H03','首页·找人','与H01同一路由的地图状态','首页切找人','区域标记/聚合|服务区域/相关经验筛选|司机卡：显示名、声明时段、容量、经验来源|我的可接活入口|发需求与导航', '司机卡::D02::看最小档案|搜索/筛选::S01::按服务区/承运商|设置可接活::U03::本人主动开放|列表::H03::同状态可操作司机列表|＋发需求::P01::统一入口','有效可用司机|列表替代|无人可接|司机未在线但声明有效|时段刚到期|加载失败','listAvailableDrivers,listRegions','V12-13,V12-14','不画精确车点/轨迹；不以关闭App判不可用；区域中心不叫司机当前位置。')
 page('S01','搜索与筛选','二级搜索页，依来源切内容','H01/H02/H03搜索','返回/输入/清除|公寓：自有地址名称，外部临时候选独立来源|找活：区域、承运商、支援类型、日期|找人：区域、承运商经验|结果列表/空态', '返回::H01::回原地图视图与选中对象，非固定切公寓|选择公寓::H01::锁定用户选中公寓后查权限与记录|选择需求::D01::展示当前版本|选择司机::D02::展示最小档案|选择外部地址::L01::仅用于当前定位候选，不默认入永久库','空查询|输入联想|自有结果|仅外部地址|无结果|失败|筛选后无结果','searchApartments,suggestAddresses,retrieveAddress,listRequests,listAvailableDrivers','V12-02,V12-08,V12-18,ADD-03','不持久保存敏感搜索历史；切来源调整字段，不用全站万能搜索混放私人账号。')
 page('L01','选择正确公寓','地图底部选择面板','多候选、不是这栋、外部地址选择','当前候选地址/名称|地图候选对应高亮|手动搜索|没有这栋/纠错', '选这栋::H01::锁定并查询，不拿最近邻码代替|搜索地址::S01::带当前搜索词|没有这栋::B02::先提交公寓提议再贡献，均待规则核验','多栋|仅地址无公寓|候选已撤回|提交纠错失败','getApartment,proposeApartment,correctApartment','V12-02,V12-08','外部临时地址不自动变有权长期存储的自有公寓；无匹配能退出。')
-page('B01','密码大字','轻量全屏/弹层','H01点单条密码','所属地址|该条密码/进入方式大字|必要适用范围|关闭','关闭::H01::恢复原展开位置','正常|记录已撤回/资格失效|重新加载失败','readAccessRecords','V12-07,V12-17','退出清敏感内存；不提供批量复制/分享密码按钮；不把已失效缓存继续显示。')
 page('B02','贡献密码/进入方式','编辑面板，可随键盘展开','H01添加/更新，L01无这栋','固定所属公寓/纠错入口|密码或进入方式|可选门别/时段|有权分享来源确认|保存；未知公寓先提议地址','保存::H01::新增待审核/可用记录或同码验证；不覆盖原记录|取消::G03::未提交内容仅内存保留，本轮不将明文草稿持久化|改公寓::L01::先确认目标再提交','空|同码验证|新记录|来源未确认|权限不足|待审核|保存失败|公寓提议待审核','contributeAccess,proposeApartment','V12-04,V12-05,V12-06,V12-07','保存成功状态准确，不将pending放进可用首码；0/O、1/I、#/*可辨；请求重试复用幂等键。')
 page('P01','统一发需求选择','首页工具展开面板，合并旧P02','任一地图＋发需求、司机圈发需求','配送找人/车辆求助/其他配送求助|配送子类：部分包裹/整条线路/增加司机|增加司机指本次配送临时缺人','配送类型::P03::创建对应表单，保留类型草稿|车辆/其他::P04::打开共用短表单|取消::H01::恢复来源视图','一级类别|配送子类|已有草稿选择','createDraft','V12-09,ADD-01','司机DSP共用，无角色工作台；发布后改类型走复制新草稿。')
 page('P03','配送找人发布/编辑','全屏表单；类型内短分组','P01或P09编辑/复制','基础：承运商、配送区、单一取件区|时间：具体日期、开始时段与有效截止|数量：当次总量/人数/拆分/最低量|报价金额+单位或议价|理货/接手条件|相关配送经验要求|可选：车型/特殊配送条件与私下付款约定|提交摘要与发布', '发布::D01::先校验和摘要确认，再发布成功回本人详情|保存草稿::U04::仅本人可见|返回::G03::选择保留草稿或放弃，不丢状态|切换类型::P01::仅未发布可切；已发布不提供此项','部分包裹|整线|临时增人|联系议价|最低量错误|不同取件/配送区域|编辑版本冲突|提交中/失败','createDraft,updateRequest,publishRequest','V12-09,V12-11,ADD-01,ADD-02,ADD-03,ADD-04','每条配送支援明确当次件数/时段；不设招聘周期/试线/带教流程；无代收/支付选项；未填金额不显示$0。')
@@ -30,7 +29,7 @@ page('C02','动态与回复','二级详情','C01、U04、通知','作者/时间|
 page('C03','发布互助文字','二级编辑页','C01发文字','文本输入|可选关联本人已发布需求|发布按钮','发布::C02::成功进动态，不构造假互动|返回::G03::保存普通文字草稿或放弃','空|字数上限|发布中/失败|关联需求不可见','createPost,listMyRequests','V12-16','无多图上传、租房保险交易表单；页面不加品牌口号长说明。')
 page('U01','我的','底部导航根页','我的导航','本人资料|可接活状态|我的发布/报名/贡献|常联系|组织来源|设置','资料::U02::修改本人|可接活::U03::声明时段与区域|我的发布::U04::需求/文字|我的报名::U05::当前与历史|我的贡献::U06::本人记录|常联系::U08::私人列表|组织来源::U10::最小来源|设置::U11::账户/通知/位置','未登录|正常|资格待核验|可用/到期|账号受限','getMe,getMyAvailability','V12-13,V12-20','没有钱包/收入/结算/配送数据；身份不触发另一端工作台。')
 page('U02','资料与经验','二级编辑页','U01、报名补充','显示名、简短介绍|自报承运商经验/区域|车型|已有核验记录只读|保存','保存::U01::回实际来源，报名返回P08保留条件|返回::G03::普通草稿提示保留或放弃','普通|长名/空名错误|自报与核验分开|保存失败','patchMyProfile,getMe','V12-13','本人无法把source改verified；核验资料不被自报PATCH覆盖。')
-page('U03','可接活设置','二级编辑页','U01/H03','可接活开关|开始/结束时段|可去区域|可接容量|最晚结束时间|保存','保存::U01::当前时段生效，回来源|关闭可接活::U03::停止找人推荐，不删除会话','未设置|已开启|时间错误|过期|容量为空|版本冲突','getMyAvailability,setMyAvailability,listRegions','V12-13,V12-14','切回承运商App仍按声明时段有效；不请求后台轨迹权限。')
+page('U03','可接活设置','二级编辑页','U01/H03','可接活开关|可接日期与开始/结束时间|愿意去的1–5个区域|最多可接包裹（选填）|保存及错误/读取最新状态','保存::U01::当前时段生效，回来源|关闭可接活::U03::停止找人推荐，不删除会话','未设置|已开启|时间错误|过期|容量为空|版本冲突','getMyAvailability,setMyAvailability,listRegions','V12-13,V12-14','切回承运商App仍按声明时段有效；不请求后台轨迹权限。')
 page('U04','我的发布','二级列表，需求/动态分段','U01','需求：草稿/开放/终态、件数/本次人数缺口、更新时间|动态：正文摘要/状态','需求::P09::本人管理模式|动态::C02::本人更多有删除|草稿::P03::继续编辑','草稿|已发布|已结束|文字|空|失败','listMyRequests,listMyPosts','V12-12,V12-16','本人列表不能把草稿放进公开圈子；旧报名不搬到复制需求。')
 page('U05','我的报名','二级列表','U01','配送区域/支援类型|本次到达时间/容量|报名版本/当前状态|撤回操作','需求::D01::当前条件|联系::M02::已有会话|撤回::G03::撤本人报名，不替发布者扣回缺口','已报名|撤回|条件变更|需求结束|空','listMyApplications,withdrawApplication','V12-10,V12-11','撤回不删除双方历史消息；未接受新价不显示已同意。')
 page('U06','我的贡献','二级列表；元数据与正文分开','U01','所属公寓、创建/同码验证类型、时间|待审核/可用/失效/撤回|不默认加载密码正文','看公寓::H01::重新校验资格再读正文|撤回本人创建::G03::停止展示；同码验证者不能撤别人原记录|查看审核状态::U06::只读本人元数据','创建|同码验证|待审核|已失效|已撤回|资格过期仍可看本人元数据','listMyContributions,withdrawAccess','V12-07,V12-17','不能为看本人审核进度强制继续持有access.read；不从列表泄露失效正文。')
@@ -85,6 +84,17 @@ for p in pages:
 page('U09','公寓详情与我的记录','二级页；私存与共享两个分区','U06保存公寓、H01收藏','地址与自定区域|我的记录：仅自己可见|共享资料：按当前资格读最新|添加/修改/删除私存|主动共享与地图入口','修改私存::U09::只改本人记录，不覆盖共享库|共享这条::U06::确认范围后复用正式贡献链路，私人备注不共享|设置区域::U09::维护本人区域标签|移除本人公寓::G03::确认私人范围，不删除公共记录|在地图查看::H01::选择该公寓后读当前资料','收藏无私存|有私人记录|共享资料可读|共享资格待审核|未收录公寓私存|编辑与删除|主动共享确认|私存/共享分别失败','', 'ADD-07','收藏关联公寓ID；本人私存和共享资格分离；不展示他人私存，修改私存不隐式修改共享。')
 pages[-1]['api_contract_status']='T27/T32–T35待扩展私存/收藏/共享/纠正/统计接口'
 
+# ADD-19: each owner manages a publication source, not the canonical secret.
+for p in pages:
+ if p['id']=='U06':
+  p.update(information=['我保存的/我共享的','本人来源状态、首次时间、门别、版本','有权查看的有效密码直显；真实有用/不能用反馈，不虚构查看人数'],actions=[dict(label='纠正密码',target='B02',result='固定公寓，正确密码直接共享并结束本人旧来源；他人和旧反馈保留'),dict(label='查看公寓',target='H01',result='按公寓ID重新校验资格')],states=['加载/分页','有效共享','本人已纠正','历史已停止共享','同码其他来源保留','无查看资格可管理元数据','无贡献资格不可纠正','弱网重试同键','版本冲突刷新','写入成功读取失败'],api_operations=['listMyContributions','getMyContributionSummary','getMyContribution','correctMyContribution'],requirements=['ADD-07','ADD-19'])
+  p['api_contract_status']='A1：仅纠正及元数据；普通撤回接口已移除，误共享仅内测管理员处理'
+  p['requirements'].append('ADD-20')
+ if p['id']=='B02':
+  p['requirements'].append('ADD-19')
+  p['states']+=['纠正本人来源/固定公寓','版本冲突不覆盖','成功返回共享管理']
+  p['api_operations']+=['getMyContribution','correctMyContribution']
+
 # Latest contribution-first entry hierarchy; no extra route required.
 for p in pages:
  if p['id'] in ('H01','U01','U06','B02','B04','B05'):
@@ -116,6 +126,26 @@ for p in pages:
   p['api_operations']=['getMyApartmentEntry','patchMyApartmentEntry','deleteMyApartmentEntry','createMyPrivateRecord','patchMyPrivateRecord','deleteMyPrivateRecord','shareMyPrivateRecord','readAccessRecords']
   p['api_contract_status']='本人记录/收藏/主动共享契约已生成；未知公寓共享提议、纠正、统计仍待后续任务'
 
+# 2026-10-30 approved unified home map controls and location recovery.
+for p in pages:
+ if p['id'] in ['H01','H02','H03']:
+  p['information'].append('搜索右侧消息；可见地图右下定位，发需求位于定位上方；地图归属避让卡片')
+  p['acceptance']+=' 三模式共享会话位置；同坐标拖图后可回位，卡片和工具栏通过camera padding避让；GPS失败、无收录与查询失败分别显示，拒绝权限可打开系统设置。'
+ if p['id']=='H01':
+  for a in p['actions']:
+   if a['label']=='定位':a['result']='刷新本人位置并回到可见地图中心；保留阅读中的卡片，候选确认后再改变公寓'
+ if p['id'] in ['H02','H03']:
+  p['information'].append('模式栏右侧列表/地图切换；切换后保留筛选、选中项、视野和列表滚动')
+  p['actions'].append(dict(label='回到我的位置',target=p['id'],result='独立定位，不被列表切换替代，不公开本人精确位置'))
+ if p['id']=='U01':
+  p['acceptance']+=' 设置只在页面底部菜单，不放顶部重复入口。'
+ if p['id']=='M01':
+  p['acceptance']+=' 首页搜索右侧为消息主入口，打开本二级页；我的顶部不重复放入口。'
+
+for p in pages:
+ if p['id']=='S01':
+  p['requirements'].append('ADD-16')
+  p['planned_address_photo']='已批准拍面单查地址：搜索内相机、端侧提取、同页核对后查找、复用地址候选；不进密码贡献批次、不移动GPS。L1已记录；L2搜索页与原生相机已接入，双端/真机验收按专项记录，详见ADD-16。'
 outdir=ROOT/'docs/product'
 outdir.mkdir(parents=True,exist_ok=True)
 coverage_path=ROOT/'design/abasong-independent-v1/v12.1/coverage.json'
@@ -133,14 +163,203 @@ for p in pages:
 for p in pages:
  if p['id'] in ['B04','B05','B06','U09'] and p['id'] in extension_made:
   p['prototype_status']='已制作本地合成交互·待用户评审；非真实OCR'
-(outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-10-30','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；新B04/B05/B06合成交互待评审，接口待扩展','pages':pages},ensure_ascii=False,indent=2)+'\n')
+# Current on-device batch API implementation; cloud OCR/upload remains planned.
+for p in pages:
+ if p['id']=='B04':
+  p['api_operations']=['getImportPolicy','listImportBatches','createImportBatch','getImportBatch','registerImportLocalSource','submitImportDeviceExtraction']
+  p['information']=[x.replace('逐图上传状态','逐图识别与草稿状态') for x in p['information']]
+  p['states']=[x.replace('部分上传失败','部分识别失败').replace('上传中','识别中') for x in p['states']]
+  for a in p['actions']:
+   if a['label']=='识别截图':a['result']='端侧识别；主动保存草稿或提交时登记本人加密批次'
+ if p['id']=='B05':
+  p['api_operations']=['listImportCandidates','editImportCandidate','confirmImportCandidate','confirmImportSelection','editImportBatchMode','deleteImportDraft']
+ if p['id']=='B06':
+  p['api_operations']=['getImportBatch','listImportSources','commitImportCandidates','cancelImportBatch']
+ if p['id'] in ['B04','B05','B06']:
+  p['api_contract_status']='15个端侧批次接口已实现并经本地HTTP/数据库验证；云端上传/识别3操作仍planned，真机与完整状态验收未完成'
+ if p['id'] in ['H01','B02','U01','U06']:
+  p['pending_extension']='端侧识别+加密草稿/确认/两阶段批次已接入；真实来源样本、完整原生异常/真机、云识别与贡献统计仍待验收或开发'
+# LA expansion + weak-network recovery acceptance slice.
+for p in pages:
+ if p['id']=='H01':
+  p['acceptance']+=' 精度圆触及相邻建筑或无边界地址点时不自动认栋；配置版本变化重新计停留；地址-only样本不伪造建筑轮廓。'
+ if p['id']=='B04':
+  p['states']+=['草稿加载超时可重试','来源已登记但无已保存识别结果']
+  p['actions'].append(dict(label='重试加载草稿',target='B04',result='仅重读本人未完成批次元数据；恢复网络后继续'))
+  p['acceptance']+=' 无已保存候选时返回选图页，用户重新选图后明确开始新批次，旧批次按TTL保留；不声称原图或未保存OCR可恢复。'
+ if p['id']=='B05':
+  p['states']+=['修改响应丢失后幂等恢复','原公寓已不可用','异端编辑冲突']
+  p['acceptance']+=' 修改和模式切换丢失响应先复用原键/原体；不吸收异端修改；旧公寓404可恢复其他候选，401/503仍报错可重试。'
+ if p['id']=='B06':
+  p['states']+=['提交完成但响应丢失']
+  p['acceptance']+=' 复用逐项稳定提交ID恢复结果，不重复私存；超时和退出取消分别处理，不自动重试写入。'
+# 2026-10-31 interrupted on-device recognition and atomic draft restoration.
+for p in pages:
+ if p['id']=='B04':
+  p['states']+=['识别中可停止','多图暂停后继续剩余图片','单图超时仍等待原生任务结束']
+  p['information'].append('逐图已处理/总数进度；识别中显示停止识别')
+  p['actions'].append(dict(label='停止识别',target='B05',result='立即停止等待与后续图片，保留已完成图片结果；没有结果则留在选图页'))
+  p['acceptance']+=' 原生任务未结束前不并发发起新识别，迟到结果不得覆盖当前结果；不把停止等待说成系统OCR已硬终止。'
+ if p['id']=='B05':
+  p['states']+=['移除最后一条后保存空草稿']
+  p['actions'].append(dict(label='继续处理剩余截图',target='B05',result='仅处理未完成图片，不重跑已识别或人工补充的图片；已提交范围锁定时显式转新草稿，旧结果保留'))
+  p['acceptance']+=' 已有且未锁定草稿可保存全部移除，首次无内容不创建空批次；失败图片可单图重试。'
+ if p['id']=='B06':
+  p['states']+=['恢复分页失败保留当前批次']
+  p['acceptance']+=' 新批次元数据与全部候选读取完成前，不替换当前草稿和重试状态。'
+# Driver-first screenshot UI: secondary controls are progressively disclosed.
+for p in pages:
+ if p['id']=='B04':
+  p['information']=['标题与返回','已保存且非空的上次进度（仅空选择时）','所选图片和数量、继续添加/移除','底部唯一主动作：未选图选择截图，选图后识别N张截图','识别中仅处理进度与停止识别']
+  p['acceptance']+=' 不让0条空进度占用入口；识别中不重复显示不可操作的主按钮；不改变空草稿有限留存。'
+ if p['id']=='B05':
+  p['information']=['顶部返回与更多','资料数量/已选数量','卡片直接显示地址和密码；必要问题突出，未知门别不作常驻占位','每条可选择与编辑；移除和原图在编辑层','底部清晰显示保存方式及更改入口、一次核对声明和唯一确认N条按钮']
+  p['actions']=[a for a in p['actions'] if a['label']!='稍后继续']
+  p['actions'] += [dict(label='更多：保存进度',target='B05',result='本人受保护草稿，仍需主动保存；首次空内容不创建批次'),dict(label='更多：继续添加截图',target='B04',result='保留当前已识别内容，不重复处理已完成图片'),dict(label='更改保存方式',target='B05',result='显式选择共享并保存或仅自己保存；原有清确认/范围锁保持')]
+  p['states']+=['更多辅助操作菜单','保存方式选择菜单']
+  p['acceptance']+=' 正常页没有常驻保存草稿/继续选图大按钮；不展示批次ID、版本或技术备注；完整且无异常记录可批量选中，异常不擅自发布。'
+# ADD-10: continuous foreground location and arrival-first home states.
+for p in pages:
+ if p['id']=='H01':
+  p['information'] += ['无候选：低高度共享公寓密码入口；无重复搜索/定位','附近候选与当前公寓分开；已核对门外到达区域可匹配']
+  p['states'] += ['门外可信入口稳定命中','街道附近候选','普通住宅或商业无相关候选','覆盖未知中性状态','详情展开蓝点持续更新','已离开清除自动卡','入口重叠只给候选']
+  p['requirements'].append('ADD-10')
+  p['actions'].append(dict(label='共享公寓密码',target='B04',result='进入截图贡献，不推断当前位置为某公寓'))
+  p['acceptance'] += ' ADD-10：蓝点、相机和选卡解耦，前台持续定位，展开锁定只影响选卡；门外识别须已核对独立到达区域；无候选不当成定位失败/非公寓；正常空态没有重复搜索或重新定位。'
+  p['acceptance'] += ' 停留同时核对位置稳定：同公寓换门移动、相对起始点累计超过15米或建筑/入口依据改变，重计8秒；这是待现场校准的开发窗口，不是入口区域或行驶判断，不保存GPS轨迹。'
+# ADD-11: user-confirmed codes publish directly; no per-record operator queue.
+for p in pages:
+ if p['id'] in ['H01','B02','B05','B06','U06','U09']:
+  p['requirements'].append('ADD-11')
+  p['acceptance']+=' ADD-11：司机确认后的正常密码直接共享，无人工审核等待；已共享不等于已验证有效。同码不刷新贡献时间，不自动增加有用票。'
+ if p['id']=='B02':
+  p['information']=[x.replace('保存；未知公寓先提议地址','确认共享；未匹配地址可先私存') for x in p['information']]
+  p['actions']=[{**a,'result':a['result'].replace('新增待审核/可用记录或同码验证','直接共享新记录或合并同码贡献')} for a in p['actions']]
+  p['states']=[x.replace('公寓提议待审核','未匹配公寓待补充').replace('待审核','历史尚未发布') for x in p['states']]
+ if p['id']=='B06':
+  p['information']=[x.replace('私存/共享/同码/待审核/待处理/失败独立计数','私存/共享/同码/待处理/失败独立计数；历史未发布不计入共享成功') for x in p['information']]
+  p['states']=[x.replace('待审核','历史尚未发布') for x in p['states']]
+# ADD-12: a shared contribution menu and fresh screenshot sessions.
+for p in pages:
+ if p['id'] in ['H01','U01','U06','B04','B05','B06']:
+  p['requirements'].append('ADD-12')
+ if p['id'] in ['H01','U01','U06']:
+  p['acceptance']+=' ADD-12：通用贡献按钮复用我的页面的截图识别/快速填写菜单；返回原页面，不按当前位置预选公寓。'
+  for a in p['actions']:
+   if a['label'] in ['共享公寓密码','贡献公寓密码']:
+    a['label']='贡献公寓密码';a['result']='打开统一贡献菜单：截图识别或快速填写；取消留在原页面'
+ if p['id']=='B04':
+  p['information']=['标题与返回','每次新进入都是空白选择，无旧批次列表或恢复请求','所选图片和数量；本次可继续添加/移除','底部唯一主动作：选择截图或识别N张截图','识别中处理进度与停止识别']
+  p['api_operations']=['getImportPolicy']
+ if p['id'] in ['B04','B05','B06','U06']:
+  p['states']=[x for x in p['states'] if not any(w in x for w in ['恢复','草稿','进度','继续上次'])]
+  p['actions']=[a for a in p['actions'] if not any(w in a['label'] for w in ['保存进度','稍后继续','上次','恢复'])]
+ if p['id']=='B05':
+  p['information']=[x.replace('顶部返回与更多','顶部返回与添加截图') for x in p['information']]
+  for a in p['actions']:
+   a['label']=a['label'].replace('更多：继续添加截图','添加截图')
+  p['states']=[x for x in p['states'] if x!='更多辅助操作菜单']
+ if p['id']=='B06':
+  p['actions']=[{**a,'result':a['result'].replace('恢复待确认项','在本次内处理待确认项')} for a in p['actions']]
+ for key in ['information']:
+  p[key]=[x.replace('导入记录与继续入口','已保存/共享资料').replace('本人导入批次进度和继续处理入口','已保存/共享资料') for x in p[key]]
+ if p['id'] in ['B04','B05','B06']:
+  p['states']+=['退出后重新进入为空','短暂切换保留本次内容']
+  p['acceptance']=p['acceptance'].replace('恢复草稿', '本次重试').replace('空草稿', '空批次')
+  p['acceptance']+=' ADD-12覆盖旧续填要求：移除历史恢复/保存进度，仅同次失败重试。退出有未提交内容只提醒一次，空白或全完成不提醒；重进不恢复，已保存或共享资料保留。'
+# Current page definitions must not retain historical resume actions.
+for p in pages:
+ if p['id']=='U06':
+  p['information']=[x for x in p['information'] if '本人导入批次' not in x]
+  p['actions']=[a for a in p['actions'] if a['label']!='继续导入']
+  p['acceptance']=p['acceptance'].replace('本人审核进度','本人贡献记录')
+ if p['id']=='B04':
+  p['entry']='H01/U01/U06统一贡献菜单、本人私存入口或B02截图添加'
+  p['actions']=[a for a in p['actions'] if a['label']!='重试加载草稿']
+  for a in p['actions']:
+   if a['label']=='识别截图':a['result']='端侧识别并核对；仅确认提交时登记本人加密批次'
+   if a['label']=='返回':a['result']='有未提交内容只确认一次；离开清除本次内容，成功记录保留'
+  p['acceptance']='单/多图无须逐条录地址；不读取其他APP账户，不自动公开原图或识别正文。每次新进入为空，无历史加载请求。原生任务未结束前不并发新识别，迟到结果不覆盖当前内容。停止后保留本次已完成结果，后续只处理剩余图片。系统相册、短暂后台和临时网络错误不清空本次内容；主动离开有未提交内容只提醒一次，空白或全完成不提醒。'
+ if p['id']=='B05':
+  p['entry']='本次B06识别完成或待继续处理'
+  p['acceptance']='不强制逐条打勾；OCR不能代替用户确认，低置信项不默认共享。地址与密码直显；顶部直接添加截图，编辑和返回选图保留本次内容。不显示历史续填、保存进度或技术批次信息。失败可在本次内重试，修改或模式响应丢失复用原请求；共享范围锁定后不可扩大。确认后正常记录直接共享，同码不刷新贡献时间、不自动投有用票。'
+ if p['id']=='B06':
+  p['entry']='本次B04启动识别、B05确认提交'
+  p['api_operations']+=['createImportBatch','registerImportLocalSource','submitImportDeviceExtraction']
+  p['actions']=[a for a in p['actions'] if a['label']!='返回我的贡献']
+  p['actions'].append(dict(label='完成',target='G03',result='返回发起页面；成功记录保留，无历史续填'))
+  p['acceptance']='识别、提交、保存与共享结果分开；短暂切后台保留本次会话。稳定提交标识支持同次重试，不重复私存或共享已成功项，不自动重试写入。未提交内容退出仅一次确认，全部完成直接返回来源页面；下次进入空白选图。取消未提交内容不删除已成功记录。'
+for p in pages:
+ if p['id'] in ['H01','H02','H03']:
+  p['requirements'].append('ADD-13')
+  p['information'].append('左上模式栏下原生英尺/英里比例尺，随缩放更新；列表/展开详情随地图隐藏')
+  p['acceptance']+=' ADD-13：俯视北向地图；普通门牌取供应商数据不补猜，公寓模式首次定位17级、找活找人14级；主动选中建筑按可视区域适配且不超过18级；手动缩放不被连续GPS打断。'
+ if p['id']=='H01':
+  p['information'].append('普通建筑灰色门牌；选中建筑蓝色高亮与内部强调门牌，保留中庭空洞；无轮廓不画建筑')
+  for a in p['actions']:
+   if a['label']=='定位':a['result']='回到新鲜蓝点并解除选卡锁定，恢复自动匹配'
+# ADD-14: current address search/destination behaviour, separate from GPS arrival.
+for p in pages:
+ if p['id'] in ['S01','L01','H01']:p['requirements'].append('ADD-14')
+ if p['id']=='S01':
+  p['information']=['返回/输入/清除','公寓：2字符、300ms并行目录和Mapbox候选，完整地址去重','名称或门牌街道＋城市/州','供应商归属、加载/错误重试','找活找人筛选仍按原范围后置']
+  p['states']+=['部分服务失败保留可用结果','取消旧查询','过期候选重新搜索']
+  p['acceptance']+=' ADD-14：不保存历史；点选后收键盘；唯一明确匹配才打开公寓，多个实体选择、未匹配临时目的地；不移动GPS蓝点。'
+ if p['id']=='L01':
+  p['information']=['当前候选名称/完整地址','多个匹配公寓可选','未匹配显示暂未匹配到公寓资料和搜索其他地址','临时目的地菱形标记/供应商归属']
+  p['actions']=[dict(label='选择公寓',target='H01',result='加载明确选中公寓，仍检查密码资格'),dict(label='搜索其他地址',target='S01',result='重新搜索'),dict(label='回到当前位置',target='H01',result='清理临时目的地，恢复GPS位置和原匹配流程')]
+  p['api_operations']=['retrieveAddress','getApartment']
+  p['acceptance']='ADD-14：不把附近公寓当作匹配，不从临时供应商结果直接建档；完整街道门牌/城市/州一致且250米内方可匹配，多实体由用户选择。临时结果只在会话内存，切后台清理。'
+ if p['id']=='H01':p['states']+=['手选外部地址未匹配','外部地址多实体待选择']
+# ADD-16: photo search is a state of S01, not another batch/page.
+for p in pages:
+ if p['id']=='S01':
+  p['information']+=['公寓搜索框相机入口：拍面单查地址','端侧单张识别；完整收件地址核对/修改；主操作查找此地址、次操作重新拍照']
+  p['states']+=['相机权限请求/拒绝','系统单张拍照/取消','正在识别/取消等待','唯一地址待核对','多个地址待选择','未识别到收件地址','重新拍照失败保留输入','退出/迟到结果丢弃']
+  p['actions']+=[dict(label='拍面单查地址',target='S01',result='只拍一张；端侧识别后回同页核对，确认前不调用地址接口'),dict(label='查找此地址',target='S01',result='核对可编辑地址后请求既有联想；候选仍由用户点选'),dict(label='重新拍照/取消',target='S01',result='重拍；取消保留原输入与核对态，迟到结果不能覆盖新输入')]
+  p['acceptance']+=' ADD-16：不上传原图、不记录整段OCR；拒绝权限可手输；临时照片等原生任务实际结束再清理，退出无跨次续填。真实拍摄与DEV合成UI分别验收。'
+# ADD-17: address-first compact cards; display only, no matching/data-policy change.
+for p in pages:
+ if p['id'] in ['H01','S01','L01','B02','U06','U09']:
+  p['requirements'].append('ADD-17')
+  p['acceptance']+=' ADD-17：地址优先，门牌完整加粗，街道同行；收起/列表单行末尾省略，详情可读完整地址。方向、字母、分数和连字符不丢失；展示拆分不用于匹配。'
+ if p['id']=='H01':
+  p['information']=[s.replace('名称/英文地址','单行门牌号+街道').replace('贡献时间','贡献时间与用户名') for s in p['information']]
+  p['information']+=['收起仅街道单行；展开补城市/州/邮编与公寓名','门禁密码小标签同行；原样保留#、*、前导零，4–6位为常见格式而非硬性限制','贡献元信息：今天8:20 AM贡献·用户名；历史明确日期，按记录当地时区']
+  p['acceptance']+=' 密码完整显示且不跳放大页；长值可换行，系统字号不禁用。长用户名收起可省略，展开显示完整；未知显示名仅回退司机，不使用手机号。'
+ if p['id'] in ['S01','L01']:
+  p['information']+=['候选第一行门牌+街道，城市/州/邮编及公寓名作为次级核对信息']
+ if p['id']=='B02':p['information']+=['目标公寓地址优先且完整可核对；名称次级']
+ if p['id']=='U06':p['information']+=['保存/共享列表先地址再名称；现有权限下密码直显保持']
+ if p['id']=='U09':p['information']+=['完整地址优先于公寓名称；共享记录贡献时间与用户名']
+# Automatic evidence expires independently of fresh GPS / slow responses.
+for p in pages:
+ if p['id']=='H01':
+  p['states']+=['离开时查询未返回','离开后密码或建筑迟到','轮廓请求失败仍可查码']
+  p['acceptance']+=' 弱网：新位置离开15米停留窗口或变粗略，先撤销自动卡和高亮、使旧查询失效，再查询；GPS持续更新不延长旧匹配，20秒未获新匹配即撤销。迟到密码/轮廓不得恢复已撤销对象。手动阅读仍锁定，定位按钮立即解除旧选卡。新公寓自动到达时，未手动拖缩地图可按当次GPS一次回到17级；已经拖缩则保留用户视野，不以公寓质心移动蓝点。'
+for p in pages:
+ if p['id']=='H01':
+  p['states']+=['附近多公寓横向滑动，无可见页码，收起等高','滑动期间立即隐藏旧密码，迟到响应丢弃','Mapbox临时公寓地址待核对','阅读锁定及主动定位恢复附近推荐']
+  p['api_operations']+=['discoverNearbyApartments','discoverMapboxApartments']
+  p['requirements']+=['ADD-18']
+  p['information']=[s.replace('门禁密码小标签同行；','不显示附近公寓、页码或门禁密码标签；') for s in p['information']]
+  p['information']+=['ADD-18：附近200米公寓横向滑卡，独立等高卡片，门牌街道同行；有权密码直显，无资料可添加，不依赖入口或8秒停稳。']
+  p['acceptance']+=' ADD-18最新视觉：收起卡标准字号192点等高，移除附近公寓、页码、门禁密码标签。保留地址、密码、时间和用户名，读取失败仅一条状态与重试。大字号统一适配高度；长值完整换行并允许卡内滚动，不截断秘密。辅助序号仅通过无障碍语义表达。附近发现与入口/8秒停稳解耦；前文精确到达规则只约束辅助到达判断。'
+  p['acceptance']+=' ADD-18范围刷新：每次新鲜精确定位先按各来源原始查询点、边界距离与期限保守撤下不能保证仍在200米内的自动候选，不等待慢查询；地图迟到结果不续期目录。手动阅读保持，点击定位清除旧密码、高亮及候选地址列表，再重新查找。可选地图故障仍可读目录，未知地址不读取邻近其他公寓密码。'
+ if p['id']=='B02':
+  p['api_operations']+=['contributeAtConfirmedAddress']
+  p['requirements']+=['ADD-18']
+  p['states']+=['目标公寓读取失败与重试','提交中锁定与重复点按']
+  p['actions']+=[dict(label='重新读取公寓',target='B02',result='保留本次填写，重新核对原目标；明确选择其他公寓后才改目标')]
+  p['acceptance']+=' ADD-18贡献回程：共享成功按实际提交公寓ID返回首页同一地址，不以最近公寓或上一页推断；无返回栈不发送GO_BACK。目标读取失败不自动切为新建地址，重试保留密码，明确更换后才填写其他地址。提交期间锁定输入与目标，连续点按不重复发起；同次不确定结果重试复用键。私人条目创建与密码写入分开保留意图，第二步失败只改密码时复用条目创建键，避免重复地址；退出不跨会话续填。'
+(outdir/'V12.1_页面与状态目录.json').write_text(json.dumps({'version':'V12.1','date':'2026-11-01','note':f'{len(pages)}设计节点含截图扩展；{sum(len(p["states"]) for p in pages)}状态待逐项验证。原认可原型为36节点/207状态历史范围；B04/B05/B06合成交互与原生业务证据分开；端侧批次15接口已实现，云识别3接口仍规划','pages':pages},ensure_ascii=False,indent=2)+'\n')
 with (outdir/'V12.1_页面制作清单.csv').open('w',encoding='utf-8-sig',newline='') as f:
  fields=['id','name','surface','batch','state_count','api_operations','status']
  w=csv.DictWriter(f,fieldnames=fields,lineterminator="\n");w.writeheader()
  for p in pages:
-  batch='01-公寓闭环' if p['id'] in ['A02','A03','A04','H01','S01','L01','B01','B02','B04','B05','B06','U06','U09','G01','G03'] else '02-找人找活' if p['id'] in ['H02','H03','P01','P03','P04','D01','P08','P09','P10','D02','U03','G02','X01'] else '03-消息与常联系' if p['id'] in ['M01','M02','U08'] else '04-社区与我的'
+  batch='01-公寓闭环' if p['id'] in ['A02','A03','A04','H01','S01','L01','B02','B04','B05','B06','U06','U09','G01','G03'] else '02-找人找活' if p['id'] in ['H02','H03','P01','P03','P04','D01','P08','P09','P10','D02','U03','G02','X01'] else '03-消息与常联系' if p['id'] in ['M01','M02','U08'] else '04-社区与我的'
   w.writerow(dict(id=p['id'],name=p['name'],surface=p['surface'],batch=batch,state_count=len(p['states']),api_operations=','.join(p['api_operations']),status=p['prototype_status']))
-lines=['# Abasong V12.1 页面功能、信息与交互规格','', '日期：2026-10-30。状态：含截图P0扩展；新节点合成交互已制作待评审，接口待扩展，不代表原生/OCR已实现。产品依据：[V12 PRD](../../Abasong_PRD_V12_首版产品需求.md)及[V12.1补充决策](../Abasong_V12.1_需求补充与原型决策.md)。颜色/组件依据：[V3设计系统](../design/Abasong_设计系统_V3_原型制作基线.md)。', '', '## 1. 全局规则','', '产品只做临时配送支援与灵活运力协作，不设置长期招聘/司机招募流程。根导航固定首页/司机圈/我的；公寓/找活/找人为同一首页路由的状态。二级页面和公共面板可暂时隐藏导航，返回恢复来源视图、选中对象、筛选与滚动。登录后回到发起动作前的对象，但重新读取当前条件，不自动提交过期报名。', '', '每个界面只保留必要信息和一项当前主动作；空/错误/审核/来源/地图归属属于必要状态，设计说明、策略备注、合成数据说明留在原型外壳，不能成为产品首页常驻文案。', '', '普通草稿可保留；手动密码/进入信息明文只在编辑会话内存保留，不写通用持久草稿。截图批次另采用本人专属、有限保留的服务端加密草稿，详见[截图补充](Abasong_V12.1_截图批量贡献需求补充.md)。用户切账号、退出或资格被撤销后清理敏感缓存。需求、私聊、进入资料各自鉴权，不因显示同一地图就共享访问权。', '', '菜单按对象权限显示：发布者管理自己的需求，报名者管理自己的报名；司机与DSP不切换客户端或导航。当前没有支付、交接履约、司机排名、会员密码付费墙。', '', '原型使用合成资料和模拟请求；每个状态应可在原型外的场景控制中触发。开发说明/测试开关不出现在产品画面。', '', '## 2. 页面总览','', '| ID | 名称 | 载体 | 状态数 |','|---|---|---|---|']
+lines=['# Abasong V12.1 页面功能、信息与交互规格','', '日期：2026-11-01。状态：含截图P0扩展；端侧15接口与部分原生流程已有验证，新增长任务/恢复状态仍待逐项原生验收，云上传/OCR3接口仍规划。产品依据：[V12 PRD](../../Abasong_PRD_V12_首版产品需求.md)及[V12.1补充决策](../Abasong_V12.1_需求补充与原型决策.md)。颜色/组件依据：[V3设计系统](../design/Abasong_设计系统_V3_原型制作基线.md)。', '', '## 1. 全局规则','', '产品只做临时配送支援与灵活运力协作，不设置长期招聘/司机招募流程。根导航固定首页/司机圈/我的；公寓/找活/找人为同一首页路由的状态。二级页面和公共面板可暂时隐藏导航，返回恢复来源视图、选中对象、筛选与滚动。登录后回到发起动作前的对象，但重新读取当前条件，不自动提交过期报名。', '', '每个界面只保留必要信息和一项当前主动作；空/错误/审核/来源/地图归属属于必要状态，设计说明、策略备注、合成数据说明留在原型外壳，不能成为产品首页常驻文案。', '', '普通草稿可保留；手动密码/进入信息明文只在编辑会话内存保留，不写通用持久草稿。截图仅保留本次添加内容，不提供跨次续填；服务端批次只支持本次提交一致性与重试，既有有限留存策略保留，详见[ADD-12](Abasong_V12.1_统一贡献入口与单次截图添加.md)。用户切账号、退出或资格被撤销后清理敏感缓存。需求、私聊、进入资料各自鉴权，不因显示同一地图就共享访问权。', '', '菜单按对象权限显示：发布者管理自己的需求，报名者管理自己的报名；司机与DSP不切换客户端或导航。当前没有支付、交接履约、司机排名、会员密码付费墙。', '', '原型使用合成资料和模拟请求；每个状态应可在原型外的场景控制中触发。开发说明/测试开关不出现在产品画面。', '', '## 2. 页面总览','', '| ID | 名称 | 载体 | 状态数 |','|---|---|---|---|']
 for p in pages: lines.append(f"| {p['id']} | {p['name']} | {p['surface']} | {len(p['states'])} |")
 lines+=['','## 3. 逐页规格','']
 for p in pages:
@@ -148,6 +367,8 @@ for p in pages:
  lines+=['','| 元素/动作 | 目标 | 操作结果 |','|---|---|---|']+[f"| {a['label']} | {a['target']} | {a['result']} |" for a in p['actions']]
  lines+=['', '**必须制作的状态：** '+'；'.join(p['states'])+'。','', '**接口 operationId：** '+(p['api_contract_status'] if p.get('api_contract_status') else '、'.join(p['api_operations']) if p['api_operations'] else 'Auth SDK或纯客户端/来源动作；不新建无业务价值的接口')+'。', '', '**验收：** '+p['acceptance'], '', '**需求映射：** '+ '、'.join(p['requirements'])+'。','']
  if p.get('pending_extension'): lines += ['**截图扩展：** '+p['pending_extension'],'']
-lines+=['## 4. 制作与变更规则','', '本次40个节点包含B04/B05/B06及重新定义的公寓U09；原36节点原型保留历史，不等于40条原生独立路由，也不是所有状态各复制一页。原有V1.1的B03/P02/P06/P07/C05/M03/U07/U12–U14在本版合并；C04生活专用表单/非公寓综合收藏/完整组织成员管理继续后置；U09仅做公寓私存工具。', '', '每个动作目标必须能到达，空白按钮不得伪装完成。接口由openapi-v12.yaml提供，operationId在目录中可机器检查；该文件保留名称，版本升为12.1。新增功能需更新补充决策→页面目录→接口/数据→原型与验收，不在画稿时临时加业务。', '', '后续先做公寓完整闭环，再做找人找活/分享，再做消息与常联系，最后补最小社区/我的；所有批次遵循同一套品牌和组件，不把多个历史版本混在同一原型。']
+ if p.get('planned_address_photo'): lines += ['**计划增量：** '+p['planned_address_photo']+' [ADD-16](Abasong_V12.1_拍面单查地址补充.md)。','']
+lines+=['## 4. 制作与变更规则','', '本次39个节点包含B04/B05/B06及重新定义的公寓U09；B01大字页按ADD-15移除，密码在卡片直接阅读。原36节点原型保留历史，不等于39条原生独立路由，也不是所有状态各复制一页。原有V1.1的B03/P02/P06/P07/C05/M03/U07/U12–U14在本版合并；C04生活专用表单/非公寓综合收藏/完整组织成员管理继续后置；U09仅做公寓私存工具。', '', '每个动作目标必须能到达，空白按钮不得伪装完成。接口由openapi-v12.yaml提供，operationId在目录中可机器检查；该文件保留名称，版本升为12.1。新增功能需更新补充决策→页面目录→接口/数据→原型与验收，不在画稿时临时加业务。', '', '后续先做公寓完整闭环，再做找人找活/分享，再做消息与常联系，最后补最小社区/我的；所有批次遵循同一套品牌和组件，不把多个历史版本混在同一原型。']
+lines+=['','','2026-11-01 ADD-18：H01默认改为附近200米公寓独立悬浮滑卡，卡间透出地图，当前卡直接读取有权共享资料；精确入口和8秒停稳不再是展示前置。B02支持未收录地址核对后直接共享，新地址位置使用服务端永久许可编码。细则与用户最新独立卡片裁决见[附近滑卡补充](Abasong_V12.1_附近公寓滑卡补充.md)。','','2026-11-01 ADD-18紧凑卡片覆盖：首页收起卡192点等高，移除“附近公寓”、页码与“门禁密码”标签，保留地址/原样密码/时间/用户名及必要操作。状态变化不改变卡高；展开/滑动阅读锁、错误和无密码区分、密码请求隔离继续执行。完整规则见ADD-18。']
 (outdir/'Abasong_V12.1_页面功能信息与交互规格.md').write_text('\n'.join(lines)+'\n')
 print(f'{len(pages)} design nodes; {sum(len(p["states"]) for p in pages)} required state variants')

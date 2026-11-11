@@ -1,0 +1,251 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Text, View } from "react-native";
+import { randomUUID } from "expo-crypto";
+import type { components } from "@abasong/contracts";
+import { tokens } from "@abasong/ui";
+import { ActionButton, ApartmentPage, FormError } from "../auth/AuthControls";
+import { AccountError } from "../auth/api-client";
+import { AddressLine } from "./AddressLine";
+import { unspecifiedDoor } from "./DoorScopeField";
+import type { ContributionRequest } from "./contribution-address-search";
+import { createContributionAttempt } from "./contribution-attempt";
+import { AccessCodeFields } from "./AccessCodeFields";
+import { CheckField } from "../ui/CheckField";
+import { typeStyles } from "../ui/foundation";
+import { useAccessFormExit } from "./useAccessFormExit";
+type S = components["schemas"];
+export function CorrectionForm(p: {
+  id: string;
+  request: ContributionRequest;
+  canReadOriginal?: boolean;
+  onBack: () => void;
+  onSaved: (result: S["ContributionChangeResult"]) => void;
+  testControls?: ReactNode;
+}) {
+  const { id } = p;
+  const latest = useRef(p);
+  latest.current = p;
+  const controller = useRef(new AbortController()),
+    attempt = useRef(createContributionAttempt(randomUUID)),
+    original = useRef("");
+  const [source, setSource] = useState<S["ContributionSummary"] | null>(null),
+    [value, setValue] = useState(""),
+    [scope, setScope] = useState(""),
+    [attested, setAttested] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState<string | null>(null),
+    [conflict, setConflict] = useState(false),
+    [committed, setCommitted] = useState(false);
+  const changed =
+    value !== original.current || (!!source && scope !== source.scope_label);
+  const exit = useAccessFormExit(!committed && (changed || attested), busy);
+  const request = <T,>(
+    path: string,
+    options: Parameters<ContributionRequest>[1] = {},
+  ) =>
+    latest.current.request<T>(path, {
+      ...options,
+      signal: options.signal ?? controller.current.signal,
+    });
+  async function load() {
+    const signal = controller.current.signal;
+    setSource((old) => (old?.id === id ? old : null));
+    setBusy(true);
+    setError(null);
+    try {
+      const path = "/v1/me/contributions/" + id;
+      const detail = latest.current.canReadOriginal
+        ? await request<S["ContributionDetail"]>(path, { signal }).catch(
+            () => null,
+          )
+        : null;
+      if (signal.aborted) return;
+      const s =
+        detail?.source ??
+        (await request<S["ContributionSummary"]>(path + "/summary", {
+          signal,
+        }));
+      if (signal.aborted) return;
+      if (s.id !== id) throw new Error("贡献资料与所选记录不一致，请重新读取");
+      setSource(s);
+      setScope(s.scope_label);
+      setConflict(false);
+      original.current = s.can_correct ? (detail?.value ?? "") : "";
+      setValue(original.current);
+      setAttested(false);
+    } catch (e) {
+      if (!signal.aborted)
+        setError(e instanceof Error ? e.message : "暂时无法读取贡献");
+    } finally {
+      if (!signal.aborted) setBusy(false);
+    }
+  }
+  useEffect(() => {
+    controller.current = new AbortController();
+    attempt.current = createContributionAttempt(randomUUID);
+    const current = controller.current,
+      policy = attempt.current;
+    void load();
+    return () => {
+      current.abort();
+      policy.dispose();
+    };
+  }, [id]);
+  function back() {
+    exit.back(() => latest.current.onBack());
+  }
+  async function submit() {
+    if (
+      !source ||
+      source.id !== id ||
+      !source.can_correct ||
+      !changed ||
+      !value.trim() ||
+      !scope.trim() ||
+      !attested ||
+      conflict ||
+      committed
+    )
+      return;
+    const body = {
+      expected_version: source.version,
+      value: value.trim(),
+      scope: { label: scope.trim() },
+      source_attested: true as const,
+    };
+    const intent = attempt.current.begin(source.id, JSON.stringify(body));
+    if (!intent) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await request<S["ContributionChangeResult"]>(
+        "/v1/me/contributions/" + source.id + "/corrections",
+        { method: "POST", body, key: intent.recordKey },
+      );
+      attempt.current.finish(true);
+      if (controller.current.signal.aborted) return;
+      exit.release();
+      setCommitted(true);
+      setValue("");
+      setAttested(false);
+      latest.current.onSaved(result);
+    } catch (e) {
+      attempt.current.finish();
+      if (controller.current.signal.aborted) return;
+      if (
+        e instanceof AccountError &&
+        ["VERSION_CONFLICT", "SOURCE_UNAVAILABLE"].includes(e.code)
+      )
+        setConflict(true);
+      setError(e instanceof Error ? e.message : "纠正失败，请重试");
+    } finally {
+      if (!controller.current.signal.aborted) setBusy(false);
+    }
+  }
+  return (
+    <ApartmentPage
+      title="纠正门禁码"
+      onBack={() => {
+        if (!busy) back();
+      }}
+      footer={
+        <>
+          <FormError message={error} />
+          {source?.can_correct && !committed ? (
+            conflict ? (
+              <ActionButton
+                label="刷新当前记录"
+                variant="secondary"
+                busy={busy}
+                onPress={() => void load()}
+              />
+            ) : (
+              <ActionButton
+                label="确认纠正并共享"
+                busy={busy}
+                disabled={
+                  !changed || !value.trim() || !scope.trim() || !attested
+                }
+                onPress={() => void submit()}
+              />
+            )
+          ) : null}
+        </>
+      }
+    >
+      {p.testControls}
+      {!source ? (
+        <ActionButton
+          label="重新读取"
+          secondary
+          busy={busy}
+          onPress={() => void load()}
+        />
+      ) : (
+        <>
+          <View style={{ gap: 8 }}>
+            <Text style={typeStyles.label}>公寓地址</Text>
+            <AddressLine line={source.address_label} expanded />
+          </View>
+          {committed ? (
+            <>
+              <Text>已纠正并共享</Text>
+              <ActionButton label="返回共享记录" onPress={back} />
+            </>
+          ) : !source.can_correct ? (
+            <>
+              <Text>
+                {source.sharing_paused
+                  ? "该公寓暂不共享门禁码"
+                  : "这条贡献当前不能纠正"}
+              </Text>
+              <ActionButton label="返回共享记录" secondary onPress={back} />
+            </>
+          ) : (
+            <>
+              <AccessCodeFields
+                correction
+                value={value}
+                address={source.address_label}
+                scope={scope}
+                disabled={busy || conflict}
+                onValueChange={(v) => {
+                  setValue(v);
+                  setAttested(false);
+                }}
+                onScopeChange={(v) => {
+                  setScope(v || unspecifiedDoor);
+                  setAttested(false);
+                }}
+              />
+              <CheckField
+                label="我已核对，并有权共享这条资料"
+                checked={attested}
+                disabled={busy || conflict}
+                onChange={setAttested}
+              />
+              <Text
+                style={{
+                  fontSize: 13,
+                  lineHeight: 20,
+                  color: tokens.color.textSecondary,
+                }}
+              >
+                纠正仅结束你的旧贡献，其他司机的贡献和反馈保留。
+              </Text>
+
+              <View>
+                <ActionButton
+                  label="取消"
+                  secondary
+                  disabled={busy}
+                  onPress={back}
+                />
+              </View>
+            </>
+          )}
+        </>
+      )}
+    </ApartmentPage>
+  );
+}

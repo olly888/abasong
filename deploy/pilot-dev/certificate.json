@@ -1,0 +1,39 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Review-only non-exportable public certificate; external DNS confirmation is required",
+  "Metadata": {
+    "Environment": "pilot-dev",
+    "Region": "us-west-1",
+    "ReviewOnly": true
+  },
+  "Parameters": {},
+  "Resources": {
+    "ApiCertificate": {
+      "Type": "AWS::CertificateManager::Certificate",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "DomainName": "api-dev.abasong.com",
+        "CertificateExport": "DISABLED",
+        "ValidationMethod": "DNS",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "CertificateArn": {
+      "Value": {
+        "Ref": "ApiCertificate"
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "prototype_version": "3.2-account",
+  "executed_at": "2026-11-05T20:49:18.130Z",
+  "scope": "isolated synthetic UI; TEST fixtures only; no Auth phone, services, roles, subscriptions or real contact; clipboard stubbed",
+  "checks": [
+    {
+      "name": "我的顺序、唯一贡献入口与底部设置，无收费/成员/重复消息",
+      "status": "PASS"
+    },
+    {
+      "name": "统一登录无司机/DSP二选一，游客不能编辑资料",
+      "status": "PASS"
+    },
+    {
+      "name": "司机资料多选与其他快递保存，回到本人资料保持",
+      "status": "PASS"
+    },
+    {
+      "name": "只找人的DSP不必填写车型，保存不改变资格且仍可选择接活",
+      "status": "PASS"
+    },
+    {
+      "name": "资料保存失败保留全部字段并重试，未伪造保存成功",
+      "status": "PASS"
+    },
+    {
+      "name": "未修改直接返回；修改后继续/保留/放弃各自明确",
+      "status": "PASS"
+    },
+    {
+      "name": "个人电话/微信只在本人资料和自愿复制处，不自动发消息",
+      "status": "PASS"
+    },
+    {
+      "name": "DSP团队可编辑多快递/多区域，数据自填不提供核验/成员/收费开关",
+      "status": "PASS"
+    },
+    {
+      "name": "业务联系方式默认关闭，填写但未开放时需求不显示",
+      "status": "PASS"
+    },
+    {
+      "name": "本人主动开放后资料/需求可查看，关闭后停止展示",
+      "status": "PASS"
+    },
+    {
+      "name": "公开业务电话仍不进入地图、列表、通知或公开分享摘要",
+      "status": "PASS"
+    },
+    {
+      "name": "开放无联系方式、坏号码与空名称均须修正",
+      "status": "PASS"
+    },
+    {
+      "name": "团队保存失败保留展示开关及输入，不更改已保存团队",
+      "status": "PASS"
+    },
+    {
+      "name": "已有团队改名不覆盖历史需求发布来源，已发布需求身份锁定",
+      "status": "PASS"
+    },
+    {
+      "name": "普通司机可个人发需求；首次添加团队后回原表单并保留条件",
+      "status": "PASS"
+    },
+    {
+      "name": "对方关闭展示或注销，大图层式联系方式不残留旧号码",
+      "status": "PASS"
+    },
+    {
+      "name": "复制失败保留可手动选择的联系文字，不假装已复制",
+      "status": "PASS"
+    },
+    {
+      "name": "关闭接活用途须确认关闭已有声明，取消不改已保存状态",
+      "status": "PASS"
+    },
+    {
+      "name": "账号退出丢弃未保存资料，迟到保存不覆盖其他界面",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430布局，个人/团队的保存和输入始终可达",
+      "status": "PASS"
+    }
+  ],
+  "passed": 20,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "human_participants": 0,
+  "native_acceptance": false
+}

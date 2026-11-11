@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-08",
+  "scope": "V3.5 M5-02 local only",
+  "native_acceptance": "pending_locked_Mac",
+  "prototype": {
+    "scope": "HTML prototype synthetic only",
+    "checks": [
+      {
+        "name": "手填：同一门别三选、取消和重新确认、原公寓回程",
+        "status": "PASS"
+      },
+      {
+        "name": "纠正：固定地址、改码重确认、可清空门别",
+        "status": "PASS"
+      },
+      {
+        "name": "截图：独立地址卡、核对后重新选择、明确共享确认",
+        "status": "PASS"
+      },
+      {
+        "name": "320/390/430：门禁输入层级与三选门别不溢出",
+        "status": "PASS"
+      }
+    ],
+    "passed": 4,
+    "failed": 0,
+    "errors": []
+  },
+  "RN_web_components": {
+    "scope": "RN-web actual components / TEST memory; not native gestures or OCR quality",
+    "checks": [
+      {
+        "name": "手填：选项可取消、#/*与前导零保留、失败可重试",
+        "status": "PASS"
+      },
+      {
+        "name": "地址更换：保留门禁码和门别，清除来源确认",
+        "status": "PASS"
+      },
+      {
+        "name": "纠正：不换地址，修改后重确认、失败保留与回程",
+        "status": "PASS"
+      },
+      {
+        "name": "纠正：历史门别保留；版本冲突锁定提交",
+        "status": "PASS"
+      },
+      {
+        "name": "截图：两条地址独立，待核对不可选，编辑清除确认且保留符号",
+        "status": "PASS"
+      },
+      {
+        "name": "320/390/430宽：三选门别、输入及底部操作无横向溢出",
+        "status": "PASS"
+      }
+    ],
+    "passed": 6,
+    "failed": 0,
+    "errors": []
+  },
+  "engineering": {
+    "files": 93,
+    "tests": 561,
+    "lint": "passed",
+    "types": "passed",
+    "build": "passed"
+  },
+  "actual_local_api": {
+    "contribution_assertions": 31,
+    "contribution_http_calls": 78,
+    "import_http_database_checks": 125,
+    "disposable_cleanup": "passed"
+  },
+  "exports": {
+    "ios": "Hermes JS passed",
+    "android": "Hermes JS passed",
+    "native_compilation": false
+  }
+}

@@ -1,0 +1,11 @@
+participant_id,role,task_id,prototype_version,device,started_at,elapsed_seconds,excluded_pause_seconds,outcome,assistance,misoperations,severity,issue_id,observation,retest_result
+D01,driver,T10,r3-images,,,,,not_run,,,,,,
+D01,driver,T11,r3-images,,,,,not_run,,,,,,
+D02,driver,T10,r3-images,,,,,not_run,,,,,,
+D02,driver,T11,r3-images,,,,,not_run,,,,,,
+D03,driver,T10,r3-images,,,,,not_run,,,,,,
+D03,driver,T11,r3-images,,,,,not_run,,,,,,
+D04,driver,T10,r3-images,,,,,not_run,,,,,,
+D04,driver,T11,r3-images,,,,,not_run,,,,,,
+D05,driver,T10,r3-images,,,,,not_run,,,,,,
+D05,driver,T11,r3-images,,,,,not_run,,,,,,

@@ -1,0 +1,70 @@
+{
+  "components": {
+    "scope": "Actual RN components on Expo web / memory TEST only / no native gestures or photo picker",
+    "checks": [
+      {
+        "name": "标签直接选择/取消；可选地区与需求独立失败；文字发布重试保持同一提交",
+        "status": "PASS"
+      },
+      {
+        "name": "我的：无重复标题、关闭失败保留开启、重试成功；重新开启只进入设置",
+        "status": "PASS"
+      },
+      {
+        "name": "个人资料复用选项；修改保存回我的",
+        "status": "PASS"
+      },
+      {
+        "name": "司机圈加载失败和空态独立；重试后可进详情；发布入口两种明确操作",
+        "status": "PASS"
+      },
+      {
+        "name": "320/390/430：标签触控与左右边界；底部发布按钮可见",
+        "status": "PASS"
+      }
+    ],
+    "passed": 5,
+    "failed": 0,
+    "errors": []
+  },
+  "prototype": {
+    "scope": "HTML prototype synthetic only",
+    "checks": [
+      {
+        "name": "我的：资料在前、接活/共享/分组工具顺序、无重复标题",
+        "status": "PASS"
+      },
+      {
+        "name": "正文优先、三标签点选取消、选填信息默认折叠",
+        "status": "PASS"
+      },
+      {
+        "name": "三图选择、失败保留文字与图片、重试发布",
+        "status": "PASS"
+      },
+      {
+        "name": "320/390/430：选项与我的工具列表不横向溢出",
+        "status": "PASS"
+      }
+    ],
+    "passed": 4,
+    "failed": 0,
+    "errors": []
+  },
+  "date": "2026-11-08",
+  "engineering": {
+    "files": 93,
+    "tests": 561,
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "http": {
+    "request_checks": 652,
+    "profile_assertions": 28,
+    "profile_http_calls": 26,
+    "disposable_database_and_roles": "cleaned"
+  },
+  "ios_android": "Hermes exports PASS; native checks pending; not a signed build",
+  "remote_ci": "not run for uncommitted worktree"
+}

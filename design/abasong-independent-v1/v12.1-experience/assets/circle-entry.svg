@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640" role="img" aria-label="TEST synthetic entrance illustration">
+<rect width="960" height="640" fill="#e7eef6"/><path d="M0 440h960v200H0z" fill="#ccd6df"/>
+<path d="M110 450V145h610v305" fill="#d0c9bf"/><path d="M150 450V180h255v270" fill="#e3dcd3"/>
+<g fill="#788b9b"><path d="M175 205h65v85h-65zM280 205h65v85h-65zM175 325h65v85h-65zM280 325h65v85h-65zM465 205h70v85h-70zM580 205h70v85h-70z"/></g>
+<path d="M465 450V330h205v120" fill="#3d5165"/>
+<g stroke="#8ca2b4" stroke-width="8"><path d="M490 330v120m30-120v120m30-120v120m30-120v120m30-120v120m30-120v120"/></g>
+<path d="M730 510H560v-30m0 0-35 35m35-35 35 35" stroke="#1467d8" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M400 640 520 450h150l180 190" fill="#f7f9fb" opacity=".65"/>
+<rect x="32" y="28" width="230" height="60" rx="12" fill="#fff" opacity=".9"/><text x="54" y="68" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#395574">TEST · ENTRY</text>
+<text x="580" y="600" font-family="Arial,sans-serif" font-size="25" fill="#4c6177">SYNTHETIC SAMPLE</text>
+</svg>

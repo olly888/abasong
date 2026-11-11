@@ -1,3 +1,6 @@
+import { clearCircleDrafts } from "../circle/session";
+import { clearProfileDraft } from "../profile/profile-session";
+import { preparePushLogout } from "../notifications/registration";
 import {
   createContext,
   useCallback,
@@ -26,6 +29,7 @@ type State = {
   session: Session | null;
   me: Me | null;
   error: string | null;
+  accountErrorStatus?: number;
 };
 type AuthValue = State & {
   pendingPhone: string | null;
@@ -35,6 +39,7 @@ type AuthValue = State & {
   completeProfile: (name: string, key: string) => Promise<void>;
   signOut: () => Promise<void>;
   retryAccount: () => void;
+  applySavedProfile: (profile: Me['profile']) => void;
 };
 const Context = createContext<AuthValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -56,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (ignoreSessionEvents.current) return;
     if (session) setRetry((value) => value + 1);
     if (owner.current !== (session?.user.id ?? null)) {
+      clearProfileDraft();
+      clearCircleDrafts();
       identityVersion.current++;
       owner.current = session?.user.id ?? null;
       setPendingPhone(null);
@@ -138,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phase: 'ready',
             me,
             error: null,
+            accountErrorStatus: undefined,
           }));
       })
       .catch((error) => {
@@ -148,6 +156,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...current,
           phase: needsProfile ? 'needs-profile' : 'error',
           me: null,
+          accountErrorStatus:
+            error instanceof AccountError ? error.status : 503,
           error: needsProfile
             ? null
             : error instanceof AccountError
@@ -212,6 +222,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((current) => ({ ...current, phase: 'ready', me, error: null }));
   }
   async function signOut() {
+    clearProfileDraft();
+    clearCircleDrafts();
     if (signingOut.current) return;
     signingOut.current = true;
     ignoreSessionEvents.current = true;
@@ -221,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setResendAt(0);
     setState({ phase: 'signing-out', session: null, me: null, error: null });
     try {
+      await preparePushLogout();
       await supabase?.auth.signOut({ scope: 'local' });
       await sessionStorage.removeItem(AUTH_STORAGE_KEY);
       await sessionStorage.removeItem(`${AUTH_STORAGE_KEY}-code-verifier`);
@@ -249,6 +262,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyCode,
         completeProfile,
         signOut,
+        applySavedProfile: (profile) => {
+          // A successful self-edit refreshes only the matching profile. Keep
+          // parent forms mounted when returning from a nested profile editor.
+          setState((current) =>
+            current.phase === 'ready' &&
+            current.me?.user_id === profile.user_id &&
+            current.session?.user.id === profile.user_id
+              ? { ...current, me: { ...current.me, profile } }
+              : current,
+          );
+        },
         retryAccount: () => {
           setState((current) => ({
             ...current,

@@ -1,0 +1,1108 @@
+{
+  "version": "V3.2-B5-05-driver-invite",
+  "date": "2026-11-06",
+  "code_audit_base": "df82aefc32bbcaef6a9671da18ad517e88c4d074",
+  "app_design": "V3.1_shared_tokens_with_scoped_V3.2_R4_and_B5_01_to_04",
+  "prototype": "3.2-r3-delivery",
+  "scope": "B5_04_scoped_local_exit_PASS_controlled_B5_05_eligible",
+  "app_changed": true,
+  "gates": {
+    "research_evidence": "documented_primary_sources_not_competitor_account_test",
+    "requirements": "scoped",
+    "core_prototype": "owner_main_flow_accepted_not_native",
+    "human_usability": "B6_01_facilitator_pack_prepared_sessions_not_scheduled",
+    "baseline_documents": "R4_13_closed_unlisted_batch_and_consolidated_core_differences",
+    "implementation": "R4_01_to_13_and_B5_01_to_04_scoped_local_exit_PASS",
+    "circle_prototype": "text_implementation_local_HTTP_DB_dual_native_PASS",
+    "circle_images": "private_media_local_HTTP_DB_dual_native_representative_PASS",
+    "my_account": "self_profile_My_switch_team_contact_scoped_local_PASS_invitation_pending",
+    "invitation_prototype": "owner_main_flow_review_recorded_native_distribution_pending",
+    "delivery_prototype": "owner_main_flow_accepted_R4_08_native_representative_checks_not_full_usability"
+  },
+  "human_testing": {
+    "drivers_required": 5,
+    "dsp_required": 2,
+    "completed": 0,
+    "template_rows": 38,
+    "results": "not_run",
+    "blocks_all_local_R4_implementation": false,
+    "results_required_for_usability_acceptance": true
+  },
+  "development_ready": true,
+  "b5_ready": true,
+  "pending": [
+    "B5_invitation",
+    "human_task_observation",
+    "B6_real_image_quality_cloud_accounts_push_package_and_field"
+  ],
+  "evidence": "../research/Abasong_竞品与替代方案证据表_2026-11-05.md",
+  "requirements": "V3.2_首版需求缺口与范围裁决.md",
+  "prototype_entry": "../../design/abasong-independent-v1/v12.1-experience/review.html",
+  "core_report": "../../design/abasong-independent-v1/v12.1-experience/core-checks.json",
+  "usability": "../usability/V3.2_五司机两DSP可用性测试包.md",
+  "differences": "../technical/V3.2_代码差异清单.csv",
+  "requirement_ids": [
+    "G01",
+    "G02",
+    "G03",
+    "G04",
+    "G05",
+    "G06",
+    "G07",
+    "G08",
+    "G09",
+    "G10",
+    "G11",
+    "G12",
+    "G13",
+    "G14",
+    "G15",
+    "G16",
+    "G17",
+    "G18",
+    "G19",
+    "G20",
+    "G21",
+    "G22",
+    "G23",
+    "G24"
+  ],
+  "difference_ids": [
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06",
+    "D07",
+    "D08",
+    "D09",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14",
+    "D15",
+    "D16",
+    "D17",
+    "D18",
+    "D19",
+    "D20",
+    "D21",
+    "D22",
+    "D23",
+    "D24"
+  ],
+  "evidence_ids": [
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "E11",
+    "E12"
+  ],
+  "user_task_ids": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09"
+  ],
+  "synthetic_checks": {
+    "map_warehouse": 34,
+    "core_tasks": 10,
+    "human_participants": 0,
+    "native_acceptance": false,
+    "circle_tasks": 19,
+    "circle_image_tasks": 17,
+    "account_tasks": 20,
+    "simplification_tasks": 12,
+    "invitation_tasks": 20,
+    "delivery_tasks": 25
+  },
+  "circle_requirements": "Abasong_V3.2_司机圈定位与最小社区补充.md",
+  "circle_report": "../../design/abasong-independent-v1/v12.1-experience/circle-checks.json",
+  "b5_follow_up": {
+    "user_task_ids": [
+      "T10",
+      "T11"
+    ],
+    "template_rows": 10,
+    "completed": 0,
+    "results": "not_run",
+    "template": "../usability/V3.2_司机圈任务记录模板.csv",
+    "blocks_core_R4_preparation": false
+  },
+  "circle_image_requirements": "Abasong_V3.2_司机圈图片发布补充.md",
+  "circle_image_report": "../../design/abasong-independent-v1/v12.1-experience/circle-images-checks.json",
+  "account_requirements": "Abasong_V3.2_我的与团队资料补充.md",
+  "account_report": "../../design/abasong-independent-v1/v12.1-experience/account-checks.json",
+  "account_follow_up": {
+    "user_task_ids": [
+      "T12",
+      "T13"
+    ],
+    "template_rows": 7,
+    "completed": 0,
+    "results": "not_run",
+    "template": "../usability/V3.2_我的团队任务记录模板.csv",
+    "blocks_core_R4_preparation": false
+  },
+  "cancelled_difference_ids": [
+    "D19"
+  ],
+  "retired_page_ids": [
+    "U08"
+  ],
+  "simplification_report": "../../design/abasong-independent-v1/v12.1-experience/simplification-checks.json",
+  "requirements_version": "two_delivery_scenarios_20261105",
+  "prototype_audit_base": "7240c03d4dd48ea7a7b33aa0f4b21946c05771e4",
+  "active_page_count": 39,
+  "state_requirements": 387,
+  "invitation": {
+    "status": "owner_main_flow_review_recorded_native_distribution_pending",
+    "requirements": "Abasong_V3.2_邀请司机功能方案.md",
+    "page_ids": [
+      "U15",
+      "X02"
+    ],
+    "difference_id": "D21",
+    "design_upgrade": "UP18",
+    "acceptance": "UX16",
+    "app_changed": false,
+    "prototype_changed": true,
+    "invite_sent": false,
+    "tests_executed": 20,
+    "native_acceptance": false,
+    "distribution_deployed": false,
+    "scope": "documents_and_independent_prototype_only",
+    "report": "../../design/abasong-independent-v1/v12.1-experience/invitation-checks.json",
+    "regressions": "../../design/abasong-independent-v1/v12.1-experience/invitation-regressions.json"
+  },
+  "deferred_page_ids": [
+    "P04"
+  ],
+  "delivery": {
+    "status": "R4_10_scoped_real_local_HTTP_dual_native_exit_PASS",
+    "requirements": "Abasong_V3.2_两场景发布与公寓卡片优化补充.md",
+    "app_changed": true,
+    "report": "../../design/abasong-independent-v1/v12.1-experience/delivery-checks.json",
+    "regressions": "../../design/abasong-independent-v1/v12.1-experience/delivery-regressions.json",
+    "p1_apartment_list_implemented": false,
+    "deferred_specialized_help": true,
+    "contracts_prepared": true,
+    "v2_routes_enabled": true,
+    "native_report": "../technical/R4_08_两场景原生表单与仓库操作验收.md",
+    "combined_report": "../technical/R4_10_本地原生业务组合实施验收.md"
+  },
+  "release_ready": false,
+  "readiness_scope": "controlled_B5_05_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
+  "owner_review": {
+    "status": "main_flows_accepted",
+    "date": "2026-11-05",
+    "evidence": "user: 原型基本体验符合预期",
+    "all_page_states_accepted": false,
+    "native_acceptance": false,
+    "human_test_participants_added": 0
+  },
+  "b5_team": {
+    "status": "scoped_local_team_HTTP_DB_native_verified",
+    "report": "../technical/B5_02_本人DSP团队与发布身份实施验收.md",
+    "migration": "V12.0020",
+    "contract_paths": 93,
+    "team_http_db_assertions": 27,
+    "physical_or_cloud_acceptance": false
+  },
+  "b5_circle": {
+    "status": "scoped_local_circle_text_HTTP_DB_dual_native_verified",
+    "report": "../technical/B5_03_司机圈文字动态回复与通知实施验收.md",
+    "migration": "V12.0021",
+    "contract_paths": 94,
+    "circle_assertions": 27,
+    "physical_or_cloud_acceptance": false,
+    "real_push_delivery_verified": false
+  },
+  "b5_circle_media": {
+    "status": "scoped_local_HTTP_DB_dual_native_representative_verified",
+    "report": "../technical/B5_04_司机圈私有图片实施验收.md",
+    "migration": "V12.0022",
+    "contract_paths": 96,
+    "media_http_checks": 41,
+    "physical_or_cloud_acceptance": false
+  },
+  "b5_invitation": {
+    "status": "scoped_local_dual_native_and_recipient_page_verified",
+    "report": "../technical/B5_05_邀请司机与接收页实施验收.md",
+    "real_distribution": false
+  },
+  "b6_01": {
+    "status": "prepared_waiting_for_participants_authorized_samples_and_field_preflight",
+    "facilitator_pack": "../usability/B6-01_可用性与现场测试执行包.md",
+    "field_template": "../usability/B6-01_现场记录模板.csv",
+    "ocr_template": "../usability/B6-01_OCR记录模板.csv",
+    "participants_completed": 0,
+    "field_trials_completed": 0,
+    "authorized_images_received": 0
+  },
+  "b6_02": {
+    "status": "real_two_account_kms_revocation_and_cleanup_verified",
+    "preflight": "../technical/B6-02_云内测升级预检.md",
+    "cloud_schema": "V12.0022",
+    "candidate_schema": "V12.0022",
+    "migrations_rehearsed": 13,
+    "migrations_applied": 13,
+    "cloud_runtime_verified": true,
+    "real_accounts_and_kms_verified": true,
+    "live_business_checks": 23,
+    "post_revocation_accounts_denied": 2,
+    "synthetic_cleanup_verified": true
+  },
+  "b6_03": {
+    "status": "ios_cellular_apartment_and_west_covina_delivery_verified",
+    "ios_bundle_identifier": "com.abasong.pilot",
+    "ios_native_compiled": true,
+    "ios_signed": true,
+    "ios_installed": true,
+    "ios_launch_request_accepted": true,
+    "cellular_cold_launch_verified": true,
+    "cellular_sms_login_verified": true,
+    "cellular_account_load_verified": true,
+    "cellular_verification_source": "operator_reported_on_physical_iphone",
+    "cellular_verified_build_number": "1",
+    "ios_v3_3_home_update": {
+      "build_number": "2",
+      "signed": true,
+      "installed_on_iphone_13_pro": true,
+      "launch_request": "accepted_after_reconnect",
+      "cellular_modes_verified": true,
+      "cellular_modes_scope": "empty_states_and_jobs_people_map_list_parity",
+      "cellular_modes_verification_source": "operator_reported_on_physical_iphone",
+      "cellular_apartment_search_card_and_code_verified": true,
+      "cellular_apartment_verification_source": "operator_reported_on_physical_iphone",
+      "cellular_apartment_fixture": "AP01_public_address_and_synthetic_access_record",
+      "cellular_apartment_fixture_cleanup_verified": true,
+      "cellular_apartment_contribution_verified": true,
+      "cellular_apartment_owner_correction_verified": true,
+      "cellular_apartment_return_to_original_card_verified": true,
+      "cellular_apartment_write_fixture_cleanup_verified": true,
+      "field_automatic_apartment_match_verified": false,
+      "field_automatic_apartment_match_status": "deferred_by_operator"
+    },
+    "west_covina_delivery": {
+      "scenario_count": 2,
+      "publisher_verification": "operator_on_physical_iphone_13_pro",
+      "applicant_verification": "real_sms_account_cloud_api",
+      "ended_requests_verified": 2,
+      "warehouse_gap_verified": 1,
+      "message_kms_envelopes_verified": 4,
+      "revocation_and_fixture_cleanup_verified": true
+    },
+    "distribution_preflight": {
+      "candidate_build_number": "2",
+      "rollback_build_number": "1",
+      "signatures_and_bundle_receipts_verified": true,
+      "device_rollback_rehearsed": false,
+      "provisioning_expires_at_los_angeles": "2026-11-14T11:25:00-08:00",
+      "archived_mobile_source_matches": 207,
+      "local_engineering_tests_passed": 510,
+      "local_requests_media_push_checks_passed": 620,
+      "android_native_distribution_verified": false,
+      "invite_release_isolation_verified": true,
+      "original_frozen_candidate_git_sha": "e15f6ad690fea1c32a288996dbf90d001645b72a",
+      "frozen_candidate_git_sha": "477e7ec4ac2d502e59f3a9dc5031a00085a8af45",
+      "frozen_candidate_draft_pr": "https://github.com/olly888/abasong/pull/107",
+      "exact_candidate_remote_ci_verified": true,
+      "exact_candidate_remote_ci_run": "https://github.com/olly888/abasong/actions/runs/42431690583",
+      "new_frozen_candidate_archive_signed": true,
+      "frozen_candidate_installed_on_iphone_13_pro": true,
+      "private_media_bound_in_deployed_template": true,
+      "private_media_s3_proposal": "../technical/B6-03_私有图片S3变更方案.md",
+      "private_media_s3_proposal_template_validated": true,
+      "cloud_private_media_verified": true,
+      "cloud_private_media_http_checks_passed": 29,
+      "cloud_private_media_iam_simulations_passed": 6,
+      "cloud_private_media_synthetic_cleanup_verified": true,
+      "cloud_private_media_native_device_verified": true,
+      "cloud_private_media_ios_cellular_publisher_verified": true,
+      "cloud_private_media_android_emulator_publisher_verified": true,
+      "cloud_private_media_native_two_account_reads_verified": true,
+      "cloud_private_media_native_removed_detail_verified_on_android": true,
+      "cloud_private_media_native_fixtures_remaining": 0,
+      "android_picker_correction_git_sha": "7a9ce9497c415e8cf917ee0e834eb0d50907e9d6",
+      "native_modal_safe_area_correction": "477e7ec",
+      "native_modal_safe_area_ios_and_android_emulator_verified": true,
+      "corrected_candidate_exact_remote_ci_verified": true,
+      "push_enabled_in_deployed_template": false,
+      "distribution_invites_open": false
+    },
+    "remote_push_verified": false,
+    "ios_remote_push_preflight": {
+      "worktree_branch": "codex/b6-03-push",
+      "local_git_sha": "bc953b7fbde2bebf9247f3923d8a6f95d7d64836",
+      "local_engineering_tests_passed": 511,
+      "synthetic_apns_prebuild_verified": true,
+      "push_build_refused_without_approved_team": true,
+      "deployed_worker_push_mode": "disabled",
+      "eligible_device_bindings": 0,
+      "recent_push_event_candidates": 0,
+      "open_push_deliveries": 0,
+      "apple_membership_status": "operator_check_pending",
+      "expo_project_configured": false,
+      "signed_push_build_verified": false
+    }
+  },
+  "controlled_implementation": {
+    "eligible_batches": [],
+    "next_task": "B6-03",
+    "task_register": "../technical/V3.2_App对齐开发任务清单.csv",
+    "source_audit": "../technical/V3.2_App对齐审查与开发任务.md",
+    "task_count": 22,
+    "business_changes_started": true
+  },
+  "r4_distance_cards": {
+    "report": "../technical/R4_01_距离契约与公寓卡片实施验收.md",
+    "evidence": "../technical/R4_01_执行证据.json",
+    "r4_01": "implemented_local_and_remote_code_CI_verified",
+    "r4_02": "implemented_scoped_dual_native_function_and_visual_verified",
+    "native_compilation_run": false,
+    "ios_physical_acceptance": false,
+    "android_physical_acceptance": false,
+    "owner_android_three_interactions_passed": true,
+    "blocked_observation": null,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "pull_request": "https://github.com/olly888/abasong/pull/90",
+    "ci_source": "https://github.com/olly888/abasong/pull/90/checks",
+    "validated_code_commit": "fdb0fca3881c521c5e4c760f7126669a18fc458c",
+    "validated_code_run_id": 42143887719,
+    "current_batch_complete": true,
+    "whole_R4_1_exit": false
+  },
+  "r4_contribution_form": {
+    "report": "../technical/R4_03_统一贡献表单实施验收.md",
+    "status": "implemented_scoped_dual_native_verified",
+    "branch": "codex/r4-03-unified-contribution-form",
+    "base": "1e6b306080a9a0cc1f7985b5f72f62d0dcd76627",
+    "engineering_tests": 380,
+    "http_database_checks": 295,
+    "android_manual_feedback": "PASS_owner_confirmed_both_groups",
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "real_account_grants": false,
+    "cloud_changed": false,
+    "evidence": "../technical/R4_03_执行证据.json",
+    "ios_native": "PASS_TEST_component_flows_and_visual",
+    "native_compilation_run": false,
+    "ios_physical_acceptance": false,
+    "android_physical_acceptance": false,
+    "current_batch_complete": true,
+    "whole_R4_1_exit": false,
+    "ci_source": "https://github.com/olly888/abasong/pull/91/checks",
+    "pull_request": "https://github.com/olly888/abasong/pull/91"
+  },
+  "r4_collaboration": {
+    "report": "../technical/R4_04_找活找人滑卡区域与相机验收.md",
+    "status": "implemented_scoped_dual_native_verified",
+    "branch": "codex/r4-04-collaboration-carousel",
+    "base": "d087114eb7424ca32657c5d2dea17a4594ea8ba8",
+    "engineering_tests": 387,
+    "http_database_checks": 261,
+    "android_manual_feedback": "PASS_owner_confirmed_swipe_detail_list_region_query_and_locate_retains_filters",
+    "ios_native": "PASS_representative_flows_and_owner_manual_viewport_return",
+    "native_compilation_run": false,
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "real_account_grants": false,
+    "cloud_changed": false,
+    "whole_R4_1_exit": false,
+    "evidence": "../technical/R4_04_执行证据.json",
+    "current_batch_complete": true,
+    "ios_physical_acceptance": false,
+    "android_physical_acceptance": false,
+    "ci_source": "https://github.com/olly888/abasong/pull/92/checks",
+    "pull_request": "https://github.com/olly888/abasong/pull/92"
+  },
+  "r4_home_integration": {
+    "report": "../technical/R4_05_首页组合流程与阶段验收.md",
+    "evidence": "../technical/R4_05_执行证据.json",
+    "branch": "codex/r4-05-home-integration-acceptance",
+    "base": "7ac2d456739ea3fe04017ead1375bbf2d622d99d",
+    "status": "scoped_local_dual_native_exit_passed",
+    "engineering_tests": 390,
+    "library_http_database_checks": 295,
+    "requests_http_database_checks": 261,
+    "android_owner_feedback": "PASS_both_combined_groups",
+    "whole_R4_1_exit": true,
+    "new_native_compilation": false,
+    "physical_acceptance": false,
+    "real_account_writes": false,
+    "cloud_changed": false,
+    "new_grants": false,
+    "new_migrations": false,
+    "current_batch_complete": true,
+    "validated_code_commit": "3c3b57c7cd8fbfcc16e7bbd604400f20616ed176",
+    "validated_code_run_id": 42172364103,
+    "pull_request": "https://github.com/olly888/abasong/pull/93",
+    "ci_source": "https://github.com/olly888/abasong/pull/93/checks",
+    "closure_changes": "documents_only_code_fingerprint_unchanged"
+  },
+  "r4_delivery_contracts": {
+    "report": "../technical/R4_06_两场景契约与迁移设计.md",
+    "evidence": "../technical/R4_06_执行证据.json",
+    "branch": "codex/r4-06-delivery-contracts",
+    "base": "822a9ecc87cdb83a685e28b0dc36518aefc2e59c",
+    "status": "prepared_contract_and_local_migration_verified",
+    "current_batch_complete": true,
+    "v2_routes_enabled": false,
+    "engineering_files": 76,
+    "engineering_tests": 429,
+    "focused_tests": 39,
+    "requests_http_database_checks": 315,
+    "upgrade_groups": 5,
+    "v2_storage_role_checks": 42,
+    "library_http_database_checks": 295,
+    "import_http_database_checks": 124,
+    "d0_migrations": 16,
+    "d0_tables": 54,
+    "new_contract_models": 12,
+    "new_migrations": [
+      "0015",
+      "0016"
+    ],
+    "address_provenance": "independent_publisher_or_server_licensed_provider_text_and_coordinates",
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "new_real_account_grants": false,
+    "native_ui_changed": false,
+    "new_native_acceptance": false,
+    "next_task": "R4-07",
+    "pull_request": "https://github.com/olly888/abasong/pull/94",
+    "ci_source": "https://github.com/olly888/abasong/pull/94/checks",
+    "validated_code_commit": "87d52eef7c595737073c155adb00666954583a0e"
+  },
+  "r4_delivery_services": {
+    "report": "../technical/R4_07_两场景服务闭环验收.md",
+    "evidence": "../technical/R4_07_执行证据.json",
+    "branch": "codex/r4-07-delivery-services",
+    "base": "3bc2037c5a776018aee19a610a67890adeb71713",
+    "status": "scoped_local_HTTP_PG_services_verified",
+    "current_batch_complete": true,
+    "v2_routes_enabled": true,
+    "default_list_schema_version": 1,
+    "new_list_opt_in_schema_version": 2,
+    "engineering_files": 76,
+    "engineering_tests": 434,
+    "requests_http_database_checks": 509,
+    "delivery_additional_assertions": 88,
+    "library_http_database_checks": 295,
+    "import_http_database_checks": 124,
+    "d0_migrations": 17,
+    "d0_tables": 54,
+    "new_migrations": [
+      "0017"
+    ],
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "real_provider_calls": false,
+    "public_share_receiver_deployed": false,
+    "native_ui_changed": false,
+    "new_native_acceptance": false,
+    "next_task": "R4-08",
+    "pull_request": "https://github.com/olly888/abasong/pull/95",
+    "ci_source": "https://github.com/olly888/abasong/pull/95/checks",
+    "validated_code_commit": "3ca40c7cd971349425f97123e479bc31e0c3da0f"
+  },
+  "r4_native_delivery": {
+    "report": "../technical/R4_08_两场景原生表单与仓库操作验收.md",
+    "evidence": "../technical/R4_08_执行证据.json",
+    "branch": "codex/r4-08-native-delivery",
+    "base": "d5cb673c6870e822f955017302cd1e995b24d9c3",
+    "status": "scoped_native_TEST_and_contract_verified",
+    "current_batch_complete": true,
+    "engineering_files": 78,
+    "engineering_tests": 453,
+    "native_payload_server_cases": 6,
+    "requests_http_database_checks": 509,
+    "new_migrations": false,
+    "new_dependency": "expo-clipboard@58.0.4",
+    "ios_native_compilation": "PASS_simulator",
+    "android_native_compilation": "PASS_emulator",
+    "native_js_export": "PASS_ios_android",
+    "android_owner_feedback_groups": 3,
+    "real_account_grants": false,
+    "cloud_changed": false,
+    "real_provider_business_calls": false,
+    "real_native_HTTP_combined_exit": "PASS_scoped_R4-10_actual_components_local_HTTP",
+    "full_system_exception_matrix": "scoped_R4-10_PASS_remaining_normal_route_and_foreground_protection_R4-12_13_B6",
+    "next_task": "R4-09",
+    "pull_request": "https://github.com/olly888/abasong/pull/96",
+    "ci_source": "https://github.com/olly888/abasong/pull/96/checks",
+    "validated_code_commit": "5f354de7b3783aa8046ac5a148ae2ecd03fec048",
+    "implementation_ci": {
+      "run_id": 42268830936,
+      "head_sha": "5f354de7b3783aa8046ac5a148ae2ecd03fec048",
+      "conclusion": "success"
+    }
+  },
+  "r4_availability": {
+    "report": "../technical/R4_09_单次接活时段实施验收.md",
+    "evidence": "../technical/R4_09_执行证据.json",
+    "branch": "codex/r4-09-availability-window",
+    "base": "587b6c00b491049ff7a5ffff4fad79ffa8b72a1a",
+    "status": "scoped_dual_native_exit_PASS",
+    "current_batch_complete": true,
+    "engineering_files": 79,
+    "engineering_tests": 470,
+    "requests_http_database_checks": 515,
+    "native_payload_additional_http_calls": 6,
+    "native_js_export": "PASS_ios_android",
+    "new_native_compilation": false,
+    "new_contracts": false,
+    "new_dependencies": false,
+    "new_migrations": false,
+    "real_account_grants": false,
+    "cloud_changed": false,
+    "my_compact_switch": "B5_pending",
+    "physical_acceptance": false,
+    "next_task": "R4-10",
+    "pull_request": "https://github.com/olly888/abasong/pull/97",
+    "ci_source": "https://github.com/olly888/abasong/pull/97/checks",
+    "validated_code_commit": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+    "implementation_ci": {
+      "run_id": 42295105317,
+      "head_sha": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+      "conclusion": "success"
+    },
+    "ios_native_supplement": "PASS_picker_cancel_dirty_cancel_save_retry_conflict_region_failure_expired_close",
+    "android_owner_feedback": "PASS_both_groups",
+    "latest_document_ci": {
+      "run_id": 42301127932,
+      "head_sha": "d475625a154b4144195007f1c73caecf2da1b3f8",
+      "conclusion": "success"
+    }
+  },
+  "r4_native_http_exit": {
+    "version": "R4-10-local-native-http",
+    "date": "2026-11-06",
+    "branch": "codex/r4-10-native-http-exit",
+    "base": "d475625a154b4144195007f1c73caecf2da1b3f8",
+    "status": "scoped_real_local_HTTP_dual_native_exit_PASS",
+    "report": "../technical/R4_10_本地原生业务组合实施验收.md",
+    "current_batch_complete": true,
+    "engineering": {
+      "files": 80,
+      "tests": 476,
+      "lint_types_build": "PASS"
+    },
+    "native_mobile_payload_service": {
+      "assertions": 25,
+      "http_calls": 35,
+      "status": "PASS",
+      "actual_nest_postgres": true,
+      "provider": "localhost_synthetic",
+      "real_SMS_or_messages": false
+    },
+    "cleanup": {
+      "positive_lifecycle": "PASS",
+      "occupied_port_refusal": "PASS",
+      "signal_exit_regression": "PASS",
+      "remaining_disposable_databases": 0,
+      "remaining_disposable_roles": 0,
+      "earlier_owned_TEST_recovery": {
+        "databases": 3,
+        "roles": 3,
+        "D0_changed": false
+      },
+      "fixture_running": false
+    },
+    "native": {
+      "ios_device": "iPhone 18 Pro / iOS 27 simulator",
+      "android_device": "API 37 emulator",
+      "actual_components_real_HTTP": true,
+      "container": "DEV_only_not_normal_login_route",
+      "ios_business": "PASS_observed",
+      "ios_keyboard_edge_return": "PASS_owner_software_keyboard_action_reachable_review_edge_back_preserves_1.86",
+      "android_owner_groups": 3,
+      "android_owner_result": "PASS_normal_all_three",
+      "android_feedback_reference": "call_234b8db558684fb3ae3abb90306f1d77:0,1,2",
+      "new_binary_compilation": false,
+      "ios_android_Hermes_export": "PASS",
+      "physical_acceptance": false,
+      "normal_route_real_account_exit": false,
+      "full_foreground_background_matrix": false,
+      "ios_feedback_reference": "call_d4054483ad3044639723868d674ed656:0"
+    },
+    "production_changes": [
+      "V2_source_card_scenario_and_estimate_unknown_labels",
+      "shared_conversation_controller_authenticated_adapter_preserved",
+      "shared_gap_editor_authenticated_adapter_preserved",
+      "conversation_remount_on_user_and_conversation"
+    ],
+    "new_dependencies": false,
+    "new_contracts": false,
+    "new_migrations": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "d0_migrations": 17,
+    "d0_tables": 54,
+    "human_participants": 0,
+    "b5_ready": false,
+    "release_ready": false,
+    "next_task": "R4-11",
+    "ci": "exact_current_head_via_PR98_checks_not_inherited",
+    "pull_request": "https://github.com/olly888/abasong/pull/98",
+    "requests_http_database_checks": 515,
+    "ci_source": "https://github.com/olly888/abasong/pull/98/checks",
+    "validated_code_commit": "cdff153f1fd6b409697e812fcd224b6fab488923",
+    "whole_R4_2_scoped_exit": true,
+    "evidence": "../technical/R4_10_执行证据.json"
+  },
+  "r4_contribution_protection": {
+    "version": "R4-11-scoped-contribution-protection",
+    "date": "2026-11-06",
+    "branch": "codex/r4-11-contribution-protection",
+    "base": "a1e475827cf2ec19f9689608ffc82c1b2b311bd6",
+    "status": "scoped_recorded_apartment_protection_dual_native_verified_D08_unlisted_batch_gap_pending_R4_13",
+    "scoped_batch_complete": true,
+    "all_B05_implemented": false,
+    "report": "../technical/R4_11_截图手填与本人纠正保护验收.md",
+    "engineering": {
+      "files": 82,
+      "tests": 483,
+      "lint_types_build": "PASS"
+    },
+    "new_mobile_core_HTTP": {
+      "assertions": 27,
+      "calls": 75,
+      "status": "PASS",
+      "controller": "ImportDraft_actual_implementation",
+      "real_API_PG": true
+    },
+    "library_HTTP_PG": 295,
+    "import_HTTP_PG": 124,
+    "delivery_regression": {
+      "assertions": 25,
+      "calls": 35,
+      "status": "PASS"
+    },
+    "cleanup": {
+      "positive": "PASS",
+      "occupied_port_delivery": "PASS",
+      "occupied_port_contribution": "PASS",
+      "native_fixture_stopped": true,
+      "final_remaining_counts": {
+        "databases": 0,
+        "roles": 0
+      }
+    },
+    "native": {
+      "ios": "PASS_actual_components_real_HTTP_representative_flows",
+      "android": "PASS_owner_three_groups_and_observed_ambiguity_disabled",
+      "android_owner_reference": "call_706ab1cc2b5942d99f9c6992c6bff867:0,1,2",
+      "android_owner_result": "normal_all_three",
+      "ios_input": "hardware_keyboard_AX_not_new_full_software_keyboard_claim",
+      "test_container": "DEV_only_not_normal_login_route",
+      "OCR_fields": "synthetic_not_real_accuracy",
+      "prototype_B02": "opened_and_visually_compared",
+      "native_JS_export": "PASS_ios_android",
+      "new_binary_compilation": false,
+      "physical_acceptance": false
+    },
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "d0_migrations": 17,
+    "d0_tables": 54,
+    "human_participants": 0,
+    "b5_ready": false,
+    "release_ready": false,
+    "open_P0": [
+      {
+        "id": "D08-B05-unlisted-batch-address",
+        "task": "R4-13",
+        "status": "structured_address_licensed_persistence_and_durable_batch_share_contract_pending",
+        "manual_single_address": "implemented_prior_R4-03"
+      }
+    ],
+    "next_task": "R4-12",
+    "pull_request": "https://github.com/olly888/abasong/pull/99",
+    "ci_source": "https://github.com/olly888/abasong/pull/99/checks",
+    "evidence": "../technical/R4_11_执行证据.json",
+    "validated_code_commit": "6d66281d0d4f4f439324efa793846d4079319b39",
+    "implementation_ci": {
+      "run_id": 42315086377,
+      "head_sha": "6d66281d0d4f4f439324efa793846d4079319b39",
+      "conclusion": "success",
+      "url": "https://github.com/olly888/abasong/actions/runs/42315086377"
+    },
+    "secret_scans": {
+      "staged": "PASS",
+      "all_history": "PASS"
+    }
+  },
+  "r4_collaboration_protection": {
+    "version": "R4-12-collaboration-protection",
+    "date": "2026-11-06",
+    "base": "4855e8e765508ae5cb2f0f64e92f01594ade0cb9",
+    "branch": "codex/r4-12-messaging-protection",
+    "status": "scoped_local_HTTP_dual_native_protection_PASS",
+    "scoped_batch_complete": true,
+    "report": "../technical/R4_12_报名来源消息与关闭保护验收.md",
+    "engineering": {
+      "files": 84,
+      "tests": 488,
+      "lint_types_build": "PASS"
+    },
+    "requests_HTTP_PG": 515,
+    "mobile_core_HTTP": {
+      "assertions": 37,
+      "calls": 44,
+      "status": "PASS",
+      "real_API_PG": true
+    },
+    "native": {
+      "ios": "PASS_representative_actual_components_real_HTTP",
+      "ios_foreground_background": "PASS_background_block_resume_and_recovery",
+      "android": "PASS_observed_conflict_uncertain_form_found_detail_and_owner_two_groups",
+      "normal_route_real_account": false,
+      "physical_acceptance": false,
+      "new_binary_compilation": false,
+      "Hermes_export": "PASS_ios_android",
+      "prototype": "P08_M02_opened_and_visual_hierarchy_compared",
+      "android_owner_reference": "call_c6341bb037e941c98efe3962e76d64b0:0,1",
+      "android_owner_result": "normal_both_groups"
+    },
+    "cleanup": {
+      "runner": "PASS_footprint_restored",
+      "occupied_port": "PASS_existing_listener_untouched",
+      "live_fixture": "stopped_and_owned_resources_cleaned",
+      "final_remaining_counts": {
+        "databases": 0,
+        "roles": 0
+      }
+    },
+    "new_contracts": false,
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "D0_migrations": 17,
+    "D0_tables": 54,
+    "b5_ready": false,
+    "release_ready": false,
+    "human_participants": 0,
+    "next_task": "R4-13",
+    "open_P0": [
+      "D08-B05-unlisted-batch-address"
+    ],
+    "pull_request": "https://github.com/olly888/abasong/pull/100",
+    "ci_source": "https://github.com/olly888/abasong/pull/100/checks",
+    "evidence": "../technical/R4_12_执行证据.json",
+    "validated_code_commit": "83217a0ba808e7bdc0eaec2eac8cbc250bcdb358",
+    "secret_scans": {
+      "staged": "PASS",
+      "all_history": "PASS"
+    }
+  },
+  "r4_unlisted_closure": {
+    "version": "R4-13-unlisted-batch-closure",
+    "date": "2026-11-06",
+    "base": "35b16444a49ec2ae535f23351d365de111c2a8a3",
+    "branch": "codex/r4-13-unlisted-import-closure",
+    "status": "scoped_local_core_and_dual_native_exit_PASS",
+    "scoped_batch_complete": true,
+    "report": "../technical/R4_13_核心差异关闭与未收录截图方案.md",
+    "engineering": {
+      "files": 85,
+      "tests": 492,
+      "lint_types_build": "PASS"
+    },
+    "unlisted_HTTP_PG": {
+      "assertions": 41,
+      "calls": 183,
+      "status": "PASS",
+      "actual_API_PG": true,
+      "provider": "synthetic_not_live_Mapbox"
+    },
+    "import_HTTP_PG": 124,
+    "library_HTTP_PG": 295,
+    "native": {
+      "ios": "PASS_actual_components_200_partial_failure_retry_return_999_to_204_reconfirmation_return",
+      "android": "PASS_actual_220_partial_failure_retry_return_999_rejection_reopen_204_catalog_selection_reconfirm_and_return",
+      "android_initial_feedback": "normal_but_current_screen_and_zero_write_counts_conflicted_not_counted_as_pass",
+      "android_recovery": "tool_restarted_preconfirmed_synthetic_220_and_verified_actual_writes_no_handtyped_or_OCR_quality_claim",
+      "normal_route_real_accounts": false,
+      "physical_acceptance": false,
+      "new_binary_compilation": false,
+      "Hermes_export": "PASS_ios_android",
+      "prototype": "actual_browser_B05_no_full_dropdown_missing_city_blocks_literal_preserved_shared_1610_return_recenter_excludes_unlocated_candidate",
+      "prototype_full_old_10_check_rerun": false,
+      "android_owner_reference": "call_a1772a6134814b97a51b900894d45380:0",
+      "android_owner_result": "normal_followed_by_observed_204_same_value_result_and_204_return",
+      "final_visual": "PASS_both_address_first_single_line_group_without_duplicate_address_row_and_intact_literal"
+    },
+    "new_contracts": {
+      "confirmed_address": "optional_nullable_candidate_edit_and_candidate",
+      "apartment_id": "optional_nullable_commit_result",
+      "supplier_evidence": "server_only_encrypted_not_in_DTO",
+      "paths": 88,
+      "operations": 112,
+      "schemas": 160
+    },
+    "new_migrations": false,
+    "new_dependencies": false,
+    "cloud_changed": false,
+    "real_account_grants": false,
+    "D0_migrations": 17,
+    "D0_tables": 54,
+    "human_participants": 0,
+    "b5_ready": true,
+    "release_ready": false,
+    "cleanup": {
+      "HTTP_runner": "PASS_owned_footprint_restored",
+      "live_fixture": "stopped_owned_resources_cleaned",
+      "final_remaining_counts": {
+        "databases": 0,
+        "roles": 0
+      }
+    },
+    "secret_scans": {
+      "staged": "PASS",
+      "all_history": "PASS_local_and_remote_exact_code_head"
+    },
+    "latest_commit_CI": "document_only_closure_must_independently_pass_PR101_checks_no_old_CI_substitution",
+    "code_fingerprints": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "sha256": "624a2d43c2cb78de53f08ab60452b1db719204d57a6cc672d30cb67e7ef5d3d8"
+      },
+      {
+        "path": "apps/api/src/apartments/apartments.service.ts",
+        "sha256": "c05da2c227fd102aa821bfe61400b59df8bfc4b8af4f5c26b6989eaeb28a9fd9"
+      },
+      {
+        "path": "apps/api/src/imports/imports.service.ts",
+        "sha256": "fc9f9c467c1a562ab365f80dc914bf703cd4c41d01140ba033b053b1d4098ae4"
+      },
+      {
+        "path": "apps/api/src/nearby/nearby.service.ts",
+        "sha256": "c87b657630c65e20cb51efb5e8ca3a9d5b6ca6e2787471c7f3ec2fe5c9c3e86a"
+      },
+      {
+        "path": "apps/mobile/src/apartments/ContributionAddressField.tsx",
+        "sha256": "e865e4941a81e42a9ba941ae588bfab726eb059ca3ed039c1449078d8987d772"
+      },
+      {
+        "path": "apps/mobile/src/app/unlisted-import-lab.tsx",
+        "sha256": "033b213da6b60e709454a7b91d27e153fc2d335bfbf28cb15bc0954fb6796431"
+      },
+      {
+        "path": "apps/mobile/src/design/UnlistedImportLab.tsx",
+        "sha256": "7a4c6350dadea24f993f102e62e94fac76a3184d60c183ad1d84af098fa676e4"
+      },
+      {
+        "path": "apps/mobile/src/imports/ImportScreen.tsx",
+        "sha256": "3c808dcfd5c74edff8457eee418b1fc4c031aee4e769cd6ec15f3fed20da9d08"
+      },
+      {
+        "path": "apps/mobile/src/imports/candidate-address.test.ts",
+        "sha256": "d7c8d55f8e0c6bdd8a81e859d4105e6f63d8c415c6ceb8a65051f3136643cc3b"
+      },
+      {
+        "path": "apps/mobile/src/imports/candidate-address.ts",
+        "sha256": "b06b12a3a3f98caa74f76e0d40f439d333541763ffe40df58e3044d9b3d13e01"
+      },
+      {
+        "path": "apps/mobile/src/imports/commit-patch.ts",
+        "sha256": "440bcb965fcdca25ba23f4be3a0487b16246b641f9bfe3713a5b063a5f72d05e"
+      },
+      {
+        "path": "apps/mobile/src/imports/restore-draft.ts",
+        "sha256": "a859e45973015649bf08ede0ad5c85ac7a0e56214606d8f7f252122004633606"
+      },
+      {
+        "path": "apps/mobile/src/imports/server-draft-core.ts",
+        "sha256": "17d85b7d32a6654d6f0d4f82f9a33c77ee0bd774aea1a26f91ae468605792e04"
+      },
+      {
+        "path": "apps/mobile/src/imports/server-draft.test.ts",
+        "sha256": "01c46048922d9b0485f4e128123b0a68ca127641a6ba158180936d0442a412a6"
+      },
+      {
+        "path": "apps/mobile/src/imports/types.ts",
+        "sha256": "7c61783f2a33121509aae501cea4e6bda7cda5f42807e2a62d9b455c38ab8b28"
+      },
+      {
+        "path": "packages/contracts/src/generated.ts",
+        "sha256": "e864e92f2094000d525aab5494a12ea653db87b828d1061344c7ba67774ccc8c"
+      },
+      {
+        "path": "scripts/d1/native-exit-fixture.ts",
+        "sha256": "e479ba85947c1c1e00cd6db01c00b9ffa1f7011362a47fd153cfc3e6b1ca7fab"
+      },
+      {
+        "path": "scripts/d1/run-native-exit.ts",
+        "sha256": "2582d1aefebdfaf8b16e8078c7641dc854778f6630b51260796b2d03245693ec"
+      },
+      {
+        "path": "scripts/d1/verify-native-contribution.ts",
+        "sha256": "0ebfb8b3062954418aabc83f999ccaa6f04a47d378bb9729194582042699bdb6"
+      },
+      {
+        "path": "scripts/d1/verify-unlisted-import.ts",
+        "sha256": "ba3b0ee883ad276a0880d62fc4d65a8e65ac3e2cb4a7573fa5c772b309d4f6d3"
+      },
+      {
+        "path": "scripts/import_contracts.py",
+        "sha256": "eb938185ac0aa539d466e55df6c8567e435f5f3b9712d9504bf2e3ee6ab91675"
+      },
+      {
+        "path": "scripts/validate_v12_contracts.py",
+        "sha256": "e390187c024146a799b30db0d02f05df44e6ceb7562cb9068f229fa55b59d60f"
+      }
+    ],
+    "known_contribution_HTTP": {
+      "assertions": 27,
+      "calls": 75,
+      "status": "PASS"
+    },
+    "pull_request": "https://github.com/olly888/abasong/pull/101",
+    "ci_source": "https://github.com/olly888/abasong/pull/101/checks",
+    "implementation_ci": {
+      "head_sha": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+      "run_id": 42328650702,
+      "conclusion": "success",
+      "url": "https://github.com/olly888/abasong/actions/runs/42328650702"
+    },
+    "artifacts": [
+      "artifacts/r4-13/ios-partial-failure.png",
+      "artifacts/r4-13/ios-return-200.png",
+      "artifacts/r4-13/ios-corrected-204.png",
+      "artifacts/r4-13/android-partial-failure.png",
+      "artifacts/r4-13/android-return-204.png",
+      "artifacts/r4-13/ios-final-review.png",
+      "artifacts/r4-13/android-final-review.png",
+      "artifacts/r4-13/native-live-summary.json",
+      "artifacts/r4-13/final-test-footprint.json"
+    ],
+    "next_task": "B5-01",
+    "readiness_scope": "controlled_B5_01_local_implementation_only_not_full_product_real_account_physical_or_release_acceptance",
+    "validated_code_commit": "f46dbb25683ab2850cea49fc9d63d48f4d959abc",
+    "closed_core_gaps": [
+      "D08-B05-unlisted-batch-address"
+    ],
+    "open_local_R4_core_P0": [],
+    "evidence": "../technical/R4_13_执行证据.json"
+  },
+  "b5_self_profile": {
+    "report": "../technical/B5_01_本人资料与我的实施验收.md",
+    "evidence": "../technical/B5_01_执行证据.json",
+    "status": "scoped_local_exit_PASS",
+    "real_accounts": false,
+    "cloud_changes": false,
+    "source_commit": "e6e55ab727c48fd8d3f5383dfbb3b678867bef89",
+    "source_CI": 42333171347,
+    "cleanup": "0_disposable_databases_and_roles"
+  },
+  "current_workstream": {
+    "target": "V3.5.1-UI-detail",
+    "date": "2026-11-09",
+    "batch": "DTL-03",
+    "state": "scoped_dual_native_pass_signed_build3_installed_owner_home_return_pass",
+    "report": "../technical/V3.5.1_DTL-03_可见读取回程与签名包验收.md",
+    "next": "DTL-04_contribution_and_two_scenario_form_details",
+    "candidate_branch": "codex/dtl03-pilot",
+    "source_commit": "f970904172e658de565bfe0e7a7d034fe21371b2",
+    "accepted_parent": "3e36678572b8473020b324951790c6e5fe7f8737",
+    "pull_request": "https://github.com/olly888/abasong/pull/109",
+    "evidence": {
+      "engineering_files": 99,
+      "engineering_tests": 594,
+      "lint_types_build": "passed",
+      "native_acceptance": "iOS_Android_simulators_scoped_pass",
+      "remote_CI": {
+        "run_id": 42763282240,
+        "conclusion": "success",
+        "exact_head_sha": true,
+        "jobs": [
+          "Secret history scan",
+          "Engineering verification"
+        ]
+      },
+      "iphone": {
+        "model": "iPhone 13 Pro",
+        "build": 3,
+        "installed": true,
+        "launched": true,
+        "file_backed_sources_match": 237,
+        "owner_home_search_detail_return": "passed",
+        "cellular_this_build": "not_verified"
+      }
+    },
+    "not_claimed": [
+      "cloud0023_rollout",
+      "new_cellular_business_verification",
+      "Android_physical_device",
+      "whole_app_screen_reader_acceptance",
+      "field_or_participant_acceptance"
+    ],
+    "historical_fields_note": "All other B5/B6/M7 snapshots retain their original scope. This object and DEVELOPMENT_STATUS.md define the current batch."
+  },
+  "workstream_history": [
+    {
+      "target": "V3.5-Muse",
+      "date": "2026-11-08",
+      "batch": "M7-01",
+      "state": "frozen_candidate_exact_ci_pass_native_pending",
+      "report": "../technical/V3.5_M7-01_统一候选与集成验收.md",
+      "next": "affected_native_acceptance_after_unlock",
+      "candidate_branch": "codex/v35-m7-integration",
+      "accepted_parent": "477e7ec4ac2d502e59f3a9dc5031a00085a8af45",
+      "evidence": {
+        "engineering_tests": 561,
+        "library_http_database_checks": 328,
+        "requests_http_database_checks": 660,
+        "import_http_database_checks": 125,
+        "generated_drift": false,
+        "native_acceptance": "pending_locked_Mac",
+        "ios_android_hermes_exports": "passed",
+        "release_invitation_isolation": "passed",
+        "remote_CI": {
+          "run_id": 42537634392,
+          "conclusion": "success",
+          "exact_candidate_tree": true
+        },
+        "mobile_input_http_pg": {
+          "assertions": 32,
+          "http_calls": 40
+        }
+      },
+      "not_claimed": [
+        "native_gestures_while_mac_locked",
+        "cloud_rollout",
+        "signed_build",
+        "invitation_distribution",
+        "field_or_participant_acceptance"
+      ],
+      "historical_fields_note": "Other B5/B6 snapshots remain historical; current Muse work is tracked here and in DEVELOPMENT_STATUS.md.",
+      "source_commit": "a9c245b29a85ae72d08216d52beb2d22b100be2e",
+      "pull_request": "https://github.com/olly888/abasong/pull/108"
+    }
+  ]
+}

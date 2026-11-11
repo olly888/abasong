@@ -1,5 +1,39 @@
 # D0 依赖与运行时基线
 
+2026-11-10 DTL-04 截图导入增加 Android 本机简体中文识别。Gradle 仅在 OCR 模块增加固定版本 `com.google.mlkit:text-recognition-chinese:16.0.1`，模型随应用打包。iOS 截图导入复用系统 Vision 的简体中文和英文。两端地址相机沿用英文入口，旧原生壳可通过能力标记走兼容路径。此依赖随下一次原生构建分发。[Google ML Kit Android 文档](https://developers.google.com/ml-kit/vision/text-recognition/v2/android)。
+
+2026-11-08 M6-01：无新增依赖、契约、迁移或云资源。复用现有React Native/Expo与Lucide，新增ChoiceChip、ComposerOption；圈内正文／标签／可选字段与我的菜单对齐。锁屏原生验收待补，详见[M6-01报告](docs/technical/V3.5_M6-01_司机圈与我的视觉收敛验收.md)。
+
+2026-11-08 M5-02：无新增依赖、原生模块、契约、迁移或云资源。复用既有字段、Lucide和品牌token，统一门禁码/三选门别/勾选组件与截图核对卡。561工程、125导入检查、31贡献断言/78 HTTP、4原型与6RN-web组通过；双端Hermes导出通过，原生键盘/手势/视觉待补。详见[M5-02报告](docs/technical/V3.5_M5-02_贡献截图与门别对齐验收.md)。
+
+2026-11-08 M5-01：无新增依赖、原生模块、契约、迁移或云资源。复用已锁Expo58/RN0.88、共用字体/颜色、原生日期与既有表单/报名transport。新增共用摘要及分组、报名字段锚点定位；[561工程/652接口数据库检查及浏览器证据](docs/technical/V3.5_M5-01_详情报名与核对验收.md)通过。双端Hermes导出通过，原生手势与键盘待补；未重签或部署。
+
+2026-11-08 M4-02：无新增依赖、原生模块、迁移、外部服务或费用。复用现有Nest/Zod/PostgreSQL、React Native列表与AbortController；新增可选scenario查询参数并同步契约生成源。iOS/Android Hermes导出通过，原生手势待解锁，未云部署或重签。详见[M4-02报告](docs/technical/V3.5_M4-02_协作查询与分页验收.md)。
+
+2026-11-08 M4-01：无新增包、原生模块、迁移或云资源。复用Node24 AbortSignal、Zod、现有Mapbox临时Tilequery/Geocoding及PostGIS。新增只读TileJSON元数据调用（进程内五分钟缓存maxzoom）用于九瓦片范围判断；一次扩围最多3次catalog、7次Tilequery、4次逆地理、1次元数据，共享8秒供应商中止预算。未运行实时供应商探测，不持久保存临时地址，不改变账号计费或访问资格。详见[M4报告](docs/technical/V3.5_M4_受控扩围与覆盖验收.md)。
+
+2026-11-07 设计系统 V3.3：通过 Expo SDK 58 兼容安装并精确锁定 `react-native-svg 15.16.0`，pnpm 与 iOS CocoaPods 锁已同步。Lucide 1.70.0 仅选用所需的上游 SVG 路径，许可入库，原型与 App 由同一份映射生成。两端 Debug 模拟器包实际重编译。iOS 本地由供应商脚本恢复匹配的 React Native、Hermes、Expo Debug 预编译模块，再使用模拟器临时签名。
+
+2026-11-06 R4-09：无新增包、SDK、原生模块、迁移或锁变更。复用Expo58 Router及RN0.88 AppState/Switch、已安装DateTimePicker9.2.1和V3.2共用控件；时段仍为既有版本化PUT，关闭只提交开关及版本。仅刷新显示，不增加后台自动续期/定位/推送或云调用。
+
+2026-11-06 R4-08：通过 Expo58 `expo install` 安装并精确锁定 expo-clipboard 58.0.4，用于仓库完整地址原生复制；不读取既有剪贴板。复用现有 expo-linking58.0.15、RNMapbox10.3.16 及临时地址搜索会话；无新地图供应商、迁移或云资源。本批重新编译 iOS／Android 开发应用，实际结果见 R4-08 报告。
+
+2026-11-06 R4-07：没有新增依赖、SDK、原生模块或锁文件变更；复用现有MapboxNearbyProvider永久地理编码、Intl、HMAC幂等及PostGIS。0017只追加发布身份与重开校验，D0为17迁移/54表。REQUEST_SHARE_BASE_URL是可选服务端HTTPS接收页来源；未配置时不创建分享，真实分发未开放。供应商测试仅用严格test环境子进程的localhost transport替身，无真实网络调用/费用；不把测试配置写入正式.env或云环境。
+
+2026-11-05 R4-06：没有新增包、原生模块、SDK或锁文件变更。复用Node24 Intl处理America/Los_Angeles日期及23/25小时日边界；契约校验复用现有openapi-typescript。生成器新增只读`--json`路径仅需Python3标准库，不给CI增加PyYAML安装依赖；默认YAML生成仍沿用既有环境。0015新增一张受控仓库地址版本表，0016补齐地址文字持久来源，D0为16迁移/54表；V2模型本批准备、端点接通属于R4-07。未调用云库、地理供应商或新增付费资源。
+
+2026-11-04体验升级方案：保留现有RN/Expo/Mapbox、NestJS/PostGIS、KMS/outbox及令牌生成链。本轮仅文档，无安装/版本/锁文件变更；不引入H3、Redis、Kafka、微服务或新地图SDK。区域几何、全量发现、私人偏好和机会通知为后续明确增量，不因方案存在自动部署或开通付费。见[架构增量](docs/technical/V12.1_地图协作架构增量方案.md)。
+
+2026-11-04 B4：无新npm依赖/原生模块/字体/SDK/DDL，单一pnpm及Pods锁不变。复用现有Mapbox PointAnnotation、系统DateTimePicker/Switch、RN列表和Nest/pg/Zod。D0仍14迁移/53表；复用availability/availability_regions及公开Region display_point，不上传司机GPS。原生实际渲染现有开发壳＋新JS，不声称本批重编译二进制。
+
+2026-11-02真实Mapbox联测：无新依赖、原生模块或DDL。复用Node24/pg/tsx、已编译生产服务及客户端纯合并函数；显式ABASONG_VERIFY_LIVE_MAPBOX=1才在受保护一次性库调用真实供应商，最多27临时请求，默认/CI不调用。仅整数米档稳定排序变更；三端JS导出与实际模拟器观察不作为新二进制或现场验收。
+
+2026-11-02最新启动：用户已恢复Mapbox→最小云内测顺序。AWS官方macOS CLI2.39.3经Apple AMZN Mobile LLC签名与公证校验后，以官方Payload安装到忽略的`.tooling/aws-tools/aws-cli`；包SHA256为f9014f2edc9d4f40cb1f6662f1ec6d0f2d89d60d9d452f830008d9d92ca49f22。scripts/aws隔离项目配置，不改全局PATH/运行时，尚无凭据/云调用。新增实时Mapbox诊断复用Node24/tsx，最多6临时请求，无新npm依赖/锁文件/原生模块。此前“不安装云CLI/暂缓”说明保留其历史范围。
+
+2026-11-02附近覆盖批次：复用既有PostGIS、pg、Zod、Vitest和ODbL公开几何，无新增库／SDK／迁移／原生模块。附近发现与搜索统一使用有效来源的边界／轮廓；Mapbox临时反向查询上限4及25秒速率限制保持，不增加供应商账号或实际付费调用。真实供应商和现场仍待，云部署继续暂缓。
+
+2026-11-02本地OCR质量批次：无新增包、字体或原生模块，单一锁文件未变。回放工具复用生产TypeScript解析器、现有tsx/Vitest和Node24内置fs/crypto；合成图生成与主机识别仅用macOS AppKit/Vision/CryptoKit，不作为iOS/Android原生质量证据。云部署按用户决定暂缓，不安装云CLI或新增供应商计费服务。
+
 记录日期：2026-10-29。精确 JavaScript 解析以 `pnpm-lock.yaml` 为准，直接依赖使用精确版本。升级必须重跑工程检查、数据库验证和原生构建。
 
 | 层 | 已使用版本 | 决策 |
@@ -39,3 +73,152 @@ D1原生登录：@supabase/supabase-js2.118.0、expo-secure-store58.0.2、expo-c
 2026-10-30 D1 private data: no new runtime packages. Local envelope uses Node24 built-in crypto (AES-256-GCM, HKDF, HMAC), zod/pg/Nest already locked. Test provider uses existing jose/pg; schema validation reuses isolated /private/tmp/abasong-v12-validation dependencies. No KMS/OCR dependency selected or installed; local adapter cannot be enabled in production. Dedicated local DB credential/KEK stays ignored0600.
 
 2026-10-30 GitHub history audit: Gitleaks v8.30.1 official vendor binary, release checksum verified, installed only in ignored .tooling/security. CI installer pins this version and checks vendor SHA256 before extraction. Apple Vision and existing pdftotext used offline for28 visual/PDF history versions. No new application dependencies or package-lock changes.
+
+2026-10-30 D1 location: reuses locked expo-location58.0.20 / rnmapbox10.3.16 / PostGIS, no new package or lockfile changes. Versioned candidate limits required; production auto-match remains off pending T23. Vitest5 source-only discovery configured to exclude compiled duplicate suites on repeat checks.
+
+2026-10-30 native visual alignment: no added packages/fonts/native modules; outline icons use native views, V3 shared tokens reused. Existing rnmapbox10.3.16 Light basemap with required attribution retained.
+
+2026-10-30 screenshot import: Expo58官方兼容安装后固定 expo-image-picker58.0.10、expo-file-system58.0.13；pnpm主锁与审查后的Podfile.lock同步。新增本地Expo模块AbasongOcr0.1.0：iOS Apple Vision系统框架，Android Google Maven随包Latin文本识别com.google.mlkit:text-recognition16.0.1。原图不发往云端OCR，单张串行且限制文件/像素/行数；模型输出仅是待核对文本。Android依赖由Gradle解析，后续升级须复跑双平台原生及识别样本。未选择云端OCR供应商、未增加商业账号或上传真实截图。新增原生模块已触发双平台Debug重编译，详细验收以本批记录为准。
+
+2026-10-30 首页定位修正：未改变外部依赖版本或主锁。Expo58旧Android定位及内置next系统路径在default镜像未获得样本，未保留beta next API。最终新增本地Android专用AbasongLocation0.1.0，通过现有AndroidX/系统LocationManager兼容接口请求GPS单次位置；仅粗略权限时不使用GPS。显式15秒取消、前后台/销毁/Abort清理，无新增系统权限/后台服务/GMS。Android实际重编译安装，合成GPS和用户回位补验通过；iOS仍用expo-location58.0.20，JS相机修正与用户回位补验通过。升级必须复跑提供者、权限、取消、旧位置与设备场景。expo-dev-client58.0.17现有setToolsButtonVisible(false)隐藏开发齿轮，保留开发菜单快捷方式。
+
+
+2026-10-30 D1真实定位/建筑首批：不增加依赖或权限，复用expo-location58与已有Android前台单次定位模块串行刷新；rnmapbox10.3.16现有ShapeSource/FillLayer/LineLayer/SymbolLayer绘制经核对几何。刷新5秒/停留8秒仅开发保护，等待现场参数冻结；不启用beta定位API或后台服务。Mapbox临时样本请求只记录覆盖统计，不存供应商返回坐标/轮廓。0003新增独立建筑映射，截图批次迁移顺延0004。
+
+
+2026-10-30真实公寓/端侧批次：不新增依赖或原生权限，继续Node24/pnpm10.32.1与现有Expo/Mapbox/OCR模块。新增独立ODbL公开几何样本及归属说明，非Mapbox临时结果存库，不新增App运行时OSM请求。新0004/50表、15个本地端侧批次操作、源状态registered、ImportScope仅label、逐项稳定提交ID与owner加密结果；云OCR/上传三操作继续planned。API JSON体上限调整为128KiB（仅批次JSON，其他接口仍16KiB），DTO/100候选/10图等开发策略另行限额，图片不走此JSON接口。worker仅新增受限过期函数调用；生产KMS/云配置未变。
+
+2026-10-30洛杉矶扩充/弱网批次：无新增依赖、原生模块、权限或数据库迁移。复用现有PostGIS geography距离判断精度范围相交，既有信封加密/幂等重放；新增5个ODbL公开地址样本，总6处，来源-only与建筑轮廓严格区分。端侧超时10秒和取消独立，不自动重复写；默认自动认定及云配置未变。
+
+2026-10-31多图中断批次：不新增依赖、原生模块、权限、API或迁移。复用Expo OCR桥接；JS等待60秒开发保护与串行原生槽位，取消不声称硬终止Vision/ML Kit。迟到结果忽略，真实任务结束前不并发重试；字段仍主动保存到现有加密批次。CPU/耗电/设备时限待现场冻结。
+
+
+2026-10-31解锁补验修正：无新增依赖、原生模块、权限或DDL。ImportBatch.candidate_count明确为非removed候选；源契约和生成类型同步，返回选图页刷新草稿。复用既有Debug原生OCR执行实际TEST多图/进程恢复，不将JS热更新当作重新原生编译。
+
+
+2026-10-31截图简洁交互：无新增依赖、字体、原生模块、系统权限或API/数据库变动；使用既有原生Alert菜单和V3组件，iOS/Android既有Debug接收JS更新。不能把本批JS导出或网页原型当作新原生编译/完整双端验收。
+
+2026-10-31双端补验：无依赖、锁文件、原生模块、API、DDL或系统权限变动。临时连接错误保留并遮挡同账号导入内存，明确账号/权限错误仍清理；结果页控件精简。故障注入仅暂停本地API或暂时损坏自建TEST缓存副本并恢复，不改系统网络和相册原图。
+
+2026-10-31 首页自动查码：无新增依赖、锁文件或系统权限。既有 Android AbasongLocation 扩展前台连续 LocationManager 事件，后台/销毁清理；实际 Debug 重编译安装通过。iOS 复用 expo-location58 watchPositionAsync；双端查找串行、两秒启动下限，8秒停留/20秒新鲜度为待现场冻结的开发保护。Mapbox 使用 moveTo 显式立即相机命令，避免布局更新中断缩放。新增0005入口到达区域与本地验证，不改云或默认自动认定开关。
+
+
+2026-10-31 建筑门牌/尺度：明确固定 Mapbox light-v11 样式URL，复用其 composite/Streets v8 housenum_label，不新增逐建筑搜索请求或自建门牌数据源。继续 rnmapbox10.3.16 的 existing VectorSource、SymbolLayer、Fill/Line 和原生英制比例尺；自选公寓按 Mercator/512逻辑像素视野适配、最大zoom18，手动最大20。无新增依赖/锁文件/原生权限，本批为JS更新与双平台导出/现有原生运行，不称重新原生编译。公开Tilequery仅作有界覆盖诊断，不持久化供应商几何或用户位置。
+
+2026-10-31 Mapbox Search Box：通过既有Nest/Node fetch接suggest/retrieve，无新依赖或原生重编译。公开token仅本机.env；临时数据不入永久库，路由只传内存交接键。地址身份规范化共享在contracts；无DDL/云改动。生产多实例需集中限流和会话设计，本批单进程保护仅开发环境。
+
+## 2026-10-31 拍面单查地址
+
+复用已锁定的 Expo58.0.21、expo-image-picker58.0.10、expo-file-system58.0.13及现有 Apple Vision/ML Kit 本地模块，无新依赖或锁版本变化。image-picker cameraPermission由禁用改为明确中文用途；microphonePermission仍false，Android合并Manifest只新增所需CAMERA而无RECORD_AUDIO。需重新prebuild、锁定Pods安装及双端原生编译；不能只热刷新。原生OCR模块常量addressCameraVersion=1用于旧包保护；iOS显式照片方向、Android旋转后文字坐标归一化。签名团队只从既有本机产物读取，不写入公共配置。
+
+本批按安装版本阅读[Expo58 ImagePicker](https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/)、[FileSystem](https://docs.expo.dev/versions/v58.0.0/sdk/filesystem/)和Apple Vision方向初始化文档。系统相机/强杀恢复/照片缓存与JS合成状态的验收分开记录。
+
+## 2026-11-01 公开入口核对图
+
+未新增应用运行依赖。离线SVG图生成只用Python标准库；PNG预览可选使用本机既有Pillow12.1.1，缺失时不要求安装，产物与脚本不进入移动端包。停留修正使用已有前台位置观测和纯TypeScript距离计算；无新原生API、位置权限或后台采集。
+
+## 2026-11-01 独立 iPhone 入口核对版
+
+无新增依赖、锁文件或后台权限。复用已锁 Expo58.0.21 / rnmapbox10.3.16 / expo-location58.0.20，本地Release与独立registerRootComponent入口打包公开Woodside资料；普通Expo Router入口不变。独立bundle ID/scheme避免覆盖业务开发版；构建时不加载业务API/Auth模块，结束恢复普通原生配置。Expo58 prebuild必须显式`--no-clean`保留Pods；首轮误清生成目录后已按审查锁文件执行Pods部署安装恢复，没有升级。实际证据见[独立现场版方案](docs/technical/D1_独立现场版与HTTPS测试环境方案.md)。AWS北加州/KMS仍为既有部署方向，未创建资源；不以免费休眠服务或公网隧道替代现场查码就绪条件。
+
+2026-11-01 ADD-18 nearby carousel: no new dependency/native module. Reuse Nest/pg/zod/Node24 fetch, existing RN ScrollView and Mapbox. Separate catalog and bounded temporary Tilequery/reverse enrichment; explicitly configured permanent Geocoding v6 is required for new stored coordinates. Public sample entitlement tested and enabled only in ignored local.env; sample default false. No persistent storage of temporary provider responses, cloud change or new native compile. Caption accessibility follows [React Native0.88](https://reactnative.dev/docs/accessibility), runtime remains [Expo58](https://docs.expo.dev/versions/v58.0.0/).
+
+2026-11-01 follow-up: no dependency/native module changes. Native carousel now handles touch, Android post-release snapping and wheel scrolling using existing ScrollView events; pure event-order regressions guard programmatic remounts. Discovery tolerates fresh <=15m drift without confirming arrival and uses conservative boundary-distance radius checks. Mapbox trial entitlement correction: local permanent geocoding disabled after console/style401 checks; earlier200 responses were insufficient. No paid-plan change. See Mapbox development cost note before restoring service.
+
+
+2026-11-01 ADD-19 本人共享管理：无新依赖、锁文件、原生模块或系统权限。复用Expo58/React Native0.88、现有加密与pg事务；新增0008仅本机D0/一次性库。纠正返回用既有Expo Router dismissTo和非敏感revision刷新“我共享的”；effect重建取消令牌避免开发刷新遗留aborted状态。双端现有原生包接收JS，不声称本批重新原生编译。原生功能验证与Mapbox401、物理设备/现场分开。
+
+2026-11-02 A2云加密与容器：新增服务端 @aws-sdk/client-kms3.1161.0（官方npm，Node>=20，适配Node24），主pnpm锁同步；无移动端/原生模块变化。新增无外部依赖的@abasong/runtime共享生产环境校验。Node容器24.22.1-bookworm-slim固定官方manifest digest be8204d4bd327363357f532187b752ff62759c31bedf98e9e18fc08c9cbd605c，pnpm10.32.1/frozen-lockfile；API/worker已实际构建与非root断网运行。KMS只用SDK任务角色链，不保存AWS长期凭据；云镜像固定入口不能改环境标签退回D0。KMS适配、私存/共享/导入真实PG集成使用合成网关，不声称真实AWS已验收。
+
+2026-11-07 B6-02 容器安全修复。原 Bookworm 镜像的 ECR 扫描新增 `CVE-2026-109518`（apt）和 `CVE-2026-76844`（zlib）。构建和运行统一采用 Docker 官方 `node:24.22.1-alpine`，固定多架构摘要 `sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53`。该基础镜像自带 zlib `1.3.2-r1`，ECR 报告 `CVE-2026-4738`。共享基础层从 Alpine 3.24 官方仓库要求 `zlib>=1.4-r0`。Linux AMD64 容器通过既有生产入口检查，API 内的 sharp PNG 编码和解码通过。[zlib 1.4 修复说明](https://www.zlib.net/)
+
+2026-11-02 永久地理编码：无新增依赖/SDK/DDL。按官方有效卡条件及两次有界公开地址实测，仅忽略本机.env启用MAPBOX_PERMANENT_GEOCODING_ENABLED；默认/云模板仍false，按部署环境单独配置。默认回归无外部调用，ABASONG_VERIFY_LIVE_PERMANENT=1仅允许一次真实永久请求并限一次性测试库；供应商错误不回退临时保存。
+
+2026-11-03 Mapbox候选长ID兼容：真实五候选中四项超过旧500上限；统一供应商/DTO/源OpenAPI为4096字符，禁止截断，保持会话归属与16KiB/512KiB限制。无新依赖/SDK/DDL；原生仅把既有错误移至固定提交区，无新二进制编译。
+
+2026-11-03 Android验收网络：模拟器公网IP可达而Supabase DNS超时；同一AVD保留数据冷启并临时指定DNS后恢复，用户确认真实短信登录。preview:android新增ABASONG_ANDROID_DNS可选IP列表，默认不改，最多4个，仅新启动生效；无全局网络、TLS、供应商配置改动，无新SDK/依赖。
+
+2026-11-03 独立业务配置：无新依赖、SDK、原生模块、锁文件或迁移。复用已锁Expo58配置/CLI、既有pg/jose/zod与审计表；pilot-dev固定HTTPS/DevWest，配置错误拒绝；默认普通/入口核对标识不变。pilot:prepare为本地配置及生产JS导出，不等于Release原生编译。内测资格工具仅D0/MFA ops.user_manage、显式最长7天、默认dry-run；云管理角色与执行器待A4，禁止用本地admin连接代替。AWS注册选择官方Advanced以保留指定区域和细分IAM能力，无新增插件或云凭据。
+
+2026-11-03 AWS接入：复用官方CLI2.39.3的aws login（最低要求2.32），用户亲自确认短期root会话。新增AWS_LOGIN_CACHE_DIRECTORY和umask077，将缓存与配置限定.tooling/aws；不安装插件，不创建长期key/Organizations。新只读预检仅10个读取请求，账号匹配先行，敏感输出白名单；无依赖/锁/原生模块变更。DevWest使用供应商project-scoped迁移执行既有0001–0009与运行角色SQL，不复制D0，不改本地目标防护。真实KMS与运行连接仍待项目用户登录及受限角色核对。
+
+2026-11-03 AWS基础层续批：无新依赖、SDK、锁或业务DDL。用户已批准基础资源与费用；6项资源实际配置核对。修正创建参数为--disable-rollback（AWS拒绝DO_NOTHING失败栈原地恢复），补严格项目/区域/请求标签的初始KMS TagResource及固定stack/changeset管理权限，旧Allow/Deny保持；实际IAM模拟/Access Analyzer核对。alias补Retain供精确导入，真实资源不删除，管理记录释放/导入已获明确批准并完成，UPDATE_COMPLETE/6个物理标识不变。新增模板边界和真实CFN标签结构回归，复用已有jsonschema做官方provider Schema离线验证，无新增依赖。
+
+
+2026-11-03 A4运行准备：无新增依赖、SDK、锁文件、原生模块或业务DDL。复用Node24/pnpm10.32.1/现有pg、Node crypto/fs及jsonschema；4份CloudFormation由TypeScript生成并受CI漂移/拒绝边界测试约束。官方AWS区域24类provider schema只读获取，43项属性用合成引用离线验证，不当作实际部署。Fargate1.4.0/x86_64、单API/worker、只读根+UID1000可写scratch卷；不引入NAT/WAF/Redis。当前搜索会话/HTTP保护均单进程，故明确采用维护窗口stop-first，不声称横向扩容或无中断。HTTP日志只记粗路由/状态/耗时/服务器UUID，worker原子心跳仅状态时间。部署资源/费用及IAM增量仍待授权，未创建新资源、服务凭据、DNS或升级Paid。
+
+
+2026-11-03 A4 IAM准备续批：无新应用依赖、锁、SDK、DDL或原生修改。复用Node子进程/crypto及现有官方AWS CLI，准备两份managed policy（分别低于6144字符）、MFA一小时项目身份和IAM/五秘密模板拆分；Access Analyzer0 findings与13组权限模拟通过。复用本机既有GPG及DevWest pgcrypto验证RSA加密子密钥的TEST密封传输，不安装新加密包、不设置真实服务密码。自动审批在执行前拒绝未逐项授权的新部署身份/策略及ECS/ELB服务关联角色，未尝试绕过；apply新增独立IAM批准开关，费用批准不代替权限批准。
+# 2026-11-03 pilot image assessment
+
+Pinned Node 24.22.1/bookworm image and pnpm dependencies unchanged. Actual ECR scans exposed five unfixed stable-system High findings; [scoped mitigation and expiry](docs/technical/A4_内测镜像扫描与运行限制.md). Strip SUID/SGID and enforce C.UTF-8/empty LANGUAGE, no unstable distro or unpinned package upgrade. New/critical/changed-package findings and expired assessment block deployment. This is not a zero-vulnerability claim.
+
+
+## 2026-11-04 UI样板与系统选择器
+
+新增移动端`@react-native-community/datetimepicker`精确9.2.1，按[Expo58官方版本说明](https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/)选择，来自官方npm注册表，兼容锁定Expo58/RN0.88；不安装@expo/ui或全面迁移SwiftUI。使用当前接口onValueChange，LA timeZoneName固定；iOS滚轮在品牌面板内、Android系统对话框，web有独立HTML字段回退。无新系统权限/网络上传。
+
+app.json加入config plugin，prebuild --no-install --no-clean保留既有目录，pnpm锁和native-locks/Podfile.lock仅增加此模块；无Mapbox/RN升级。已执行Pod安装、Android原生编译和双端/web JS导出。iOS本机CocoaPods缓存中的RNCore/Hermes与配置标记不一致，使用RN供应商的Debug替换构建脚本恢复生成产物；不编辑node_modules源码、不以全局环境或关闭新架构绕过。最终iOS标准模拟器签名编译/启动及部分实际系统控件交互通过；Android输入可靠性仍保留待验，结果分别记录于UI实施文档。普通开发profile显式恢复LocalNetworking，任意HTTP仍false；pilot/field两独立profile保持LocalNetworking false并有回归。不能让旧开发包只收热刷新来验证新原生依赖。
+
+
+## 2026-11-04 B3消息
+
+无新增依赖、SDK、原生模块、系统权限或锁文件。复用现有EnvelopeCrypto/Node crypto、pg、Nest、Zod、Expo/RN FlatList与KeyboardAvoidingView。前台有界轮询先完成完整本地消息：会话4秒、中心12秒、首页未读15秒；后台/离页取消。设备推送与明确集合点分享留B3下一子批，不引入WebSocket/通知供应商假接通。密文正文不用于列表或锁屏预览；本地与AWS KMS格式严格隔离，云业务验证仍B6，不降级。D0增量0011及0012分开保留已应用历史；无云迁移/云IAM变更。
+
+
+## 2026-11-04 设计系统V3.1收敛
+
+无新增依赖、SDK、系统权限、锁文件、业务DDL或云修改。复用Expo58/RN0.88的Pressable/TextInput/Modal/KeyboardAvoidingView及已安装的系统选择器。唯一tokens-v3.json生成原生与三份CSS；旧Python入口仅代理同一Node生成器。共用UI从认证模块提取，旧导出兼容保留；不全面改写SwiftUI。DEV-only组件目录不连接业务写入。官方RN组件API已核对，原生壳仅接收本批JS；三平台JS导出不代表本次重新原生编译或真机验收。
+
+
+## 2026-11-04 B3通知（独立集合点按用户决定取消）
+
+新增expo-notifications **58.1.8**，通过Expo58 install匹配后精确固定；传递expo-application58.1.2，pnpm与native-locks/Podfile.lock同步。SDK离线bundledNativeModules检查通过，未据此声称在线依赖服务核验。实际iOS Debug模拟器与Android arm64 Debug编译成功，Pods新增模块并锁定；无Expo Go/SwiftUI重写。配置notifications插件、Android collaboration通道，iOS后台远程开关false。field-review过滤通知插件，pilot仍需自己的APNs/FCM和签名分发条件。
+
+无服务端SDK依赖：Expo固定HTTPS send/getReceipts接口使用Node fetch8秒超时/白名单错误；worker默认PUSH_PROVIDER=disabled，未配置凭据不消费事件或连接供应商。EXPO_PUBLIC_EXPO_PROJECT_ID是可公开项目ID、不是密钥，目前未配置；未来访问令牌只能用worker秘密注入。未新建EAS项目、APNs/FCM凭据/长期密钥或云资源，真实远程送达保留B6。0013已应用D0后用户取消独立集合点，新增0014撤去敏感服务的集合点权限；保留历史表，不删除数据。两项均只限D0，云仍待B6。
+
+## R4-01（2026-11-05）
+
+距离契约与公寓卡片不新增依赖/原生模块；复用现有PostGIS、Tilequery及已安装RNMapbox的metric比例尺。球面距离与快照校验使用既有本地实现，不增加Turf/Matrix逐卡调用；没有Pod、Gradle或pnpm锁更新。共用组件属于应用源码，原生编译、模拟器功能与物理验收仍分别记录。
+
+2026-11-05 R4-03：无新增依赖、原生模块或API契约。地址联想复用现有catalog/suggest/retrieve和会话限制，保存复用原共享/永久地址贡献/本人私存API；表单沿用V3令牌与PageFrame，键盘偏移采用当前RN0.88的View.measureInWindow/KeyboardAvoidingView。未重新原生编译，不以JS运行替代编译证据。
+
+2026-11-05 R4-04：无新增依赖、原生模块、契约、DDL或云变更。复用现有MapCardFrame/MapCardCarousel、RNMapbox10.3.16的相机事件/setCamera与PointAnnotation.refresh；中心/zoom/heading/pitch仅保存当前账号会话内存，不上传司机GPS。测试适配器/内存详情不作为业务导航或权限实现，原生编译与现场仍分栏。
+
+- 2026-11-06 R4-10：不新增依赖/原生模块；提取既有消息与缺口控制器的传输适配以接真实隔离HTTP，原路由鉴权适配保留。临时工具仅监听回环，短期JWT与密钥不进App/Metro/日志，不改云或D0防护。
+
+- 2026-11-06 R4-11：无新增依赖/原生模块/权限/锁文件/契约/迁移。复用Expo58选图和既有原生OCR；导入状态控制器分出纯传输核心及原鉴权适配，错误类保持兼容导出。纠正复用PageFrame/Controls固定底部主操作。loopback测试工具以独立contribution场景限定路径及合成身份，不扩大普通API权限，不写云或真实D0资格。
+
+2026-11-06 R4-12：无新增依赖/SDK/原生模块、权限、契约、迁移或云资源。复用现有Expo58、React/RN、crypto/pg及V3.2共用组件；抽出报名幂等尝试与会话生命周期发送门控。现有loopback独立TEST工具新增collaboration验证入口，仍拒绝非D0管理目标/外部origin，合成JWT与加密密钥留服务进程；结束清理自有随机库/角色。真实账号及云服务不变。
+
+2026-11-06 R4-13：无新增应用依赖、SDK、原生模块、系统权限或锁文件；复用现有Mapbox永久地理编码、Nest/pg/EnvelopeCrypto和统一ContributionAddressField。临时Python契约验证虚拟环境仅在/private/tmp，不改变全局Python及工程依赖。确认新地图地址先取得持久化许可再写加密草稿；服务端证据不入公开DTO；D0仍17迁移54表，无云变更。
+
+
+## 2026-11-06 B5-01 本人资料与我的
+
+沿用Expo58.0.21/RN0.88.1、已有expo-router/crypto/clipboard及V3 tokens，无依赖升级、新原生模块或权限。电话/微信使用既有EnvelopeCrypto与单独owner RLS表；选择用途不授能力。0018/0019只应用本地D0，19迁移55表；未修改云库/费用/账号资格。熟悉区域是声明资料，不是GPS。团队、媒体及邀请按后续批次，保留历史表不删常联系数据。依据及检查见[B5-01报告](docs/technical/B5_01_本人资料与我的实施验收.md)。
+
+## 2026-11-06 B5-02 本人 DSP 团队
+
+沿用 Expo 58、React Native、现有剪贴板、共用组件及 EnvelopeCrypto；无新增依赖、锁文件、原生模块或系统权限。0020 仅应用本机 D0（20 迁移、56 表），独立加密业务联系方式，云环境未改。见[实施验收](docs/technical/B5_02_本人DSP团队与发布身份实施验收.md)。
+
+## 2026-11-06 B5-03 司机圈文字动态与通知
+
+沿用 Expo 58、React Native、Expo Router、现有消息与推送接口、pg 和 V3 共用组件。未新增依赖、锁文件、原生模块或系统权限。0021 已应用本机 D0，21 次迁移、56 张表。见[实施验收](docs/technical/B5_03_司机圈文字动态回复与通知实施验收.md)。
+
+## 2026-11-06 B5-04 司机圈私有图片
+
+服务端固定 sharp 0.35.5 解码、转正、缩放及重新编码，AWS SDK S3 3.1161.0 用于云端私有桶适配，锁文件已同步。客户端沿用 Expo 58 ImagePicker、FileSystem、fetch 与状态栏模块；未新增移动端依赖或系统权限，更新既有权限用途文案。0022 仅在本机 D0 与隔离验证应用。见[实施验收](docs/technical/B5_04_司机圈私有图片实施验收.md)。
+
+## 2026-11-06 B5-05 邀请司机
+
+- Expo SDK 58：以 `expo install` 解析并锁定 `expo-asset@58.0.20`（将已有传递依赖升级并声明为直接依赖）和 `expo-media-library@58.0.13`。更新 pnpm lock 与 iOS Podfile.lock。
+- MediaLibrary 仅用于邀请图新增；iOS `addOnly`，Android 10+ MediaStore，Android 13+ 图像/视频/音频及部分媒体读取权限均从合并清单移除。既有照片选择仍使用系统选择器。
+- 系统分享、剪贴板、临时文件继续复用现有能力。海报生成脚本的 Pillow/qrcode 只用于本机生成合成素材，不进入 App 或运行服务。
+
+
+## 2026-11-08 M7 Android 实际读屏测试环境
+
+仅增加本机忽略目录内的官方Android SDK系统镜像：`system-images;android-37.0;google_apis_playstore;arm64-v8a` 和 `system-images;android-36;google_apis_playstore;arm64-v8a`。新增许可由用户亲自阅读接受。分别建立独立A11y测试AVD，保留D0原设备和数据；两版启动均失败，尚未运行TalkBack，不把下载或AVD创建计为读屏验收。未从第三方下载APK，没有Google账号登录或新增系统权限。
+
+产品依赖、pnpm/Pod/Gradle锁文件及原生包不变；本轮只运行既有Debug容器和冻结源码9d31f95。原设备字号临时2.0用于代表性首页测试，用户确认后已恢复并只读核对为1.0；Display size未改。详见[补验记录](docs/technical/V3.5_M7-01_Android贡献与读屏补验.md)。

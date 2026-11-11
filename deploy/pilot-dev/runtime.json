@@ -1,0 +1,1220 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Review-only bounded pilot runtime; one API/worker with maintenance-window deployments",
+  "Metadata": {
+    "Environment": "pilot-dev",
+    "Region": "us-west-1",
+    "ReviewOnly": true
+  },
+  "Parameters": {
+    "CertificateArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:acm:us-west-1:[0-9]{12}:certificate/[0-9a-f-]{36}$"
+    },
+    "BusinessKeyArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:kms:us-west-1:[0-9]{12}:key/[0-9a-f-]{36}$"
+    },
+    "DatabaseHost": {
+      "Type": "String",
+      "AllowedPattern": "^(db\\.mxlmemaunzoramgemiju\\.supabase\\.co|aws-[0-9]+-us-west-1\\.pooler\\.supabase\\.com)$"
+    },
+    "ApiImageDigest": {
+      "Type": "String",
+      "AllowedPattern": "^[a-f0-9]{64}$"
+    },
+    "CircleMediaBucketName": {
+      "Type": "String",
+      "AllowedPattern": "^(?:|abasong-pilot-dev-circle-media-[a-z0-9][a-z0-9-]{0,30}[a-z0-9])$",
+      "Default": ""
+    },
+    "WorkerImageDigest": {
+      "Type": "String",
+      "AllowedPattern": "^[a-f0-9]{64}$"
+    },
+    "AlertTopicArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:sns:us-west-1:[0-9]{12}:abasong-pilot-dev-alerts$"
+    },
+    "ApiExecutionRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/abasong-pilot-dev-api-execution$"
+    },
+    "WorkerExecutionRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/abasong-pilot-dev-worker-execution$"
+    },
+    "ApiTaskRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/abasong-pilot-dev-api-task$"
+    },
+    "WorkerTaskRoleArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:iam::[0-9]{12}:role/abasong-pilot-dev-worker-task$"
+    },
+    "ApiDatabaseArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:secretsmanager:us-west-1:[0-9]{12}:secret:abasong/pilot-dev/api-db-[A-Za-z0-9]{6}$"
+    },
+    "SensitiveDatabaseArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:secretsmanager:us-west-1:[0-9]{12}:secret:abasong/pilot-dev/sensitive-db-[A-Za-z0-9]{6}$"
+    },
+    "WorkerDatabaseArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:secretsmanager:us-west-1:[0-9]{12}:secret:abasong/pilot-dev/worker-db-[A-Za-z0-9]{6}$"
+    },
+    "DataHmacArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:secretsmanager:us-west-1:[0-9]{12}:secret:abasong/pilot-dev/data-hmac-[A-Za-z0-9]{6}$"
+    },
+    "MapboxSearchArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:secretsmanager:us-west-1:[0-9]{12}:secret:abasong/pilot-dev/mapbox-search-[A-Za-z0-9]{6}$"
+    }
+  },
+  "Resources": {
+    "Vpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.42.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "Gateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "GatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "InternetGatewayId": {
+          "Ref": "Gateway"
+        }
+      }
+    },
+    "Routes": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "InternetRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "Routes"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "Gateway"
+        }
+      },
+      "DependsOn": "GatewayAttachment"
+    },
+    "ApiSecurity": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "API accepts only the load balancer",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupIngress": [],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 5432,
+            "ToPort": 5432,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "WorkerSecurity": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Worker has no inbound access",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupIngress": [],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 5432,
+            "ToPort": 5432,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "EdgeSecurity": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Public TLS entry",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 3001,
+            "ToPort": 3001,
+            "DestinationSecurityGroupId": {
+              "Ref": "ApiSecurity"
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "ApiIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "ApiSecurity"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 3001,
+        "ToPort": 3001,
+        "SourceSecurityGroupId": {
+          "Ref": "EdgeSecurity"
+        }
+      }
+    },
+    "LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": "abasong-pilot-dev-alb",
+        "Type": "application",
+        "Scheme": "internet-facing",
+        "IpAddressType": "ipv4",
+        "Subnets": [
+          {
+            "Ref": "SubnetA"
+          },
+          {
+            "Ref": "SubnetB"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "EdgeSecurity"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "LoadBalancerAttributes": [
+          {
+            "Key": "access_logs.s3.enabled",
+            "Value": "false"
+          },
+          {
+            "Key": "routing.http.xff_header_processing.mode",
+            "Value": "append"
+          },
+          {
+            "Key": "routing.http.xff_client_port.enabled",
+            "Value": "false"
+          },
+          {
+            "Key": "routing.http.drop_invalid_header_fields.enabled",
+            "Value": "true"
+          },
+          {
+            "Key": "routing.http.desync_mitigation_mode",
+            "Value": "strictest"
+          }
+        ]
+      }
+    },
+    "Targets": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": "abasong-pilot-dev-api",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Port": 3001,
+        "Protocol": "HTTP",
+        "TargetType": "ip",
+        "HealthCheckPath": "/health/ready",
+        "HealthCheckIntervalSeconds": 15,
+        "HealthCheckTimeoutSeconds": 8,
+        "HealthyThresholdCount": 2,
+        "UnhealthyThresholdCount": 3,
+        "Matcher": {
+          "HttpCode": "200"
+        },
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "30"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "HttpListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "LoadBalancerArn": {
+          "Ref": "LoadBalancer"
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+        "DefaultActions": [
+          {
+            "Type": "redirect",
+            "RedirectConfig": {
+              "Protocol": "HTTPS",
+              "Port": "443",
+              "Host": "api-dev.abasong.com",
+              "Path": "/#{path}",
+              "Query": "#{query}",
+              "StatusCode": "HTTP_301"
+            }
+          }
+        ]
+      }
+    },
+    "HttpsListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "LoadBalancerArn": {
+          "Ref": "LoadBalancer"
+        },
+        "Port": 443,
+        "Protocol": "HTTPS",
+        "SslPolicy": "ELBSecurityPolicy-TLS13-1-2-2021-06",
+        "Certificates": [
+          {
+            "CertificateArn": {
+              "Ref": "CertificateArn"
+            }
+          }
+        ],
+        "DefaultActions": [
+          {
+            "Type": "fixed-response",
+            "FixedResponseConfig": {
+              "StatusCode": "404",
+              "ContentType": "text/plain",
+              "MessageBody": "Not found"
+            }
+          }
+        ]
+      }
+    },
+    "ApiHostRule": {
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+      "Properties": {
+        "ListenerArn": {
+          "Ref": "HttpsListener"
+        },
+        "Priority": 1,
+        "Conditions": [
+          {
+            "Field": "host-header",
+            "HostHeaderConfig": {
+              "Values": [
+                "api-dev.abasong.com"
+              ]
+            }
+          }
+        ],
+        "Actions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": {
+              "Ref": "Targets"
+            }
+          }
+        ]
+      }
+    },
+    "Cluster": {
+      "Type": "AWS::ECS::Cluster",
+      "Properties": {
+        "ClusterName": "abasong-pilot-dev",
+        "ClusterSettings": [
+          {
+            "Name": "containerInsights",
+            "Value": "disabled"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "SubnetA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.42.0.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "SubnetARoutes": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "Routes"
+        },
+        "SubnetId": {
+          "Ref": "SubnetA"
+        }
+      }
+    },
+    "SubnetB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.42.1.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "SubnetBRoutes": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "Routes"
+        },
+        "SubnetId": {
+          "Ref": "SubnetB"
+        }
+      }
+    },
+    "ApiTask": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "Family": "abasong-pilot-dev-api",
+        "Cpu": "256",
+        "Memory": "512",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE"
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "X86_64",
+          "OperatingSystemFamily": "LINUX"
+        },
+        "ExecutionRoleArn": {
+          "Ref": "ApiExecutionRoleArn"
+        },
+        "TaskRoleArn": {
+          "Ref": "ApiTaskRoleArn"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "Volumes": [
+          {
+            "Name": "scratch"
+          }
+        ],
+        "ContainerDefinitions": [
+          {
+            "Name": "api",
+            "Essential": true,
+            "Image": {
+              "Fn::Sub": "${AWS::AccountId}.dkr.ecr.us-west-1.${AWS::URLSuffix}/abasong-pilot-dev-api@sha256:${ApiImageDigest}"
+            },
+            "User": "1000:1000",
+            "ReadonlyRootFilesystem": true,
+            "LinuxParameters": {
+              "Capabilities": {
+                "Drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "StopTimeout": 30,
+            "MountPoints": [
+              {
+                "SourceVolume": "scratch",
+                "ContainerPath": "/app-tmp",
+                "ReadOnly": false
+              }
+            ],
+            "Environment": [
+              {
+                "Name": "ABASONG_ENV",
+                "Value": "pilot-dev"
+              },
+              {
+                "Name": "NODE_ENV",
+                "Value": "production"
+              },
+              {
+                "Name": "AWS_REGION",
+                "Value": "us-west-1"
+              },
+              {
+                "Name": "PILOT_DATABASE_HOST",
+                "Value": {
+                  "Ref": "DatabaseHost"
+                }
+              },
+              {
+                "Name": "TMPDIR",
+                "Value": "/app-tmp"
+              },
+              {
+                "Name": "CIRCLE_MEDIA_BUCKET",
+                "Value": {
+                  "Ref": "CircleMediaBucketName"
+                }
+              },
+              {
+                "Name": "PUBLIC_API_ORIGIN",
+                "Value": "https://api-dev.abasong.com"
+              },
+              {
+                "Name": "API_HOST",
+                "Value": "0.0.0.0"
+              },
+              {
+                "Name": "API_PORT",
+                "Value": "3001"
+              },
+              {
+                "Name": "AUTH_ISSUER",
+                "Value": "https://mxlmemaunzoramgemiju.supabase.co/auth/v1"
+              },
+              {
+                "Name": "AUTH_AUDIENCE",
+                "Value": "authenticated"
+              },
+              {
+                "Name": "AUTH_JWT_ALGORITHM",
+                "Value": "ES256"
+              },
+              {
+                "Name": "DATA_ENCRYPTION_PROVIDER",
+                "Value": "aws-kms"
+              },
+              {
+                "Name": "DATA_HMAC_KEY_VERSION",
+                "Value": "pilot-v1"
+              },
+              {
+                "Name": "KMS_KEY_ARN",
+                "Value": {
+                  "Ref": "BusinessKeyArn"
+                }
+              },
+              {
+                "Name": "IDEMPOTENCY_RETENTION_SECONDS",
+                "Value": "86400"
+              },
+              {
+                "Name": "MAPBOX_PERMANENT_GEOCODING_ENABLED",
+                "Value": "false"
+              }
+            ],
+            "Secrets": [
+              {
+                "Name": "DATABASE_URL",
+                "ValueFrom": {
+                  "Ref": "ApiDatabaseArn"
+                }
+              },
+              {
+                "Name": "DATABASE_SENSITIVE_URL",
+                "ValueFrom": {
+                  "Ref": "SensitiveDatabaseArn"
+                }
+              },
+              {
+                "Name": "DATA_HMAC_KEY",
+                "ValueFrom": {
+                  "Ref": "DataHmacArn"
+                }
+              },
+              {
+                "Name": "IDEMPOTENCY_HMAC_KEY",
+                "ValueFrom": {
+                  "Ref": "DataHmacArn"
+                }
+              },
+              {
+                "Name": "MAPBOX_SEARCH_TOKEN",
+                "ValueFrom": {
+                  "Ref": "MapboxSearchArn"
+                }
+              }
+            ],
+            "PortMappings": [
+              {
+                "ContainerPort": 3001,
+                "Protocol": "tcp"
+              }
+            ],
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": "/abasong/pilot-dev/api",
+                "awslogs-region": "us-west-1",
+                "awslogs-stream-prefix": "api",
+                "mode": "non-blocking",
+                "max-buffer-size": "1m"
+              }
+            },
+            "HealthCheck": {
+              "Command": [
+                "CMD",
+                "node",
+                "-e",
+                "fetch('http://127.0.0.1:3001/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+              ],
+              "Interval": 30,
+              "Timeout": 5,
+              "Retries": 3,
+              "StartPeriod": 60
+            }
+          }
+        ]
+      }
+    },
+    "ApiService": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "ServiceName": "abasong-pilot-dev-api",
+        "Cluster": {
+          "Ref": "Cluster"
+        },
+        "TaskDefinition": {
+          "Ref": "ApiTask"
+        },
+        "LaunchType": "FARGATE",
+        "PlatformVersion": "1.4.0",
+        "DesiredCount": 1,
+        "EnableExecuteCommand": false,
+        "PropagateTags": "SERVICE",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "DeploymentConfiguration": {
+          "MinimumHealthyPercent": 0,
+          "MaximumPercent": 100,
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": true
+          }
+        },
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "ENABLED",
+            "SecurityGroups": [
+              {
+                "Ref": "ApiSecurity"
+              }
+            ],
+            "Subnets": [
+              {
+                "Ref": "SubnetA"
+              },
+              {
+                "Ref": "SubnetB"
+              }
+            ]
+          }
+        },
+        "HealthCheckGracePeriodSeconds": 120,
+        "LoadBalancers": [
+          {
+            "TargetGroupArn": {
+              "Ref": "Targets"
+            },
+            "ContainerName": "api",
+            "ContainerPort": 3001
+          }
+        ]
+      },
+      "DependsOn": [
+        "InternetRoute",
+        "SubnetARoutes",
+        "SubnetBRoutes",
+        "ApiIngress",
+        "ApiHostRule"
+      ]
+    },
+    "ApiCPUAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "abasong-pilot-dev-api-cpu",
+        "Namespace": "AWS/ECS",
+        "MetricName": "CPUUtilization",
+        "Dimensions": [
+          {
+            "Name": "ClusterName",
+            "Value": "abasong-pilot-dev"
+          },
+          {
+            "Name": "ServiceName",
+            "Value": "abasong-pilot-dev-api"
+          }
+        ],
+        "Statistic": "Average",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 85,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "breaching",
+        "AlarmActions": [
+          {
+            "Ref": "AlertTopicArn"
+          }
+        ]
+      }
+    },
+    "ApiMemoryAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "abasong-pilot-dev-api-memory",
+        "Namespace": "AWS/ECS",
+        "MetricName": "MemoryUtilization",
+        "Dimensions": [
+          {
+            "Name": "ClusterName",
+            "Value": "abasong-pilot-dev"
+          },
+          {
+            "Name": "ServiceName",
+            "Value": "abasong-pilot-dev-api"
+          }
+        ],
+        "Statistic": "Average",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 85,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "breaching",
+        "AlarmActions": [
+          {
+            "Ref": "AlertTopicArn"
+          }
+        ]
+      }
+    },
+    "WorkerTask": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "Family": "abasong-pilot-dev-worker",
+        "Cpu": "256",
+        "Memory": "512",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE"
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "X86_64",
+          "OperatingSystemFamily": "LINUX"
+        },
+        "ExecutionRoleArn": {
+          "Ref": "WorkerExecutionRoleArn"
+        },
+        "TaskRoleArn": {
+          "Ref": "WorkerTaskRoleArn"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "Volumes": [
+          {
+            "Name": "scratch"
+          }
+        ],
+        "ContainerDefinitions": [
+          {
+            "Name": "worker",
+            "Essential": true,
+            "Image": {
+              "Fn::Sub": "${AWS::AccountId}.dkr.ecr.us-west-1.${AWS::URLSuffix}/abasong-pilot-dev-worker@sha256:${WorkerImageDigest}"
+            },
+            "User": "1000:1000",
+            "ReadonlyRootFilesystem": true,
+            "LinuxParameters": {
+              "Capabilities": {
+                "Drop": [
+                  "ALL"
+                ]
+              }
+            },
+            "StopTimeout": 30,
+            "MountPoints": [
+              {
+                "SourceVolume": "scratch",
+                "ContainerPath": "/app-tmp",
+                "ReadOnly": false
+              }
+            ],
+            "Environment": [
+              {
+                "Name": "ABASONG_ENV",
+                "Value": "pilot-dev"
+              },
+              {
+                "Name": "NODE_ENV",
+                "Value": "production"
+              },
+              {
+                "Name": "AWS_REGION",
+                "Value": "us-west-1"
+              },
+              {
+                "Name": "PILOT_DATABASE_HOST",
+                "Value": {
+                  "Ref": "DatabaseHost"
+                }
+              },
+              {
+                "Name": "TMPDIR",
+                "Value": "/app-tmp"
+              },
+              {
+                "Name": "CIRCLE_MEDIA_BUCKET",
+                "Value": {
+                  "Ref": "CircleMediaBucketName"
+                }
+              },
+              {
+                "Name": "WORKER_POLL_MS",
+                "Value": "30000"
+              },
+              {
+                "Name": "WORKER_HEARTBEAT_PATH",
+                "Value": "/app-tmp/worker-health.json"
+              }
+            ],
+            "Secrets": [
+              {
+                "Name": "WORKER_DATABASE_URL",
+                "ValueFrom": {
+                  "Ref": "WorkerDatabaseArn"
+                }
+              }
+            ],
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": "/abasong/pilot-dev/worker",
+                "awslogs-region": "us-west-1",
+                "awslogs-stream-prefix": "worker",
+                "mode": "non-blocking",
+                "max-buffer-size": "1m"
+              }
+            },
+            "HealthCheck": {
+              "Command": [
+                "CMD",
+                "node",
+                "dist/health.js"
+              ],
+              "Interval": 30,
+              "Timeout": 5,
+              "Retries": 3,
+              "StartPeriod": 60
+            }
+          }
+        ]
+      }
+    },
+    "WorkerService": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "ServiceName": "abasong-pilot-dev-worker",
+        "Cluster": {
+          "Ref": "Cluster"
+        },
+        "TaskDefinition": {
+          "Ref": "WorkerTask"
+        },
+        "LaunchType": "FARGATE",
+        "PlatformVersion": "1.4.0",
+        "DesiredCount": 1,
+        "EnableExecuteCommand": false,
+        "PropagateTags": "SERVICE",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "DeploymentConfiguration": {
+          "MinimumHealthyPercent": 0,
+          "MaximumPercent": 100,
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": true
+          }
+        },
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "ENABLED",
+            "SecurityGroups": [
+              {
+                "Ref": "WorkerSecurity"
+              }
+            ],
+            "Subnets": [
+              {
+                "Ref": "SubnetA"
+              },
+              {
+                "Ref": "SubnetB"
+              }
+            ]
+          }
+        }
+      },
+      "DependsOn": [
+        "InternetRoute",
+        "SubnetARoutes",
+        "SubnetBRoutes",
+        "ApiIngress",
+        "ApiHostRule"
+      ]
+    },
+    "WorkerCPUAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "abasong-pilot-dev-worker-cpu",
+        "Namespace": "AWS/ECS",
+        "MetricName": "CPUUtilization",
+        "Dimensions": [
+          {
+            "Name": "ClusterName",
+            "Value": "abasong-pilot-dev"
+          },
+          {
+            "Name": "ServiceName",
+            "Value": "abasong-pilot-dev-worker"
+          }
+        ],
+        "Statistic": "Average",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 85,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "breaching",
+        "AlarmActions": [
+          {
+            "Ref": "AlertTopicArn"
+          }
+        ]
+      }
+    },
+    "WorkerMemoryAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "abasong-pilot-dev-worker-memory",
+        "Namespace": "AWS/ECS",
+        "MetricName": "MemoryUtilization",
+        "Dimensions": [
+          {
+            "Name": "ClusterName",
+            "Value": "abasong-pilot-dev"
+          },
+          {
+            "Name": "ServiceName",
+            "Value": "abasong-pilot-dev-worker"
+          }
+        ],
+        "Statistic": "Average",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 85,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "breaching",
+        "AlarmActions": [
+          {
+            "Ref": "AlertTopicArn"
+          }
+        ]
+      }
+    },
+    "HealthyTargetsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "abasong-pilot-dev-healthytargets",
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HealthyHostCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": {
+              "Fn::GetAtt": [
+                "LoadBalancer",
+                "LoadBalancerFullName"
+              ]
+            }
+          },
+          {
+            "Name": "TargetGroup",
+            "Value": {
+              "Fn::GetAtt": [
+                "Targets",
+                "TargetGroupFullName"
+              ]
+            }
+          }
+        ],
+        "Statistic": "Minimum",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 1,
+        "ComparisonOperator": "LessThanThreshold",
+        "TreatMissingData": "breaching",
+        "AlarmActions": [
+          {
+            "Ref": "AlertTopicArn"
+          }
+        ]
+      }
+    },
+    "TargetErrorsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmName": "abasong-pilot-dev-targeterrors",
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HTTPCode_Target_5XX_Count",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": {
+              "Fn::GetAtt": [
+                "LoadBalancer",
+                "LoadBalancerFullName"
+              ]
+            }
+          },
+          {
+            "Name": "TargetGroup",
+            "Value": {
+              "Fn::GetAtt": [
+                "Targets",
+                "TargetGroupFullName"
+              ]
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 60,
+        "EvaluationPeriods": 3,
+        "Threshold": 5,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": [
+          {
+            "Ref": "AlertTopicArn"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "LoadBalancerDnsName": {
+      "Value": {
+        "Fn::GetAtt": [
+          "LoadBalancer",
+          "DNSName"
+        ]
+      }
+    },
+    "ApiOrigin": {
+      "Value": "https://api-dev.abasong.com"
+    },
+    "ClusterArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Cluster",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

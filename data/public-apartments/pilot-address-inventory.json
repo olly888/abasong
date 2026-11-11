@@ -1,0 +1,257 @@
+{
+  "scope": "Public address validation inventory; not a new runtime catalog or password dataset",
+  "as_of": "2026-11-02",
+  "apartment_addresses": [
+    {
+      "id": "existing-01",
+      "name": "One Santa Fe",
+      "address": {
+        "address_line1": "300 S Santa Fe Ave",
+        "city": "Los Angeles",
+        "state": "CA",
+        "postal_code": "90012"
+      },
+      "classification": "apartment",
+      "basis": "existing_public_dataset",
+      "source": "https://osfla.com/",
+      "geometry_ref": "one-santa-fe.geojson#features/0",
+      "geometry_role": "building_footprints",
+      "runtime_catalog": true,
+      "password_scope": "not_established_by_public_map",
+      "field_gate_verified": false
+    },
+    {
+      "id": "existing-02",
+      "name": "Del Mar Apartments",
+      "address": {
+        "address_line1": "2445 E Del Mar Blvd",
+        "city": "Pasadena",
+        "state": "CA",
+        "postal_code": "91107"
+      },
+      "classification": "apartment",
+      "basis": "existing_public_dataset",
+      "source": "https://www.delmarpasadena.com/",
+      "geometry_ref": "la-expansion.geojson#features/0",
+      "geometry_role": "building_footprints",
+      "runtime_catalog": true,
+      "password_scope": "not_established_by_public_map",
+      "field_gate_verified": false
+    },
+    {
+      "id": "existing-03",
+      "name": "Woodside Village",
+      "address": {
+        "address_line1": "2547 Temple Ave",
+        "city": "West Covina",
+        "state": "CA",
+        "postal_code": "91792"
+      },
+      "classification": "apartment",
+      "basis": "existing_public_dataset",
+      "source": "https://www.woodsidevillageapartmenthomes.com/contactus",
+      "geometry_ref": "la-expansion.geojson#features/1",
+      "geometry_role": "building_footprints",
+      "runtime_catalog": true,
+      "password_scope": "not_established_by_public_map",
+      "field_gate_verified": false
+    },
+    {
+      "id": "existing-04",
+      "name": "Colony at The Lakes",
+      "address": {
+        "address_line1": "301 S Glendora Ave",
+        "city": "West Covina",
+        "state": "CA",
+        "postal_code": "91790"
+      },
+      "classification": "apartment",
+      "basis": "existing_public_dataset",
+      "source": "https://www.colonyatthelakes.com/",
+      "geometry_ref": "la-expansion.geojson#features/2",
+      "geometry_role": "address_only_area",
+      "runtime_catalog": true,
+      "password_scope": "not_established_by_public_map",
+      "field_gate_verified": false
+    },
+    {
+      "id": "existing-05",
+      "name": "Park La Brea",
+      "address": {
+        "address_line1": "6200 W 3rd St",
+        "city": "Los Angeles",
+        "state": "CA",
+        "postal_code": "90036"
+      },
+      "classification": "apartment",
+      "basis": "existing_public_dataset",
+      "source": "https://www.parklabrea.com/",
+      "geometry_ref": "la-expansion.geojson#features/3",
+      "geometry_role": "address_only_area",
+      "runtime_catalog": true,
+      "password_scope": "not_established_by_public_map",
+      "field_gate_verified": false
+    },
+    {
+      "id": "existing-06",
+      "name": "Park La Brea · Tower 48",
+      "address": {
+        "address_line1": "435 S Curson Ave",
+        "city": "Los Angeles",
+        "state": "CA",
+        "postal_code": "90036"
+      },
+      "classification": "apartment",
+      "basis": "existing_public_dataset",
+      "source": "https://www.parklabrea.com/",
+      "geometry_ref": "la-expansion.geojson#features/4",
+      "geometry_role": "building_footprints",
+      "runtime_catalog": true,
+      "password_scope": "not_established_by_public_map",
+      "field_gate_verified": false
+    },
+    {
+      "id": "acappella-pasadena",
+      "name": "Acappella Pasadena",
+      "address": {
+        "address_line1": "145 Chestnut Street",
+        "city": "Pasadena",
+        "state": "CA",
+        "postal_code": "91103"
+      },
+      "classification": "apartment",
+      "basis": "operator_public_property_page",
+      "source": "https://www.equityapartments.com/los-angeles/pasadena/acappella-pasadena-apartments",
+      "checked_at": "2026-11-02",
+      "geometry_ref": null,
+      "geometry_role": "not_obtained",
+      "runtime_catalog": false,
+      "address_quality": "public_postal_address",
+      "password_scope": "unknown",
+      "field_gate_verified": false
+    },
+    {
+      "id": "ava-pasadena",
+      "name": "AVA Pasadena",
+      "address": {
+        "address_line1": "385 South Catalina Avenue",
+        "city": "Pasadena",
+        "state": "CA",
+        "postal_code": "91106"
+      },
+      "classification": "apartment",
+      "basis": "operator_public_property_page",
+      "source": "https://www.avaloncommunities.com/california/pasadena-apartments/ava-pasadena/",
+      "checked_at": "2026-11-02",
+      "geometry_ref": null,
+      "geometry_role": "not_obtained",
+      "runtime_catalog": false,
+      "address_quality": "public_postal_address",
+      "password_scope": "unknown",
+      "field_gate_verified": false
+    },
+    {
+      "id": "avalon-glendora",
+      "name": "Avalon Glendora",
+      "address": {
+        "address_line1": "121 E. Route 66",
+        "city": "Glendora",
+        "state": "CA",
+        "postal_code": "91740"
+      },
+      "classification": "apartment",
+      "basis": "operator_public_property_page",
+      "source": "https://www.avaloncommunities.com/california/glendora-apartments/avalon-glendora/",
+      "checked_at": "2026-11-02",
+      "geometry_ref": null,
+      "geometry_role": "not_obtained",
+      "runtime_catalog": false,
+      "address_quality": "public_postal_address",
+      "password_scope": "unknown",
+      "field_gate_verified": false
+    },
+    {
+      "id": "avalon-monrovia",
+      "name": "Avalon Monrovia",
+      "address": {
+        "address_line1": "825 South Myrtle Avenue",
+        "city": "Monrovia",
+        "state": "CA",
+        "postal_code": "91016"
+      },
+      "classification": "apartment",
+      "basis": "operator_public_property_page",
+      "source": "https://www.avaloncommunities.com/california/monrovia-apartments/avalon-monrovia/",
+      "checked_at": "2026-11-02",
+      "geometry_ref": null,
+      "geometry_role": "not_obtained",
+      "runtime_catalog": false,
+      "address_quality": "public_postal_address",
+      "password_scope": "unknown",
+      "field_gate_verified": false
+    },
+    {
+      "id": "eaves-old-town",
+      "name": "eaves Old Town Pasadena",
+      "address": {
+        "address_line1": "350 Del Mar Blvd.",
+        "city": "Pasadena",
+        "state": "CA",
+        "postal_code": "91101"
+      },
+      "classification": "apartment",
+      "basis": "operator_public_property_page",
+      "source": "https://www.avaloncommunities.com/california/pasadena-apartments/eaves-old-town-pasadena/",
+      "checked_at": "2026-11-02",
+      "geometry_ref": null,
+      "geometry_role": "not_obtained",
+      "runtime_catalog": false,
+      "address_quality": "direction_not_explicit_in_source",
+      "password_scope": "unknown",
+      "field_gate_verified": false
+    },
+    {
+      "id": "avalon-pasadena",
+      "name": "Avalon Pasadena",
+      "address": {
+        "address_line1": "25 S. Oak Knoll Ave.",
+        "city": "Pasadena",
+        "state": "CA",
+        "postal_code": "91101"
+      },
+      "classification": "apartment",
+      "basis": "operator_public_property_page",
+      "source": "https://www.avaloncommunities.com/california/pasadena-apartments/avalon-pasadena/",
+      "checked_at": "2026-11-02",
+      "geometry_ref": null,
+      "geometry_role": "not_obtained",
+      "runtime_catalog": false,
+      "address_quality": "public_postal_address",
+      "password_scope": "unknown",
+      "field_gate_verified": false
+    }
+  ],
+  "negative_controls": [
+    {
+      "id": "pasadena-city-hall",
+      "name": "Pasadena City Hall",
+      "address": {
+        "address_line1": "100 North Garfield Avenue",
+        "city": "Pasadena",
+        "state": "CA"
+      },
+      "classification": "municipal_not_apartment",
+      "basis": "city_official_page",
+      "source": "https://www.cityofpasadena.net/about-pasadena/city-hall/",
+      "checked_at": "2026-11-02",
+      "runtime_catalog": false
+    }
+  ],
+  "pending": [
+    "ordinary_house_provider_classification",
+    "adjacent_apartment_boundary_validation",
+    "new_six_licensed_geometry",
+    "Woodside_G1_G2_applicability",
+    "authorized_real_carrier_screenshots_30_to_50"
+  ]
+}

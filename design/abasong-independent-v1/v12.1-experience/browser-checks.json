@@ -1,0 +1,148 @@
+{
+  "prototype_version": "3.2-r3-core",
+  "executed_at": "2026-11-05T20:55:17.082Z",
+  "scope": "isolated Chromium prototype; synthetic business data; external navigation not opened; clipboard stubbed",
+  "checks": [
+    {
+      "name": "公寓独立192px卡、完整符号与贡献人，无重复标题",
+      "status": "PASS"
+    },
+    {
+      "name": "鼠标横拖切公寓，地图/门禁码同步，展开收起保持选择",
+      "status": "PASS"
+    },
+    {
+      "name": "公寓无码可直接贡献并返回同地址",
+      "status": "PASS"
+    },
+    {
+      "name": "查码失败保持地址且不冒充无码，重试恢复",
+      "status": "PASS"
+    },
+    {
+      "name": "无公寓低高度统一贡献入口；首页与我的入口一致",
+      "status": "PASS"
+    },
+    {
+      "name": "点区域真实筛选，地图列表同源",
+      "status": "PASS"
+    },
+    {
+      "name": "需求日期按接手日；今天明天与有效截止分开",
+      "status": "PASS"
+    },
+    {
+      "name": "司机多服务区总人数去重，日期与经验筛选独立",
+      "status": "PASS"
+    },
+    {
+      "name": "详情往返保留区域、列表和相机；定位不清筛选",
+      "status": "PASS"
+    },
+    {
+      "name": "不同模式慢响应不覆盖当前结果",
+      "status": "PASS"
+    },
+    {
+      "name": "读取失败不是0，调整场景后重试恢复",
+      "status": "PASS"
+    },
+    {
+      "name": "仓库地址/地图/导航取消回原图，复制内容准确",
+      "status": "PASS"
+    },
+    {
+      "name": "仓库地图失败仍能复制和选择导航",
+      "status": "PASS"
+    },
+    {
+      "name": "途中交接没有假仓库点或导航",
+      "status": "PASS"
+    },
+    {
+      "name": "发布：完整仓库地址必填，候选/预览/存储一致",
+      "status": "PASS"
+    },
+    {
+      "name": "仓库/途中切换清理旧地点，草稿输入保留",
+      "status": "PASS"
+    },
+    {
+      "name": "可接活快捷日期/跨日明确，关闭旧时段可保存",
+      "status": "PASS"
+    },
+    {
+      "name": "地图缩放改变比例尺，卡片保持；定位恢复推荐",
+      "status": "PASS"
+    },
+    {
+      "name": "未登录或无查看资格，展开不展示合成门禁码",
+      "status": "PASS"
+    },
+    {
+      "name": "手填完整仓库地址未定位时，不画假点而可复制/导航",
+      "status": "PASS"
+    },
+    {
+      "name": "洛杉矶日期边界包含DST短日与长日",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430小屏：卡片等高、无整页横溢出、固定操作可见",
+      "status": "PASS"
+    },
+    {
+      "name": "同城两个仓库按需求保持独立，不串地址",
+      "status": "PASS"
+    },
+    {
+      "name": "取件地图可缩放，导航取消保留视野且不改首页相机",
+      "status": "PASS"
+    },
+    {
+      "name": "地址分级与近似距离，不挤占单行街道",
+      "status": "PASS"
+    },
+    {
+      "name": "定位粗略弱化距离、过期隐藏数值，仍保留公寓地址与门禁码",
+      "status": "PASS"
+    },
+    {
+      "name": "三模式共用192px外框与12px间距，找人不是精确司机定位",
+      "status": "PASS"
+    },
+    {
+      "name": "找活横滑高亮当前配送区，不改全部区域或自动报名",
+      "status": "PASS"
+    },
+    {
+      "name": "找活滑卡进入详情、列表再返回仍是同一对象",
+      "status": "PASS"
+    },
+    {
+      "name": "找人跨区一人一卡，滑卡同步声明区域并保留经验筛选",
+      "status": "PASS"
+    },
+    {
+      "name": "单结果无假邻卡，多结果中间卡露两边且过滤不被滑动修改",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430三模式同高且距离不重叠门牌或拖柄",
+      "status": "PASS"
+    },
+    {
+      "name": "找活与找人鼠标横拖切卡，不误开详情",
+      "status": "PASS"
+    },
+    {
+      "name": "快速切公寓不串门禁码，调整屏宽保持选中对象",
+      "status": "PASS"
+    }
+  ],
+  "console_errors": [],
+  "external_request_hosts": [],
+  "passed": 34,
+  "failed": 0,
+  "native_acceptance": false
+}

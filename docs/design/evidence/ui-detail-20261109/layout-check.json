@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-09",
+  "scope": "Isolated HTML proposal; TEST data; not native acceptance",
+  "geometry": {
+    "screens": [
+      {
+        "mode": "apartment",
+        "map": 381,
+        "cards": [
+          {
+            "w": 358,
+            "h": 180
+          },
+          {
+            "w": 358,
+            "h": 180
+          },
+          {
+            "w": 358,
+            "h": 180
+          }
+        ],
+        "list": 240,
+        "secondVisible": 44,
+        "secretOfSecondVisible": false,
+        "logo": true
+      },
+      {
+        "mode": "jobs",
+        "map": 381,
+        "cards": [
+          {
+            "w": 358,
+            "h": 180
+          },
+          {
+            "w": 358,
+            "h": 180
+          },
+          {
+            "w": 358,
+            "h": 180
+          }
+        ],
+        "list": 240,
+        "secondVisible": 44,
+        "secretOfSecondVisible": false,
+        "logo": true
+      },
+      {
+        "mode": "people",
+        "map": 381,
+        "cards": [
+          {
+            "w": 358,
+            "h": 180
+          },
+          {
+            "w": 358,
+            "h": 180
+          },
+          {
+            "w": 358,
+            "h": 180
+          }
+        ],
+        "list": 240,
+        "secondVisible": 44,
+        "secretOfSecondVisible": false,
+        "logo": true
+      }
+    ],
+    "states": [
+      {
+        "s": "ready",
+        "h": 180,
+        "text": "*0012#\n行人门"
+      },
+      {
+        "s": "empty",
+        "h": 180,
+        "text": "暂无共享门禁码\n添加"
+      },
+      {
+        "s": "error",
+        "h": 180,
+        "text": "门禁码读取失败\n重试"
+      },
+      {
+        "s": "denied",
+        "h": 180,
+        "text": "暂未开通查看资格"
+      }
+    ]
+  },
+  "scroll": {
+    "secondCardFullyVisible": true,
+    "scrollTop": 192,
+    "heading": "102 TEST Arrival Ave",
+    "code": "#0008*"
+  }
+}

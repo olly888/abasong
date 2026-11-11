@@ -1,13 +1,15 @@
-"""Initial-only board status sync; not a background automation or recurring authority."""
+"""Manual reviewed status sync. Read-only by default; --apply is explicit."""
 import sys,json,re
 from pathlib import Path
 from bootstrap import ROOT,REPO,gh,STATES,stage
-if '--initial-sync' not in sys.argv:raise SystemExit('Use --initial-sync only during explicitly authorized initial setup')
+if '--sync-status' not in sys.argv and '--initial-sync' not in sys.argv:raise SystemExit('Use --sync-status for the reviewed snapshot; add --apply only to write')
+apply='--apply' in sys.argv or '--initial-sync' in sys.argv
 assert gh(['api','user'])['login']=='olly888'
 repo=gh(['repo','view',REPO,'--json','isPrivate']);assert repo['isPrivate'] or '--allow-public' in sys.argv
 project=gh(['project','view','1','--owner','olly888','--format','json']);assert project['title']=='Abasong V12.1 开发与验收' and not project['public']
 fields=gh(['project','field-list','1','--owner','olly888','--format','json'])['fields']
 if not any(x['name']=='阶段' for x in fields):
+ if not apply:raise SystemExit('Phase field missing; dry-run performed no writes')
  gh(['project','field-create','1','--owner','olly888','--name','阶段','--data-type','SINGLE_SELECT','--single-select-options','D0,D1,D2,D3,D4','--format','json'])
 fields=gh(['project','field-list','1','--owner','olly888','--format','json'])['fields']
 status=next(f for f in fields if f['name']=='Status');phase=next(f for f in fields if f['name']=='阶段')
@@ -25,6 +27,8 @@ for item in items:
  match=re.search(r'<!-- abasong-task:(T\d+) -->',content['body']);assert match;tid=match[1]
  if item.get('status')!=STATES.get(tid,'待开发'):changes.append((item['id'],status['id'],status_options[STATES.get(tid,'待开发')]))
  if current_values.get(item['id'],{}).get(phase['id'])!=stage(tid):changes.append((item['id'],phase['id'],phase_options[stage(tid)]))
+if not apply:
+ print(json.dumps({'dry_run':True,'items':len(items),'field_changes':len(changes),'snapshot':'scripts/github/task-status.json'},ensure_ascii=False));raise SystemExit
 for start in range(0,len(changes),15):
  group=changes[start:start+15];definitions=['$project:ID!'];variables={'project':project['id']};parts=[]
  for i,(item,field,option) in enumerate(group):

@@ -1,0 +1,165 @@
+import { useCallback, useRef, useState } from "react";
+import { View, type ViewProps } from "react-native";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
+import type { components } from "@abasong/contracts";
+import { useAuth } from "../../auth/AuthProvider";
+import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
+import { StatusPanel } from "../../ui/Feedback";
+import { dataRequest } from "../../apartments/client";
+import { RequestGate, RequestCard } from "../../requests/RequestUi";
+import { CircleFeed } from "../../circle/CircleFeed";
+import { useBusinessRequest } from "../../auth/useBusinessRequest";
+import {
+  openPost,
+  openAuthor,
+  openCircleRequest,
+} from "../../circle/navigation";
+import type { DeliverySummary } from "../../requests/presentation";
+export default function Requests() {
+  return (
+    <RequestGate>
+      <RequestLists />
+    </RequestGate>
+  );
+}
+function RequestLists() {
+  const mine = useLocalSearchParams<{ mine?: string }>().mine === "1";
+  const [section, setSection] = useState<"requests" | "posts">("requests");
+  const request = useBusinessRequest();
+  const tabs = mine ? (
+    <View style={{ flexDirection: "row", justifyContent: "center", gap: 20 }}>
+      <ActionButton
+        label="配送需求"
+        variant={section === "requests" ? "secondary" : "text"}
+        onPress={() => setSection("requests")}
+      />
+      <ActionButton
+        label="动态"
+        variant={section === "posts" ? "secondary" : "text"}
+        onPress={() => setSection("posts")}
+      />
+    </View>
+  ) : undefined;
+  return mine && section === "posts" ? (
+    <CircleFeed
+      request={request}
+      mine
+      header={tabs}
+      onBack={() =>
+        router.canGoBack() ? router.back() : router.replace("/profile")
+      }
+      onPublish={() => router.push("/circle/new")}
+      onNewRequest={() => router.push("/requests/new")}
+      onOpen={openPost}
+      onAuthor={openAuthor}
+      onRequest={openCircleRequest}
+    />
+  ) : (
+    <List mine={mine} tabs={tabs} />
+  );
+}
+
+function List({ mine, tabs }: { mine: boolean; tabs?: ViewProps["children"] }) {
+  const { session } = useAuth();
+  const [rows, setRows] = useState<DeliverySummary[]>([]),
+    [regions, setRegions] = useState<Record<string, string>>({}),
+    [cursor, setCursor] = useState<string | null>(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState<string | null>(null);
+  const generation = useRef(0);
+  async function load(next?: string, signal?: AbortSignal) {
+    const current = ++generation.current;
+    if (!session) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const [page, regionPage] = await Promise.all([
+        dataRequest<components["schemas"]["RequestPageV2"]>(
+          session,
+          `/v1/${mine ? "me/" : ""}requests?request_schema_version=2&limit=20${next ? "&cursor=" + encodeURIComponent(next) : ""}`,
+          { signal },
+        ),
+        dataRequest<components["schemas"]["RegionPage"]>(
+          session,
+          "/v1/regions?limit=100",
+          { signal },
+        ),
+      ]);
+      if (signal?.aborted || current !== generation.current) return;
+      setRegions(
+        Object.fromEntries(regionPage.items.map((r) => [r.id, r.label])),
+      );
+      setRows((old) =>
+        next
+          ? [
+              ...old,
+              ...page.items.filter((r) => !old.some((x) => x.id === r.id)),
+            ]
+          : page.items,
+      );
+      setCursor(page.next_cursor);
+    } catch (e) {
+      if (!signal?.aborted && current === generation.current)
+        setError(e instanceof Error ? e.message : "需求读取失败");
+    } finally {
+      if (!signal?.aborted && current === generation.current) setBusy(false);
+    }
+  }
+  useFocusEffect(
+    useCallback(() => {
+      const c = new AbortController();
+      void load(undefined, c.signal);
+      return () => {
+        generation.current++;
+        c.abort();
+      };
+    }, [session?.access_token, mine]),
+  );
+  return (
+    <AuthPage compact title={mine ? "我的发布" : "配送需求"}>
+      {tabs}
+      <ActionButton
+        label="＋ 发需求"
+        onPress={() => router.push("/requests/new")}
+      />
+      <FormError message={error} />
+      {error ? (
+        <ActionButton
+          label="重新加载"
+          secondary
+          disabled={busy}
+          onPress={() => void load()}
+        />
+      ) : null}
+      {busy && !rows.length ? (
+        <StatusPanel state="loading" title="正在加载需求" />
+      ) : null}
+      {!busy && !error && !rows.length ? (
+        <StatusPanel
+          state="empty"
+          title={mine ? "还没有发布的需求" : "暂无开放的配送需求"}
+        />
+      ) : null}
+      <View style={{ gap: 12 }}>
+        {rows.map((r) => (
+          <RequestCard
+            key={r.id}
+            request={r}
+            region={regions[r.region_id ?? ""]}
+            onPress={() =>
+              router.push({ pathname: "/requests/[id]", params: { id: r.id } })
+            }
+          />
+        ))}
+      </View>
+      {cursor ? (
+        <ActionButton
+          label="加载更多"
+          secondary
+          busy={busy}
+          onPress={() => void load(cursor)}
+        />
+      ) : null}
+    </AuthPage>
+  );
+}

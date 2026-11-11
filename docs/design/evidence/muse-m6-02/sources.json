@@ -1,0 +1,80 @@
+{
+  "scope": "selected_worktree_sources_not_frozen_commit",
+  "date": "2026-11-08",
+  "base_head": "09b0c889dfa87699397c98d72dbb35d6dae2644b",
+  "branch": "codex/b6-02-cloud-preflight",
+  "sources": [
+    {
+      "path": "apps/api/src/requests/messaging.service.ts",
+      "sha256": "64dff7f8ee3cc66238af46b227aca9f503888ac710c9d8c1fc6770eecbd095df"
+    },
+    {
+      "path": "apps/mobile/src/messages/InboxScreen.tsx",
+      "sha256": "5ce684815e9ce7cdc92ca927dbedf46d7dca29e44d07f2f40a9149233c9156cf"
+    },
+    {
+      "path": "apps/mobile/src/messages/MessageViews.tsx",
+      "sha256": "1b1d120eb22bcdfefa27910487992913df5526790a55ba36d512b549797cacce"
+    },
+    {
+      "path": "apps/mobile/src/messages/useInboxCount.ts",
+      "sha256": "7e5c03f8c564c8fd164ef7042bc29bf42932b43135c38fe5aa5c1426946269d2"
+    },
+    {
+      "path": "apps/mobile/src/ui/MapControls.tsx",
+      "sha256": "ab300ee1206cbf957fa54f544ce44b7664d51a2f20e4f2384a16e2e0057b10b4"
+    },
+    {
+      "path": "apps/mobile/src/ui/UnreadBadge.tsx",
+      "sha256": "b81656164ff2b08d49940b78d2fd4faf2bc34b9c7a725e55f143f3b0648e0887"
+    },
+    {
+      "path": "apps/mobile/src/invitation/InviteDriver.tsx",
+      "sha256": "8dd07b0219eae01ebce0e4806deca8c8d1da0e516eeafb2015b2b4cdfe687990"
+    },
+    {
+      "path": "apps/mobile/src/app/inbox-visual-lab.tsx",
+      "sha256": "2d8291b1c6bcc65860fcd694414d353254c0f26c11b360750bdb807e5cd489dd"
+    },
+    {
+      "path": "apps/mobile/src/design/InboxVisualLab.tsx",
+      "sha256": "c793097b5089031f57fcc3c2718132f31cf79179187bb93ee99a356bf9c71014"
+    },
+    {
+      "path": "scripts/generate_v12_openapi.py",
+      "sha256": "d155e585cb4ad78d0c60ea80a9b8f4c7a0c4dcbb9d11edb2525efe13906b5213"
+    },
+    {
+      "path": "scripts/d1/verify-circle-services.ts",
+      "sha256": "cde1ca5e0878a717582c6aeb1e60b634817346e153aa4f85e695688501da445c"
+    },
+    {
+      "path": "docs/technical/openapi-v12.yaml",
+      "sha256": "48d321625750f7584da72c847e0f0b697611ab0ba3c172654edd8340d2837be9"
+    },
+    {
+      "path": "packages/contracts/src/generated.ts",
+      "sha256": "282b1862125995621e8e0d28b412333099cb6f4dbfc695d84032a5d09d13bc4c"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/app.js",
+      "sha256": "0154984bef409d0b0b355ede8b10fb5955b53cbf1d8e1a04ce4e208b268c3c37"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/circle.js",
+      "sha256": "2d20b5f3abccf8566f146591e3e5411dfa5cefcb1ff89f219952941d8f15ede4"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/muse-v35.css",
+      "sha256": "e32b43a3376793d70a7db5cede3e3e00a2b1d3301221c3bff886e85cd30680f0"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/muse-v35-messages-checks.browser.js",
+      "sha256": "da9332715596a36494dc94e543c619849cc09e25c99c324633358687e642ce43"
+    },
+    {
+      "path": "design/abasong-independent-v1/v12.1-experience/muse-v35-messages-components.browser.js",
+      "sha256": "d0b01e32fc1911a58b7fe5b62ac771141efceb5bf7f18c9d66b309a5616b12e1"
+    }
+  ]
+}

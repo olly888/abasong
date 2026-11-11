@@ -1,0 +1,47 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AssumeOnlyPilotFoundationRoleWithMFA",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/abasong-pilot-dev-deployer",
+      "Condition": { "Bool": { "aws:MultiFactorAuthPresent": "true" } }
+    },
+    {
+      "Sid": "OwnLoginInformation",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetUser",
+        "iam:ChangePassword",
+        "iam:ListMFADevices",
+        "iam:EnableMFADevice",
+        "iam:ResyncMFADevice"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/abasong-pilot-operator"
+    },
+    {
+      "Sid": "OwnVirtualMFAEnrollment",
+      "Effect": "Allow",
+      "Action": ["iam:CreateVirtualMFADevice", "iam:DeleteVirtualMFADevice"],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:mfa/abasong-pilot-operator*"
+    },
+    {
+      "Sid": "OwnMFARotationWithMFA",
+      "Effect": "Allow",
+      "Action": "iam:DeactivateMFADevice",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/abasong-pilot-operator",
+      "Condition": { "Bool": { "aws:MultiFactorAuthPresent": "true" } }
+    },
+    {
+      "Sid": "LoginMetadata",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetAccountPasswordPolicy",
+        "iam:ListAccountAliases",
+        "iam:ListVirtualMFADevices"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+trial_id,site_id,public_viewpoint,participant_id,app_build,platform,runtime,environment,network,preflight_status,target_eligible,nearby_outcome,first_card_target,address_check,door_scope_check,search_attempted,search_outcome,lookup_state,code_verification,elapsed_seconds,issue_id,status
+F01,AP01,public_frontage,,,,,,,,,,,,,,,,,,,planned
+F02,AP02,public_frontage,,,,,,,,,,,,,,,,,,,planned
+F03,AP03,public_side_a,,,,,,,,,,,,,,,,,,,planned
+F04,AP03,public_side_b,,,,,,,,,,,,,,,,,,,planned
+F05,AP04,public_frontage,,,,,,,,,,,,,,,,,,,planned
+F06,CT01,public_frontage,,,,,,,,,,,,,,,,,,,planned

@@ -1,0 +1,525 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Review-only pilot service identities and empty secrets; no values, no runtime tasks",
+  "Metadata": {
+    "Environment": "pilot-dev",
+    "Region": "us-west-1",
+    "ReviewOnly": true
+  },
+  "Parameters": {
+    "BusinessKeyArn": {
+      "Type": "String",
+      "AllowedPattern": "^arn:aws:kms:us-west-1:[0-9]{12}:key/[0-9a-f-]{36}$"
+    }
+  },
+  "Resources": {
+    "ApiDatabase": {
+      "Type": "AWS::SecretsManager::Secret",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Name": "abasong/pilot-dev/api-db",
+        "Description": "Populate through the reviewed private credential workflow before starting tasks",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "SensitiveDatabase": {
+      "Type": "AWS::SecretsManager::Secret",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Name": "abasong/pilot-dev/sensitive-db",
+        "Description": "Populate through the reviewed private credential workflow before starting tasks",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "WorkerDatabase": {
+      "Type": "AWS::SecretsManager::Secret",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Name": "abasong/pilot-dev/worker-db",
+        "Description": "Populate through the reviewed private credential workflow before starting tasks",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "DataHmac": {
+      "Type": "AWS::SecretsManager::Secret",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Name": "abasong/pilot-dev/data-hmac",
+        "Description": "Populate through the reviewed private credential workflow before starting tasks",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "MapboxSearch": {
+      "Type": "AWS::SecretsManager::Secret",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Name": "abasong/pilot-dev/mapbox-search",
+        "Description": "Populate through the reviewed private credential workflow before starting tasks",
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ]
+      }
+    },
+    "ApiExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RoleName": "abasong-pilot-dev-api-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnLike": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ecs:us-west-1:${AWS::AccountId}:*"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "MaxSessionDuration": 3600,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "Policies": [
+          {
+            "PolicyName": "PilotOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:GetAuthorizationToken"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": "us-west-1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ecr:us-west-1:${AWS::AccountId}:repository/abasong-pilot-dev-api"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:us-west-1:${AWS::AccountId}:log-group:/abasong/pilot-dev/api:log-stream:*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "ApiDatabase"
+                    },
+                    {
+                      "Ref": "SensitiveDatabase"
+                    },
+                    {
+                      "Ref": "DataHmac"
+                    },
+                    {
+                      "Ref": "MapboxSearch"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": "kms:*",
+                  "Resource": {
+                    "Ref": "BusinessKeyArn"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "WorkerExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RoleName": "abasong-pilot-dev-worker-execution",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnLike": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ecs:us-west-1:${AWS::AccountId}:*"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "MaxSessionDuration": 3600,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "Policies": [
+          {
+            "PolicyName": "PilotOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:GetAuthorizationToken"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": "us-west-1"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ecr:us-west-1:${AWS::AccountId}:repository/abasong-pilot-dev-worker"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:us-west-1:${AWS::AccountId}:log-group:/abasong/pilot-dev/worker:log-stream:*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "WorkerDatabase"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Deny",
+                  "Action": "kms:*",
+                  "Resource": {
+                    "Ref": "BusinessKeyArn"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ApiTaskRole": {
+      "Type": "AWS::IAM::Role",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RoleName": "abasong-pilot-dev-api-task",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnLike": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ecs:us-west-1:${AWS::AccountId}:*"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "MaxSessionDuration": 3600,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "Policies": [
+          {
+            "PolicyName": "PilotOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:GenerateDataKey",
+                    "kms:Decrypt"
+                  ],
+                  "Resource": {
+                    "Ref": "BusinessKeyArn"
+                  },
+                  "Condition": {
+                    "StringEquals": {
+                      "kms:EncryptionContext:app": "abasong",
+                      "kms:EncryptionContext:environment": "pilot-dev"
+                    },
+                    "Null": {
+                      "kms:EncryptionContext:aad_sha256": "false"
+                    },
+                    "ForAllValues:StringEquals": {
+                      "kms:EncryptionContextKeys": [
+                        "app",
+                        "environment",
+                        "aad_sha256"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "WorkerTaskRole": {
+      "Type": "AWS::IAM::Role",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RoleName": "abasong-pilot-dev-worker-task",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnLike": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ecs:us-west-1:${AWS::AccountId}:*"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "MaxSessionDuration": 3600,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "Abasong"
+          },
+          {
+            "Key": "Environment",
+            "Value": "pilot-dev"
+          }
+        ],
+        "Policies": [
+          {
+            "PolicyName": "PilotOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Deny",
+                  "Action": "*",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "ApiDatabaseArn": {
+      "Value": {
+        "Ref": "ApiDatabase"
+      }
+    },
+    "SensitiveDatabaseArn": {
+      "Value": {
+        "Ref": "SensitiveDatabase"
+      }
+    },
+    "WorkerDatabaseArn": {
+      "Value": {
+        "Ref": "WorkerDatabase"
+      }
+    },
+    "DataHmacArn": {
+      "Value": {
+        "Ref": "DataHmac"
+      }
+    },
+    "MapboxSearchArn": {
+      "Value": {
+        "Ref": "MapboxSearch"
+      }
+    },
+    "ApiExecutionRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ApiExecutionRole",
+          "Arn"
+        ]
+      }
+    },
+    "WorkerExecutionRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WorkerExecutionRole",
+          "Arn"
+        ]
+      }
+    },
+    "ApiTaskRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ApiTaskRole",
+          "Arn"
+        ]
+      }
+    },
+    "WorkerTaskRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WorkerTaskRole",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

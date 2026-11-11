@@ -1,0 +1,109 @@
+{
+  "batch": "M6-02",
+  "date": "2026-11-08",
+  "scope": "local_implementation_and_scoped_regression_not_native_acceptance",
+  "engineering": {
+    "command": "./scripts/dev check",
+    "status": "PASS",
+    "files": 93,
+    "tests": 561
+  },
+  "http_database": {
+    "command": "./scripts/dev verify:requests-api",
+    "status": "PASS",
+    "checks": 660,
+    "scope": "disposable_local_database_roles_and_synthetic_accounts",
+    "circle_assertions_subset": 35,
+    "media_http_calls_subset": 41
+  },
+  "prototype": {
+    "scope": "HTML prototype synthetic only",
+    "checks": [
+      {
+        "name": "统一消息分类与未读；阅读通知不清对话",
+        "status": "PASS"
+      },
+      {
+        "name": "邀请分享取消无成功统计；接收邀请不自动增权",
+        "status": "PASS"
+      },
+      {
+        "name": "320/390/430 消息与邀请的层次、触控和宽度",
+        "status": "PASS"
+      }
+    ],
+    "passed": 3,
+    "failed": 0,
+    "errors": []
+  },
+  "RN_web_components": {
+    "scope": "RN web / DEV in-memory only; not native acceptance",
+    "checks": [
+      {
+        "name": "已读仅确认本条；圈内为子集，不清对话/其他通知；重复点读不重复扣数",
+        "status": "PASS"
+      },
+      {
+        "name": "读通知失败保持未读；重试后才打开",
+        "status": "PASS"
+      },
+      {
+        "name": "已删除通知移除；权限失效不保留旧记录、不冒充空态",
+        "status": "PASS"
+      },
+      {
+        "name": "慢列表切页、换账号：迟到结果不覆盖新页/新账号",
+        "status": "PASS"
+      },
+      {
+        "name": "通知已读期间的迟到轮询不复活未读",
+        "status": "PASS"
+      },
+      {
+        "name": "加载错误可重试；320/390/430 真实组件不溢出",
+        "status": "PASS"
+      },
+      {
+        "name": "连续确认两条通知，先发后到的汇总不恢复旧未读",
+        "status": "PASS"
+      },
+      {
+        "name": "普通邀请页不开放复制/系统分享/下载，不产生资格或假统计",
+        "status": "PASS"
+      }
+    ],
+    "passed": 8,
+    "failed": 0,
+    "errors": []
+  },
+  "exports": {
+    "ios": "PASS",
+    "android": "PASS",
+    "kind": "Hermes_JS_export_not_native_compilation"
+  },
+  "native": {
+    "status": "pending",
+    "observation": "CUA listApps reported the Mac locked during this batch; no native interaction or screenshot accepted."
+  },
+  "not_executed": [
+    "Xcode_Gradle_native_build",
+    "iOS_Android_native_visual_and_gesture_acceptance",
+    "remote_CI",
+    "cloud_rollout",
+    "signed_package",
+    "real_invitation_distribution"
+  ],
+  "pitfalls": [
+    "Initial HTTP listener sandbox denial; allowed localhost rerun passed without weakening assertions.",
+    "First HTTP run raced the API build and loaded old compiled service; rerun after build passed unchanged assertions.",
+    "Explicit aria-selected added for RN-web segmented tabs.",
+    "Late list poll and out-of-order acknowledgement summaries now discarded.",
+    "Prototype circle inbox override and unequal segmented widths corrected."
+  ],
+  "logs": [
+    "artifacts/m6-02-check.log",
+    "artifacts/m6-02-requests.log",
+    "artifacts/muse-m6-02/ios-export.log",
+    "artifacts/muse-m6-02/android-export.log"
+  ]
+}

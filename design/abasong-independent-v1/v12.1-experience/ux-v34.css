@@ -1,0 +1,77 @@
+/* V3.4 prototype. Keep the comparison baseline available at the same entry. */
+.ux-v34 .delivery-form { padding-bottom: 20px; }
+.ux-v34 .delivery-form .delivery-identity { margin-bottom: 16px; padding-bottom: 6px; }
+.v34-form-section { min-width: 0; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--ab-color-border); }
+.v34-form-section > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 10px; }
+.v34-form-section h2 { margin: 0; font-size: 19px; line-height: 1.3; letter-spacing: -.01em; }
+.v34-form-section > header .text-btn { flex-shrink: 0; font-size: 13px; padding-block: 0; }
+.ux-v34 .delivery-form .field { margin-bottom: 10px; }
+.ux-v34 .delivery-form .field-label { margin-bottom: 5px; }
+.v34-choice { min-width: 0; margin: 0 0 12px; padding: 0; border: 0; }
+.v34-choice legend { margin-bottom: 7px; padding: 0; font-size: 14px; font-weight: 650; }
+.v34-choice legend small { font-size: 12px; color: var(--ab-color-textSecondary); font-weight: 400; }
+.v34-choice > div, .v34-date-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.v34-choice label { position: relative; display: inline-flex; min-width: 0; }
+.v34-choice input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.v34-choice label > span, .v34-inline, .ux-v34 .v34-date-chips > button, .v34-native-date { display: inline-flex; min-height: 48px; min-width: 48px; align-items: center; justify-content: center; border: 1px solid var(--ab-color-controlBorder); border-radius: var(--ab-radius-control); background: var(--ab-color-surface); color: var(--ab-color-ink); padding: 7px 11px; font-size: 14px; text-align: center; line-height: 1.3; }
+.v34-choice input:checked + span, .v34-inline[aria-pressed=true], .ux-v34 .v34-date-chips > .active, .v34-native-date.active { background: var(--ab-color-brandSurface); color: var(--ab-color-brandText); border-color: var(--ab-color-brandText); font-weight: 650; }
+.v34-choice input:focus-visible + span, .v34-native-date:focus-within { outline: 2px solid var(--ab-color-focus); outline-offset: 2px; }
+.v34-native-date { position: relative; }
+.v34-native-date input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.v34-native-date input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.ux-v34 .delivery-date-quick { display: block; margin-bottom: 10px; }
+.ux-v34 .delivery-form .ex-segment { min-height: 48px; margin-bottom: 10px; }
+.ux-v34 .delivery-form .ex-segment button { min-height: 48px; }
+.v34-address { padding: 12px; margin-bottom: 10px; border-radius: 12px; background: var(--ab-color-canvas); overflow-wrap: anywhere; }
+.v34-address p { margin: 5px 0 0; font-size: 14px; }
+.v34-address .text-btn + .text-btn { margin-left: 12px; }
+.ux-v34 .delivery-form [data-field-error=warehouseConfirm] { margin-bottom: 12px; }
+.v34-counter { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: end; gap: 8px; margin-bottom: 10px; }
+.ux-v34 .delivery-form .v34-counter .field { margin: 0; }
+.v34-counter input { text-align: center; }
+.v34-inline-fields { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(112px, 1fr); align-items: start; gap: 8px; }
+.v34-inline-fields .v34-choice > div { gap: 4px; }
+.v34-inline-fields .v34-choice label > span { padding-inline: 8px; }
+.v34-inline-fields .field, .v34-inline-fields .field > input { min-width: 0; max-width: 100%; }
+.v34-disclosure { min-width: 0; border-top: 1px solid var(--ab-color-border); padding: 0 0 4px; }
+.v34-disclosure > summary { margin: 0; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--ab-color-ink); list-style: none; }
+.v34-disclosure > summary::-webkit-details-marker { display: none; }
+.v34-disclosure > summary small { display: block; color: var(--ab-color-textSecondary); margin-top: 3px; font-weight: 400; }
+.v34-disclosure > div { padding-top: 8px; }
+.v34-edit { color: var(--ab-color-brandText); text-align: right; font-size: 14px; overflow-wrap: anywhere; }
+.ux-v34 .delivery-options > summary { color: var(--ab-color-ink); }
+.ux-v34 .v34-review { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 12px; }
+.v34-review-body { overflow-y: auto; min-height: 0; padding: 0 2px; }
+.v34-review > footer { padding-top: 12px; border-top: 1px solid var(--ab-color-border); }
+.v34-review-group { border-bottom: 1px solid var(--ab-color-border); padding: 0 0 7px; }
+.v34-review-group > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.v34-review-group h3 { margin: 0; font-size: 16px; }
+.v34-review-group .detail-row { padding: 9px 0; }
+.ux-v34 .circle-editor [data-submit=post] { padding-top: 14px; }
+.ux-v34 .circle-editor textarea[name=text] { min-height: 122px; }
+.ux-v34 .circle-editor .v34-choice { margin-top: 12px; }
+.ux-v34 .circle-editor-actions .circle-error { margin: 0 0 6px; }
+.v34-post-option > .field { margin-bottom: 10px; }
+.v34-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ux-v34 .account-scroll { padding-top: max(16px, env(safe-area-inset-top)); }
+.ux-v34 .account-identity { min-height: 64px; margin-top: 0; }
+.ux-v34 .account-identity strong { font-size: 23px; }
+.ux-v34 .account-row { justify-content: start; }
+.ux-v34 .account-row > span { flex: 1; min-width: 0; }
+.v34-account-icon { display: inline-grid; place-items: center; width: 24px; color: var(--ab-color-textSecondary); }
+.v34-account-icon svg { width: 20px; height: 20px; }
+.v34-account-guest { margin: 12px 0; font-size: 24px; }
+.ux-v34 .ex-region.selected { background: var(--ab-color-brandSurface); border-color: var(--ab-color-brandText); color: var(--ab-color-brandText); }
+.ux-v34 .ex-region.selected b { background: var(--ab-color-brandText); color: white; }
+.ux-v34 .ex-region b small { margin-left: 2px; font-size: 10px; }
+.ux-v34 .ex-roof.active { fill: var(--ab-color-brandText); }
+.ux-v34 .ex-blue-dot { border-width: 3px; box-shadow: 0 0 0 7px #3483f326, 0 1px 5px #183f7540; }
+.ux-v34 .ex-warehouse-marker { border: 2px solid white; background: var(--ab-color-ink); color: white; border-radius: 16px 16px 16px 4px; width: 50px; height: 50px; }
+.ux-v34 .ex-warehouse-marker:after { background: var(--ab-color-ink); border: 1px solid white; border-radius: 2px; transform: rotate(45deg); }
+.ux-v34 .ex-place-card .ex-copy-square { width: auto; min-width: 64px; }
+@media (max-width: 350px) {
+  .v34-choice label > span, .ux-v34 .v34-date-chips > button, .v34-native-date { padding-inline: 8px; }
+  .v34-review .detail-row { flex-wrap: wrap; gap: 4px 12px; }
+  .v34-inline-fields { grid-template-columns: minmax(0, 1fr) minmax(88px, .52fr); }
+  .v34-inline-fields .v34-choice label > span { padding-inline: 5px; font-size: 13px; }
+}

@@ -1,6 +1,7 @@
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { existsSync, mkdirSync, openSync, closeSync } from 'node:fs';
+import { isIP } from 'node:net';
 import { setTimeout as pause } from 'node:timers/promises';
 const exec = promisify(execFile);
 const helper = './scripts/android';
@@ -15,6 +16,9 @@ function run(file,args,options={}) {
   });
 }
 async function main() {
+  const dns = process.env.ABASONG_ANDROID_DNS?.trim();
+  if (dns && (dns.split(',').length > 4 || dns.split(',').some(ip=>!isIP(ip))))
+    throw new Error('ABASONG_ANDROID_DNS 需为最多4个逗号分隔的IP地址');
   const status = await fetch('http://127.0.0.1:8081/status',{signal:AbortSignal.timeout(3000)}).then(r=>r.text()).catch(()=>null);
   if (status?.trim() !== 'packager-status:running') throw new Error('请先在另一个终端运行 ./scripts/dev preview:native');
   const mirror = '/opt/homebrew/bin/scrcpy';
@@ -23,7 +27,7 @@ async function main() {
   if (!devices.includes(serial)) {
     mkdirSync('.tooling/preview',{recursive:true});
     const log=openSync('.tooling/preview/android-emulator.log','a');
-    const child=spawn(helper,['emulator','-avd',avd,'-port','5556','-no-window','-no-audio','-no-snapshot','-no-boot-anim','-gpu','swiftshader'],{stdio:['ignore',log,log],detached:true});
+    const child=spawn(helper,['emulator','-avd',avd,'-port','5556','-no-window','-no-audio','-no-snapshot','-no-boot-anim','-gpu','swiftshader',...(dns?['-dns-server',dns]:[])],{stdio:['ignore',log,log],detached:true});
     child.on('error',()=>console.error('Android emulator failed to start'));
     child.unref();closeSync(log);
     console.log('正在启动 Android 模拟器…');

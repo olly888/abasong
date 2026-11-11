@@ -1,0 +1,140 @@
+{
+  "date": "2026-11-06",
+  "timezone": "America/Los_Angeles",
+  "branch": "codex/r4-09-availability-window",
+  "base": "587b6c00b491049ff7a5ffff4fad79ffa8b72a1a",
+  "scope": "R4-09 single availability window; My compact switch B5 and full native_HTTP exit R4-10 pending",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS",
+      "files": 79,
+      "tests": 470,
+      "added_tests": 17,
+      "lint_types_build": true,
+      "local_log": "/private/tmp/abasong-r4-09-check.log"
+    },
+    "requests_database": {
+      "command": "./scripts/dev verify:requests-api",
+      "status": "PASS",
+      "checks": 515,
+      "native_payload_additional_http_calls": 6,
+      "actual_mobile_payload": true,
+      "upgrade_groups": 5,
+      "v2_role_storage_checks": 42,
+      "environment": "disposable_guarded_local_PostGIS",
+      "local_log": "/private/tmp/abasong-r4-09-requests.log"
+    },
+    "native_export": {
+      "status": "PASS",
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "hermes_bundles": 2,
+      "local_log": "/private/tmp/abasong-r4-09-export.log"
+    },
+    "new_native_binary_compilation": false,
+    "secret_scan": {
+      "history": "PASS_144_commits",
+      "staged_diff": "PASS",
+      "local_logs": [
+        "/private/tmp/abasong-r4-09-history-secrets.log",
+        "/private/tmp/abasong-r4-09-staged-secrets.log"
+      ]
+    }
+  },
+  "native_acceptance": {
+    "transport": "DEV memory adapter reusing production AvailabilityFlow/Editor/native pickers; actual API/PG separately exercised",
+    "ios": [
+      "today/tomorrow shifts both start and overnight end date; saved summary unchanged",
+      "compact date/time rows and fixed operations observed",
+      "native end-date picker opens",
+      "native date/time cancellation keeps values",
+      "dirty cancel continue keeps tomorrow/overnight dates; discard returns original saved period with0writes",
+      "first save fails retaining tomorrow draft, explicit retry succeeds with2attempts",
+      "409 disables stale form and requires confirmed reload; reads capacity80 and current date; subsequent save succeeds",
+      "region list failure still permits minimal close with1write",
+      "failed close keeps prior saved summary, explicit retry closes with2attempts",
+      "expired period initializes off and closes without renewing"
+    ],
+    "android": [
+      "tomorrow shifts overnight end date; saved summary unchanged",
+      "compact date/time rows and fixed operations observed",
+      "brand track/white native thumb observed"
+    ],
+    "pending": [],
+    "blocked_observation": null,
+    "physical_device_acceptance": false,
+    "full_native_HTTP_combined_exit": "R4-10_pending",
+    "software_keyboard_matrix": "R4-10_pending",
+    "android_owner_feedback": [
+      {
+        "question_id": "call_6b4879d97cc7497a940c9fe747518892:0",
+        "result": "正常",
+        "scope": "dirty_cancel_continue_preserves_draft/discard_zero_writes/failed_save_tomorrow_retry_two_attempts"
+      },
+      {
+        "question_id": "call_6b4879d97cc7497a940c9fe747518892:1",
+        "result": "正常",
+        "scope": "version_conflict_locks_reload_current_date_capacity80_save/region_failure_close"
+      }
+    ],
+    "android_tool_clicks": "unreliable_noWindowsAvailable_owner_results_used",
+    "android_native_picker_cancel": "not_newly_claimed_R4-10_system_matrix"
+  },
+  "artifacts": [
+    {
+      "path": "artifacts/r4-09/android-current.png",
+      "sha256": "6f9902bbc0cd1b99691e330408d04641092edfa602d3a2b8ff402b4a3046ecd6"
+    },
+    {
+      "path": "artifacts/r4-09/ios-current.png",
+      "sha256": "53ab0759d69c501b3c6d9882caca13c1e72bce26b66d51636151f82c342b5757"
+    },
+    {
+      "path": "artifacts/r4-09/ios-close-failure.png",
+      "sha256": "5e2e3fbea2fcbfff245f308be95631ea18312a8a10f9637015516eed125f4aca"
+    },
+    {
+      "path": "artifacts/r4-09/ios-close-retry.png",
+      "sha256": "8c488e378ece8ecf61e8cd722e880645e1baf80ecbefd7c9384e5dd5b67cf65b"
+    }
+  ],
+  "boundaries": {
+    "cloud_changed": false,
+    "migrations_added": false,
+    "D0_migrations": 17,
+    "D0_tables": 54,
+    "new_dependencies": false,
+    "real_account_grants": false,
+    "real_SMS_or_messages": false,
+    "test_records_in_business_database": false,
+    "human_study_participants": 0,
+    "human_study_required": 7,
+    "B5_ready": false,
+    "release_ready": false
+  },
+  "ci": {
+    "status": "PASS",
+    "inherited_previous_PR_success": false,
+    "run_id": 42295105317,
+    "url": "https://github.com/olly888/abasong/actions/runs/42295105317",
+    "head_sha": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+    "latest_document_closure_source": "https://github.com/olly888/abasong/pull/97/checks",
+    "scope": "implementation_commit_exact_head",
+    "note": "Documentation closure changes no business code; latest closure-head CI must be checked separately via PR97 Checks."
+  },
+  "current_batch_complete": true,
+  "next_task": "R4-10",
+  "pull_request": "https://github.com/olly888/abasong/pull/97",
+  "validated_code_commit": "1db799f9ff4e66d07dbe16462cd7d5fef13079e6",
+  "code_diff_sha256": "54b267aa3487c53babc23cd8716d181716e194b1a03bed8cbbc83d86eed95a26",
+  "code_diff_command": "git diff --binary 587b6c00b491049ff7a5ffff4fad79ffa8b72a1a VALIDATED_HEAD -- apps packages scripts pnpm-lock.yaml",
+  "latest_document_closure_ci": {
+    "run_id": 42300095336,
+    "head_sha": "0b35c5b3e98b213605e616a6cd6f84482fbaaf8b",
+    "status": "PASS"
+  },
+  "next_plan": "R4_10_本地原生业务组合验收方案.md"
+}

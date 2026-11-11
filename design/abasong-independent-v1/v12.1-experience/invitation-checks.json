@@ -1,0 +1,95 @@
+{
+  "prototype_version": "3.2-r3-invite",
+  "executed_at": "2026-11-05T21:40:19.665Z",
+  "scope": "isolated Chromium TEST invitation UI; no real share/clipboard/photos/download/Auth/Mapbox",
+  "checks": [
+    {
+      "name": "我的：保留开关/共享/管理分组，邀请与条件团队在次级组、设置之前",
+      "status": "PASS"
+    },
+    {
+      "name": "不代表DSP的司机仍能邀请；不恢复常联系/收费/成员管理",
+      "status": "PASS"
+    },
+    {
+      "name": "邀请图价值/覆盖说明清楚，二维码与链接同源，不附个人/业务资料",
+      "status": "PASS"
+    },
+    {
+      "name": "分享预览可取消，回原页且不出现邀请成功/人数",
+      "status": "PASS"
+    },
+    {
+      "name": "预览进入公开接收页，返回仍为邀请页，不发送邀请",
+      "status": "PASS"
+    },
+    {
+      "name": "系统分享不可用：地址/邀请图保留，仍可使用其他方式",
+      "status": "PASS"
+    },
+    {
+      "name": "图片保存权限拒绝，不申请实际权限、不阻断其他分享",
+      "status": "PASS"
+    },
+    {
+      "name": "保存失败后重试，保留邀请图和页面上下文",
+      "status": "PASS"
+    },
+    {
+      "name": "复制仅演示；文案不包含邀请人/接收者资料",
+      "status": "PASS"
+    },
+    {
+      "name": "复制失败：可选择完整文案/链接，取消和重试均可达",
+      "status": "PASS"
+    },
+    {
+      "name": "公开接收页：未登录先看价值，无假下载/登录强迫/数据名单",
+      "status": "PASS"
+    },
+    {
+      "name": "已安装：游客走现有登录，不因邀请开放资格或新建团队",
+      "status": "PASS"
+    },
+    {
+      "name": "已登录：模拟打开首页，保持账号/资格/团队/报名关系",
+      "status": "PASS"
+    },
+    {
+      "name": "iOS内测入口只模拟、不下载；Android未开放没有假操作",
+      "status": "PASS"
+    },
+    {
+      "name": "微信受阻：可复制链接；失败保持可选文字，不强制外部跳转",
+      "status": "PASS"
+    },
+    {
+      "name": "隐私/联系说明可关闭；不收集电话、门禁码或联系人",
+      "status": "PASS"
+    },
+    {
+      "name": "键盘：菜单与主操作可触发，分享弹窗焦点限制且Escape可关闭",
+      "status": "PASS"
+    },
+    {
+      "name": "320/390/430：邀请/接收页无横向溢出，操作可滚动到，热区达标",
+      "status": "PASS"
+    },
+    {
+      "name": "浏览器文字放大200%：文案换行、主操作可滚动到，无裁剪式横溢出",
+      "status": "PASS"
+    },
+    {
+      "name": "弱网/离线重渲染仍可读本地内容；重置清掉错误但不造邀请结果",
+      "status": "PASS"
+    }
+  ],
+  "passed": 20,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "actual_downloads": 0,
+  "unexpected_side_effects": [],
+  "human_participants": 0,
+  "native_acceptance": false
+}

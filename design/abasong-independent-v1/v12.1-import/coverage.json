@@ -1,10 +1,10 @@
 {
-  "version": "V12.1-contribution-first-extension",
-  "date": "2026-10-30",
+  "version": "V12.1-inline-password-extension",
+  "date": "2026-11-01",
   "prototype": "index.html",
-  "design_nodes": 40,
-  "route_or_page_views": 36,
-  "spec_state_variants": 259,
+  "design_nodes": 39,
+  "route_or_page_views": 35,
+  "spec_state_variants": 301,
   "all_state_variants_verified": false,
   "real_services_connected": false,
   "nodes": [
@@ -65,18 +65,11 @@
       "state_coverage": "partial; see acceptance record"
     },
     {
-      "id": "B01",
-      "name": "密码大字",
-      "implementation": "local_interactive_prototype",
-      "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
-      "state_coverage": "partial; see acceptance record"
-    },
-    {
       "id": "B02",
       "name": "贡献密码/进入方式",
       "implementation": "local_interactive_prototype",
       "acceptance": "included_in_accepted_reference; node_specific_exhaustive_acceptance_not_recorded",
-      "state_coverage": "partial; see acceptance record"
+      "state_coverage": "partial; target-load error/retry, failed-save input retention and same-apartment return observed with synthetic browser data; see acceptance record"
     },
     {
       "id": "P01",
@@ -297,5 +290,6 @@
   },
   "extension_acceptance": "pending_user_review",
   "real_ocr_implemented": false,
-  "personal_library_implementation": "synthetic_memory_only"
+  "personal_library_implementation": "synthetic_memory_only",
+  "latest_change": "ADD-15 removes B01; passwords are inline text. Historical acceptance does not prove new device behavior."
 }

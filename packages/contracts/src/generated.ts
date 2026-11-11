@@ -63,13 +63,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** 本人资料和加密私有联系方式；不读取Auth手机号 */
+        get: operations["getMyProfile"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** 修改本人白名单字段；经验source不可自行verified */
+        /** 版本及幂等保护；自填经验不授资格；仅本人联系方式 */
         patch: operations["patchMyProfile"];
         trace?: never;
     };
@@ -97,10 +98,95 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 本人最小组织来源；未设置返回404 */
+        /** 本人团队及选填业务联系方式；未设置返回404 */
         get: operations["getMyOrganization"];
-        /** 最小组织来源；不允许自选审核状态 */
+        /** 本人团队，版本和幂等保护；用途不授权发布 */
         put: operations["putMyOrganization"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/organization/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本人团队与发布选择，无联系方式正文 */
+        get: operations["getMyOrganizationSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{request_id}/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 登录对象详情内的当前团队资料；不含联系方式正文 */
+        get: operations["getRequestTeam"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{request_id}/team/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 再次验证对象权限和当前自愿开放，未开放返回404 */
+        get: operations["getRequestTeamContact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drivers/{user_id}/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 登录对象详情内的当前团队资料；不含联系方式正文 */
+        get: operations["getDriverTeam"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drivers/{user_id}/team/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 再次验证对象权限和当前自愿开放，未开放返回404 */
+        get: operations["getDriverTeamContact"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -125,6 +211,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/apartments/{apartment_id}/map-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 已核对且有持久使用许可的建筑与门牌号；不含进入资料 */
+        get: operations["getApartmentMapContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/apartments/resolve": {
         parameters: {
             query?: never;
@@ -134,7 +237,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 仅本次位置匹配，不留个人轨迹 */
+        /** 前台位置候选；只有版本化现场证据、可信范围与精度全部满足才自动匹配，不保存轨迹 */
         post: operations["resolveApartment"];
         delete?: never;
         options?: never;
@@ -210,6 +313,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/apartments/discover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 附近200米目录公寓；同一定位快照的最近几何距离；不代表到达、不返回密码 */
+        post: operations["discoverNearbyApartments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apartments/discover/mapbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 同原点目录及Mapbox公寓候选；唯一地址及空间匹配可关联，未关联需核对；无临时结果落库 */
+        post: operations["discoverMapboxApartments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apartments/address-contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 核对地址后直接共享；新位置只接受服务端永久许可地理编码；同事务幂等 */
+        post: operations["contributeAtConfirmedAddress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/apartments/proposals": {
         parameters: {
             query?: never;
@@ -254,7 +408,7 @@ export interface paths {
         /** 资格和对象校验后返回密码；有用优先+贡献时间倒序 */
         get: operations["readAccessRecords"];
         put?: never;
-        /** 有权来源；同码同范围变验证事件 */
+        /** 本人确认后直接共享；同码合并且不刷新贡献时间，不产生有用票 */
         post: operations["contributeAccess"];
         delete?: never;
         options?: never;
@@ -279,23 +433,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/access-records/{record_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** 仅本人贡献或运营；停止正文展示 */
-        delete: operations["withdrawAccess"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/me/contributions": {
         parameters: {
             query?: never;
@@ -307,6 +444,57 @@ export interface paths {
         get: operations["listMyContributions"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contributions/{contribution_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅本人贡献元数据，不含密码；无需查看资格 */
+        get: operations["getMyContributionSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contributions/{contribution_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅本人来源；正文仍要求查看资格，已终止来源不返回密码 */
+        get: operations["getMyContribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/contributions/{contribution_id}/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 版本化纠正本人来源；关联正确记录，保留他人来源和反馈 */
+        post: operations["correctMyContribution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -409,7 +597,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 仅开放且未到期的可见需求 */
+        /**
+         * 仅开放且未到期的可见需求
+         * @description 默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。
+         */
         get: operations["listRequests"];
         put?: never;
         /** 创建本人需求草稿 */
@@ -448,7 +639,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 完整字段/时间/接手条件检查后发布 */
+        /** 核对字段及可选团队版本，冻结发布身份 */
         post: operations["publishRequest"];
         delete?: never;
         options?: never;
@@ -583,7 +774,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 本人草稿与发布记录 */
+        /**
+         * 本人草稿与发布记录
+         * @description 默认旧版1；新版2显式查询。day在新版按洛杉矶接手日精确筛选，不按下架相交。
+         */
         get: operations["listMyRequests"];
         put?: never;
         post?: never;
@@ -619,7 +813,7 @@ export interface paths {
         };
         /** 本人可用声明；不存在返回404 */
         get: operations["getMyAvailability"];
-        /** 首建expected_version=0，更新校验版本；后台到期 */
+        /** 首建expected_version=0，更新校验版本；启用必填7天内开始、最长24小时的时段与1–5个区域；关闭只需版本和enabled=false；按服务端时间自然到期 */
         put: operations["setMyAvailability"];
         post?: never;
         delete?: never;
@@ -635,7 +829,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 仅主动开放且时段有效的区域司机 */
+        /** 仅主动开放、未到期的当前或未来7天内区域声明；非在线状态；无精确GPS */
         get: operations["listAvailableDrivers"];
         put?: never;
         post?: never;
@@ -680,6 +874,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅参与者；读取元数据与双方已读水位 */
+        get: operations["getConversation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -710,41 +921,6 @@ export interface paths {
         put: operations["readConversation"];
         post?: never;
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/requests/{request_id}/meeting-shares": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 仅发布者向已关联未屏蔽会话明确分享精确集合点 */
-        post: operations["shareMeeting"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/requests/{request_id}/meeting-shares/{conversation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 仅发布者或已获共享的该会话参与者 */
-        get: operations["getSharedMeeting"];
-        put?: never;
-        post?: never;
-        /** 仅发布者撤回集合点授权 */
-        delete: operations["revokeMeetingShare"];
         options?: never;
         head?: never;
         patch?: never;
@@ -785,6 +961,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 仅返回本人屏蔽的账号与最小显示信息 */
+        get: operations["listBlockedUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/blocks/{user_id}": {
         parameters: {
             query?: never;
@@ -810,11 +1003,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 互助文字与同ID需求卡 */
+        /** 互助文字、受控图片与同ID需求卡 */
         get: operations["listPosts"];
         put?: never;
-        /** 创建文字动态；不许夹带门码/住户信息 */
+        /** 创建文字动态及最多3张本人已上传图片；不许夹带门码/住户信息 */
         post: operations["createPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/circle-media/{upload_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 本人上传单张静态图片，最多5 MiB，编号重试复用；返回内部媒体ID与有效期 */
+        put: operations["uploadCircleMedia"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/posts/{post_id}/media/{media_id}/{variant}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 每次检查动态、图片绑定和双向屏蔽后返回JPEG */
+        get: operations["readCircleMedia"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -832,7 +1059,7 @@ export interface paths {
         get: operations["getPost"];
         put?: never;
         post?: never;
-        /** 仅作者或有权运营软删除 */
+        /** 仅作者软删除；重复删除同一对象安全 */
         delete: operations["removePost"];
         options?: never;
         head?: never;
@@ -867,7 +1094,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** 仅作者或有权运营软删除 */
+        /** 仅作者软删除；重复删除同一对象安全 */
         delete: operations["removeComment"];
         options?: never;
         head?: never;
@@ -898,7 +1125,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 本人站内通知；无密码/消息正文 */
+        /** 本人站内通知；司机圈回复按当前可见性过滤，仅附回复ID */
         get: operations["listNotifications"];
         put?: never;
         post?: never;
@@ -960,6 +1187,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/device-installations/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 仅持有安装凭据可幂等停用该设备，无账号读取/绑定能力 */
+        post: operations["revokeInstallation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/devices": {
         parameters: {
             query?: never;
@@ -1003,7 +1247,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 校验可见对象；仅提交不自动封禁 */
+        /** 举报可见动态或回复；不自动封禁 */
         post: operations["submitReport"];
         delete?: never;
         options?: never;
@@ -1181,6 +1425,248 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/import-batches/{batch_id}/sources/local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["registerImportLocalSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/sources/{source_id}/extractions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["submitImportDeviceExtraction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        get: operations["listImportSources"];
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["createImportSourceUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/candidates/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["confirmImportSelection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        get: operations["getImportPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        get: operations["listImportBatches"];
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["createImportBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        get: operations["getImportBatch"];
+        put?: never;
+        post?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        delete: operations["deleteImportDraft"];
+        options?: never;
+        head?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        patch: operations["editImportBatchMode"];
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/sources/{source_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["completeImportSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/process": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["processImportBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        get: operations["listImportCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/candidates/{candidate_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        patch: operations["editImportCandidate"];
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/candidates/{candidate_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["confirmImportCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["commitImportCandidates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/import-batches/{batch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 本人截图批次；owner/当前资格/版本及状态校验；详见截图契约文档 */
+        post: operations["cancelImportBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1204,14 +1690,20 @@ export interface components {
             /** @enum {string} */
             status: "ok";
         };
+        PrivateContact: {
+            phone: string;
+            wechat: string;
+        };
         ProfilePatch: {
-            display_name?: string;
-            bio?: string;
-            vehicle_type?: string;
-            /** @enum {string} */
-            locale?: "zh-CN" | "en-US";
-            timezone?: string;
-            experience?: components["schemas"]["ExperienceInput"][];
+            close_availability_expected_version?: number;
+            expected_version: number;
+            display_name: string;
+            bio: string;
+            vehicle_type: string;
+            experience: components["schemas"]["ExperienceInput"][];
+            purposes: ("delivery" | "dsp")[];
+            familiar_region_ids: string[];
+            private_contact: components["schemas"]["PrivateContact"];
         };
         ExperienceInput: {
             carrier: string;
@@ -1232,6 +1724,19 @@ export interface components {
             bio: string | null;
             vehicle_type: string | null;
             experience: components["schemas"]["Experience"][];
+            familiar_regions?: components["schemas"]["ProfileRegion"][];
+        };
+        ProfileRegion: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+        };
+        SelfProfile: {
+            profile: components["schemas"]["Profile"];
+            version: number;
+            purposes: ("delivery" | "dsp")[];
+            familiar_region_ids: string[];
+            private_contact: components["schemas"]["PrivateContact"];
         };
         Me: {
             /** Format: uuid */
@@ -1264,8 +1769,42 @@ export interface components {
             /** @enum {string} */
             verification_status: "self_reported" | "verified" | "rejected";
         };
-        OrganizationInput: {
+        TeamSummary: {
+            /** Format: uuid */
+            id: string;
             name: string;
+            contact_display_name: string;
+            carriers: string[];
+            regions: components["schemas"]["ProfileRegion"][];
+            contact_available: boolean;
+        };
+        OwnTeamSummary: {
+            team: components["schemas"]["TeamSummary"];
+            version: number;
+            active: boolean;
+            can_represent: boolean;
+        };
+        OwnTeam: {
+            team: components["schemas"]["TeamSummary"];
+            version: number;
+            active: boolean;
+            can_represent: boolean;
+            contact_shared: boolean;
+            business_contact: components["schemas"]["PrivateContact"];
+        };
+        OrganizationInput: {
+            expected_version: number;
+            name: string;
+            carriers: string[];
+            region_ids: string[];
+            active: boolean;
+            contact_shared: boolean;
+            business_contact: components["schemas"]["PrivateContact"];
+        };
+        TeamContact: {
+            /** Format: uuid */
+            team_id: string;
+            business_contact: components["schemas"]["PrivateContact"];
         };
         Apartment: {
             /** Format: uuid */
@@ -1278,6 +1817,25 @@ export interface components {
             point: components["schemas"]["Point"];
             /** @enum {string} */
             confidence: "unverified" | "field_verified" | "authorized_source";
+        };
+        BuildingGeometry: {
+            /** @enum {string} */
+            type: "MultiPolygon";
+            coordinates: number[][][][];
+        };
+        ApartmentBuilding: {
+            /** Format: uuid */
+            id: string;
+            geometry: components["schemas"]["BuildingGeometry"];
+            label_point: components["schemas"]["Point"];
+            street_number: string;
+            /** Format: date-time */
+            verified_at: string;
+        };
+        ApartmentMapContext: {
+            /** Format: uuid */
+            apartment_id: string;
+            buildings: components["schemas"]["ApartmentBuilding"][];
         };
         ResolveInput: {
             point: components["schemas"]["Point"];
@@ -1294,15 +1852,28 @@ export interface components {
             matched_id: string | null;
             candidates: components["schemas"]["Apartment"][];
             config_version: number;
+            /** @enum {string} */
+            reason?: "matched" | "ambiguous" | "nearby" | "no_coverage" | "imprecise" | "stale_location" | "policy_disabled";
+            /** @enum {string} */
+            match_basis?: "boundary" | "entrance";
         };
         AddressSuggestInput: {
             query: string;
             /** Format: uuid */
             session_token: string;
         };
+        SearchAddress: {
+            address_line1: string;
+            city: string;
+            state: string;
+            postal_code: string | null;
+        };
         AddressSuggestion: {
             provider_result_id: string;
             label: string;
+            title: string;
+            subtitle: string;
+            address: components["schemas"]["SearchAddress"] | (never | null);
         };
         AddressSuggestions: {
             items: components["schemas"]["AddressSuggestion"][];
@@ -1310,6 +1881,7 @@ export interface components {
             session_token: string;
             /** @enum {string} */
             use_mode: "temporary";
+            attribution: string;
         };
         AddressRetrieveInput: {
             provider_result_id: string;
@@ -1318,9 +1890,112 @@ export interface components {
         };
         TemporaryAddress: {
             label: string;
+            title: string;
             point: components["schemas"]["Point"];
             /** @enum {string} */
             use_mode: "temporary";
+            attribution: string;
+            /** @enum {string} */
+            match_status: "matched" | "ambiguous" | "unmatched";
+            apartments: components["schemas"]["Apartment"][];
+            address?: components["schemas"]["SearchAddress"] | (never | null);
+        };
+        NearbyInput: {
+            point: components["schemas"]["Point"];
+            /** Format: date-time */
+            observed_at: string;
+            accuracy_m: number;
+            /** @enum {string} */
+            accuracy_permission: "precise" | "approximate";
+            /** Format: uuid */
+            observation_id?: string;
+            /** @description 仅Mapbox发现端点支持；显式true启用200/500/1000m受控扩围，省略保持200m */
+            expand?: boolean;
+        };
+        /** @description 当前请求的定位快照，不重复返回坐标、不持久化；valid_until最多为observed_at后20秒。仅用于距离与请求关联，不表示到达、入口或读取资格。 */
+        DistanceContext: {
+            /** Format: uuid */
+            observation_id: string | null;
+            /** Format: date-time */
+            observed_at: string;
+            accuracy_m: number;
+            /** @enum {string} */
+            accuracy_permission: "precise" | "approximate";
+            /** Format: date-time */
+            valid_until: string;
+        };
+        NearbyCandidate: {
+            key: string;
+            /** @enum {string} */
+            source: "catalog" | "mapbox";
+            /** @description 已有业务公寓的唯一完整地址与空间匹配；Mapbox来源也可关联。发现响应不含密码正文 */
+            apartment: components["schemas"]["Apartment"] | (never | null);
+            address: components["schemas"]["SearchAddress"] | (never | null);
+            point: components["schemas"]["Point"];
+            distance_m: number;
+            /** @enum {string} */
+            classification: "catalog_community" | "apartments";
+            /** @description 未关联或存在歧义时需核对地址；不是贡献人工审核 */
+            requires_address_confirmation: boolean;
+            /**
+             * @description 与distance_m同一计算来源。最后一项为补充Tilequery返回点的保守上界；均非入口/路线距离。旧响应缺字段时不显示距离数字。
+             * @enum {string}
+             */
+            distance_basis?: "address_point" | "community_boundary" | "building_footprint" | "building_point_upper_bound";
+            /** @description 会话内Mapbox建筑要素ID，仅辅助原生选中；不是公寓ID、地址证明或永久存储许可 */
+            provider_feature_id?: string;
+        };
+        /** @description 同一次定位快照的候选，最多20条；expand省略为200m兼容模式。扩围不足3且本档查询完整才进入下一档；失败保留上一有效范围的公共地址并标注失败，绝不含门禁正文。 距离字段为加法兼容；旧服务缺失时客户端隐藏距离。 */
+        NearbyDiscovery: {
+            items: components["schemas"]["NearbyCandidate"][];
+            /** @enum {integer} */
+            radius_m: 200 | 500 | 1000;
+            /** Format: date-time */
+            expires_at: string;
+            truncated: boolean;
+            /** @enum {string} */
+            provider_status: "not_requested" | "ok" | "unavailable";
+            attribution: string;
+            /** @enum {string} */
+            use_mode: "temporary";
+            coverage?: components["schemas"]["NearbyCoverage"];
+            expansion?: components["schemas"]["NearbyExpansion"];
+            distance_context?: components["schemas"]["DistanceContext"];
+        };
+        /** @description 仅表示本次来源查询范围及预算状态，不保证现实世界分类/地址完整。Tilequery九瓦片覆盖不足、50条封顶或地址解析未完成时为partial。 */
+        NearbyCoverage: {
+            /** @enum {string} */
+            catalog: "queried" | "capped";
+            /** @enum {string} */
+            mapbox: "not_requested" | "queried" | "partial" | "unavailable";
+        };
+        NearbyExpansion: {
+            attempted_radii_m: (200 | 500 | 1000)[];
+            /** @enum {string} */
+            stop_reason: "fixed" | "sufficient" | "max_radius" | "coverage_incomplete" | "provider_unavailable" | "budget_exhausted";
+            catalog_queries: number;
+            tilequery_requests: number;
+            reverse_requests: number;
+            metadata_requests: number;
+            elapsed_ms: number;
+        };
+        ConfirmedAddressAccessScope: {
+            label: string;
+        };
+        AddressContributionInput: {
+            address: components["schemas"]["SearchAddress"];
+            /** @enum {string} */
+            method: "keypad";
+            value: string;
+            scope?: components["schemas"]["ConfirmedAddressAccessScope"];
+            /** @enum {boolean} */
+            source_attested: true;
+            /** @enum {boolean} */
+            address_confirmed: true;
+        };
+        AddressContributionResult: {
+            apartment: components["schemas"]["Apartment"];
+            contribution: components["schemas"]["ContributionResult"];
         };
         ApartmentProposalInput: {
             name?: string;
@@ -1385,7 +2060,13 @@ export interface components {
             items: components["schemas"]["AccessRecord"][];
             config_version: number;
             next_cursor: string | null;
+            /**
+             * @description 公寓暂停共享时返回；items 为空，地址仍可查看。
+             * @enum {boolean}
+             */
+            sharing_paused?: true;
         };
+        /** @description 新贡献成功返回created_active，无人工审核；created_pending仅兼容旧请求重放，不表示当前仍在共享。same_value_validation不刷新贡献时间或增加有用票。 */
         ContributionResult: {
             /** Format: uuid */
             record_id: string;
@@ -1456,16 +2137,16 @@ export interface components {
             /** Format: date-time */
             starts_at?: string;
             /** Format: date-time */
-            pickup_deadline_at?: string;
+            pickup_deadline_at?: string | null;
             /** Format: date-time */
-            delivery_deadline_at?: string;
+            delivery_deadline_at?: string | null;
             /** Format: date-time */
             expires_at?: string;
             timezone?: string;
-            parcel_count?: number;
-            stop_count?: number;
-            drivers_needed?: number;
-            price_cents?: number;
+            parcel_count?: number | null;
+            stop_count?: number | null;
+            drivers_needed?: number | null;
+            price_cents?: number | null;
             /** @enum {string} */
             price_unit?: "per_parcel" | "per_route" | "negotiable";
             /** @enum {string} */
@@ -1479,6 +2160,10 @@ export interface components {
             experience_requirement?: "any" | "delivery_experience" | "carrier_experience";
             /** Format: uuid */
             pickup_region_id?: string;
+        };
+        PublishInput: {
+            expected_version: number;
+            expected_team_version?: number;
         };
         VersionInput: {
             expected_version: number;
@@ -1597,19 +2282,20 @@ export interface components {
             contacted_at: string | null;
             /** Format: uuid */
             conversation_id: string;
-            request_summary: components["schemas"]["Request"] | (never | null);
+            request_summary: components["schemas"]["RequestSummaryRead"] | (never | null);
+            applicant_profile: components["schemas"]["Profile"] | (never | null);
         };
         AvailabilityInput: {
             expected_version: number;
             enabled: boolean;
             /** Format: date-time */
-            starts_at: string;
+            starts_at?: string;
             /** Format: date-time */
-            ends_at: string;
-            region_ids: string[];
-            capacity_parcels?: number;
+            ends_at?: string;
+            region_ids?: string[];
+            capacity_parcels?: number | null;
             /** Format: date-time */
-            latest_finish_at?: string;
+            latest_finish_at?: string | null;
         };
         Availability: {
             /** Format: uuid */
@@ -1644,20 +2330,41 @@ export interface components {
             other_profile: components["schemas"]["Profile"];
             unread_count: number;
             last_sequence: number;
+            my_last_read_sequence: number;
+            other_last_read_sequence: number;
+            can_send: boolean;
+            last_request_region_label: string | null;
+            last_request_snapshot: components["schemas"]["RequestSnapshot"] | (never | null);
             /** Format: date-time */
             updated_at: string;
         };
-        MessageInput: {
+        TextMessageInput: {
             /** Format: uuid */
             client_message_id: string;
-            /** @enum {string} */
-            kind: "text" | "request_card";
-            text?: string;
-            /** Format: uuid */
-            source_request_id?: string;
-            source_request_version?: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "text";
+            text: string;
         };
+        RequestCardMessageInput: {
+            /** Format: uuid */
+            client_message_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "request_card";
+            /** Format: uuid */
+            source_request_id: string;
+            source_request_version: number;
+        };
+        MessageInput: components["schemas"]["TextMessageInput"] | components["schemas"]["RequestCardMessageInput"];
         Message: {
+            request_region_label: string | null;
+            /** Format: uuid */
+            client_message_id: string;
             /** Format: uuid */
             id: string;
             sequence: number;
@@ -1668,24 +2375,12 @@ export interface components {
             /** @enum {string} */
             kind: "text" | "request_card";
             text: string | null;
-            request_snapshot: components["schemas"]["RequestVersion"] | (never | null);
+            request_snapshot: components["schemas"]["RequestSnapshot"] | (never | null);
             /** Format: date-time */
             created_at: string;
         };
         ReadInput: {
             last_read_sequence: number;
-        };
-        MeetingShareInput: {
-            /** Format: uuid */
-            conversation_id: string;
-            details: string;
-        };
-        MeetingDetails: {
-            /** Format: uuid */
-            request_id: string;
-            /** Format: uuid */
-            conversation_id: string;
-            details: string;
         };
         ContactInput: {
             private_note?: string;
@@ -1698,13 +2393,81 @@ export interface components {
             body: string;
             /** Format: uuid */
             request_id?: string;
+            /** Format: uuid */
+            region_id?: string;
+            /** @enum {string} */
+            topic?: "delivery_question" | "experience" | "on_the_road";
+            media_ids?: string[];
+        };
+        CircleMedia: {
+            /** Format: uuid */
+            id: string;
+            width: number;
+            height: number;
+        };
+        CircleMediaUpload: {
+            /** Format: uuid */
+            id: string;
+            width: number;
+            height: number;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        CircleAuthor: {
+            /** Format: uuid */
+            user_id: string;
+            display_name: string;
+        };
+        BlockedUser: {
+            /** Format: uuid */
+            user_id: string;
+            display_name: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        BlockedUserPage: {
+            items: components["schemas"]["BlockedUser"][];
+            next_cursor: string | null;
+        };
+        CircleRequestSummary: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+            /** @enum {string} */
+            status: "draft" | "open" | "found" | "closed" | "expired";
+            /** @enum {string|null} */
+            scenario: "warehouse_shortage" | "delivery_handoff" | null;
+            region_label: string | null;
+            pickup_region_label: string | null;
+            /** @enum {string|null} */
+            price_unit: "per_parcel" | "per_route" | "negotiable" | null;
+            price_cents: number | null;
+            /** Format: date-time */
+            starts_at: string | null;
+            /** Format: date */
+            handoff_date: string | null;
+            /** @enum {string|null} */
+            handoff_mode: "asap" | "scheduled" | null;
+            /** @enum {string|null} */
+            quantity_mode: "exact" | "estimate" | "unknown" | null;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            remaining_parcels: number | null;
+            remaining_drivers: number | null;
         };
         Post: {
             /** Format: uuid */
             id: string;
-            author: components["schemas"]["Profile"];
+            author: components["schemas"]["CircleAuthor"];
             body: string;
-            request: components["schemas"]["Request"] | (never | null);
+            /** @enum {string|null} */
+            topic: "delivery_question" | "experience" | "on_the_road" | null;
+            region: components["schemas"]["ProfileRegion"] | (never | null);
+            has_request: boolean;
+            request: components["schemas"]["CircleRequestSummary"] | (never | null);
+            media: components["schemas"]["CircleMedia"][];
+            reply_count: number;
             /** Format: date-time */
             created_at: string;
         };
@@ -1716,7 +2479,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             post_id: string;
-            author: components["schemas"]["Profile"];
+            author: components["schemas"]["CircleAuthor"];
             body: string;
             /** Format: date-time */
             created_at: string;
@@ -1732,10 +2495,19 @@ export interface components {
             read_at: string | null;
             /** Format: date-time */
             created_at: string;
+            /** Format: uuid */
+            comment_id?: string;
+        };
+        InstallationProof: {
+            /** Format: uuid */
+            installation_id: string;
+            installation_secret: string;
+            binding_version: number;
         };
         DeviceInput: {
             /** Format: uuid */
             installation_id: string;
+            installation_secret: string;
             /** @enum {string} */
             platform: "ios" | "android";
             push_token?: string;
@@ -1749,6 +2521,7 @@ export interface components {
             /** @enum {string} */
             platform: "ios" | "android";
             enabled: boolean;
+            binding_version: number;
         };
         Preferences: {
             chat_push: boolean;
@@ -1757,7 +2530,7 @@ export interface components {
         };
         ReportInput: {
             /** @enum {string} */
-            object_type: "apartment" | "access_record" | "request" | "user" | "post" | "comment" | "message";
+            object_type: "post" | "comment";
             /** Format: uuid */
             object_id: string;
             reason: string;
@@ -1833,21 +2606,56 @@ export interface components {
             apartment_id: string;
             address_label: string;
             /** @enum {string} */
-            event_type: "created" | "same_value_validation" | "withdrawal_requested";
+            event_type: "created" | "same_value_validation" | "withdrawal_requested" | "withdrawn" | "corrected";
             /** @enum {string} */
             record_status: "pending" | "active" | "review" | "invalid" | "withdrawn";
-            can_withdraw_record: boolean;
             /** Format: date-time */
             occurred_at: string;
+            /** @enum {string} */
+            status: "active" | "withdrawn" | "corrected";
+            version: number;
+            scope_label: string;
+            can_correct: boolean;
+            other_source_count: number;
+            useful_count: number;
+            not_useful_count: number;
+            /** Format: date-time */
+            last_feedback_at: string | null;
+            views_count: number | null;
+            /**
+             * @description 公寓暂停共享，历史贡献保留，正文不返回。
+             * @enum {boolean}
+             */
+            sharing_paused?: true;
         };
         ContributionSummaryPage: {
             items: components["schemas"]["ContributionSummary"][];
             next_cursor: string | null;
         };
+        ContributionDetail: {
+            source: components["schemas"]["ContributionSummary"];
+            value: string | null;
+        };
+        ContributionCorrectionInput: {
+            expected_version: number;
+            value: string;
+            scope: components["schemas"]["ConfirmedAddressAccessScope"];
+            /** @enum {boolean} */
+            source_attested: true;
+        };
+        ContributionChangeResult: {
+            /** @enum {string} */
+            operation: "corrected";
+            applied_version: number;
+            source: components["schemas"]["ContributionSummary"];
+            replacement: components["schemas"]["ContributionSummary"] | (never | null);
+        };
         InboxSummary: {
             unread_conversations: number;
             unread_messages: number;
             unread_notifications: number;
+            /** @description 本人仍可查看的未读司机圈回复；是 unread_notifications 的子集，不额外计入总数。 */
+            unread_circle_replies: number;
         };
         ShareCreateInput: {
             /** @enum {boolean} */
@@ -1885,7 +2693,372 @@ export interface components {
             /** @enum {string} */
             status: "open" | "ended";
             title: string;
-            summary: components["schemas"]["PublicRequestSummary"] | (never | null);
+            summary: components["schemas"]["PublicRequestSummaryRead"] | (never | null);
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。address_source需明确区分手填与Mapbox联想；联想地址文字也须经后台有持久许可的来源核对后保存，不能仅删除坐标后当手填存储。 */
+        WarehousePickupDraftV2: {
+            /** @enum {string} */
+            kind: "warehouse";
+            name?: string | null;
+            address_line1?: string | null;
+            city?: string | null;
+            state?: string | null;
+            postal_code?: string | null;
+            address_confirmed?: boolean;
+            /** @enum {string} */
+            address_source?: "publisher_entered" | "mapbox_suggestion";
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        ContactHandoffV2: {
+            /** @enum {string} */
+            kind: "contact_handoff";
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        PickupDraftV2: components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"];
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。草稿可不完整；发布前须完整核对。asap的starts_at为空并由服务端当次生成；scheduled使用明确时刻和匹配的洛杉矶接手日。下架默认最迟接手或接手日23:59，独立于送完要求。 */
+        RequestDraftInputV2: {
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** Format: uuid */
+            organization_id?: string;
+            /** Format: uuid */
+            region_id?: string;
+            carrier?: string;
+            route_label?: string;
+            description?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            pickup_deadline_at?: string | null;
+            /** Format: date-time */
+            delivery_deadline_at?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** @enum {string} */
+            timezone?: "America/Los_Angeles";
+            parcel_count?: number | null;
+            stop_count?: number | null;
+            drivers_needed?: number | null;
+            price_cents?: number | null;
+            /** @enum {string} */
+            price_unit?: "per_parcel" | "per_route" | "negotiable";
+            /** @enum {string} */
+            sorted_state?: "sorted" | "unsorted" | "unknown";
+            /** @enum {string} */
+            handoff_requirement?: "carrier_account" | "dsp_approval" | "contact_confirm";
+            private_payment_terms?: string;
+            minimum_parcels?: number | null;
+            /** @enum {string} */
+            experience_requirement?: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id?: string;
+            /** @enum {string} */
+            task_scope?: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode?: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode?: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date?: string;
+            /** @enum {string} */
+            completion_mode?: "same_day" | "next_day" | "contact";
+            pickup?: (components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"]) | (never | null);
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        RequestPatchV2: {
+            /** @enum {integer} */
+            request_schema_version: 2;
+            expected_version: number;
+            /** Format: uuid */
+            organization_id?: string | null;
+            /** Format: uuid */
+            region_id?: string;
+            carrier?: string;
+            route_label?: string;
+            description?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            pickup_deadline_at?: string | null;
+            /** Format: date-time */
+            delivery_deadline_at?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** @enum {string} */
+            timezone?: "America/Los_Angeles";
+            parcel_count?: number | null;
+            stop_count?: number | null;
+            drivers_needed?: number | null;
+            price_cents?: number | null;
+            /** @enum {string} */
+            price_unit?: "per_parcel" | "per_route" | "negotiable";
+            /** @enum {string} */
+            sorted_state?: "sorted" | "unsorted" | "unknown";
+            /** @enum {string} */
+            handoff_requirement?: "carrier_account" | "dsp_approval" | "contact_confirm";
+            private_payment_terms?: string;
+            minimum_parcels?: number | null;
+            /** @enum {string} */
+            experience_requirement?: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id?: string;
+            /** @enum {string} */
+            task_scope?: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode?: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode?: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date?: string;
+            /** @enum {string} */
+            completion_mode?: "same_day" | "next_day" | "contact";
+            pickup?: (components["schemas"]["WarehousePickupDraftV2"] | components["schemas"]["ContactHandoffV2"]) | (never | null);
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        GapInputV2: {
+            /** @enum {integer} */
+            request_schema_version: 2;
+            expected_version: number;
+            remaining_parcels?: number | null;
+            remaining_drivers?: number;
+        } | unknown | unknown;
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        WarehousePickupDetailV2: {
+            /** @enum {string} */
+            kind: "warehouse";
+            address_version: number;
+            name: string | null;
+            address_line1: string | null;
+            city: string | null;
+            state: string | null;
+            postal_code: string | null;
+            address_confirmed: boolean;
+            /** @enum {string} */
+            address_source: "publisher_entered" | "provider_permanent" | "legacy_unclassified";
+            point: components["schemas"]["Point"] | (never | null);
+            /** @enum {string} */
+            point_source: "unlocated" | "persistent_source";
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。 */
+        PickupLocationDetailV2: components["schemas"]["WarehousePickupDetailV2"] | components["schemas"]["ContactHandoffV2"];
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。仅发现摘要，不含完整取件地址。 */
+        RequestSummaryV2: {
+            /** Format: uuid */
+            id: string;
+            publisher: components["schemas"]["Profile"];
+            organization: components["schemas"]["Organization"] | (never | null);
+            /** @enum {string} */
+            kind: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+            /** @enum {string} */
+            status: "draft" | "open" | "found" | "closed" | "expired";
+            version: number;
+            /** Format: uuid */
+            region_id: string | null;
+            pickup_area: string | null;
+            carrier: string | null;
+            route_label: string | null;
+            description: string | null;
+            /** Format: date-time */
+            starts_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            pickup_deadline_at: string | null;
+            /** Format: date-time */
+            delivery_deadline_at: string | null;
+            timezone: string;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            remaining_parcels: number | null;
+            remaining_drivers: number | null;
+            price_cents: number | null;
+            /** @enum {string|null} */
+            price_unit: "per_parcel" | "per_route" | "negotiable" | null;
+            /** @enum {string} */
+            currency: "USD";
+            sorted_state: string | null;
+            handoff_requirement: string | null;
+            stop_count: number | null;
+            accepts_partial: boolean;
+            minimum_parcels: number | null;
+            /** @enum {string} */
+            experience_requirement: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string|null} */
+            task_scope: "partial" | "whole_route" | null;
+            /** @enum {string|null} */
+            quantity_mode: "exact" | "estimate" | "unknown" | null;
+            /** @enum {string|null} */
+            handoff_mode: "asap" | "scheduled" | null;
+            /** Format: date */
+            handoff_date: string | null;
+            /** @enum {string|null} */
+            completion_mode: "same_day" | "next_day" | "contact" | null;
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。完整取件信息仅在有权登录详情读取。 */
+        RequestDetailV2: {
+            /** Format: uuid */
+            id: string;
+            publisher: components["schemas"]["Profile"];
+            organization: components["schemas"]["Organization"] | (never | null);
+            /** @enum {string} */
+            kind: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+            /** @enum {string} */
+            status: "draft" | "open" | "found" | "closed" | "expired";
+            version: number;
+            /** Format: uuid */
+            region_id: string | null;
+            pickup_area: string | null;
+            carrier: string | null;
+            route_label: string | null;
+            description: string | null;
+            /** Format: date-time */
+            starts_at: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** Format: date-time */
+            pickup_deadline_at: string | null;
+            /** Format: date-time */
+            delivery_deadline_at: string | null;
+            timezone: string;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            remaining_parcels: number | null;
+            remaining_drivers: number | null;
+            price_cents: number | null;
+            /** @enum {string|null} */
+            price_unit: "per_parcel" | "per_route" | "negotiable" | null;
+            /** @enum {string} */
+            currency: "USD";
+            sorted_state: string | null;
+            handoff_requirement: string | null;
+            stop_count: number | null;
+            accepts_partial: boolean;
+            minimum_parcels: number | null;
+            /** @enum {string} */
+            experience_requirement: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string|null} */
+            task_scope: "partial" | "whole_route" | null;
+            /** @enum {string|null} */
+            quantity_mode: "exact" | "estimate" | "unknown" | null;
+            /** @enum {string|null} */
+            handoff_mode: "asap" | "scheduled" | null;
+            /** Format: date */
+            handoff_date: string | null;
+            /** @enum {string|null} */
+            completion_mode: "same_day" | "next_day" | "contact" | null;
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
+            pickup: components["schemas"]["PickupLocationDetailV2"] | (never | null);
+            private_payment_terms: string | null;
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。去敏来源快照：不含地址、坐标或私下付款正文。 */
+        RequestVersionV2: {
+            /** Format: uuid */
+            request_id: string;
+            version: number;
+            kind: string;
+            /** Format: uuid */
+            region_id: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            price_cents: number | null;
+            price_unit: string | null;
+            parcel_count: number | null;
+            handoff_requirement: string | null;
+            pickup_area: string | null;
+            carrier: string | null;
+            route_label: string | null;
+            /** Format: date-time */
+            pickup_deadline_at: string | null;
+            /** Format: date-time */
+            delivery_deadline_at: string | null;
+            timezone: string;
+            drivers_needed: number | null;
+            stop_count: number | null;
+            sorted_state: string | null;
+            /** @enum {string} */
+            currency: "USD";
+            accepts_partial: boolean;
+            minimum_parcels: number | null;
+            /** @enum {string} */
+            experience_requirement: "any" | "delivery_experience" | "carrier_experience";
+            /** Format: uuid */
+            pickup_region_id: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string} */
+            task_scope: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date: string;
+            /** @enum {string} */
+            completion_mode: "same_day" | "next_day" | "contact";
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
+            pickup_address_version: number | null;
+            publisher_display_name: string | null;
+            organization_name: string | null;
+        };
+        /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。独立游客白名单，不含取件地址、坐标及私人联系方式。 */
+        PublicRequestSummaryV2: {
+            carrier: string | null;
+            kind: string;
+            region_label: string;
+            pickup_area: string | null;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            parcel_count: number | null;
+            drivers_needed: number | null;
+            minimum_parcels: number | null;
+            accepts_partial: boolean;
+            price_cents: number | null;
+            price_unit: string | null;
+            /** @enum {string} */
+            currency: "USD";
+            experience_requirement: string;
+            public_publisher_name: string;
+            public_organization_name: string | null;
+            /** @enum {integer} */
+            request_schema_version: 2;
+            /** @enum {string} */
+            scenario: "warehouse_shortage" | "delivery_handoff";
+            /** @enum {string} */
+            task_scope: "partial" | "whole_route";
+            /** @enum {string} */
+            quantity_mode: "exact" | "estimate" | "unknown";
+            /** @enum {string} */
+            handoff_mode: "asap" | "scheduled";
+            /** Format: date */
+            handoff_date: string;
+            /** @enum {string} */
+            completion_mode: "same_day" | "next_day" | "contact";
+            /** @enum {string|null} */
+            pickup_kind: "warehouse" | "contact_handoff" | null;
         };
         ApartmentPage: {
             items: components["schemas"]["Apartment"][];
@@ -1900,7 +3073,7 @@ export interface components {
             next_cursor: string | null;
         };
         RequestVersionPage: {
-            items: components["schemas"]["RequestVersion"][];
+            items: components["schemas"]["RequestSnapshot"][];
             next_cursor: string | null;
         };
         ApplicationPage: {
@@ -2006,6 +3179,227 @@ export interface components {
             /** @enum {boolean} */
             source_attested: true;
         };
+        ImportScope: {
+            label?: string;
+        };
+        ImportPolicy: {
+            version: number;
+            max_images: number;
+            max_image_bytes: number;
+            max_total_bytes: number;
+            max_pixels: number;
+            draft_ttl_seconds: number;
+            source_ttl_seconds: number;
+            upload_ttl_seconds: number;
+            processing_timeout_seconds: number;
+            daily_image_limit: number;
+            max_candidates: number;
+            /** @enum {string} */
+            recognition_mode: "on_device" | "server";
+            supported_mime_types: string[];
+        };
+        ImportCreate: {
+            /** Format: uuid */
+            client_batch_id: string;
+            policy_version: number;
+            /** @enum {string} */
+            mode: "private_only" | "private_and_share";
+            /** @enum {string} */
+            origin: "contribute" | "library" | "apartment";
+            /** Format: uuid */
+            origin_apartment_id?: string;
+        };
+        ImportBatch: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            state: "created" | "uploading" | "queued" | "processing" | "needs_review" | "submitting" | "completed" | "partial_failed" | "failed" | "cancelled" | "expired";
+            version: number;
+            generation: number;
+            /** @enum {string} */
+            mode: "private_only" | "private_and_share";
+            mode_locked: boolean;
+            policy_version: number;
+            /** Format: date-time */
+            expires_at: string;
+            sources_count: number;
+            /** @description Number of non-removed candidates; removed rows remain only in owner draft history until expiry. */
+            candidate_count: number;
+            private_saved_count: number;
+            shared_count: number;
+            pending_count: number;
+            failed_count: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ImportBatchPage: {
+            items: components["schemas"]["ImportBatch"][];
+            next_cursor: string | null;
+        };
+        ImportBatchPatch: {
+            expected_version: number;
+            /** @enum {string} */
+            mode: "private_only" | "private_and_share";
+        };
+        ImportSourceCreate: {
+            /** Format: uuid */
+            client_source_id: string;
+            expected_batch_version: number;
+            /** @enum {string} */
+            mime_type: "image/jpeg" | "image/png" | "image/heic";
+            byte_size: number;
+            width: number;
+            height: number;
+        };
+        ImportSource: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            state: "registered" | "awaiting_upload" | "uploaded" | "processing" | "recognized" | "failed" | "deleted";
+            version: number;
+            /** Format: date-time */
+            expires_at: string;
+            error_code: string | null;
+        };
+        ImportSourcePage: {
+            items: components["schemas"]["ImportSource"][];
+            next_cursor: string | null;
+        };
+        ImportUploadGrant: {
+            source: components["schemas"]["ImportSource"];
+            upload_url: string;
+            /** Format: date-time */
+            expires_at: string;
+            required_headers: {
+                [key: string]: string;
+            };
+        };
+        ImportVersionInput: {
+            expected_version: number;
+        };
+        ImportStartInput: {
+            expected_version: number;
+            source_ids: string[];
+        };
+        ImportCandidateEdit: {
+            expected_revision: number;
+            address_text?: string;
+            /** Format: uuid */
+            apartment_id?: string | null;
+            confirmed_address?: components["schemas"]["SearchAddress"] | (never | null);
+            /** @enum {string} */
+            method?: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
+            value?: string;
+            scope?: components["schemas"]["ImportScope"];
+            removed?: boolean;
+        };
+        ImportCandidate: {
+            /** Format: uuid */
+            id: string;
+            revision: number;
+            source_ids: string[];
+            address_text: string;
+            /** Format: uuid */
+            apartment_id: string | null;
+            /** @enum {string} */
+            method: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
+            value: string;
+            scope: components["schemas"]["ImportScope"];
+            issues: ("missing_address" | "missing_value" | "ambiguous_pair" | "uncertain_characters" | "uncertain_address" | "unmatched_apartment" | "duplicate" | "unsupported_method")[];
+            /** @enum {string} */
+            state: "needs_review" | "ready" | "removed" | "committed" | "failed";
+            confirmation_revision: number | null;
+            confirmed_address?: components["schemas"]["SearchAddress"] | (never | null);
+            commit_result?: components["schemas"]["ImportCommitResult"];
+        };
+        ImportCandidatePage: {
+            items: components["schemas"]["ImportCandidate"][];
+            next_cursor: string | null;
+        };
+        ImportCandidateConfirm: {
+            expected_revision: number;
+            /** @enum {boolean} */
+            fields_confirmed: true;
+        };
+        ImportConfirmSelectionItem: {
+            /** Format: uuid */
+            candidate_id: string;
+            expected_revision: number;
+        };
+        ImportConfirmSelection: {
+            expected_batch_version: number;
+            /** @enum {boolean} */
+            fields_confirmed: true;
+            items: components["schemas"]["ImportConfirmSelectionItem"][];
+        };
+        ImportCommitItem: {
+            /** Format: uuid */
+            candidate_id: string;
+            confirmed_revision: number;
+            /** Format: uuid */
+            client_commit_id: string;
+        };
+        ImportCommitInput: {
+            expected_batch_version: number;
+            /** @enum {string} */
+            mode: "private_only" | "private_and_share";
+            /** @enum {boolean} */
+            source_attested: true;
+            items: components["schemas"]["ImportCommitItem"][];
+        };
+        ImportCommitResult: {
+            /** Format: uuid */
+            candidate_id: string;
+            confirmed_revision: number;
+            /** Format: uuid */
+            client_commit_id: string;
+            /** @enum {string} */
+            private_status: "not_started" | "saved" | "failed";
+            /** Format: uuid */
+            private_record_id: string | null;
+            /** @enum {string} */
+            share_status: "not_requested" | "not_started" | "active" | "pending" | "same_value" | "failed";
+            /** Format: uuid */
+            contribution_id: string | null;
+            error_code: string | null;
+            retryable: boolean;
+            /** Format: uuid */
+            apartment_id?: string | null;
+            /**
+             * Format: uuid
+             * @description 已保存资料所属的本人公寓条目 ID。仅在本人保存成功时返回。
+             */
+            private_entry_id?: string;
+        };
+        ImportCommitResponse: {
+            batch: components["schemas"]["ImportBatch"];
+            results: components["schemas"]["ImportCommitResult"][];
+        };
+        ImportDeviceCandidateInput: {
+            address_text: string;
+            value: string;
+            /** @enum {string} */
+            method: "keypad" | "front_desk" | "digital_access" | "no_fixed_code" | "other";
+            scope?: components["schemas"]["ImportScope"];
+            review_issues?: ("ambiguous_pair" | "uncertain_address" | "uncertain_characters")[];
+        };
+        ImportDeviceExtraction: {
+            expected_source_version: number;
+            recognizer_version: string;
+            candidates: components["schemas"]["ImportDeviceCandidateInput"][];
+        };
+        RequestRead: components["schemas"]["Request"] | components["schemas"]["RequestDetailV2"];
+        RequestSummaryRead: components["schemas"]["Request"] | components["schemas"]["RequestSummaryV2"];
+        RequestDraftAny: components["schemas"]["RequestDraftInput"] | components["schemas"]["RequestDraftInputV2"];
+        RequestPatchAny: components["schemas"]["RequestPatch"] | components["schemas"]["RequestPatchV2"];
+        GapAny: components["schemas"]["GapInput"] | components["schemas"]["GapInputV2"];
+        RequestSnapshot: components["schemas"]["RequestVersion"] | components["schemas"]["RequestVersionV2"];
+        PublicRequestSummaryRead: components["schemas"]["PublicRequestSummary"] | components["schemas"]["PublicRequestSummaryV2"];
+        RequestPageV2: {
+            items: components["schemas"]["RequestSummaryV2"][];
+            next_cursor: string | null;
+        };
+        RequestListRead: components["schemas"]["RequestPage"] | components["schemas"]["RequestPageV2"];
     };
     responses: never;
     parameters: never;
@@ -2397,6 +3791,100 @@ export interface operations {
             };
         };
     };
+    getMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelfProfile"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     patchMyProfile: {
         parameters: {
             query?: never;
@@ -2418,7 +3906,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Profile"];
+                    "application/json": components["schemas"]["SelfProfile"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -2606,10 +4094,12 @@ export interface operations {
                 headers: {
                     /** @description 追踪ID，不含个人数据 */
                     "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Organization"];
+                    "application/json": components["schemas"]["OwnTeam"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -2689,7 +4179,9 @@ export interface operations {
     putMyOrganization: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2704,10 +4196,494 @@ export interface operations {
                 headers: {
                     /** @description 追踪ID，不含个人数据 */
                     "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Organization"];
+                    "application/json": components["schemas"]["OwnTeam"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getMyOrganizationSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnTeamSummary"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getRequestTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamSummary"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getRequestTeamContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamContact"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDriverTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamSummary"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getDriverTeamContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamContact"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -2802,6 +4778,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicConfig"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getApartmentMapContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                apartment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApartmentMapContext"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -3297,6 +5371,308 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TemporaryAddress"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    discoverNearbyApartments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NearbyInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NearbyDiscovery"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    discoverMapboxApartments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NearbyInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NearbyDiscovery"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    contributeAtConfirmedAddress: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressContributionInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            201: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressContributionResult"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -3876,102 +6252,6 @@ export interface operations {
             };
         };
     };
-    withdrawAccess: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                record_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功；202 表示已接受任务，非最终完成 */
-            200: {
-                headers: {
-                    /** @description 追踪ID，不含个人数据 */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Ack"];
-                };
-            };
-            /** @description 输入或跨字段约束错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 认证失败 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 权限不足 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 不存在或不可见 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 版本/状态/幂等内容冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 业务条件不满足 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 限流 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 依赖暂不可用 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
     listMyContributions: {
         parameters: {
             query?: {
@@ -4069,11 +6349,308 @@ export interface operations {
             };
         };
     };
+    getMyContributionSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionSummary"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getMyContribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionDetail"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    correctMyContribution: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                contribution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionCorrectionInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionChangeResult"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     listMyApartmentLibrary: {
         parameters: {
             query?: {
                 cursor?: string;
                 limit?: number;
+                apartment_id?: string;
             };
             header?: never;
             path?: never;
@@ -4981,8 +7558,12 @@ export interface operations {
                 limit?: number;
                 region_id?: string;
                 query?: string;
-                kind?: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
                 carrier?: string;
+                day?: string;
+                kind?: "partial_route" | "whole_route" | "extra_drivers" | "vehicle_help" | "other_help";
+                /** @description 新版两场景筛选，与 request_schema_version=2 一起使用；代送同时包含整条线路与部分包裹。 */
+                scenario?: "warehouse_shortage" | "delivery_handoff";
+                request_schema_version?: 1 | 2;
             };
             header?: never;
             path?: never;
@@ -4998,7 +7579,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RequestPage"];
+                    "application/json": components["schemas"]["RequestListRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5086,7 +7667,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RequestDraftInput"];
+                "application/json": components["schemas"]["RequestDraftAny"];
             };
         };
         responses: {
@@ -5098,7 +7679,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5194,7 +7775,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5378,7 +7959,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RequestPatch"];
+                "application/json": components["schemas"]["RequestPatchAny"];
             };
         };
         responses: {
@@ -5390,7 +7971,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5480,7 +8061,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VersionInput"];
+                "application/json": components["schemas"]["PublishInput"];
             };
         };
         responses: {
@@ -5492,7 +8073,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5594,7 +8175,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5696,7 +8277,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -5784,7 +8365,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GapInput"];
+                "application/json": components["schemas"]["GapAny"];
             };
         };
         responses: {
@@ -5796,7 +8377,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -6370,6 +8951,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                request_schema_version?: 1 | 2;
             };
             header?: never;
             path?: never;
@@ -6385,7 +8967,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RequestPage"];
+                    "application/json": components["schemas"]["RequestListRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -6467,6 +9049,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 limit?: number;
+                request_id?: string;
             };
             header?: never;
             path?: never;
@@ -6758,6 +9341,7 @@ export interface operations {
                 limit?: number;
                 region_id?: string;
                 carrier?: string;
+                day?: string;
             };
             header?: never;
             path?: never;
@@ -7143,12 +9727,109 @@ export interface operations {
             };
         };
     };
+    getConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     listMessages: {
         parameters: {
             query?: {
                 cursor?: string;
                 limit?: number;
                 after_sequence?: number;
+                before_sequence?: number;
             };
             header?: never;
             path: {
@@ -7363,304 +10044,6 @@ export interface operations {
                 "application/json": components["schemas"]["ReadInput"];
             };
         };
-        responses: {
-            /** @description 成功；202 表示已接受任务，非最终完成 */
-            200: {
-                headers: {
-                    /** @description 追踪ID，不含个人数据 */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Ack"];
-                };
-            };
-            /** @description 输入或跨字段约束错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 认证失败 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 权限不足 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 不存在或不可见 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 版本/状态/幂等内容冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 业务条件不满足 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 限流 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 依赖暂不可用 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    shareMeeting: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                request_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MeetingShareInput"];
-            };
-        };
-        responses: {
-            /** @description 成功；202 表示已接受任务，非最终完成 */
-            200: {
-                headers: {
-                    /** @description 追踪ID，不含个人数据 */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Ack"];
-                };
-            };
-            /** @description 输入或跨字段约束错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 认证失败 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 权限不足 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 不存在或不可见 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 版本/状态/幂等内容冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 业务条件不满足 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 限流 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 依赖暂不可用 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getSharedMeeting: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: string;
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功；202 表示已接受任务，非最终完成 */
-            200: {
-                headers: {
-                    /** @description 追踪ID，不含个人数据 */
-                    "X-Request-ID"?: string;
-                    /** @description 敏感响应不缓存 */
-                    "Cache-Control"?: "no-store";
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MeetingDetails"];
-                };
-            };
-            /** @description 输入或跨字段约束错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 认证失败 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 权限不足 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 不存在或不可见 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 版本/状态/幂等内容冲突 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 业务条件不满足 */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 限流 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 依赖暂不可用 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    revokeMeetingShare: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: string;
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description 成功；202 表示已接受任务，非最终完成 */
             200: {
@@ -7964,6 +10347,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ack"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listBlockedUsers: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockedUserPage"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -8353,6 +10833,226 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Post"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    uploadCircleMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CircleMediaUpload"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 待发布上传已过期 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 图片超过5 MiB */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    readCircleMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+                media_id: string;
+                variant: "thumb" | "full";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -9494,6 +12194,104 @@ export interface operations {
             };
         };
     };
+    revokeInstallation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstallationProof"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ack"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     registerDevice: {
         parameters: {
             query?: never;
@@ -10103,7 +12901,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["RequestRead"];
                 };
             };
             /** @description 输入或跨字段约束错误 */
@@ -10698,6 +13496,1855 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OpsReveal"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    registerImportLocalSource: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            201: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportSource"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    submitImportDeviceExtraction: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportDeviceExtraction"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            201: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCandidatePage"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listImportSources: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportSourcePage"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createImportSourceUpload: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            201: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportUploadGrant"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    confirmImportSelection: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportConfirmSelection"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCandidatePage"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getImportPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPolicy"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listImportBatches: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatchPage"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createImportBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCreate"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            201: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatch"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getImportBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatch"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteImportDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportVersionInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ack"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    editImportBatchMode: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportBatchPatch"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatch"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    completeImportSource: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+                source_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportVersionInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportSource"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    processImportBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportStartInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            202: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatch"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listImportCandidates: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCandidatePage"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    editImportCandidate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCandidateEdit"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCandidate"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    confirmImportCandidate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCandidateConfirm"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCandidate"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    commitImportCandidates: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCommitInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCommitResponse"];
+                };
+            };
+            /** @description 输入或跨字段约束错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 认证失败 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 权限不足 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 不存在或不可见 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 版本/状态/幂等内容冲突 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 业务条件不满足 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 限流 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 依赖暂不可用 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    cancelImportBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportVersionInput"];
+            };
+        };
+        responses: {
+            /** @description 成功；202 表示已接受任务，非最终完成 */
+            200: {
+                headers: {
+                    /** @description 追踪ID，不含个人数据 */
+                    "X-Request-ID"?: string;
+                    /** @description 敏感响应不缓存 */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatch"];
                 };
             };
             /** @description 输入或跨字段约束错误 */

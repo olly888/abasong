@@ -1,0 +1,369 @@
+{
+  "version": "V3.1",
+  "date": "2026-11-04",
+  "scope": "same-state UI evidence is distinct from business/physical acceptance",
+  "pages": [
+    {
+      "id": "A02",
+      "name": "手机号登录",
+      "prototype": "login",
+      "native": "apps/mobile/src/app/auth/phone.tsx",
+      "implementation": "已实现",
+      "evidence": "共用认证排版/字段源码核对；当前已登录，未退出或发短信",
+      "remaining": "认证整页/软键盘随B6"
+    },
+    {
+      "id": "A03",
+      "name": "验证码与恢复",
+      "prototype": "otp",
+      "native": "apps/mobile/src/app/auth/code.tsx",
+      "implementation": "已实现",
+      "evidence": "共用Field/按钮；倒计时和返回逻辑保留，未制造验证码会话",
+      "remaining": "真实验证码页随B6"
+    },
+    {
+      "id": "A04",
+      "name": "首次最小资料",
+      "prototype": "onboarding",
+      "native": "apps/mobile/src/app/auth/profile.tsx",
+      "implementation": "已实现",
+      "evidence": "最小显示名与共用字段；当前真实账号不重置",
+      "remaining": "首次资料流程随B6"
+    },
+    {
+      "id": "H01",
+      "name": "首页·公寓",
+      "prototype": "home",
+      "native": "apps/mobile/src/apartments/ApartmentSheet.tsx",
+      "implementation": "已实现",
+      "evidence": "双端符号/无码/消息前后回归；192高、地址优先及独立卡规则保留",
+      "remaining": "全字号/读屏/真实现场未关闭"
+    },
+    {
+      "id": "H02",
+      "name": "首页·找活",
+      "prototype": "home/jobs",
+      "native": "apps/mobile/src/drivers/CollaborationHome.tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端TEST区域需求卡/地图列表与筛选；原型同步。区域点不等于精确取件点",
+      "remaining": "真实需求、完整大字号/读屏/物理设备B6"
+    },
+    {
+      "id": "H03",
+      "name": "首页·找人",
+      "prototype": "home/people",
+      "native": "apps/mobile/src/drivers/CollaborationHome.tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端TEST司机地图/列表、资料返回、筛选、失败重试及声明到期清卡；不发布GPS",
+      "remaining": "真实账号协作/现场B6"
+    },
+    {
+      "id": "S01",
+      "name": "搜索与筛选",
+      "prototype": "search",
+      "native": "apps/mobile/src/apartments/ApartmentSearch.tsx",
+      "implementation": "已实现",
+      "evidence": "双端空搜索页/共用SearchBox；焦点与边界统一",
+      "remaining": "真实联想既有验收保留，当前补测另记"
+    },
+    {
+      "id": "L01",
+      "name": "选择正确公寓",
+      "prototype": "candidates",
+      "native": "apps/mobile/src/apartments/ApartmentSearch.tsx",
+      "implementation": "已实现",
+      "evidence": "同一搜索结果组件；原型候选列表已浏览",
+      "remaining": "不同实际数据不能像素对比"
+    },
+    {
+      "id": "B02",
+      "name": "贡献密码/进入方式",
+      "prototype": "code",
+      "native": "apps/mobile/src/app/apartments/contribute.tsx",
+      "implementation": "已实现",
+      "evidence": "双端未收录地址/资格不足表单；字段、禁用与固定CTA核对",
+      "remaining": "有资格共享不重复授权；B6集中"
+    },
+    {
+      "id": "P01",
+      "name": "统一发需求选择",
+      "prototype": "publish",
+      "native": "apps/mobile/src/app/requests/new.tsx",
+      "implementation": "已实现",
+      "evidence": "底部五类型面板源码/原型；取消改文字次操作、统一遮罩",
+      "remaining": "完整系统返回不冒充新验收"
+    },
+    {
+      "id": "P03",
+      "name": "配送找人发布/编辑",
+      "prototype": "requestForm",
+      "native": "apps/mobile/src/requests/SupportForm.tsx",
+      "implementation": "已实现",
+      "evidence": "双端同一TEST真实表单组件；原型固定主CTA+草稿同步，HTML表单校验及草稿实际操作通过",
+      "remaining": "实际发布/版本业务仍集中验收"
+    },
+    {
+      "id": "P04",
+      "name": "车辆/其他配送求助",
+      "prototype": "helpForm",
+      "native": "apps/mobile/src/requests/SupportForm.tsx",
+      "implementation": "已实现",
+      "evidence": "双端TEST车辆表单截图；原型补日期/截止/固定草稿，草稿续编及发布前核对通过",
+      "remaining": "实际车辆/其他请求不创建"
+    },
+    {
+      "id": "D01",
+      "name": "需求详情",
+      "prototype": "job",
+      "native": "apps/mobile/src/app/requests/[id].tsx",
+      "implementation": "已实现",
+      "evidence": "原型及真实组件源码；按钮/Header共用",
+      "remaining": "本机无真实需求，同数据详情仍B6"
+    },
+    {
+      "id": "P08",
+      "name": "报名/我能帮忙",
+      "prototype": "apply",
+      "native": "apps/mobile/src/requests/ApplySheet.tsx",
+      "implementation": "已实现",
+      "evidence": "双端TEST实际报名面板截图；通用BottomSheet取消保留数据",
+      "remaining": "真实报名不重复提交"
+    },
+    {
+      "id": "P09",
+      "name": "管理我的需求",
+      "prototype": "manage",
+      "native": "apps/mobile/src/app/requests/[id].tsx",
+      "implementation": "已实现",
+      "evidence": "原型及本人管理源码；按钮/确认共用",
+      "remaining": "同一有效本人需求待集中"
+    },
+    {
+      "id": "P10",
+      "name": "报名司机列表",
+      "prototype": "applicants",
+      "native": "apps/mobile/src/app/requests/applications.tsx",
+      "implementation": "已实现",
+      "evidence": "同源名单与空态共同组件；原型非空名单已浏览",
+      "remaining": "本人需求的真实多报名待集中"
+    },
+    {
+      "id": "D02",
+      "name": "司机档案",
+      "prototype": "driver",
+      "native": "apps/mobile/src/app/drivers/[id].tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端TEST公开档案和联系回调；实际HTTP字段隔离/屏蔽；常联系与举报仍B5",
+      "remaining": "真实文字联系B6；B5补本人经验编辑"
+    },
+    {
+      "id": "M01",
+      "name": "消息中心",
+      "prototype": "inbox",
+      "native": "apps/mobile/src/messages/InboxScreen.tsx",
+      "implementation": "已实现",
+      "evidence": "双端真实账号空列表/共同状态；B3合成非空和单条已读既有通过",
+      "remaining": "真人跨账号/B6"
+    },
+    {
+      "id": "M02",
+      "name": "一对一会话",
+      "prototype": "chat",
+      "native": "apps/mobile/src/messages/MessageViews.tsx",
+      "implementation": "已实现",
+      "evidence": "双端TEST来源/失败重试；统一PageHeader及AM/PM，不改发送/读水位",
+      "remaining": "真实双账号及iOS软键盘B6"
+    },
+    {
+      "id": "C01",
+      "name": "司机圈",
+      "prototype": "circle",
+      "native": "apps/mobile/src/app/(tabs)/circle.tsx",
+      "implementation": "部分实现",
+      "evidence": "双端统一标题和未开放状态；不冒充暂无动态",
+      "remaining": "B5真实司机圈"
+    },
+    {
+      "id": "C02",
+      "name": "动态与回复",
+      "prototype": "post",
+      "native": null,
+      "implementation": "待开发",
+      "evidence": "仅原型",
+      "remaining": "B5"
+    },
+    {
+      "id": "C03",
+      "name": "发布互助文字",
+      "prototype": "postForm",
+      "native": null,
+      "implementation": "待开发",
+      "evidence": "仅原型",
+      "remaining": "B5"
+    },
+    {
+      "id": "U01",
+      "name": "我的",
+      "prototype": "me",
+      "native": "apps/mobile/src/app/(tabs)/profile.tsx",
+      "implementation": "已实现",
+      "evidence": "双端本人菜单；统一Header/滚动、资格文案纠正",
+      "remaining": "原型可用设置/常联系等未实现不伪造"
+    },
+    {
+      "id": "U02",
+      "name": "资料与经验",
+      "prototype": "profile",
+      "native": "apps/mobile/src/app/auth/profile.tsx",
+      "implementation": "部分实现",
+      "evidence": "仅最小显示名；读取已有自报经验已接，但编辑尚未接",
+      "remaining": "B5优先补最小本人资料与经验编辑，不以A04代替"
+    },
+    {
+      "id": "U03",
+      "name": "可接活设置",
+      "prototype": "availability",
+      "native": "apps/mobile/src/app/account/availability.tsx",
+      "implementation": "本地已实现",
+      "evidence": "双端共用实际表单，关闭保存与日期控件；真实HTTP/PG版本、时间、区域、关闭及到期",
+      "remaining": "真人保存/完整软键盘与辅助技术B6"
+    },
+    {
+      "id": "U04",
+      "name": "我的发布",
+      "prototype": "myPosts",
+      "native": "apps/mobile/src/app/requests/index.tsx",
+      "implementation": "部分实现",
+      "evidence": "双端我的支援发布空态；错误/空分开",
+      "remaining": "互助文字随B5"
+    },
+    {
+      "id": "U05",
+      "name": "我的报名",
+      "prototype": "myApplications",
+      "native": "apps/mobile/src/app/requests/applications.tsx",
+      "implementation": "已实现",
+      "evidence": "双端本人报名空态；统一状态组件",
+      "remaining": "有效报名/取消真实数据B6"
+    },
+    {
+      "id": "U06",
+      "name": "我的公寓",
+      "prototype": "contributions",
+      "native": "apps/mobile/src/app/apartments/library.tsx",
+      "implementation": "已实现",
+      "evidence": "双端私人库空态；失败不再显示空列表，footer层级一致",
+      "remaining": "非空私存/共享既有记录另列"
+    },
+    {
+      "id": "U08",
+      "name": "常联系",
+      "prototype": "contacts",
+      "native": null,
+      "implementation": "待开发",
+      "evidence": "仅原型",
+      "remaining": "B5"
+    },
+    {
+      "id": "U10",
+      "name": "组织来源",
+      "prototype": "organization",
+      "native": null,
+      "implementation": "待开发",
+      "evidence": "仅原型/请求来源字段；非独立原生页",
+      "remaining": "按首版范围排期"
+    },
+    {
+      "id": "U11",
+      "name": "设置与账户",
+      "prototype": "settings",
+      "native": "apps/mobile/src/app/account/settings.tsx",
+      "implementation": "部分实现",
+      "evidence": "双端位置权限/退出；实际API偏好已备但开关未接",
+      "remaining": "通知/屏蔽/删除等B3/B5"
+    },
+    {
+      "id": "G01",
+      "name": "更多/举报/屏蔽",
+      "prototype": "modal/more",
+      "native": null,
+      "implementation": "部分实现",
+      "evidence": "复用系统/公寓更多；统一底部与按钮",
+      "remaining": "全量举报/屏蔽服务B5"
+    },
+    {
+      "id": "G02",
+      "name": "分享需求",
+      "prototype": "share",
+      "native": null,
+      "implementation": "待开发",
+      "evidence": "仅原型",
+      "remaining": "B5"
+    },
+    {
+      "id": "X01",
+      "name": "外部公开需求摘要",
+      "prototype": "public",
+      "native": null,
+      "implementation": "待开发",
+      "evidence": "仅原型",
+      "remaining": "B5"
+    },
+    {
+      "id": "G03",
+      "name": "确认/错误/恢复",
+      "prototype": "modal/confirm",
+      "native": "apps/mobile/src/ui/Controls.tsx",
+      "implementation": "已实现",
+      "evidence": "组件目录加载/失败/禁用/取消；业务退出边界保留",
+      "remaining": "真机/辅助技术单列"
+    },
+    {
+      "id": "B04",
+      "name": "截图导入",
+      "prototype": "importUpload",
+      "native": "apps/mobile/src/imports/ImportScreen.tsx",
+      "implementation": "已实现",
+      "evidence": "双端实际无图态，主按钮/标题/边距一致，无继续上次",
+      "remaining": "真实照片选择/进程恢复既有记录不抹去"
+    },
+    {
+      "id": "B05",
+      "name": "识别结果确认",
+      "prototype": "importReview",
+      "native": "apps/mobile/src/imports/ImportScreen.tsx",
+      "implementation": "已实现",
+      "evidence": "原型空态与混合样本；复用真实Field/按钮，不绕过核对",
+      "remaining": "本批真实TEST图结果补验另记"
+    },
+    {
+      "id": "B06",
+      "name": "导入进度与结果",
+      "prototype": "importResult",
+      "native": "apps/mobile/src/imports/ImportScreen.tsx",
+      "implementation": "已实现",
+      "evidence": "原型空态/处理中/结果和实际代码；主CTA/失败提示复用",
+      "remaining": "不为设计核对提交共享数据"
+    },
+    {
+      "id": "U09",
+      "name": "公寓详情与我的记录",
+      "prototype": "notebook",
+      "native": "apps/mobile/src/app/apartments/library.tsx",
+      "implementation": "已实现",
+      "evidence": "原型检查目录原缺示例ID已修；原生共用Header/Field",
+      "remaining": "本批非空私人记录未新建"
+    }
+  ],
+  "evidence_summary": {
+    "prototype": "36 catalog pages plus mixed import, P03/P04/B02 validation and U09 inspector; browser synthetic only",
+    "native": "paired default-font screenshots, iOS component actions, Android retry/sheet actions owner-confirmed; no real business submissions",
+    "engineering": "358 tests / 64 files plus lint, typecheck, build; three-platform JS export",
+    "pending": [
+      "physical devices, software keyboard, large fonts and screen readers",
+      "B6 real-account/cloud and business success states",
+      "B5 remaining pages including own profile/experience editing"
+    ],
+    "b4": "本轮报告D2_可用司机与地图找活找人实现.md；双端TEST实际业务组件与隔离HTTP/PG分列，无新原生二进制/云变化"
+  }
+}

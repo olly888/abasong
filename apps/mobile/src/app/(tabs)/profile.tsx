@@ -1,12 +1,20 @@
-import { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { openContributionMenu } from "../../apartments/contribution-entry";
+import { useState, useCallback } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "../../auth/AuthProvider";
+import { MyAccount } from "../../profile/MyAccount";
+import { dataRequest } from "../../apartments/client";
+import type { ProfileRequest } from "../../profile/profile-session";
 import { ActionButton, FormError } from "../../auth/AuthControls";
 import { tokens } from "@abasong/ui";
 export default function Profile() {
   const auth = useAuth();
+  const request: ProfileRequest = useCallback(
+    (path, options) => dataRequest(auth.session!, path, options),
+    [auth.session?.access_token],
+  );
   const [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
   async function logout() {
@@ -20,38 +28,41 @@ export default function Profile() {
       setBusy(false);
     }
   }
+  if (auth.phase === "ready" && auth.me && auth.session)
+    return (
+      <MyAccount
+        key={auth.session.user.id}
+        request={request}
+        onProfile={() => router.push("/account/profile")}
+        onTeam={() => router.push("/account/team")}
+        onInvite={() => router.push("/account/invite")}
+        onAvailability={(enable) =>
+          router.push({
+            pathname: "/account/availability",
+            params: enable ? { enable: "1" } : {},
+          })
+        }
+        onShare={openContributionMenu}
+        onMenu={(menu) => {
+          if (menu === "apartments") router.push("/apartments/library");
+          else if (menu === "requests")
+            router.push({ pathname: "/requests", params: { mine: "1" } });
+          else if (menu === "applications")
+            router.push("/requests/applications");
+          else router.push("/account/settings");
+        }}
+      />
+    );
   return (
-    <SafeAreaView style={styles.page}>
-      <Text style={styles.title}>我的</Text>
-      <View style={{ gap: 20, marginTop: 36 }}>
+    <SafeAreaView style={styles.page} edges={["top"]}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ gap: 20, paddingTop: 24, paddingBottom: 24 }}
+      >
         {auth.phase === "restoring" ||
         auth.phase === "loading-account" ||
         auth.phase === "signing-out" ? (
           <ActivityIndicator color={tokens.color.brandPrimary} />
-        ) : auth.phase === "ready" && auth.me ? (
-          <>
-            <Text style={styles.name}>{auth.me.profile.display_name}</Text>
-            <Text style={styles.secondary}>
-              {auth.me.capabilities.includes("access.read")
-                ? "公寓资料查看资格已开通"
-                : "资料查看资格待审核"}
-            </Text>
-            <ActionButton
-              label="贡献公寓密码"
-              onPress={() => router.push("/apartments/contribute")}
-            />
-            <ActionButton
-              label="我的公寓"
-              secondary
-              onPress={() => router.push("/apartments/library")}
-            />
-            <ActionButton
-              label="退出登录"
-              secondary
-              busy={busy}
-              onPress={() => void logout()}
-            />
-          </>
         ) : auth.phase === "needs-profile" ? (
           <>
             <Text style={styles.name}>完善个人资料</Text>
@@ -97,7 +108,7 @@ export default function Profile() {
           </>
         ) : (
           <>
-            <Text style={styles.name}>欢迎使用 Abasong</Text>
+            <Text style={styles.name}>登录 Abasong</Text>
             <ActionButton
               label="登录"
               onPress={() => router.push("/auth/phone")}
@@ -105,13 +116,30 @@ export default function Profile() {
           </>
         )}
         <FormError message={error} />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: tokens.color.surface, padding: 24 },
-  title: { fontSize: 28, fontWeight: "700", color: tokens.color.ink },
+  page: {
+    flex: 1,
+    backgroundColor: tokens.color.surface,
+    paddingHorizontal: 20,
+  },
+  identity: { flexDirection: "row", alignItems: "center", gap: 16 },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: tokens.color.brandSurface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  initial: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: tokens.color.brandText,
+  },
   name: { fontSize: 24, fontWeight: "600", color: tokens.color.ink },
   secondary: {
     fontSize: 15,

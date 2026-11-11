@@ -1,0 +1,9 @@
+{
+  "Version":"2012-10-17",
+  "Statement":[{
+    "Effect":"Allow",
+    "Action":["kms:GenerateDataKey","kms:Decrypt"],
+    "Resource":"arn:aws:kms:us-west-1:000000000000:key/REPLACE_WITH_REVIEWED_KEY_UUID",
+    "Condition":{"StringEquals":{"kms:EncryptionContext:app":"abasong","kms:EncryptionContext:environment":"pilot-dev"}}
+  }]
+}

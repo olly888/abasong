@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640" role="img" aria-label="TEST synthetic courtyard illustration">
+<rect width="960" height="640" fill="#e7edf3"/><path d="M0 90h320v360H0zM640 90h320v360H640z" fill="#c6c7bf"/>
+<g fill="#7f95a4"><path d="M40 130h90v100H40zM185 130h90v100h-90zM40 285h90v100H40zM185 285h90v100h-90zM685 130h90v100h-90zM830 130h90v100h-90zM685 285h90v100h-90zM830 285h90v100h-90z"/></g>
+<path d="M0 450h960v190H0z" fill="#b2c7ac"/><path d="m250 640 160-260h140l160 260" fill="#efe7da"/>
+<circle cx="105" cy="440" r="60" fill="#839f79"/><circle cx="840" cy="440" r="60" fill="#839f79"/>
+<rect x="403" y="310" width="154" height="78" rx="12" fill="#fff"/><text x="437" y="362" font-family="Arial,sans-serif" font-size="30" fill="#3d5165">TEST</text>
+<path d="M480 575V448m0 0-32 35m32-35 32 35" stroke="#1467d8" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="32" y="28" width="310" height="60" rx="12" fill="#fff" opacity=".9"/><text x="54" y="68" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#395574">TEST · COURTYARD</text>
+<text x="580" y="610" font-family="Arial,sans-serif" font-size="25" fill="#4c6177">SYNTHETIC SAMPLE</text>
+</svg>

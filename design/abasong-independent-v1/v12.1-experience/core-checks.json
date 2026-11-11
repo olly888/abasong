@@ -1,0 +1,53 @@
+{
+  "prototype_version": "3.2-r3-core",
+  "executed_at": "2026-11-05T20:54:51.606Z",
+  "scope": "isolated Chromium synthetic core flow checks; not human/native/field acceptance",
+  "checks": [
+    {
+      "name": "截图两张：有疑字符不自动共享，核对后确认完整符号",
+      "status": "PASS"
+    },
+    {
+      "name": "未收录截图：完整地址须本人确认，共享后不造附近位置",
+      "status": "PASS"
+    },
+    {
+      "name": "纠正本人来源：同码他人资料保留，旧来源不再展示门禁码",
+      "status": "PASS"
+    },
+    {
+      "name": "纠正取消保留原资料、不生成新来源",
+      "status": "PASS"
+    },
+    {
+      "name": "支援条件变化：重新核对后报名，进入同一来源会话",
+      "status": "PASS"
+    },
+    {
+      "name": "文字发送失败与重试：同条恢复，无重复气泡或假已读",
+      "status": "PASS"
+    },
+    {
+      "name": "截图退出后从头添加，不出现跨次续填",
+      "status": "PASS"
+    },
+    {
+      "name": "截图部分失败只重试未成功项，已共享不重复",
+      "status": "PASS"
+    },
+    {
+      "name": "DSP标记已找到：停止展示，保留已有消息和记录",
+      "status": "PASS"
+    },
+    {
+      "name": "评审快捷入口不计作用户测试，产品无研究备注",
+      "status": "PASS"
+    }
+  ],
+  "passed": 10,
+  "failed": 0,
+  "console_errors": [],
+  "external_request_hosts": [],
+  "human_participants": 0,
+  "native_acceptance": false
+}

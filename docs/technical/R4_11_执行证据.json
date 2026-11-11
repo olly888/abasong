@@ -1,0 +1,187 @@
+{
+  "version": "R4-11-scoped-contribution-protection",
+  "date": "2026-11-06",
+  "branch": "codex/r4-11-contribution-protection",
+  "base": "a1e475827cf2ec19f9689608ffc82c1b2b311bd6",
+  "status": "scoped_recorded_apartment_protection_dual_native_verified_D08_unlisted_batch_gap_pending_R4_13",
+  "scoped_batch_complete": true,
+  "all_B05_implemented": false,
+  "report": "R4_11_截图手填与本人纠正保护验收.md",
+  "engineering": {
+    "files": 82,
+    "tests": 483,
+    "lint_types_build": "PASS"
+  },
+  "new_mobile_core_HTTP": {
+    "assertions": 27,
+    "calls": 75,
+    "status": "PASS",
+    "controller": "ImportDraft_actual_implementation",
+    "real_API_PG": true
+  },
+  "library_HTTP_PG": 295,
+  "import_HTTP_PG": 124,
+  "delivery_regression": {
+    "assertions": 25,
+    "calls": 35,
+    "status": "PASS"
+  },
+  "cleanup": {
+    "positive": "PASS",
+    "occupied_port_delivery": "PASS",
+    "occupied_port_contribution": "PASS",
+    "native_fixture_stopped": true,
+    "final_remaining_counts": {
+      "databases": 0,
+      "roles": 0
+    }
+  },
+  "native": {
+    "ios": "PASS_actual_components_real_HTTP_representative_flows",
+    "android": "PASS_owner_three_groups_and_observed_ambiguity_disabled",
+    "android_owner_reference": "call_706ab1cc2b5942d99f9c6992c6bff867:0,1,2",
+    "android_owner_result": "normal_all_three",
+    "ios_input": "hardware_keyboard_AX_not_new_full_software_keyboard_claim",
+    "test_container": "DEV_only_not_normal_login_route",
+    "OCR_fields": "synthetic_not_real_accuracy",
+    "prototype_B02": "opened_and_visually_compared",
+    "native_JS_export": "PASS_ios_android",
+    "new_binary_compilation": false,
+    "physical_acceptance": false
+  },
+  "new_contracts": false,
+  "new_migrations": false,
+  "new_dependencies": false,
+  "cloud_changed": false,
+  "real_account_grants": false,
+  "d0_migrations": 17,
+  "d0_tables": 54,
+  "human_participants": 0,
+  "b5_ready": false,
+  "release_ready": false,
+  "open_P0": [
+    {
+      "id": "D08-B05-unlisted-batch-address",
+      "task": "R4-13",
+      "status": "structured_address_licensed_persistence_and_durable_batch_share_contract_pending",
+      "manual_single_address": "implemented_prior_R4-03"
+    }
+  ],
+  "next_task": "R4-12",
+  "pull_request": "https://github.com/olly888/abasong/pull/99",
+  "ci_source": "https://github.com/olly888/abasong/pull/99/checks",
+  "evidence_directory": "../../artifacts/r4-11",
+  "code_fingerprints": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "cf8d34a9acd41e4b45ad7e865e1175d8d6aad79574206d1177c95ecb7aed9171"
+    },
+    {
+      "path": "apps/mobile/src/apartments/CorrectionForm.tsx",
+      "sha256": "446c800e9652ee31aa937ce9bae8c8a450ff40964a37e85a48fe62dacde1b9c9"
+    },
+    {
+      "path": "apps/mobile/src/apartments/SharedContributions.tsx",
+      "sha256": "11786a193e73e66b33e4fbed8738544500957300e6d0ebe5bd6168bbcde14216"
+    },
+    {
+      "path": "apps/mobile/src/apartments/contribution-visibility.test.ts",
+      "sha256": "dbc8642735ce48ccb8716a4df7a10f079c74b7a3a8b98905d31f336e776991bf"
+    },
+    {
+      "path": "apps/mobile/src/apartments/contribution-visibility.ts",
+      "sha256": "b818a6fab0bc957fc876f905e31d56fbdab8b5befadea172369ea99507eb2b27"
+    },
+    {
+      "path": "apps/mobile/src/app/apartments/contribution.tsx",
+      "sha256": "ff54e5160f3beff151c90cacc613492f71666c498f5366442f913ef7c474b418"
+    },
+    {
+      "path": "apps/mobile/src/app/native-contribution-lab.tsx",
+      "sha256": "71ce1212ba75ec90f7e42f5ac815c80602ac04ae624603c6c371cc4a85f5d659"
+    },
+    {
+      "path": "apps/mobile/src/auth/api-client.ts",
+      "sha256": "16d1e46e6d7dcfa97eda1796a4702df15ef531e4000622b936c3f48271351abb"
+    },
+    {
+      "path": "apps/mobile/src/auth/errors.ts",
+      "sha256": "5504ad46c8bea4d487b98e5cfe5506dd53b18d742b37d540c4a651601fb015b4"
+    },
+    {
+      "path": "apps/mobile/src/design/NativeContributionLab.tsx",
+      "sha256": "7988896df44a62365f5041e98666516cd1ec869ea5636875b92bf7329bb2b4d7"
+    },
+    {
+      "path": "apps/mobile/src/imports/ImportScreen.tsx",
+      "sha256": "c9cb5dc85467cd07038313b27bfa52055e4ab76b95004c4d76a9a336edbaa220"
+    },
+    {
+      "path": "apps/mobile/src/imports/extract.test.ts",
+      "sha256": "73023a4ef0fac1185324228ab604b74ca299d38f441d043459306a037485ed56"
+    },
+    {
+      "path": "apps/mobile/src/imports/extract.ts",
+      "sha256": "628fe07fe83783d306ba29fb00f568fdf505beb4cbbf78ce7c6e4f27eae32e7b"
+    },
+    {
+      "path": "apps/mobile/src/imports/review-search.test.ts",
+      "sha256": "b45b752b5b56861461aa74f859e4fd16055ed0f3c3fb2df22a7acd68ddc1ff49"
+    },
+    {
+      "path": "apps/mobile/src/imports/review-search.ts",
+      "sha256": "b8fa3da8dde27192af7aeedb3f0b8aeaa57730c0d64fcf502afc6e1548aa5d38"
+    },
+    {
+      "path": "apps/mobile/src/imports/server-draft-core.ts",
+      "sha256": "b98a72b62af7f6e6bd53309ebe9e0e24d2d5e55992ecbd0d6cf9155799bb5986"
+    },
+    {
+      "path": "apps/mobile/src/imports/server-draft.test.ts",
+      "sha256": "8d46f5a3789f329b636358517687453b0d4b35583252eac4c176df5e60c914cc"
+    },
+    {
+      "path": "apps/mobile/src/imports/server-draft.ts",
+      "sha256": "2367a8325211e2636c72b2675cb18376ba4fd23ee9b5ce990707ecf6a44b1172"
+    },
+    {
+      "path": "apps/mobile/src/imports/types.ts",
+      "sha256": "182642343a14dfc1b1ed03cdf5c619012842f1b1ef10fc196ec4c0848700c6a0"
+    },
+    {
+      "path": "scripts/d1/native-contribution-seed.ts",
+      "sha256": "a749a45089c7032cf967f30a1c27161365e3ff56811b565bf92f4987455e1a9a"
+    },
+    {
+      "path": "scripts/d1/native-exit-fixture.ts",
+      "sha256": "0288d03c27aef0e065dd536d775aff16ac2d57fd45c4da35f1d9baf95fbad55a"
+    },
+    {
+      "path": "scripts/d1/native-exit-guard.test.ts",
+      "sha256": "92efd34da763730c121cbef2c4ee37b67cb4e08b0d83732a083a91146d9e6cd5"
+    },
+    {
+      "path": "scripts/d1/native-exit-guard.ts",
+      "sha256": "3da4fefd44288f75c997d7542d873cceb071b836d43acea070955b47abfd1813"
+    },
+    {
+      "path": "scripts/d1/run-native-exit.ts",
+      "sha256": "70f854bed3282750be8a492a6faa4206caed2a976c376f12e111ac078287772d"
+    },
+    {
+      "path": "scripts/d1/verify-native-contribution.ts",
+      "sha256": "ae1108e30f027a3a6e30c6352fd63b8a7d1873a1fd72da11baca8e5e114576e2"
+    }
+  ],
+  "validated_code_commit": "6d66281d0d4f4f439324efa793846d4079319b39",
+  "implementation_ci": {
+    "run_id": 42315086377,
+    "head_sha": "6d66281d0d4f4f439324efa793846d4079319b39",
+    "conclusion": "success",
+    "url": "https://github.com/olly888/abasong/actions/runs/42315086377"
+  },
+  "secret_scans": {
+    "staged": "PASS",
+    "all_history": "PASS"
+  }
+}

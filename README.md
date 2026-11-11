@@ -1,9 +1,13 @@
 # Abasong
 
+[本轮六步开发基准](docs/Abasong_V3.2_可开发与可验收基线.md)：竞品证据、需求缺口、核心原型及代码差异已准备；5司机/2DSP任务未测，B5在门槛和P0差异后。
+
 [GitHub仓库](https://github.com/olly888/abasong) · [开发任务](https://github.com/olly888/abasong/issues) · [里程碑](https://github.com/olly888/abasong/milestones) · [项目看板（需权限）](https://github.com/users/olly888/projects/1) · [自动检查](https://github.com/olly888/abasong/actions)
 
 
 V12.1 临时配送支援与公寓进入信息协作应用。产品基线见 [产品基线](产品基线.md)，工程进度见 [DEVELOPMENT_STATUS.md](DEVELOPMENT_STATUS.md)。
+
+[V3.2新版原型已可体验](http://127.0.0.1:8765/v12.1-experience/index.html?v=r3-core)，核心交互待用户确认；范围见[升级总览](docs/Abasong_V12.1_产品设计技术升级总览.md)。App仍执行V3.1；V3.2是待验证目标，本轮未修改应用或云环境。
 
 ## 本地启动
 
@@ -21,7 +25,7 @@ V12.1 临时配送支援与公寓进入信息协作应用。产品基线见 [产
 ./scripts/dev dev:worker
 ```
 
-API 默认仅监听 `127.0.0.1:3001`。`/health/live` 检查进程，`/health/ready` 检查实际数据库连接和迁移版本。已实现身份、私人公寓库、手动贡献与受控密码读取/反馈的一部分业务接口，范围及待办见 docs/technical/D1_私人公寓与共享接口验证.md。worker 当前仅验证连接，不消费或确认业务事件。
+API 默认仅监听 `127.0.0.1:3001`。`/health/live` 检查进程，`/health/ready` 检查实际数据库连接和迁移版本。本地已接公寓/导入、发布报名、加密消息及可接活发现等业务，范围与未验项见[工程状态](DEVELOPMENT_STATUS.md)及[现行架构](docs/technical/V12_技术架构与开发基线.md)。worker已有有界outbox与推送票据/回执处理；真实远程推送尚未配置，不能把本地队列通过当送达。
 
 `env:init` 保留已有配置，首次生成独立随机凭据；`db:verify` 仅允许本机 `127.0.0.1:54329` 的 D0 数据库。它创建 `abasong_d0`，保留镜像自带的 `abasong_local`，迁移后配置 API/worker 独立账号，并在回滚事务内验证约束与权限。不要把云端连接串用于这些命令。
 

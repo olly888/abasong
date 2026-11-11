@@ -1,0 +1,108 @@
+:root {
+  --ink: var(--ab-color-ink);
+  --muted: var(--ab-color-textSecondary);
+  --border: var(--ab-color-border);
+  --brand: var(--ab-color-brandText);
+  --pale: var(--ab-color-brandSurface);
+  color-scheme: light;
+  color: var(--ink);
+  background: white;
+  font:
+    16px/1.5 system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+body {
+  margin: 0;
+}
+main {
+  box-sizing: border-box;
+  max-width: 480px;
+  margin: auto;
+  padding: 20px 20px 32px;
+}
+.brand img {
+  display: block;
+  margin: 14px;
+  height: auto;
+}
+h1 {
+  font-size: 1.75rem;
+  line-height: 1.4;
+  margin: 32px 0 10px;
+}
+h1 span,
+summary {
+  color: var(--brand);
+}
+p {
+  margin: 0;
+  color: var(--muted);
+}
+.scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 20px 0;
+  background: var(--pale);
+  border-radius: 16px;
+}
+ul {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+li svg {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  color: var(--brand);
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+li h2 {
+  font-size: 1rem;
+  margin: 0 0 3px;
+}
+li p,
+.distribution p,
+details p {
+  font-size: 0.875rem;
+}
+.source {
+  margin: 18px 0;
+  font-size: 0.8125rem;
+}
+.distribution {
+  border-top: 1px solid var(--border);
+  padding: 18px 0;
+}
+.distribution h2 {
+  font-size: 1.125rem;
+  margin: 0 0 5px;
+}
+footer {
+  border-top: 1px solid var(--border);
+}
+summary {
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 13px 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+summary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}

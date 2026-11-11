@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, "codex/**"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,18 +44,41 @@ jobs:
         run: |
           ./scripts/dev contracts:generate
           ./scripts/dev tokens:generate
-          git diff --exit-code -- packages/contracts/src/generated.ts packages/ui/src/index.ts
+          ./scripts/dev cloud:templates
+          git diff --exit-code -- packages/contracts/src/generated.ts packages/ui/src/index.ts docs/design/tokens-v3.css design/abasong-independent-v1/v12.1/tokens.css design/abasong-independent-v1/v12.1-import/tokens.css deploy/pilot-dev
       - run: ./scripts/dev env:init
       - run: ./scripts/dev db:up
       - run: ./scripts/dev db:verify
+      - name: Rehearse pilot database upgrade in a disposable database
+        run: ./scripts/dev exec node --import tsx scripts/cloud/verify-business-bootstrap.ts
       - run: ./scripts/dev verify:auth-api
+      - run: ./scripts/dev verify:requests-api
+      - name: Verify native delivery inputs through isolated HTTP services
+        run: |
+          ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
+          ./scripts/dev exec tsx scripts/d1/verify-native-exit-collision.ts
+          ABASONG_NATIVE_EXIT_SCENARIO=contribution ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
+          ABASONG_NATIVE_EXIT_VERIFY=collaboration ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
+          ABASONG_NATIVE_EXIT_SCENARIO=contribution ABASONG_NATIVE_EXIT_VERIFY=unlisted ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
+      - name: Verify owner profile privacy and availability consent
+        run: ABASONG_NATIVE_EXIT_VERIFY=profile ./scripts/dev exec tsx scripts/d1/run-native-exit.ts
       - run: ./scripts/dev verify:library-api
+      - run: ./scripts/dev verify:import-api
       - run: ./scripts/dev verify:access-ranking
       - run: ./scripts/dev smoke:services
+      - name: Check cloud manifest and production containers
+        run: |
+          ./scripts/dev cloud:preflight --manifest
+          ./scripts/dev cloud:runtime-plan
+          docker build --target api -t abasong-api:ci .
+          docker build --target worker -t abasong-worker:ci .
+          ./scripts/dev exec node scripts/cloud/verify-containers.mjs abasong-api:ci abasong-worker:ci
       - name: Bundle native JavaScript
         run: ./scripts/dev --filter @abasong/mobile exec expo export --platform ios --output-dir dist/ios
       - name: Bundle Android JavaScript
         run: ./scripts/dev --filter @abasong/mobile exec expo export --platform android --output-dir dist/android
+      - name: Exclude local invitation links and assets from release exports
+        run: ./scripts/dev exec node scripts/preview/verify-invite-release.mjs apps/mobile/dist/ios apps/mobile/dist/android
       - name: Stop isolated database
         if: always()
         run: ./scripts/dev db:down

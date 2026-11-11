@@ -1,3 +1,4 @@
+import type { BusinessRequestOptions } from "../profile/profile-session";
 import { Platform } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../auth/supabase";
@@ -7,38 +8,94 @@ const base =
   (Platform.OS === "android"
     ? "http://10.0.2.2:3001"
     : "http://127.0.0.1:3001");
+export const apiBase = base;
+async function boundedRefresh<T>(
+  run: () => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (signal?.aborted)
+    throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let cancel = () => {};
+  try {
+    return await Promise.race([
+      Promise.resolve()
+        .then(run)
+        .catch(() => {
+          throw new AccountError(
+            503,
+            "NETWORK_UNAVAILABLE",
+            "暂时无法连接，请重试",
+          );
+        }),
+      new Promise<never>((_resolve, reject) => {
+        cancel = () =>
+          reject(new AccountError(499, "REQUEST_CANCELLED", "操作已取消"));
+        signal?.addEventListener("abort", cancel, { once: true });
+        timer = setTimeout(
+          () =>
+            reject(
+              new AccountError(503, "NETWORK_TIMEOUT", "连接超时，请重试"),
+            ),
+          10000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
+  }
+}
 export async function dataRequest<T>(
   session: Session,
   path: string,
-  options: {
-    method?: string;
-    body?: unknown;
-    key?: string;
-    signal?: AbortSignal;
-  } = {},
+  options: BusinessRequestOptions = {},
 ): Promise<T> {
   if (!__DEV__ && !base.startsWith("https://"))
     throw new AccountError(503, "API_NOT_CONFIGURED", "资料服务暂不可用");
   async function perform(token: string): Promise<T> {
+    if (options.signal?.aborted)
+      throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+    let timedOut = false;
     const controller = new AbortController(),
       abort = () => controller.abort();
     options.signal?.addEventListener("abort", abort, { once: true });
     if (options.signal?.aborted) abort();
-    const timer = setTimeout(abort, 10000);
+    const timer = setTimeout(
+      () => {
+        timedOut = true;
+        abort();
+      },
+      options.raw ? 25000 : 10000,
+    );
     try {
-      const response = await fetch(base + path, {
+      const transport =
+        (options.raw || options.acceptJpeg) && Platform.OS !== "web"
+          ? (await import("expo/fetch")).fetch
+          : fetch;
+      const response = await transport(base + path, {
         method: options.method ?? "GET",
         headers: {
           Authorization: `Bearer ${token}`,
-          ...(options.body !== undefined
-            ? { "Content-Type": "application/json" }
-            : {}),
+          ...(options.raw
+            ? { "Content-Type": "application/octet-stream" }
+            : options.body !== undefined
+              ? { "Content-Type": "application/json" }
+              : {}),
           ...(options.key ? { "Idempotency-Key": options.key } : {}),
         },
         body:
-          options.body === undefined ? undefined : JSON.stringify(options.body),
+          options.raw ??
+          (options.body === undefined
+            ? undefined
+            : JSON.stringify(options.body)),
         signal: controller.signal,
       });
+      if (response.ok && options.acceptJpeg) {
+        if (response.headers.get("Content-Type") !== "image/jpeg")
+          throw new AccountError(503, "MEDIA_UNAVAILABLE", "图片暂时无法加载");
+        return (await response.arrayBuffer()) as T;
+      }
       const value = await response.json();
       if (!response.ok)
         throw new AccountError(
@@ -49,6 +106,10 @@ export async function dataRequest<T>(
       return value as T;
     } catch (e) {
       if (e instanceof AccountError) throw e;
+      if (options.signal?.aborted)
+        throw new AccountError(499, "REQUEST_CANCELLED", "操作已取消");
+      if (timedOut)
+        throw new AccountError(503, "NETWORK_TIMEOUT", "连接超时，请重试");
       throw new AccountError(
         503,
         "NETWORK_UNAVAILABLE",
@@ -62,8 +123,17 @@ export async function dataRequest<T>(
   try {
     return await perform(session.access_token);
   } catch (e) {
-    if (!(e instanceof AccountError) || e.status !== 401 || !supabase) throw e;
-    const result = await supabase.auth.refreshSession();
+    if (
+      !(e instanceof AccountError) ||
+      e.status !== 401 ||
+      !supabase ||
+      options.signal?.aborted
+    )
+      throw e;
+    const result = await boundedRefresh(
+      () => supabase!.auth.refreshSession(),
+      options.signal,
+    );
     const next = result.data.session;
     if (
       result.error ||

@@ -1,0 +1,114 @@
+{
+  "date": "2026-11-05",
+  "timezone": "America/Los_Angeles",
+  "branch": "codex/r4-06-delivery-contracts",
+  "base": "822a9ecc87cdb83a685e28b0dc36518aefc2e59c",
+  "scope": "R4-06 prepared contracts and local migrations; V2 routes not enabled; R4-07 service and R4-08 native pending",
+  "code_diff_sha256": "f28cb4a53a1b9e52d7c19722782d1718ef9e1a6378ba63a87b5e2812922480b9",
+  "code_diff_command": "git diff --binary 822a9ecc87cdb83a685e28b0dc36518aefc2e59c VALIDATED_HEAD -- apps packages database scripts",
+  "checks": {
+    "engineering": {
+      "command": "./scripts/dev check",
+      "status": "PASS",
+      "files": 76,
+      "tests": 429,
+      "lint_types_build": true,
+      "local_log": "/private/tmp/abasong-r4-06-check.log"
+    },
+    "focused": {
+      "status": "PASS",
+      "tests": 39,
+      "input_tests": 36,
+      "contract_tests": 3,
+      "scope": "quantity, time, end-of-day, DST, source origin, strict inputs, private DTO and generation consistency"
+    },
+    "requests_database": {
+      "command": "./scripts/dev verify:requests-api",
+      "status": "PASS",
+      "checks": 315,
+      "upgrade_groups": 5,
+      "v2_storage_role_checks": 42,
+      "environment": "disposable_local_PostGIS",
+      "local_log": "/private/tmp/abasong-r4-06-requests.log"
+    },
+    "library_database": {
+      "command": "./scripts/dev verify:library-api",
+      "status": "PASS",
+      "checks": 295,
+      "nearby_checks": 97,
+      "KMS": "synthetic_gateway_with_real_PG_no_AWS_calls",
+      "local_log": "/private/tmp/abasong-r4-06-library.log"
+    },
+    "imports_database": {
+      "command": "./scripts/dev verify:import-api",
+      "status": "PASS",
+      "checks": 124,
+      "expected_fault_injection": "P0001",
+      "local_log": "/private/tmp/abasong-r4-06-import.log"
+    },
+    "d0_migration": {
+      "command": "./scripts/dev db:verify",
+      "status": "PASS",
+      "migrations": 16,
+      "tables": 54,
+      "reset": false,
+      "local_log": "/private/tmp/abasong-r4-06-database.log"
+    },
+    "local_manifest": {
+      "command": "./scripts/dev cloud:preflight --manifest",
+      "status": "PASS",
+      "checksums": 16,
+      "network_or_database_writes": false
+    },
+    "ci": {
+      "status": "consult_latest_exact_HEAD_at_PR_checks",
+      "source": "https://github.com/olly888/abasong/pull/94/checks",
+      "head_branch": "codex/r4-06-delivery-contracts",
+      "prior_PR93_green_is_current_proof": false,
+      "code_commit": "87d52eef7c595737073c155adb00666954583a0e",
+      "latest_head_results_recorded_in": "PR94 body"
+    },
+    "secret_scan": {
+      "status": "PASS_staged_Gitleaks",
+      "command": ".tooling/security/gitleaks git . --pre-commit --staged --redact=100 --ignore-gitleaks-allow --no-banner",
+      "full_history": "current_exact_HEAD_CI_at_PR94_checks"
+    }
+  },
+  "migration_sha256": {
+    "0015_delivery_request_v2.sql": "a03c730f0d18edb85a8db1ef2e22cdee4bb0bd01c4b4553a7c8c87fd29dc6c97",
+    "0016_pickup_address_provenance.sql": "76da7605c91f404ddf1ac8ec2c6284772bc7509734b59fb52f9e00159bc126df"
+  },
+  "assertions": {
+    "legacy_rows_and_snapshots_unchanged": true,
+    "missing_0015_or_0016_ready_503": true,
+    "healthy_ready_200": true,
+    "health_no_store": true,
+    "v1_rejects_v2_input": true,
+    "v1_cannot_read_v2_row": true,
+    "provider_text_requires_persistent_source": true,
+    "legacy_origin_preserved_without_fabrication": true,
+    "api_no_update_delete_private_address_history": true
+  },
+  "limitations": {
+    "v2_routes_enabled": false,
+    "native_ui_changed": false,
+    "new_native_compilation": false,
+    "new_dual_native_acceptance": false,
+    "physical_iPhone": false,
+    "physical_Android": false,
+    "cloud_migration": false,
+    "cloud_resources_or_costs": false,
+    "real_account_grants": false,
+    "provider_calls": false,
+    "real_SMS_messages": false,
+    "local_service_smoke_run": false,
+    "all_product_or_field_acceptance": false
+  },
+  "new_dependencies": false,
+  "task_register_rows": 22,
+  "human_participants": 0,
+  "current_batch_complete": true,
+  "next_dependent_task": "R4-07",
+  "pull_request": "https://github.com/olly888/abasong/pull/94",
+  "validated_code_commit": "87d52eef7c595737073c155adb00666954583a0e"
+}

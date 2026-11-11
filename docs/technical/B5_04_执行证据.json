@@ -1,0 +1,61 @@
+{
+  "scope": "isolated local HTTP/PG and two native development containers using synthetic media",
+  "migration": 22,
+  "forced_rls_tables": 57,
+  "engineering_tests": 500,
+  "request_checks": 620,
+  "media_http_checks": 41,
+  "ios_physical_camera_verified": false,
+  "cloud_bucket_created": false,
+  "screenshots": [
+    {
+      "file": "artifacts/b5-04/android/camera-return.png",
+      "sha256": "d2a5f67f1a494503d760cab6356f306e960e71f217e6fc9deaab5a10adda7103"
+    },
+    {
+      "file": "artifacts/b5-04/android/editor-3.png",
+      "sha256": "c819f3af83fed781d9eebc89b726b300d716ca557d8453bbde6fab89848e3998"
+    },
+    {
+      "file": "artifacts/b5-04/android/partial-retry.png",
+      "sha256": "db43b06f5847265b648ea5368f38528c4249dff0724ae08423f20614643c9b7f"
+    },
+    {
+      "file": "artifacts/b5-04/android/published.png",
+      "sha256": "e80697ef7eb529e0ae237717f7d69a0492f5a9094d2f36023a036d68077b543f"
+    },
+    {
+      "file": "artifacts/b5-04/android/viewer.png",
+      "sha256": "43e8268f2fd39d4c7732627f9781e916aa69422ce27116bda46e365ebc2cd0db"
+    },
+    {
+      "file": "artifacts/b5-04/ios/editor-3.png",
+      "sha256": "37e5cd03c275956e0d34fa88b7425cbcf8fc206ac75fd46422e7512c3afbaa97"
+    },
+    {
+      "file": "artifacts/b5-04/ios/partial-retry.png",
+      "sha256": "6aed69130de9c4664734d49fd33111d5fd033236a5c5a28d3858711c262baaad"
+    },
+    {
+      "file": "artifacts/b5-04/ios/publish-retry.png",
+      "sha256": "61f5a7b670b78761eee489ea922cdebf932e6759c2d69265531e06fd9b533e63"
+    },
+    {
+      "file": "artifacts/b5-04/ios/published.png",
+      "sha256": "ccb178a1b3e1f530fe2cfde8b76a09dabf8e1075af7b5a5eb3d0c7d4aa9169be"
+    },
+    {
+      "file": "artifacts/b5-04/ios/viewer.png",
+      "sha256": "9d2017f1160e9ba8b128ec0617b735bb8d8390112bd8ac8dd336eb368e64728a"
+    }
+  ],
+  "fixture_cleanup": {
+    "temporary_database_count": 0,
+    "temporary_role_count": 0,
+    "private_objects_removed": 12
+  },
+  "native_js_exports": [
+    "ios",
+    "android"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "result": "PASS",
+  "validated_assertions": 601,
+  "local_links_assets": 205,
+  "scoped_files": 23,
+  "javascript_syntax_files": 17,
+  "pages": 39,
+  "state_requirements": 387,
+  "difference_rows": 24,
+  "delivery_synthetic_tests": 25,
+  "existing_synthetic_regressions": 132,
+  "p1_apartment_list_implemented": false,
+  "prototype_ui_changed": false,
+  "owner_main_flow_accepted": true,
+  "controlled_R4_ready": true,
+  "implementation_work_packages": 22,
+  "unrun_observations": [
+    38,
+    10,
+    7
+  ],
+  "human_participants": 0,
+  "native_acceptance": false
+}

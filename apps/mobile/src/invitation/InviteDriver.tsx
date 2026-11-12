@@ -6,6 +6,7 @@ import {
   Share,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Asset } from "expo-asset";
@@ -52,6 +53,8 @@ const errors: Record<Operation, Message> = {
 };
 
 export function InviteDriver({ localPreview }: { localPreview: boolean }) {
+  const { width, fontScale } = useWindowDimensions();
+  const sideBySide = width - metrics.inset * 2 >= 352 * Math.max(1, fontScale);
   const kit = localKit?.({
     dev: __DEV__,
     localPreview,
@@ -132,8 +135,8 @@ export function InviteDriver({ localPreview }: { localPreview: boolean }) {
               busy={busy === "share"}
               disabled={busy !== null && busy !== "share"}
             />
-            <View style={s.secondary}>
-              <View style={s.operation}>
+            <View style={[s.secondary, sideBySide && s.secondaryRow]}>
+              <View style={sideBySide && s.operation}>
                 <ActionButton
                   label="保存邀请图"
                   variant="text"
@@ -142,7 +145,7 @@ export function InviteDriver({ localPreview }: { localPreview: boolean }) {
                   disabled={busy !== null && busy !== "save"}
                 />
               </View>
-              <View style={s.operation}>
+              <View style={sideBySide && s.operation}>
                 <ActionButton
                   label="复制文案与链接"
                   variant="text"
@@ -204,12 +207,14 @@ export function InvitePoster({ testLabel }: { testLabel?: string }) {
           {content.secondLine}
           <Text style={s.blue}>{content.highlight}</Text>
         </Text>
-        <Image
-          source={scene}
-          resizeMode="contain"
-          style={s.scene}
-          accessible={false}
-        />
+        <View style={s.scene}>
+          <Image
+            source={scene}
+            resizeMode="contain"
+            style={s.sceneImage}
+            accessible={false}
+          />
+        </View>
         <View style={s.benefits}>
           {content.benefits.map((benefit, i) => (
             <View key={benefit} style={s.benefit}>
@@ -254,7 +259,8 @@ const s = StyleSheet.create({
   },
   headline: { ...typeStyles.title, fontWeight: "700", marginTop: 3 },
   blue: { color: tokens.color.brandText },
-  scene: { width: "100%", aspectRatio: 3.1 },
+  scene: { alignSelf: "stretch", aspectRatio: 3.1, overflow: "hidden" },
+  sceneImage: { width: "100%", height: "100%" },
   benefits: { gap: 12 },
   benefit: { flexDirection: "row", alignItems: "center", gap: 10 },
   qrRow: {
@@ -275,8 +281,9 @@ const s = StyleSheet.create({
   },
   note: { ...typeStyles.metadata },
   operations: { gap: 12 },
-  secondary: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  operation: { flexGrow: 1, flexBasis: 136 },
+  secondary: { gap: 8 },
+  secondaryRow: { flexDirection: "row" },
+  operation: { flex: 1 },
   selectable: {
     ...typeStyles.body,
     padding: 12,

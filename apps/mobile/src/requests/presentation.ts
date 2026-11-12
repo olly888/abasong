@@ -132,6 +132,49 @@ export const statusLabels = {
   closed: "已关闭",
   expired: "已到期",
 } as const;
+export function publishedRequestCounts(r: DeliverySummary) {
+  const quantity = deliveryQuantity(
+    isV2(r) ? r.quantity_mode : null,
+    r.parcel_count,
+  );
+  if (r.status === "draft") {
+    return [
+      quantity,
+      r.drivers_needed === null ? null : `计划找 ${r.drivers_needed} 人`,
+    ];
+  }
+  if (r.status !== "open") return [quantity];
+  return [
+    exactQuantity(r) && r.remaining_parcels !== null
+      ? `剩余 ${r.remaining_parcels} 件`
+      : quantity,
+    r.remaining_drivers !== null
+      ? `还需 ${r.remaining_drivers} 人`
+      : r.drivers_needed !== null
+        ? "司机缺口待确认"
+        : null,
+  ];
+}
+export function publishedRequestTimestamp(r: DeliverySummary) {
+  if (isV2(r) && r.updated_at) return `更新于 ${requestTime(r.updated_at)}`;
+  if (isV2(r) && r.handoff_mode === "asap") return deliveryArrival(r);
+  return r.starts_at ? `到场 ${requestTime(r.starts_at)}` : null;
+}
+export function applicationSourceStatus({
+  request_summary: request,
+  observed_request_version: observed,
+}: Pick<
+  components["schemas"]["Application"],
+  "request_summary" | "observed_request_version"
+>) {
+  if (!request) return "来源需求当前不可见";
+  if (request.status === "found") return "需求已找到司机";
+  if (request.status === "closed") return "需求已关闭";
+  if (request.status === "expired") return "需求已到期";
+  return request.status === "open" && observed !== request.version
+    ? "需求条件已更新"
+    : null;
+}
 export function requestPrice(
   r: Pick<DeliveryRequest, "price_cents"> & { price_unit: string | null },
 ) {

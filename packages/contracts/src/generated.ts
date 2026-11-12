@@ -2903,6 +2903,11 @@ export interface components {
             completion_mode: "same_day" | "next_day" | "contact" | null;
             /** @enum {string|null} */
             pickup_kind: "warehouse" | "contact_handoff" | null;
+            /**
+             * Format: date-time
+             * @description 仅本人 V2 发布列表返回的最后更新时间。
+             */
+            updated_at?: string;
         };
         /** @description R4-07本地服务已接通；原生表单在R4-08接入。未知数量为null、约数不构成精确剩余上限。输入不接受供应商结果/坐标/导航URL。完整取件信息仅在有权登录详情读取。 */
         RequestDetailV2: {

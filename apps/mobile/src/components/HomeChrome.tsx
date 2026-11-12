@@ -46,7 +46,9 @@ export function HomeChrome({
             embedded
             label={
               apartment
-                ? "搜索公寓或地址"
+                ? fontScale > 1.6
+                  ? "搜索地址"
+                  : "搜索公寓或地址"
                 : mode === "找人"
                   ? "搜索区域或配送经验"
                   : "搜索区域或承运商"

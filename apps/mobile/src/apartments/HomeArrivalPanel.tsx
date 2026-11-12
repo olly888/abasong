@@ -9,6 +9,11 @@ import { router } from "expo-router";
 
 type Apartment = components["schemas"]["Apartment"];
 
+const searchAddress = {
+  label: "搜索地址",
+  onPress: () => router.push("/apartments"),
+};
+
 export function HomeArrivalPanel(p: {
   state:
     | "loading"
@@ -22,7 +27,6 @@ export function HomeArrivalPanel(p: {
   blocked?: boolean;
   candidates: Apartment[];
   onSelect: (apartment: Apartment) => void;
-  onContribute?: () => void;
   onRetry: () => void;
 }) {
   if (p.state === "loading")
@@ -42,20 +46,12 @@ export function HomeArrivalPanel(p: {
     return (
       <MapStatusRow
         state="error"
-        title="公寓资料暂时无法加载"
-        action={{ label: "重新加载", onPress: p.onRetry }}
+        title="附近公寓暂时无法加载"
+        action={{ label: "重试", onPress: p.onRetry }}
       />
     );
   if (p.state === "partial")
-    return (
-      <MapStatusRow
-        title="部分范围待补全"
-        action={{
-          label: "搜索地址",
-          onPress: () => router.push("/apartments"),
-        }}
-      />
-    );
+    return <MapStatusRow title="部分范围暂未查到" action={searchAddress} />;
   if (p.candidates.length && p.state !== "empty")
     return (
       <View>
@@ -72,14 +68,5 @@ export function HomeArrivalPanel(p: {
         ))}
       </View>
     );
-  return (
-    <MapStatusRow
-      title="附近未匹配到公寓"
-      action={
-        p.onContribute
-          ? { label: "共享门禁码", onPress: p.onContribute }
-          : undefined
-      }
-    />
-  );
+  return <MapStatusRow title="附近未匹配到公寓" action={searchAddress} />;
 }

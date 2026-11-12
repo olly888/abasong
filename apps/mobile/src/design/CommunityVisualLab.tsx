@@ -3,14 +3,14 @@ import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { CircleComposer } from "../circle/CircleComposer";
+import { CircleDetail } from "../circle/CircleDetail";
 import { CircleFeed } from "../circle/CircleFeed";
-import { CirclePostCard } from "../circle/CirclePostCard";
 import { type Circle, type CircleRequest } from "../circle/session";
 import { MyAccount } from "../profile/MyAccount";
 import { ProfileEditor } from "../profile/ProfileEditor";
 import type { SelfProfile } from "../profile/profile-session";
-import { ActionButton } from "../ui/Controls";
-import { PageFrame } from "../ui/PageFrame";
+import { AccountError } from "../auth/errors";
+import { deliveryFixture } from "../requests/delivery-fixtures";
 
 const profileSeed: SelfProfile = {
   profile: {
@@ -42,10 +42,16 @@ export default function CommunityVisualLab() {
   return __DEV__ ? <Lab key={scene} scene={scene} /> : <Redirect href="/" />;
 }
 function Lab({ scene }: { scene: string }) {
-  const [view, setView] = useState(scene);
+  const [view, setView] = useState(
+    scene === "dtl-profile"
+      ? "profile"
+      : scene === "dtl-circle"
+        ? "feed"
+        : scene,
+  );
   const [revision, revise] = useState(0);
   const [note, setNote] = useState("TEST · M6-01 · 仅内存，不连接业务服务");
-  const [post, setPost] = useState(postSeed);
+  const [postId, setPostId] = useState(postSeed.id);
   const request = useMemo(() => {
     let profile = {
         ...profileSeed,
@@ -54,8 +60,36 @@ function Lab({ scene }: { scene: string }) {
       },
       regionCalls = 0,
       postCalls = 0,
+      profileSaves = 0,
       closeCalls = 0,
       feedCalls = 0;
+    const savedPosts: Circle["Post"][] = [
+      scene === "dtl-circle"
+        ? {
+            ...postSeed,
+            body: Array(5).fill(postSeed.body).join("\n"),
+            reply_count: 1,
+          }
+        : postSeed,
+    ];
+    const replies: Circle["Comment"][] = [
+      {
+        id: "TEST-first-reply",
+        post_id: postSeed.id,
+        author: { user_id: "TEST-peer", display_name: "TEST 同行" },
+        body: "TEST · 先核对街道和门牌。",
+        created_at: postSeed.created_at,
+      },
+    ];
+    const sentReplies = new Map<string, Circle["Comment"]>();
+    const linkedRequest = {
+      ...deliveryFixture(),
+      id: "TEST-own-request",
+      status: "open" as const,
+      region_id: "TEST-region",
+      region_label: "TEST West Covina",
+      pickup_region_label: "TEST West Covina",
+    };
     const availability: Circle["Availability"] = {
       user_id: "TEST-M6",
       version: 1,
@@ -75,6 +109,8 @@ function Lab({ scene }: { scene: string }) {
       if (o?.signal?.aborted) throw Error("TEST cancelled");
       if (path === "/v1/me/profile") {
         if (o?.method === "PATCH") {
+          if (scene === "dtl-profile" && profileSaves++ === 0)
+            throw Error("TEST · 资料暂未保存，请重试");
           const b = o.body as Circle["ProfilePatch"];
           profile = {
             ...profile,
@@ -107,7 +143,10 @@ function Lab({ scene }: { scene: string }) {
         return { ...availability } as T;
       }
       if (path.startsWith("/v1/regions")) {
-        if (scene === "composer" && regionCalls++ === 0)
+        if (
+          (scene === "composer" || scene === "dtl-profile") &&
+          regionCalls++ === 0
+        )
           throw Error("TEST · 地区失败");
         return {
           items: [
@@ -121,7 +160,10 @@ function Lab({ scene }: { scene: string }) {
           next_cursor: null,
         } as T;
       }
-      if (path.startsWith("/v1/me/requests")) throw Error("TEST · 需求失败");
+      if (path.startsWith("/v1/me/requests")) {
+        if (scene !== "dtl-circle") throw Error("TEST · 需求失败");
+        return { items: [linkedRequest], next_cursor: null } as T;
+      }
       if (path === "/v1/posts" && o?.method === "POST") {
         if (postCalls++ === 0) {
           attemptKey = o.key;
@@ -131,17 +173,56 @@ function Lab({ scene }: { scene: string }) {
           throw Error("TEST · 重试错误地更换了提交标识");
         const input = o.body as Circle["PostInput"];
         setNote("TEST · 发布成功，同一提交标识");
-        return {
+        const item: Circle["Post"] = {
           ...postSeed,
+          id: "TEST-published",
           body: input.body,
           topic: input.topic ?? null,
-        } as T;
+          has_request: input.request_id === linkedRequest.id,
+          request: input.request_id === linkedRequest.id ? linkedRequest : null,
+          reply_count: 0,
+        };
+        savedPosts.unshift(item);
+        return item as T;
       }
       if (path.startsWith("/v1/posts?")) {
         if (scene === "feed-error" && feedCalls++ === 0)
           throw Error("TEST · 加载失败");
         return {
-          items: scene === "feed-empty" ? [] : [postSeed],
+          items: scene === "feed-empty" ? [] : savedPosts.slice(),
+          next_cursor: null,
+        } as T;
+      }
+      const detail = /^\/v1\/posts\/([^/?]+)(\/comments)?/.exec(path);
+      if (detail) {
+        const index = savedPosts.findIndex((p) => p.id === detail[1]);
+        const item = savedPosts[index];
+        if (!item)
+          throw new AccountError(404, "NOT_FOUND", "TEST · 动态不可查看");
+        if (o?.method === "DELETE") {
+          savedPosts.splice(index, 1);
+          return { ok: true } as T;
+        }
+        if (!detail[2]) return item as T;
+        if (o?.method === "POST" && o.key) {
+          const previous = sentReplies.get(o.key);
+          if (previous) return previous as T;
+          const { body } = o.body as Circle["CommentInput"];
+          const reply = {
+            id: "TEST-reply-" + sentReplies.size,
+            post_id: item.id,
+            author: item.author,
+            body,
+            created_at: item.created_at,
+          };
+          sentReplies.set(o.key, reply);
+          replies.unshift(reply);
+          savedPosts[index] = { ...item, reply_count: item.reply_count + 1 };
+          if (sentReplies.size === 1) throw Error("TEST · 首次回复响应丢失");
+          return reply as T;
+        }
+        return {
+          items: replies.filter((r) => r.post_id === item.id),
           next_cursor: null,
         } as T;
       }
@@ -164,7 +245,7 @@ function Lab({ scene }: { scene: string }) {
           request={request}
           onBack={() => setView("feed")}
           onDone={(p) => {
-            setPost(p);
+            setPostId(p.id);
             setView("post");
           }}
         />
@@ -187,22 +268,22 @@ function Lab({ scene }: { scene: string }) {
           onSaved={back}
         />
       ) : view === "post" ? (
-        <PageFrame compact title="动态详情" onBack={() => setView("feed")}>
-          <CirclePostCard
-            post={post}
-            request={request}
-            onAuthor={() => info("本人资料")}
-            onRequest={() => info("需求")}
-          />
-          <ActionButton label="返回司机圈" onPress={() => setView("feed")} />
-        </PageFrame>
+        <CircleDetail
+          actor="TEST-M6"
+          id={postId}
+          request={request}
+          onBack={() => setView("feed")}
+          onHome={() => setView("feed")}
+          onAuthor={() => info("本人资料")}
+          onRequest={() => info("需求")}
+        />
       ) : (
         <CircleFeed
           request={request}
           onPublish={() => setView("composer")}
           onNewRequest={() => info("发需求")}
-          onOpen={() => {
-            setPost(postSeed);
+          onOpen={(id) => {
+            setPostId(id);
             setView("post");
           }}
           onAuthor={() => info("本人资料")}

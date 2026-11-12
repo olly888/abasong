@@ -13392,6 +13392,10 @@ components:
           - warehouse
           - contact_handoff
           nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          description: 仅本人 V2 发布列表返回的最后更新时间。
       required:
       - id
       - publisher

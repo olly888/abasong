@@ -197,7 +197,7 @@ export function CircleFeed({
             }}
           />
           <ActionButton
-            label="发需求"
+            label="发配送需求"
             secondary
             onPress={() => {
               setMenu(false);

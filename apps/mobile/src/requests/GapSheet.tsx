@@ -96,7 +96,11 @@ export function GapEditor({
       if (
         mounted.current &&
         e instanceof AccountError &&
-        ["VERSION_CONFLICT", "REQUEST_ENDED"].includes(e.code)
+        [
+          "VERSION_CONFLICT",
+          "REQUEST_ENDED",
+          "REQUEST_STATE_CONFLICT",
+        ].includes(e.code)
       )
         setChanged(true);
       if (mounted.current)

@@ -7,22 +7,34 @@ import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
 import { StatusPanel } from "../../ui/Feedback";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate, requestStyles as s } from "../../requests/RequestUi";
-import { requestTime, requestTitle } from "../../requests/presentation";
+import { requestTime } from "../../requests/presentation";
+import { MyApplicationCard } from "../../requests/MyApplicationCard";
 type Application = components["schemas"]["Application"];
 export default function Applications() {
+  const { request_id, for_request } = useLocalSearchParams<{
+    request_id?: string;
+    for_request?: string;
+  }>();
   return (
     <RequestGate>
-      <List />
+      <List
+        key={JSON.stringify([request_id, for_request])}
+        requestId={request_id}
+        forRequest={for_request}
+      />
     </RequestGate>
   );
 }
-function List() {
-  const { session } = useAuth(),
-    { request_id, for_request } = useLocalSearchParams<{
-      request_id?: string;
-      for_request?: string;
-    }>();
+function List({
+  requestId,
+  forRequest,
+}: {
+  requestId?: string;
+  forRequest?: string;
+}) {
+  const { session } = useAuth();
   const [items, setItems] = useState<Application[]>([]),
+    [regions, setRegions] = useState<Record<string, string>>({}),
     [cursor, setCursor] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
     [working, setWorking] = useState<string | null>(null),
@@ -36,11 +48,11 @@ function List() {
     setBusy(true);
     setError(null);
     try {
-      const path = request_id
-        ? `/v1/requests/${encodeURIComponent(request_id)}/applications`
+      const path = requestId
+        ? `/v1/requests/${encodeURIComponent(requestId)}/applications`
         : "/v1/me/applications";
       const query = new URLSearchParams({ limit: "20" });
-      if (for_request && !request_id) query.set("request_id", for_request);
+      if (forRequest && !requestId) query.set("request_id", forRequest);
       if (next) query.set("cursor", next);
       const page = await dataRequest<components["schemas"]["ApplicationPage"]>(
         session,
@@ -73,12 +85,25 @@ function List() {
       setItems([]);
       setCursor(null);
       void load(undefined, c.signal);
+      if (session && !requestId)
+        void dataRequest<components["schemas"]["RegionPage"]>(
+          session,
+          "/v1/regions?limit=100",
+          { signal: c.signal },
+        )
+          .then((page) => {
+            if (!c.signal.aborted)
+              setRegions(
+                Object.fromEntries(page.items.map((r) => [r.id, r.label])),
+              );
+          })
+          .catch(() => undefined);
       return () => {
         active.current = false;
         generation.current++;
         c.abort();
       };
-    }, [session?.access_token, request_id, for_request]),
+    }, [session?.access_token, requestId, forRequest]),
   );
   async function mutate(item: Application, withdraw: boolean) {
     if (!session || lock.current) return;
@@ -99,8 +124,24 @@ function List() {
       if (active.current) setWorking(null);
     }
   }
+  function openConversation(item: Application) {
+    router.push({
+      pathname: "/conversations/[id]",
+      params: { id: item.conversation_id },
+    });
+  }
+  function confirmWithdrawal(item: Application) {
+    Alert.alert("撤回这次报名？", undefined, [
+      { text: "取消", style: "cancel" },
+      {
+        text: "撤回报名",
+        style: "destructive",
+        onPress: () => void mutate(item, true),
+      },
+    ]);
+  }
   return (
-    <AuthPage compact title={request_id ? "报名司机" : "我的报名"}>
+    <AuthPage compact title={requestId ? "报名司机" : "我的报名"}>
       <FormError message={error} />
       {error ? (
         <ActionButton
@@ -116,97 +157,77 @@ function List() {
       {!busy && !error && !items.length ? (
         <StatusPanel state="empty" title="暂无报名" />
       ) : null}
-      {items.map((item) => (
-        <View key={item.id} style={s.card}>
-          <View style={s.row}>
-            <Text style={s.label}>
-              {request_id
-                ? (item.applicant_profile?.display_name ?? "用户当前不可见")
-                : item.request_summary
-                  ? requestTitle(item.request_summary)
-                  : "来源需求当前不可见"}
-            </Text>
-            <Text style={s.status}>
-              {item.status === "withdrawn"
-                ? "已撤回"
-                : item.contacted_at
-                  ? "已联系"
-                  : "已报名"}
-            </Text>
-          </View>
-          {item.request_summary ? (
-            <Text style={s.text}>
-              {item.request_summary.carrier} {item.request_summary.route_label}
-            </Text>
-          ) : null}
-          <Text style={s.text}>
-            {requestTime(item.expected_arrival_at)}
-            {item.capacity_parcels ? ` · 可接 ${item.capacity_parcels} 件` : ""}
-          </Text>
-          {item.request_summary &&
-          item.observed_request_version !== item.request_summary.version ? (
-            <Text style={s.status}>需求条件已更新</Text>
-          ) : null}
-          {request_id
-            ? item.applicant_profile?.experience.map((e, i) => (
-                <Text style={s.secondary} key={i}>
-                  {e.carrier} · {e.region_label} · {e.description}（本人填写）
-                </Text>
-              ))
-            : null}
-          {item.request_summary ? (
-            <View style={{ gap: 8 }}>
-              <ActionButton
-                label="查看会话"
-                secondary
-                disabled={working !== null}
-                onPress={() =>
-                  router.push({
-                    pathname: "/conversations/[id]",
-                    params: { id: item.conversation_id },
-                  })
-                }
-              />
-              {request_id && item.status === "applied" && !item.contacted_at ? (
-                <ActionButton
-                  label="标记已联系"
-                  busy={working === item.id}
-                  onPress={() => void mutate(item, false)}
-                />
-              ) : null}
-              {!request_id ? (
-                <ActionButton
-                  label="查看当前需求"
-                  secondary
-                  onPress={() =>
-                    router.push({
-                      pathname: "/requests/[id]",
-                      params: { id: item.request_id },
-                    })
-                  }
-                />
-              ) : null}
+      {items.map((item) =>
+        requestId ? (
+          <View key={item.id} style={s.card}>
+            <View style={s.row}>
+              <Text style={s.label}>
+                {item.applicant_profile?.display_name ?? "用户当前不可见"}
+              </Text>
+              <Text style={s.status}>
+                {item.status === "withdrawn"
+                  ? "已撤回"
+                  : item.contacted_at
+                    ? "已联系"
+                    : "已报名"}
+              </Text>
             </View>
-          ) : null}
-          {!request_id && item.status === "applied" ? (
-            <ActionButton
-              label="撤回报名"
-              secondary
-              disabled={working !== null}
-              onPress={() =>
-                Alert.alert("撤回这次报名？", undefined, [
-                  { text: "取消", style: "cancel" },
-                  {
-                    text: "撤回报名",
-                    style: "destructive",
-                    onPress: () => void mutate(item, true),
-                  },
-                ])
-              }
-            />
-          ) : null}
-        </View>
-      ))}
+            {item.request_summary ? (
+              <Text style={s.text}>
+                {item.request_summary.carrier}{" "}
+                {item.request_summary.route_label}
+              </Text>
+            ) : null}
+            <Text style={s.text}>
+              {requestTime(item.expected_arrival_at)}
+              {item.capacity_parcels
+                ? ` · 可接 ${item.capacity_parcels} 件`
+                : ""}
+            </Text>
+            {item.request_summary &&
+            item.observed_request_version !== item.request_summary.version ? (
+              <Text style={s.status}>需求条件已更新</Text>
+            ) : null}
+            {item.applicant_profile?.experience.map((e, i) => (
+              <Text style={s.secondary} key={i}>
+                {e.carrier} · {e.region_label} · {e.description}（本人填写）
+              </Text>
+            ))}
+            {item.request_summary ? (
+              <View style={{ gap: 8 }}>
+                <ActionButton
+                  label="查看会话"
+                  secondary
+                  disabled={working !== null}
+                  onPress={() => openConversation(item)}
+                />
+                {item.status === "applied" && !item.contacted_at ? (
+                  <ActionButton
+                    label="标记已联系"
+                    busy={working === item.id}
+                    onPress={() => void mutate(item, false)}
+                  />
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <MyApplicationCard
+            key={item.id}
+            item={item}
+            region={regions[item.request_summary?.region_id ?? ""]}
+            disabled={working !== null}
+            onContact={() => openConversation(item)}
+            onRequest={() =>
+              router.push({
+                pathname: "/requests/[id]",
+                params: { id: item.request_id },
+              })
+            }
+            onWithdraw={() => confirmWithdrawal(item)}
+          />
+        ),
+      )}
       {cursor ? (
         <ActionButton
           label="加载更多"

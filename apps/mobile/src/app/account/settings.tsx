@@ -2,23 +2,18 @@ import { useCallback, useState } from "react";
 import { AppState, Linking } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import * as Location from "expo-location";
-import {
-  ApartmentPage,
-  ActionButton,
-  FormError,
-} from "../../auth/AuthControls";
 import { useAuth } from "../../auth/AuthProvider";
 import { useBusinessRequest } from "../../auth/useBusinessRequest";
 import type { Circle } from "../../circle/session";
-import { ListRow } from "../../ui/Primitives";
+import { SettingsPanel } from "../../settings/SettingsPanel";
 
 export default function Settings() {
   const auth = useAuth();
   const request = useBusinessRequest();
   const [hasBlocks, setHasBlocks] = useState(false);
   const [permission, setPermission] = useState("查看系统权限");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const privacyUrl = process.env.EXPO_PUBLIC_PRIVACY_URL;
+  const termsUrl = process.env.EXPO_PUBLIC_TERMS_URL;
   useFocusEffect(
     useCallback(() => {
       let live = true;
@@ -56,54 +51,32 @@ export default function Settings() {
       return () => c.abort();
     }, [auth.phase, request]),
   );
-  async function openSettings() {
-    try {
-      await Linking.openSettings();
-    } catch {
-      setError("无法打开系统设置，请手动打开");
-    }
-  }
-  async function signOut() {
-    setBusy(true);
-    setError(null);
-    try {
-      await auth.signOut();
-    } catch {
-      setError("退出失败，请重试");
-    } finally {
-      setBusy(false);
-    }
-  }
   return (
-    <ApartmentPage title="设置">
-      {auth.session ? (
-        <ListRow
-          title="通知设置"
-          icon="message"
-          onPress={() => router.push("/account/notifications")}
-        />
-      ) : null}
-      {hasBlocks ? (
-        <ListRow
-          title="已屏蔽用户"
-          icon="person"
-          onPress={() => router.push("/account/blocks")}
-        />
-      ) : null}
-      <ListRow
-        title="位置权限"
-        subtitle={permission}
-        onPress={() => void openSettings()}
-      />
-      {auth.session ? (
-        <ActionButton
-          label="退出登录"
-          secondary
-          busy={busy}
-          onPress={() => void signOut()}
-        />
-      ) : null}
-      <FormError message={error} />
-    </ApartmentPage>
+    <SettingsPanel
+      permission={permission}
+      onLocation={() => Linking.openSettings()}
+      onNotifications={
+        auth.session ? () => router.push("/account/notifications") : undefined
+      }
+      onBlocks={hasBlocks ? () => router.push("/account/blocks") : undefined}
+      onPrivacy={
+        privacyUrl?.startsWith("https://")
+          ? () => Linking.openURL(privacyUrl)
+          : undefined
+      }
+      onTerms={
+        termsUrl?.startsWith("https://")
+          ? () => Linking.openURL(termsUrl)
+          : undefined
+      }
+      onSignOut={
+        auth.session ||
+        auth.phase === "logout-error" ||
+        auth.phase === "signing-out"
+          ? auth.signOut
+          : undefined
+      }
+      signOutNeedsRetry={auth.phase === "logout-error"}
+    />
   );
 }

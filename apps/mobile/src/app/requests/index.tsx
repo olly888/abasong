@@ -7,6 +7,7 @@ import { AuthPage, ActionButton, FormError } from "../../auth/AuthControls";
 import { StatusPanel } from "../../ui/Feedback";
 import { dataRequest } from "../../apartments/client";
 import { RequestGate, RequestCard } from "../../requests/RequestUi";
+import { MyPublishedRequestCard } from "../../requests/MyPublishedRequestCard";
 import { CircleFeed } from "../../circle/CircleFeed";
 import { useBusinessRequest } from "../../auth/useBusinessRequest";
 import {
@@ -141,16 +142,45 @@ function List({ mine, tabs }: { mine: boolean; tabs?: ViewProps["children"] }) {
         />
       ) : null}
       <View style={{ gap: 12 }}>
-        {rows.map((r) => (
-          <RequestCard
-            key={r.id}
-            request={r}
-            region={regions[r.region_id ?? ""]}
-            onPress={() =>
-              router.push({ pathname: "/requests/[id]", params: { id: r.id } })
-            }
-          />
-        ))}
+        {rows.map((r) =>
+          mine ? (
+            <MyPublishedRequestCard
+              key={r.id}
+              request={r}
+              region={regions[r.region_id ?? ""]}
+              onAction={() => {
+                if (r.status === "draft")
+                  router.push({
+                    pathname: "/requests/new",
+                    params: { edit: r.id },
+                  });
+                else
+                  router.push({
+                    pathname: "/requests/[id]",
+                    params: { id: r.id, manage: "1" },
+                  });
+              }}
+              onPreview={() =>
+                router.push({
+                  pathname: "/requests/[id]",
+                  params: { id: r.id },
+                })
+              }
+            />
+          ) : (
+            <RequestCard
+              key={r.id}
+              request={r}
+              region={regions[r.region_id ?? ""]}
+              onPress={() =>
+                router.push({
+                  pathname: "/requests/[id]",
+                  params: { id: r.id },
+                })
+              }
+            />
+          ),
+        )}
       </View>
       {cursor ? (
         <ActionButton

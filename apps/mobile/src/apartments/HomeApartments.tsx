@@ -190,6 +190,7 @@ export function HomeApartments({
                 : "附近可接活司机"
           }
           apartment={mode === "公寓"}
+          statusOnly={mode === "公寓"}
           onContribute={openContributionMenu}
         >
           <View style={{ paddingHorizontal: 16 }}>
@@ -372,6 +373,9 @@ export function HomeApartmentContent({
     generation = useRef(0),
     stream = useRef<AbortController | null>(null),
     disposeLookup = useRef<(() => void) | null>(null),
+    offerLookup = useRef<((observation: DiscoveryObservation) => void) | null>(
+      null,
+    ),
     selectionRef = useRef<S["Apartment"] | null>(null),
     providerSelectionKey = useRef<string | null>(null),
     lastFixAt = useRef(0),
@@ -700,7 +704,7 @@ export function HomeApartmentContent({
   }
   const onFailure = useRef<() => void>(() => {});
   onFailure.current = () => {
-    if (manualLocked.current) return;
+    if (modeRef.current !== "公寓" || manualLocked.current) return;
     providerEpoch.current++;
     catalogRef.current = null;
     providerRef.current = null;
@@ -760,7 +764,11 @@ export function HomeApartmentContent({
       sameDiscoveryObservation,
       2000,
     );
-    disposeLookup.current = () => queue.dispose();
+    offerLookup.current = queue.offer;
+    disposeLookup.current = () => {
+      offerLookup.current = null;
+      queue.dispose();
+    };
     const resetUnconfirmedLookup = () => {
       providerEpoch.current++;
       catalogRef.current = null;
@@ -931,6 +939,26 @@ export function HomeApartmentContent({
       setLocationNotice("无法打开设置，请在系统设置中开启位置权限");
     }
   }
+  function retryDiscovery() {
+    const observation = latestObservation.current;
+    providerEpoch.current++;
+    providerLast.current = 0;
+    providerRef.current = null;
+    providerStatus.current = "idle";
+    setLookupState("loading");
+    setNotice("正在查找公寓");
+    if (
+      observation &&
+      isFreshDiscoveryObservation(observation) &&
+      offerLookup.current
+    ) {
+      offerLookup.current(observation);
+    } else {
+      void locate(false, false);
+    }
+  }
+  const retryLocation = () =>
+    void (blocked ? openLocationSettings() : locate(true, false));
   function returnToPosition() {
     recenterHome(modeRef.current, {
       blocked,
@@ -1336,6 +1364,7 @@ export function HomeApartmentContent({
           statusNote={nearbyItems.length ? rangeLabel.note : undefined}
           count={items.length || undefined}
           apartment
+          statusOnly={!temporary && !items.length}
           onContribute={openContributionMenu}
           locating={locating}
           canRecenter={!!point}
@@ -1475,7 +1504,7 @@ export function HomeApartmentContent({
                     rowKey(c) === (selected?.id ?? providerSelected?.key)
                   }
                   onOpen={() => {
-                    focus(c);
+                    focus(c, true);
                     if (c.apartment) setExpanded(true);
                   }}
                   onAdd={() => addCandidate(c)}
@@ -1499,11 +1528,7 @@ export function HomeApartmentContent({
                 candidates={candidates}
                 onSelect={(p) => void select(p)}
                 blocked={blocked}
-                onRetry={() => {
-                  providerLast.current = 0;
-                  providerStatus.current = "idle";
-                  void (blocked ? openLocationSettings() : locate(true));
-                }}
+                onRetry={locationNotice ? retryLocation : retryDiscovery}
               />
             </View>
           )}
@@ -1815,18 +1840,7 @@ export function HomeApartmentContent({
             message={locationNotice ?? notice}
             candidates={candidates}
             onSelect={(p) => void select(p)}
-            onContribute={openContributionMenu}
-            onRetry={() =>
-              locationNotice
-                ? blocked
-                  ? void openLocationSettings()
-                  : void locate(true)
-                : (() => {
-                    providerLast.current = 0;
-                    providerStatus.current = "idle";
-                    void locate(false, false);
-                  })()
-            }
+            onRetry={locationNotice ? retryLocation : retryDiscovery}
             blocked={blocked}
           />
         </MapCardFrame>

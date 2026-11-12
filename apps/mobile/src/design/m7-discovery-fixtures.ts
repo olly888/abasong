@@ -8,6 +8,7 @@ export const m7Scenes = [
   "coverage-partial",
   "coverage-empty",
   "range-failed",
+  "range-failed-empty",
 ] as const;
 export function isM7DiscoveryScene(scene: string) {
   return (m7Scenes as readonly string[]).includes(scene);
@@ -22,8 +23,8 @@ export function m7Discovery(
 ): S["NearbyDiscovery"] {
   if (provider && !(input as S["NearbyInput"] & { expand?: boolean }).expand)
     throw new Error("TEST · 新版首页必须请求受控扩围");
-  const empty = scene === "coverage-empty";
-  const failed = scene === "range-failed";
+  const empty = scene === "coverage-empty" || scene === "range-failed-empty";
+  const failed = scene.startsWith("range-failed");
   const partial = scene.startsWith("coverage-");
   const radius =
     !provider || failed || scene === "range-200"

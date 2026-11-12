@@ -25,6 +25,68 @@ import {
   type Conversation,
 } from "./state";
 type S = components["schemas"];
+function InboxRow({
+  title,
+  subtitle,
+  timestamp,
+  icon,
+  unread,
+  dot = false,
+  disabled = false,
+  busy = false,
+  onPress,
+}: {
+  title: string;
+  subtitle?: string;
+  timestamp: string | null;
+  icon: "person" | "message";
+  unread: number;
+  dot?: boolean;
+  disabled?: boolean;
+  busy?: boolean;
+  onPress: () => void;
+}) {
+  const time = timestamp ? requestTime(timestamp) : null;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={[
+        title,
+        subtitle,
+        time,
+        unread ? (dot ? "未读" : `${unread}条未读`) : null,
+      ]
+        .filter(Boolean)
+        .join("，")}
+      accessibilityState={{ disabled, busy }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        s.inboxRow,
+        pressed && { backgroundColor: tokens.color.surfaceMuted },
+      ]}
+    >
+      <View style={s.avatar}>
+        <Icon name={icon} />
+      </View>
+      <View style={s.inboxMain}>
+        <Text style={s.name} numberOfLines={2}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text style={s.secondary} numberOfLines={2}>
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+      <View style={s.inboxMeta}>
+        {time ? <Text style={s.meta}>{time}</Text> : null}
+        <UnreadBadge count={unread} dot={dot} />
+      </View>
+    </Pressable>
+  );
+}
+
 export function ConversationRows({
   items,
   onOpen,
@@ -35,50 +97,39 @@ export function ConversationRows({
   return (
     <View>
       {items.map((c) => (
-        <Pressable
+        <InboxRow
           key={c.id}
-          accessibilityRole="button"
-          accessibilityLabel={`${c.other_profile.display_name}${c.unread_count ? `，${c.unread_count}条未读` : ""}`}
+          title={c.other_profile.display_name}
+          subtitle={
+            c.last_request_snapshot
+              ? [
+                  c.last_request_region_label ??
+                    c.last_request_snapshot.carrier,
+                  sourceSummary(c.last_request_snapshot).title,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")
+              : "同行对话"
+          }
+          timestamp={c.updated_at}
+          icon="person"
+          unread={c.unread_count}
           onPress={() => onOpen(c.id)}
-          style={({ pressed }) => [
-            s.inboxRow,
-            pressed && { backgroundColor: tokens.color.surfaceMuted },
-          ]}
-        >
-          <View style={s.avatar}>
-            <Icon name="person" />
-          </View>
-          <View style={{ flex: 1, gap: 6 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                gap: 8,
-              }}
-            >
-              <Text numberOfLines={1} style={[s.name, { flex: 1 }]}>
-                {c.other_profile.display_name}
-              </Text>
-              <Text style={s.meta}>{requestTime(c.updated_at)}</Text>
-            </View>
-            <Text numberOfLines={1} style={s.secondary}>
-              {c.last_request_snapshot
-                ? [
-                    c.last_request_region_label ??
-                      c.last_request_snapshot.carrier,
-                    sourceSummary(c.last_request_snapshot).title,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")
-                : "同行对话"}
-            </Text>
-          </View>
-          <UnreadBadge count={c.unread_count} />
-        </Pressable>
+        />
       ))}
     </View>
   );
 }
+
+function notificationSubtitle(n: S["Notification"]) {
+  if (n.kind === "circle_reply" && n.object_type === "post") return "查看回复";
+  if (n.object_type === "request")
+    return ["application_received", "application_withdrawn"].includes(n.kind)
+      ? "查看报名"
+      : "查看需求";
+  if (n.object_type === "conversation") return "查看对话";
+}
+
 export function NotificationRows({
   items,
   onOpen,
@@ -91,32 +142,18 @@ export function NotificationRows({
   return (
     <View>
       {items.map((n) => (
-        <Pressable
+        <InboxRow
           key={n.id}
-          accessibilityRole="button"
-          accessibilityLabel={`${notificationLabel[n.kind] ?? "系统通知"}${!n.read_at ? "，未读" : ""}`}
+          title={notificationLabel[n.kind] ?? "系统通知"}
+          subtitle={notificationSubtitle(n)}
+          timestamp={n.created_at}
+          icon="message"
+          unread={n.read_at ? 0 : 1}
+          dot
           disabled={!!openingId}
-          accessibilityState={{
-            disabled: !!openingId,
-            busy: openingId === n.id,
-          }}
+          busy={openingId === n.id}
           onPress={() => onOpen(n)}
-          style={({ pressed }) => [
-            s.inboxRow,
-            pressed && { backgroundColor: tokens.color.surfaceMuted },
-          ]}
-        >
-          <View style={s.avatar}>
-            <Icon name="message" />
-          </View>
-          <View style={{ flex: 1, gap: 6 }}>
-            <Text style={s.name}>
-              {notificationLabel[n.kind] ?? "系统通知"}
-            </Text>
-            <Text style={s.meta}>{requestTime(n.created_at)}</Text>
-          </View>
-          <UnreadBadge count={n.read_at ? 0 : 1} dot />
-        </Pressable>
+        />
       ))}
     </View>
   );
@@ -181,19 +218,25 @@ const Bubble = memo(function Bubble({
               style={{
                 flexDirection: "row",
                 alignItems: "baseline",
+                flexWrap: "wrap",
                 justifyContent: "space-between",
-                gap: 12,
+                columnGap: 12,
+                rowGap: 2,
               }}
             >
               {!["vehicle_help", "other_help"].includes(snapshot.kind) ? (
                 <Text style={s.quote}>{requestPrice(snapshot)}</Text>
               ) : null}
-              <Text style={s.secondary}>
-                {summary?.quantity ? `${summary.quantity} · ` : ""}
-                {snapshot.carrier}
+              <Text style={[s.secondary, { flexShrink: 1 }]}>
+                {[
+                  summary?.quantity,
+                  snapshot.carrier,
+                  snapshot.starts_at && requestTime(snapshot.starts_at),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </Text>
             </View>
-            <Text style={s.meta}>{requestTime(snapshot.starts_at)}</Text>
           </>
         ) : (
           <Text style={s.secondary}>来源需求当前不可见</Text>
@@ -399,7 +442,7 @@ export function ChatComposer(
             placeholderTextColor={tokens.color.textMuted}
             style={s.input}
           />
-          <View style={{ width: 72 }}>
+          <View style={{ minWidth: 72 }}>
             <ActionButton
               label="发送"
               disabled={!p.draft.trim()}
@@ -416,11 +459,13 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 18,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderColor: tokens.color.border,
-    minHeight: 88,
+    minHeight: 80,
   },
+  inboxMain: { flex: 1, gap: 4 },
+  inboxMeta: { minHeight: 40, maxWidth: "32%", alignItems: "flex-end", gap: 4 },
   avatar: {
     width: 44,
     height: 44,
@@ -451,12 +496,12 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.color.border,
     borderRadius: 16,
-    padding: 16,
-    gap: 8,
+    padding: 12,
+    gap: 6,
   },
   quote: {
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 20,
+    lineHeight: 28,
     fontWeight: "700",
     color: tokens.color.ink,
   },

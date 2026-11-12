@@ -33,6 +33,13 @@ const carriers = [
   "Amazon Flex",
   "DoorDash",
 ];
+const vehicleOptions = ["轿车", "SUV", "Van"];
+
+function vehicleChoice(value: string) {
+  if (/^sedan$/i.test(value)) return "轿车";
+  return vehicleOptions.find((v) => v.toLowerCase() === value.toLowerCase());
+}
+
 export function ProfileEditor({
   request,
   owner,
@@ -61,15 +68,18 @@ export function ProfileEditor({
     [regionError, setRegionError] = useState<string | null>(null),
     [error, setError] = useState<string | null>(null),
     [loading, setLoading] = useState(true),
+    [retryingRegions, setRetryingRegions] = useState(false),
     [busy, setBusy] = useState(false),
     [conflict, setConflict] = useState(false),
     [leaving, setLeaving] = useState(false),
-    [contacts, setContacts] = useState(false);
+    [contacts, setContacts] = useState(false),
+    [addingVehicle, setAddingVehicle] = useState(false);
   const working = useRef(false),
     visible = useRef(false),
     discard = useRef(false),
     loadEpoch = useRef(0),
-    loadController = useRef<AbortController | null>(null);
+    loadController = useRef<AbortController | null>(null),
+    regionController = useRef<AbortController | null>(null);
   const dirty =
     !!form &&
     !!saved &&
@@ -78,9 +88,11 @@ export function ProfileEditor({
     async (restore = true) => {
       const epoch = ++loadEpoch.current;
       loadController.current?.abort();
+      regionController.current?.abort();
       const ctrl = new AbortController();
       loadController.current = ctrl;
       setLoading(true);
+      setRetryingRegions(false);
       setError(null);
       try {
         const [p, r, av] = await Promise.allSettled([
@@ -104,6 +116,7 @@ export function ProfileEditor({
         setSaved(p.value);
         const d = restore ? readProfileDraft(owner) : undefined;
         setForm(d?.fields ?? profileFields(p.value));
+        setAddingVehicle(false);
         setConflict(!!d && d.version !== p.value.version);
         setRegions(r.status === "fulfilled" ? r.value.items : []);
         setRegionError(
@@ -128,10 +141,32 @@ export function ProfileEditor({
         visible.current = false;
         loadEpoch.current++;
         loadController.current?.abort();
+        regionController.current?.abort();
         editor.cancel();
       };
     }, [editor, load]),
   );
+  async function retryRegions() {
+    regionController.current?.abort();
+    const ctrl = new AbortController();
+    regionController.current = ctrl;
+    setRetryingRegions(true);
+    try {
+      const page = await request<components["schemas"]["RegionPage"]>(
+        "/v1/regions?limit=100",
+        { signal: ctrl.signal },
+      );
+      if (!ctrl.signal.aborted && visible.current) {
+        setRegions(page.items);
+        setRegionError(null);
+      }
+    } catch {
+      if (!ctrl.signal.aborted && visible.current)
+        setRegionError("区域暂时无法读取，已有选择保留");
+    } finally {
+      if (!ctrl.signal.aborted && visible.current) setRetryingRegions(false);
+    }
+  }
   useEffect(() => {
     if (form && saved && !discard.current) {
       if (dirty) rememberProfileDraft(owner, saved.version, form);
@@ -232,6 +267,9 @@ export function ProfileEditor({
       onPress={onPress}
     />
   );
+  const selectedVehicle = form ? vehicleChoice(form.vehicle_type) : undefined;
+  const customVehicle =
+    addingVehicle || (!!form?.vehicle_type && !selectedVehicle);
   return (
     <PageFrame
       compact
@@ -388,7 +426,8 @@ export function ProfileEditor({
                   <ActionButton
                     label="重新读取区域"
                     secondary
-                    onPress={() => void load()}
+                    busy={retryingRegions}
+                    onPress={() => void retryRegions()}
                   />
                 ) : (
                   <View
@@ -418,20 +457,45 @@ export function ProfileEditor({
                   </View>
                 )}
               </View>
-              <Field
-                label="车型（选填）"
-                value={form.vehicle_type}
-                maxLength={60}
-                editable={!busy && !conflict}
-                placeholder="如 Sedan、SUV、Van"
-                onChangeText={(v) => change("vehicle_type", v)}
-              />
+              <View style={{ gap: 12 }}>
+                <Text accessibilityRole="header" style={typeStyles.title}>
+                  车型（选填）
+                </Text>
+                <View
+                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
+                >
+                  {pill("不填写", !customVehicle && !selectedVehicle, () => {
+                    setAddingVehicle(false);
+                    change("vehicle_type", "");
+                  })}
+                  {vehicleOptions.map((v) =>
+                    pill(v, !customVehicle && selectedVehicle === v, () => {
+                      setAddingVehicle(false);
+                      if (selectedVehicle !== v) change("vehicle_type", v);
+                    }),
+                  )}
+                  {pill("其他", customVehicle, () => {
+                    setAddingVehicle(true);
+                    if (selectedVehicle) change("vehicle_type", "");
+                  })}
+                </View>
+                {customVehicle ? (
+                  <Field
+                    label="其他车型"
+                    value={form.vehicle_type}
+                    maxLength={60}
+                    editable={!busy && !conflict}
+                    onChangeText={(v) => change("vehicle_type", v)}
+                  />
+                ) : null}
+              </View>
             </>
           ) : null}
           <View style={{ gap: 12 }}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="联系方式（选填）"
+              accessibilityState={{ expanded: contacts }}
               onPress={() => setContacts(!contacts)}
               style={{ minHeight: 48, justifyContent: "center" }}
             >

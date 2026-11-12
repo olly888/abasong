@@ -9,6 +9,8 @@ import { AccountError } from "../auth/api-client";
 import type { ProfileRequest } from "../profile/profile-session";
 import { ActionButton } from "../ui/Controls";
 import { PageFrame } from "../ui/PageFrame";
+import { SettingsPanel } from "../settings/SettingsPanel";
+import { NotificationSettingsView } from "../notifications/NotificationSettings";
 
 type S = components["schemas"];
 const time = "2026-11-08T18:00:00Z";
@@ -46,6 +48,10 @@ export default function InboxVisualLab() {
 function Lab({ scene }: { scene: string }) {
   const [opened, setOpened] = useState(0),
     [account, setAccount] = useState("A");
+  const [settingsView, setSettingsView] = useState<
+    "settings" | "notifications" | "signed-out"
+  >("settings");
+  const [signOutAttempts, setSignOutAttempts] = useState(0);
   const request = useMemo<ProfileRequest>(() => {
     let read = false,
       secondRead = false,
@@ -140,6 +146,50 @@ function Lab({ scene }: { scene: string }) {
       );
     };
   }, [scene, account]);
+  if (scene === "dtl-settings") {
+    if (settingsView === "notifications")
+      return (
+        <NotificationSettingsView
+          preferences={{
+            chat_push: true,
+            request_push: true,
+            system_push: false,
+          }}
+          status="TEST · 已允许系统通知"
+          enabled
+          busy={false}
+          error={null}
+          onEnable={() => {}}
+          onChange={() => {}}
+          onReload={() => {}}
+          onBack={() => setSettingsView("settings")}
+        />
+      );
+    return (
+      <SettingsPanel
+        permission="TEST · 使用时允许定位"
+        onLocation={async () => {
+          throw new Error("TEST location failure");
+        }}
+        onNotifications={
+          settingsView === "settings"
+            ? () => setSettingsView("notifications")
+            : undefined
+        }
+        onSignOut={
+          settingsView === "settings"
+            ? async () => {
+                setSignOutAttempts((count) => count + 1);
+                if (signOutAttempts === 0)
+                  throw new Error("TEST sign-out failure");
+                setSettingsView("signed-out");
+              }
+            : undefined
+        }
+        signOutNeedsRetry={settingsView === "settings" && signOutAttempts > 0}
+      />
+    );
+  }
   return (
     <View style={{ flex: 1 }}>
       <SafeAreaView edges={["top"]}>

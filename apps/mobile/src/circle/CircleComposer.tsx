@@ -58,7 +58,9 @@ export function CircleComposer({
   const [requests, setRequests] = useState<DeliverySummary[]>([]);
   const [regionOpen, setRegionOpen] = useState(!!draft.fields.region_id);
   const [requestOpen, setRequestOpen] = useState(!!draft.fields.request_id);
-  const [regionWanted, wantRegions] = useState(!!draft.fields.region_id);
+  const [regionWanted, wantRegions] = useState(
+    !!(draft.fields.region_id || draft.fields.request_id),
+  );
   const [requestWanted, wantRequests] = useState(!!draft.fields.request_id);
   const [regionError, setRegionError] = useState(false);
   const [requestError, setRequestError] = useState(false);
@@ -496,6 +498,7 @@ export function CircleComposer({
           onToggle={() => {
             setRequestOpen(!requestOpen);
             wantRequests(true);
+            wantRegions(true);
           }}
           onClear={() => {
             change({ ...fields, request_id: undefined });

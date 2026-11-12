@@ -15,6 +15,15 @@ export function SensitiveScreen({ children }: { children: ReactNode }) {
   }, []);
   if (!active) return <AuthPage title="公寓资料">{null}</AuthPage>;
   if (auth.phase === "ready" && auth.session) return <>{children}</>;
+  if (auth.phase === "error" && !auth.session)
+    return (
+      <AuthPage compact title="无法恢复登录">
+        <ActionButton
+          label="重新登录"
+          onPress={() => router.push("/auth/phone")}
+        />
+      </AuthPage>
+    );
   if (["guest", "needs-profile"].includes(auth.phase))
     return (
       <AuthPage title="登录后使用公寓资料">

@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type ComponentRef } from "react";
 import {
   Alert,
   Keyboard,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -66,6 +67,8 @@ export function CircleDetail({
   const [paging, setPaging] = useState(false);
   const lifetime = useRef<AbortController | null>(null);
   const reading = useRef(false);
+  const replyScroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const addedReply = useRef<string | null>(null);
   const busy = useRef(false);
   const reportAttempt = useRef<{
     target: string;
@@ -185,6 +188,8 @@ export function CircleDetail({
           },
         );
         if (signal.aborted) return;
+        if (!replies.some((r) => r.id === comment.id))
+          addedReply.current = comment.id;
         forgetReplyDraft(actor, id, draft.key);
         setDraft(getReplyDraft(actor, id));
         setReplies((items) =>
@@ -268,6 +273,7 @@ export function CircleDetail({
       compact
       title="动态与回复"
       onBack={onBack}
+      scrollRef={replyScroll}
       footer={
         visible ? (
           <>
@@ -278,7 +284,7 @@ export function CircleDetail({
                 multiline
                 maxLength={1000}
                 editable={!writing}
-                placeholder="分享你的看法"
+                placeholder="回复动态"
                 placeholderTextColor={tokens.color.textMuted}
                 style={s.input}
                 value={draft.fields.body}
@@ -288,7 +294,7 @@ export function CircleDetail({
                 }}
               />
               <ActionButton
-                label={writing ? "发送中" : "发送"}
+                label={writing ? "回复中" : "回复"}
                 busy={writing}
                 disabled={!draft.fields.body.trim()}
                 onPress={send}
@@ -354,6 +360,11 @@ export function CircleDetail({
             {[...replies].reverse().map((r) => (
               <View
                 key={r.id}
+                onLayout={() => {
+                  if (addedReply.current !== r.id) return;
+                  addedReply.current = null;
+                  replyScroll.current?.scrollToEnd({ animated: true });
+                }}
                 style={[
                   s.comment,
                   commentId === r.id && {

@@ -12,9 +12,9 @@ import { ApplySheet } from "../../requests/ApplySheet";
 import { DeliveryDetailBody } from "../../requests/DeliveryDetailBody";
 import type { ContributionRequest } from "../../apartments/contribution-address-search";
 import { GapSheet } from "../../requests/GapSheet";
+import { RequestManagement } from "../../requests/RequestManagement";
 import {
   canApplyTo,
-  hasEditableGap,
   isV2,
   requestPickupRegion,
   type DeliveryRequest,
@@ -28,7 +28,7 @@ export default function RequestDetail() {
 }
 function Detail() {
   const { session } = useAuth(),
-    { id } = useLocalSearchParams<{ id: string }>();
+    { id, manage } = useLocalSearchParams<{ id: string; manage?: string }>();
   const [r, setRequest] = useState<DeliveryRequest | null>(null),
     [regions, setRegions] = useState<Record<string, string>>({}),
     [busy, setBusy] = useState(false),
@@ -43,6 +43,7 @@ function Detail() {
     [gapEditing, setGapEditing] = useState(false),
     [managing, setManaging] = useState(false);
   const focused = useRef(false);
+  const initialManagement = useRef<string | null>(null);
   const generation = useRef(0),
     targetId = useRef(id);
   targetId.current = id;
@@ -79,6 +80,14 @@ function Detail() {
         setRequest(value);
         setApplication(applications.items[0] ?? null);
         setRegions(Object.fromEntries(page.items.map((x) => [x.id, x.label])));
+        if (manage === "1" && initialManagement.current !== id) {
+          initialManagement.current = id;
+          if (
+            value.status !== "draft" &&
+            value.publisher.user_id === session.user.id
+          )
+            setManaging(true);
+        }
       }
     } catch (e) {
       if (!signal?.aborted && focused.current && current === generation.current)
@@ -103,7 +112,7 @@ function Detail() {
         generation.current++;
         c.abort();
       };
-    }, [session?.access_token, id]),
+    }, [session?.access_token, id, manage]),
   );
   const own = !!r && r.publisher.user_id === session?.user.id;
   async function action(
@@ -351,105 +360,43 @@ function Detail() {
           }}
         />
       ) : null}
-      <Modal
-        visible={managing && !!r}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setManaging(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            backgroundColor: "rgba(0,0,0,.3)",
+      {r && own && r.status !== "draft" && managing ? (
+        <RequestManagement
+          request={r}
+          onClose={() => setManaging(false)}
+          onEdit={() => {
+            setManaging(false);
+            router.push({ pathname: "/requests/new", params: { edit: r.id } });
           }}
-        >
-          <View
-            style={{
-              backgroundColor: tokens.color.surface,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 24,
-              paddingBottom: 40,
-              gap: 14,
-            }}
-          >
-            <Text style={s.headline}>管理需求</Text>
-            <ActionButton
-              label="编辑需求"
-              secondary
-              onPress={() => {
-                setManaging(false);
-                if (r)
-                  router.push({
-                    pathname: "/requests/new",
-                    params: { edit: r.id },
-                  });
-              }}
-            />
-            <ActionButton
-              label="复制为新需求"
-              secondary
-              onPress={() => {
-                setManaging(false);
-                if (r)
-                  router.push({
-                    pathname: "/requests/new",
-                    params: { copy: r.id },
-                  });
-              }}
-            />
-            {r?.status === "open" && delivery && hasEditableGap(r) ? (
-              <ActionButton
-                label="更新剩余缺口"
-                secondary
-                onPress={() => {
-                  setManaging(false);
-                  setGapEditing(true);
-                }}
-              />
-            ) : null}
-            {r?.status === "open" ? (
-              <>
-                <ActionButton
-                  label="已找到司机"
-                  secondary
-                  onPress={() => {
-                    setManaging(false);
-                    setConfirmation("found");
-                  }}
-                />
-                <ActionButton
-                  label="关闭需求"
-                  secondary
-                  onPress={() => {
-                    setManaging(false);
-                    setConfirmation("closed");
-                  }}
-                />
-              </>
-            ) : (
-              <ActionButton
-                label="查看报名司机"
-                secondary
-                onPress={() => {
-                  setManaging(false);
-                  if (r)
-                    router.push({
-                      pathname: "/requests/applications",
-                      params: { request_id: r.id },
-                    });
-                }}
-              />
-            )}
-            <ActionButton
-              label="取消"
-              secondary
-              onPress={() => setManaging(false)}
-            />
-          </View>
-        </View>
-      </Modal>
+          onCopy={() => {
+            setManaging(false);
+            router.push({ pathname: "/requests/new", params: { copy: r.id } });
+          }}
+          onGap={() => {
+            setManaging(false);
+            setGapEditing(true);
+          }}
+          onFound={() => {
+            setManaging(false);
+            setConfirmation("found");
+          }}
+          onEnd={() => {
+            setManaging(false);
+            setConfirmation("closed");
+          }}
+          onReopen={() => {
+            setManaging(false);
+            setConfirmation("reopen");
+          }}
+          onApplications={() => {
+            setManaging(false);
+            router.push({
+              pathname: "/requests/applications",
+              params: { request_id: r.id },
+            });
+          }}
+        />
+      ) : null}
     </AuthPage>
   );
 }

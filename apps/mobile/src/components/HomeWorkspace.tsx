@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import {
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -31,6 +32,7 @@ export function HomeWorkspace(p: {
   onLocate?: () => void;
   locating?: boolean;
   canRecenter?: boolean;
+  statusOnly?: boolean;
 }) {
   const dimensions = useWindowDimensions();
   const { fontScale } = dimensions;
@@ -53,7 +55,14 @@ export function HomeWorkspace(p: {
     >
       <View
         testID="home-map-viewport"
-        style={[s.map, height ? { height: mapHeight } : { height: "42%" }]}
+        style={[
+          s.map,
+          p.statusOnly
+            ? s.expandedMap
+            : height
+              ? { height: mapHeight }
+              : { height: "42%" },
+        ]}
       >
         {p.map}
         {p.header}
@@ -68,40 +77,51 @@ export function HomeWorkspace(p: {
           />
         </View>
       </View>
-      <View style={s.panel}>
-        <View
-          onLayout={(e) => {
-            const value = e.nativeEvent.layout.height;
-            setChrome(value);
-            if (measurements)
-              Object.assign(measurements, { key, chrome: value });
-          }}
+      {p.statusOnly ? (
+        <ScrollView
+          testID="home-status-panel"
+          style={[s.panelSurface, s.compactPanel]}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={s.modes}>{p.controls.modes}</View>
-          <View style={[s.heading, fontScale > 1.3 && s.headingLarge]}>
-            <Text style={s.title}>
-              {p.title}
-              {p.count !== undefined ? ` · ${p.count}` : ""}
-            </Text>
-            {p.apartment ? (
-              <WorkspaceAction
-                label="共享门禁码"
-                onPress={() => p.onContribute?.()}
-              />
-            ) : (
-              <View style={s.actions}>
-                <WorkspaceAction label="筛选" onPress={p.controls.onFilter} />
+          <View style={s.statusBody}>{p.children}</View>
+        </ScrollView>
+      ) : (
+        <View style={[s.panelSurface, s.panel]}>
+          <View
+            onLayout={(e) => {
+              const value = e.nativeEvent.layout.height;
+              setChrome(value);
+              if (measurements)
+                Object.assign(measurements, { key, chrome: value });
+            }}
+          >
+            <View style={s.modes}>{p.controls.modes}</View>
+            <View style={[s.heading, fontScale > 1.3 && s.headingLarge]}>
+              <Text style={s.title}>
+                {p.title}
+                {p.count !== undefined ? ` · ${p.count}` : ""}
+              </Text>
+              {p.apartment ? (
                 <WorkspaceAction
-                  label="＋ 发需求"
-                  onPress={() => router.push("/requests/new")}
+                  label="共享门禁码"
+                  onPress={() => p.onContribute?.()}
                 />
-              </View>
-            )}
+              ) : (
+                <View style={s.actions}>
+                  <WorkspaceAction label="筛选" onPress={p.controls.onFilter} />
+                  <WorkspaceAction
+                    label="＋ 发需求"
+                    onPress={() => router.push("/requests/new")}
+                  />
+                </View>
+              )}
+            </View>
+            {p.statusNote ? <Text style={s.note}>{p.statusNote}</Text> : null}
           </View>
-          {p.statusNote ? <Text style={s.note}>{p.statusNote}</Text> : null}
+          <View style={s.body}>{p.children}</View>
         </View>
-        <View style={s.body}>{p.children}</View>
-      </View>
+      )}
     </View>
   );
 }
@@ -123,6 +143,7 @@ function WorkspaceAction(p: { label: string; onPress: () => void }) {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: tokens.color.surfaceMuted },
   map: { overflow: "hidden" },
+  expandedMap: { flex: 1, minHeight: 0 },
   action: {
     minWidth: 48,
     minHeight: 48,
@@ -136,13 +157,15 @@ const s = StyleSheet.create({
     color: tokens.color.brandText,
     fontWeight: "600",
   },
-  panel: {
-    flex: 1,
+  panel: { flex: 1 },
+  panelSurface: {
     backgroundColor: tokens.color.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: "hidden",
   },
+  compactPanel: { flexGrow: 0, flexShrink: 1, maxHeight: "64%" },
+  statusBody: { paddingTop: 6, paddingBottom: 8 },
   modes: { paddingHorizontal: 16, paddingTop: 12 },
   heading: {
     flexDirection: "row",

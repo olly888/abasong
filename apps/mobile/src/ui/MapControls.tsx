@@ -3,6 +3,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { tokens } from "@abasong/ui";
@@ -140,6 +141,8 @@ export function MapModeSwitch<T extends string>({
   icons?: Partial<Record<T, IconName>>;
   badges?: Partial<Record<T, number>>;
 }) {
+  const { fontScale } = useWindowDimensions();
+  const showIcons = !fullWidth || fontScale <= 1.6;
   return (
     <View
       accessibilityRole="tablist"
@@ -178,7 +181,7 @@ export function MapModeSwitch<T extends string>({
               selected === item && { backgroundColor: tokens.color.surface },
           ]}
         >
-          {icons?.[item] ? (
+          {showIcons && icons?.[item] ? (
             <Icon
               name={icons[item]!}
               size={19}

@@ -59,6 +59,8 @@ def add_request_v2_contracts(S, obj, out, ref, string, enum, integer, uid, dt, b
     out('RequestDetailV2', {**summary,
         'pickup': {'allOf': [ref('PickupLocationDetailV2')], 'nullable': True},
         'private_payment_terms': nullable(string(300))})
+    S['RequestSummaryV2']['properties']['updated_at'] = {
+        **deepcopy(dt), 'description': '仅本人 V2 发布列表返回的最后更新时间。'}
     snapshot = {k: deepcopy(v) for k, v in S['RequestVersion']['properties'].items() if k != 'private_payment_terms'}
     snapshot.update(terms)
     snapshot.update({'pickup_kind': nullable(enum('warehouse', 'contact_handoff')),

@@ -138,6 +138,18 @@ export async function verifyDeliveryServices(p: {
     randomUUID(),
   );
   equal((await call(`/v1/requests/${incomplete.id}`)).status, "draft");
+  const ownerList = async (token = auth) =>
+    (
+      await call<S["RequestPageV2"]>(
+        "/v1/me/requests?request_schema_version=2&limit=100",
+        "GET",
+        token,
+      )
+    ).items;
+  const draftSummary = (await ownerList()).find((x) => x.id === incomplete.id)!;
+  equal(draftSummary.status, "draft");
+  ok(Number.isFinite(Date.parse(draftSummary.updated_at ?? "")));
+  ok(!(await ownerList(other)).some((x) => x.id === incomplete.id));
   incomplete = await call(`/v1/requests/${incomplete.id}`, "PATCH", auth, 200, {
     request_schema_version: 2,
     expected_version: incomplete.version,
@@ -240,6 +252,7 @@ export async function verifyDeliveryServices(p: {
   ok(page.items.some((x) => x.id === r.id));
   const summary = page.items.find((x) => x.id === r.id)!;
   for (const field of [
+    "updated_at",
     "pickup",
     "private_payment_terms",
     "source_id",
@@ -366,6 +379,19 @@ export async function verifyDeliveryServices(p: {
   });
   equal(r.remaining_drivers, 1);
   equal(r.remaining_parcels, null);
+  const gapSummary = (await ownerList()).find((x) => x.id === r.id)!;
+  equal(gapSummary.status, "open");
+  equal(gapSummary.remaining_drivers, 1);
+  equal(gapSummary.remaining_parcels, null);
+  equal(
+    gapSummary.updated_at,
+    (
+      await db.query<{ updated_at: Date }>(
+        "SELECT updated_at FROM abasong.requests WHERE id=$1",
+        [r.id],
+      )
+    ).rows[0]!.updated_at.toISOString(),
+  );
   await http(`/v1/requests/${r.id}/gap`, "PATCH", auth, 409, {
     request_schema_version: 2,
     expected_version: r.version - 1,
@@ -548,6 +574,12 @@ export async function verifyDeliveryServices(p: {
     { expected_version: r.version, status: "closed" },
     randomUUID(),
   );
+  equal((await ownerList()).find((x) => x.id === r.id)?.status, "closed");
+  await http(`/v1/requests/${r.id}/gap`, "PATCH", auth, 409, {
+    request_schema_version: 2,
+    expected_version: r.version,
+    remaining_drivers: 0,
+  });
   const ended = await call<S["PublicRequestShare"]>(
     `/v1/public/request-shares/${shareToken}`,
     "GET",
@@ -911,6 +943,10 @@ export async function verifyDeliveryServices(p: {
     { expected_version: wholeHandoff.version, status: "found" },
     randomUUID(),
   );
+  equal(
+    (await ownerList()).find((x) => x.id === wholeHandoff.id)?.status,
+    "found",
+  );
   const afterClose = await discovery.load("找活", filters, 2);
   ok(
     afterClose?.status === "ready" &&
@@ -1077,6 +1113,40 @@ export async function verifyDeliveryServices(p: {
   await db.query(
     "UPDATE abasong.capabilities SET revoked_at=NULL WHERE user_id=$1 AND capability='request.publish'",
     [owner],
+  );
+  equal(
+    (await ownerList()).find((x) => x.id === estimate.id)?.remaining_drivers,
+    0,
+  );
+  await db.query(
+    "UPDATE abasong.requests SET created_at=now()-interval '2 hours',expires_at=now()-interval '1 hour' WHERE id=$1",
+    [incomplete.id],
+  );
+  equal(
+    (await ownerList()).find((x) => x.id === incomplete.id)?.status,
+    "expired",
+  );
+  incomplete = await call(`/v1/requests/${incomplete.id}`, "PATCH", auth, 200, {
+    request_schema_version: 2,
+    expected_version: incomplete.version,
+    handoff_mode: body.handoff_mode,
+    handoff_date: body.handoff_date,
+    starts_at: body.starts_at,
+    expires_at: body.expires_at,
+  });
+  equal(incomplete.status, "expired");
+  equal(
+    (await ownerList()).find((x) => x.id === incomplete.id)?.status,
+    "expired",
+  );
+  ok(
+    !(
+      await call<S["RequestPageV2"]>(
+        "/v1/requests?request_schema_version=2&limit=100",
+        "GET",
+        other,
+      )
+    ).items.some((x) => x.id === incomplete.id),
   );
   console.log(
     `PASS: R4-07 delivery HTTP flows and ${checks} additional assertions; quantities/time/address/provenance/identity/source/share/permissions; synthetic provider only.`,

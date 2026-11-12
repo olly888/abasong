@@ -1052,16 +1052,22 @@ async function main() {
       { other_user_id: owner },
       randomUUID(),
     );
-    assert.equal(
-      (
-        await request(
-          `/v1/me/applications?request_id=${support.id}`,
-          "GET",
-          other,
-        )
-      ).items[0].request_summary,
-      null,
+    const hiddenSourceApplication = (
+      await request(
+        `/v1/me/applications?request_id=${support.id}`,
+        "GET",
+        other,
+      )
+    ).items[0];
+    assert.equal(hiddenSourceApplication.request_summary, null);
+    assert.equal(hiddenSourceApplication.conversation_id, conversationId);
+    const retainedConversation = await request(
+      `/v1/conversations/${hiddenSourceApplication.conversation_id}`,
+      "GET",
+      other,
     );
+    assert.equal(retainedConversation.can_send, false);
+    assert.equal(retainedConversation.last_request_snapshot, null);
     cards = await request(
       `/v1/conversations/${conversationId}/messages`,
       "GET",

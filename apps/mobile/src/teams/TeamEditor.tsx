@@ -20,6 +20,7 @@ import { tokens } from "@abasong/ui";
 import type { components } from "@abasong/contracts";
 import { ActionButton, Field, FormError } from "../ui/Controls";
 import { PageFrame } from "../ui/PageFrame";
+import { Icon } from "../ui/Icon";
 import { typeStyles } from "../ui/foundation";
 import {
   ownTeam,
@@ -59,6 +60,7 @@ export function TeamEditor({
   const [conflict, setConflict] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const [contactsOpen, setContactsOpen] = useState(false);
   const transport = useRef(request);
   transport.current = request;
   const controller = useRef<AbortController | null>(null);
@@ -345,56 +347,95 @@ export function TeamEditor({
               )}
             </View>
           </View>
-          <View style={{ gap: 12 }}>
-            <Text style={typeStyles.title}>业务联系方式（选填）</Text>
-            <Field
-              label="业务电话"
-              keyboardType="phone-pad"
-              autoComplete="off"
-              maxLength={40}
-              value={form.business_contact.phone}
-              editable={!disabled}
-              onChangeText={(phone) =>
-                change({
-                  business_contact: { ...form.business_contact, phone },
-                })
-              }
-            />
-            <Field
-              label="业务微信"
-              autoCapitalize="none"
-              autoComplete="off"
-              maxLength={80}
-              value={form.business_contact.wechat}
-              editable={!disabled}
-              onChangeText={(wechat) =>
-                change({
-                  business_contact: { ...form.business_contact, wechat },
-                })
-              }
-            />
-            <View
+          <View style={{ gap: 8 }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="业务联系方式（选填）"
+              accessibilityState={{ expanded: contactsOpen }}
+              onPress={() => setContactsOpen((open) => !open)}
               style={{
+                minHeight: 48,
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 12,
-                minHeight: 48,
               }}
             >
-              <Text style={[typeStyles.body, { flex: 1 }]}>
-                向有权查看详情的登录用户展示
-              </Text>
-              <Switch
-                accessibilityLabel="分享业务联系方式"
-                trackColor={{ true: tokens.color.brandPrimary }}
-                thumbColor={
-                  Platform.OS === "android" ? tokens.color.surface : undefined
-                }
-                disabled={disabled || !form.active}
-                value={form.contact_shared}
-                onValueChange={(contact_shared) => change({ contact_shared })}
-              />
-            </View>
+              <View style={{ flex: 1, gap: 4 }}>
+                <Text style={typeStyles.title}>业务联系方式（选填）</Text>
+                <Text style={typeStyles.secondary}>
+                  {form.contact_shared
+                    ? "已开启联系方式展示"
+                    : "未开启联系方式展示"}
+                </Text>
+              </View>
+              <View
+                style={{
+                  transform: [{ rotate: contactsOpen ? "180deg" : "0deg" }],
+                }}
+              >
+                <Icon
+                  name="down"
+                  size={20}
+                  color={tokens.color.textSecondary}
+                />
+              </View>
+            </Pressable>
+            {contactsOpen ? (
+              <View style={{ gap: 12 }}>
+                <Field
+                  label="业务电话"
+                  keyboardType="phone-pad"
+                  autoComplete="off"
+                  maxLength={40}
+                  value={form.business_contact.phone}
+                  editable={!disabled}
+                  onChangeText={(phone) =>
+                    change({
+                      business_contact: { ...form.business_contact, phone },
+                    })
+                  }
+                />
+                <Field
+                  label="业务微信"
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  maxLength={80}
+                  value={form.business_contact.wechat}
+                  editable={!disabled}
+                  onChangeText={(wechat) =>
+                    change({
+                      business_contact: { ...form.business_contact, wechat },
+                    })
+                  }
+                />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    minHeight: 48,
+                  }}
+                >
+                  <Text style={[typeStyles.body, { flex: 1 }]}>
+                    向有权查看详情的登录用户展示
+                  </Text>
+                  <Switch
+                    accessibilityLabel="向有权查看详情的登录用户展示业务联系方式"
+                    trackColor={{ true: tokens.color.brandPrimary }}
+                    thumbColor={
+                      Platform.OS === "android"
+                        ? tokens.color.surface
+                        : undefined
+                    }
+                    disabled={disabled || !form.active}
+                    value={form.contact_shared}
+                    onValueChange={(contact_shared) =>
+                      change({ contact_shared })
+                    }
+                  />
+                </View>
+              </View>
+            ) : null}
           </View>
           <Text style={typeStyles.secondary}>资料由本人填写</Text>
           {existing ? (

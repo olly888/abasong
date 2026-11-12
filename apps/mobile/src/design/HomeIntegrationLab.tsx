@@ -88,6 +88,8 @@ function Lab({
   const held = useRef<(() => void)[]>([]);
   const released = useRef(false);
   const mapReads = useRef(0);
+  const positionStarts = useRef(0);
+  const lastDiscoveryFailure = useRef<number | null>(null);
   const discoveryApartments = useRef(new Map<string, S["Apartment"]>());
   const memory = useRef(createDiscoveryMemory()),
     position = useRef({ ...point }),
@@ -158,10 +160,24 @@ function Lab({
         options?: Parameters<ContributionRequest>[1],
       ) => {
         if (options?.signal?.aborted) throw new Error("TEST cancelled");
-        if (isM7DiscoveryScene(scene) && path.includes("/discover")) {
+        const recovery = scene === "discovery-retry";
+        if (
+          (isM7DiscoveryScene(scene) || recovery) &&
+          path.includes("/discover")
+        ) {
           const provider = path.endsWith("/mapbox");
+          // A normal background retry is throttled to 30 seconds. Only an
+          // explicit, earlier retry lifts the synthetic failure in this scene.
+          const retryReceived =
+            lastDiscoveryFailure.current !== null &&
+            Date.now() - lastDiscoveryFailure.current < 28_000;
+          const scenario = recovery
+            ? provider && retryReceived
+              ? "range-200"
+              : "range-failed-empty"
+            : scene;
           const response = m7Discovery(
-            scene,
+            scenario,
             options?.body as S["NearbyInput"],
             provider,
           );
@@ -174,13 +190,20 @@ function Lab({
           });
           if (provider) {
             mapReads.current++;
+            if (recovery && !retryReceived)
+              lastDiscoveryFailure.current = Date.now();
             setNotice(
-              `TEST 扩围请求${mapReads.current} · ${response.expansion!.attempted_radii_m.join("→")}`,
+              recovery
+                ? `TEST 查找${mapReads.current}次 · 定位启动${positionStarts.current}次`
+                : `TEST 扩围请求${mapReads.current} · ${response.expansion!.attempted_radii_m.join("→")}`,
             );
           }
           return response as T;
         }
-        if (isM7DiscoveryScene(scene) && path.endsWith("/map-context")) {
+        if (
+          (isM7DiscoveryScene(scene) || recovery) &&
+          path.endsWith("/map-context")
+        ) {
           const id = path.split("/")[3]!;
           const target = discoveryApartments.current.get(id);
           if (!target) throw new Error("TEST · 未知公寓轮廓");
@@ -481,6 +504,7 @@ function Lab({
             },
           },
           watchPosition: async (onFix, _onError, signal) => {
+            positionStarts.current++;
             const emit = () => {
               if (!signal.aborted)
                 onFix(

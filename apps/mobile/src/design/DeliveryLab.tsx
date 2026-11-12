@@ -9,6 +9,8 @@ import type { ContributionRequest } from "../apartments/contribution-address-sea
 import { DeliveryEditor } from "../requests/DeliveryEditor";
 import { DeliveryDetailBody } from "../requests/DeliveryDetailBody";
 import { ApplicationSheet } from "../requests/ApplySheet";
+import { MyApplicationCard } from "../requests/MyApplicationCard";
+import { PublishedRequestsFixture } from "./PublishedRequestsFixture";
 import { deliveryFixture } from "../requests/delivery-fixtures";
 import { dayAfter } from "../requests/delivery-fields";
 import { driverFixtures } from "../drivers/fixtures";
@@ -64,6 +66,8 @@ function Lab() {
       ))}
     </ScrollView>
   );
+  if (params.verify === "applications") return <MyApplicationsFixture />;
+  if (params.verify === "published") return <PublishedRequestsFixture />;
   if (params.verify === "entry" || params.verify === "entry-date")
     return (
       <AuthPage compact title="TEST · 发布时间与返回">
@@ -95,6 +99,49 @@ function Lab() {
           : undefined
       }
     />
+  );
+}
+
+function MyApplicationsFixture() {
+  const [view, setView] = useState("");
+  const request = deliveryFixture("delivery_handoff");
+  const base: S["Application"] = {
+    id: "test-application",
+    request_id: request.id,
+    applicant_id: "test-applicant",
+    status: "applied",
+    expected_arrival_at: request.starts_at!,
+    capacity_parcels: 20,
+    observed_request_version: 1,
+    contacted_at: null,
+    conversation_id: "test-conversation",
+    request_summary: { ...request, status: "open", version: 2 },
+    applicant_profile: null,
+  };
+  if (view)
+    return (
+      <AuthPage compact title={view} onBack={() => setView("")}>
+        <Text>仅本机合成资料</Text>
+      </AuthPage>
+    );
+  return (
+    <AuthPage compact title="TEST · 我的报名">
+      <MyApplicationCard
+        item={base}
+        region="TEST Pasadena"
+        disabled={false}
+        onContact={() => setView("TEST · 已有会话")}
+        onRequest={() => setView("TEST · 当前需求")}
+        onWithdraw={() => setView("TEST · 撤回报名")}
+      />
+      <MyApplicationCard
+        item={{ ...base, status: "withdrawn", request_summary: null }}
+        disabled={false}
+        onContact={() => setView("TEST · 历史会话")}
+        onRequest={() => setView("TEST · 当前需求")}
+        onWithdraw={() => setView("TEST · 撤回报名")}
+      />
+    </AuthPage>
   );
 }
 
